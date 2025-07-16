@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jain (Deemed-to-be University)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --jain-blue: #003366;
+            --jain-gold: #FFD700;
+            --jain-light: #F5F5F5;
+            --jain-dark: #222;
+            --jain-red: #f35444;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            color: var(--jain-dark);
+            background-color: var(--jain-light);
+        }
+        
+        header {
+            background-color: var(--jain-blue);
+            color: white;
+            padding: 15px 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo-section img {
+            height: 60px;
+            margin-right: 15px;
+            width: auto;
+        }
+
+        .logo-text h1 {
+            font-size: 22px;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .logo-text span {
+            font-size: 14px;
+            color: #ccc;
+            display: block;
+        }
+
+        nav {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 15px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border-radius: 4px;
+            margin: 2px;
+        }
+        
+        nav a:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: var(--jain-gold);
+        }
+        
+        .hero {
+            background: linear-gradient(135deg, var(--jain-blue) 0%, #004080 100%);
+            color: white;
+            padding: 80px 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('https://www.jainuniversity.ac.in/images/logo.png') no-repeat;
+            background-position: right bottom;
+            background-size: 300px;
+            opacity: 0.1;
+            pointer-events: none;
+        }
+        
+        .hero h2 {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            position: relative;
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 50px;
+            position: relative;
+        }
+        
+        .section-title h2 {
+            font-size: 2rem;
+            color: var(--jain-blue);
+            display: inline-block;
+            padding-bottom: 10px;
+        }
+        
+        .section-title h2::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background-color: var(--jain-gold);
+        }
+
+        /* Animated Notices Section */
+        .notice-section {
+            width: 100%;
+            max-height: 400px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin: 30px 0;
+        }
+
+        .card-header {
+            background-color: var(--jain-red);
+            padding: 12px;
+            font-weight: bold;
+            color: white;
+            font-size: 1.2rem;
+            text-align: center;
+        }
+
+        .scrolling-content {
+            height: 250px;
+            overflow: hidden;
+            position: relative;
+            padding: 0;
+        }
+
+        .notices-container {
+            position: absolute;
+            width: 100%;
+            animation: scrollNotices 30s linear infinite;
+        }
+
+        @keyframes scrollNotices {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(calc(-100% + 250px)); }
+        }
+
+        .ugc-notice {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            margin: 0;
+        }
+
+        .ugc-notice:last-child {
+            border-bottom: none;
+        }
+
+        .ugc-notice p {
+            margin: 5px 0;
+        }
+
+        .ugc-notice ul {
+            margin: 10px 0 0 20px;
+            padding: 0;
+        }
+
+        .ugc-notice a {
+            color: var(--jain-blue);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .ugc-notice a:hover {
+            text-decoration: underline;
+            color: var(--jain-red);
+        }
+
+        /* PDF Viewer Modal */
+        .pdf-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+        }
+
+        .pdf-modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            height: 80%;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .pdf-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            color: white;
+            font-size: 30px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 1001;
+        }
+
+        .read-more {
+            text-align: center;
+            padding: 10px;
+            background-color: #f5f5f5;
+        }
+
+        .read-more a {
+            display: inline-block;
+            border: 1px solid #ccc;
+            border-radius: 25px;
+            padding: 8px 16px;
+            color: var(--jain-blue);
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .read-more a:hover {
+            background-color: var(--jain-blue);
+            color: white;
+            border-color: var(--jain-blue);
+        }
+
+        /* About Content */
+        .about-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            line-height: 1.8;
+        }
+        
+        footer {
+            background-color: var(--jain-dark);
+            color: white;
+            padding: 50px 0 20px;
+        }
+        
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            padding: 0 20px;
+        }
+        
+        .footer-column h3 {
+            color: var(--jain-gold);
+            margin-top: 0;
+            font-size: 1.2rem;
+            position: relative;
+            padding-bottom: 10px;
+        }
+        
+        .footer-column h3::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 50px;
+            height: 2px;
+            background-color: var(--jain-red);
+        }
+        
+        .footer-column ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .footer-column ul li {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .footer-column ul li i {
+            margin-right: 10px;
+            color: var(--jain-gold);
+            width: 20px;
+            text-align: center;
+        }
+        
+        .footer-column ul li a {
+            color: #ccc;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .footer-column ul li a:hover {
+            color: var(--jain-gold);
+        }
+        
+        .social-links {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .social-links a {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.1);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .social-links a:hover {
+            background-color: var(--jain-gold);
+            color: var(--jain-blue);
+            transform: translateY(-3px);
+        }
+        
+        .copyright {
+            text-align: center;
+            padding-top: 30px;
+            margin-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #999;
+            font-size: 0.9rem;
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            .header-container {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .logo-section {
+                justify-content: center;
+                margin-bottom: 15px;
+            }
+            
+            nav {
+                margin-top: 15px;
+                justify-content: center;
+            }
+            
+            nav a {
+                padding: 8px 12px;
+                font-size: 0.9rem;
+            }
+            
+            .hero h2 {
+                font-size: 1.8rem;
+            }
+
+            .hero p {
+                font-size: 1rem;
+            }
+
+            .pdf-modal-content {
+                width: 95%;
+                height: 70%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero {
+                padding: 60px 15px;
+            }
+            
+            .hero h2 {
+                font-size: 1.5rem;
+            }
+            
+            .section-title h2 {
+                font-size: 1.5rem;
+            }
+
+            .notices-container {
+                animation-duration: 60s;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <div class="logo-section">
+                <img src="{{ url_for('static', filename='images/logo12345.png') }}" onerror="this.src='https://via.placeholder.com/60?text=JU+Logo';" alt="Jain University Logo">
+                <div class="logo-text">
+                    <h1>Jain (Deemed-to-be University)</h1>
+                    <span>Jain Group of Institutions</span>
+                </div>
+            </div>
+            <nav class="nav-links">
+                <a href="#"><i class="fas fa-home"></i> Home</a>
+                <a href="{{ url_for('about') }}"><i class="fas fa-info-circle"></i> About Us</a>
+                <a href="{{ url_for('ugc') }}"><i class="fas fa-bullhorn"></i> UGC Requirement</a>
+                <a href="{{ url_for('monthly') }}"><i class="fas fa-calendar-alt"></i> Monthly Engagement</a>
+                <a href="{{ url_for('contact') }}"><i class="fas fa-envelope"></i> Contact Us</a>
+                <a href="{{ url_for('login') }}"><i class="fas fa-sign-in-alt"></i> Login</a>
+            </nav>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <h2>Welcome to Jain (Deemed-to-be University)</h2>
+            <p>Empowering minds, transforming lives through excellence in education</p>
+        </div>
+    </section>
+
+    <div class="container">
+        <!-- UGC Notices Section with Auto-scrolling -->
+        <div class="notice-section">
+            <div class="card-header">
+                <i class="fas fa-bullhorn"></i> Latest UGC Notices
+            </div>
+            <div class="scrolling-content">
+                <div class="notices-container">
+                    {% if records %}
+                        {% for item in records %}
+                            <div class="ugc-notice">
+                                <p><i class="fas fa-calendar-alt"></i> Published on: 
+                                    {% if item.uploaded_at %}
+                                        {{ item.uploaded_at.strftime('%d/%m/%Y') if item.uploaded_at.__class__.__name__ == 'datetime' else item.uploaded_at }}
+                                    {% endif %}
+                                </p>
+                                <p><i class="fas fa-file-alt"></i> {{ item.text_data }}</p>
+                                {% if item.files %}
+                                    <ul>
+                                        {% for file in item.files %}
+                                            <li>
+                                                <i class="fas fa-file-pdf"></i> 
+                                                <a href="#" onclick="openPdfModal('{{ url_for('static', filename='uploads/' + file) }}')">{{ file }}</a>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="ugc-notice">
+                            <p><i class="fas fa-info-circle"></i> No notices available at this time.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="read-more">
+                <a href="{{ url_for('ugc') }}"><i class="fas fa-eye"></i> View All Notices</a>
+            </div>
+        </div>
+
+        <!-- PDF Viewer Modal -->
+        <div id="pdfModal" class="pdf-modal">
+            <span class="close-modal" onclick="closePdfModal()">&times;</span>
+            <div class="pdf-modal-content">
+                <iframe id="pdfIframe" class="pdf-iframe" src=""></iframe>
+            </div>
+        </div>
+
+        <div class="section-title">
+            <h2>About Jain University</h2>
+        </div>
+        <div class="about-content">
+            <p>Jain (Deemed-to-be University) is one of India's premier academic institutions, committed to excellence in education and research. With a rich legacy of academic distinction, the University has established itself as a trusted leader in higher education.</p>
+            <p>Our expert faculty and dedicated teams are committed to maintaining the highest standards while delivering quality education tailored to individual goals. The university offers a wide range of undergraduate, postgraduate, and doctoral programs across various disciplines.</p>
+            <p>With state-of-the-art infrastructure, innovative teaching methodologies, and strong industry collaborations, Jain University provides an enriching learning environment that fosters intellectual growth and professional development.</p>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-column">
+                <h3>Jain (Deemed-to-be University)</h3>
+                <p>Empowering innovation through education</p>
+                <div class="social-links">
+                    <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                    <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+            <div class="footer-column">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><i class="fas fa-chevron-right"></i> <a href="#">Home</a></li>
+                    <li><i class="fas fa-chevron-right"></i> <a href="{{ url_for('about') }}">About Us</a></li>
+                    <li><i class="fas fa-chevron-right"></i> <a href="{{ url_for('ugc') }}">UGC Requirements</a></li>
+                    <li><i class="fas fa-chevron-right"></i> <a href="{{ url_for('monthly') }}">Monthly Engagement</a></li>
+                    <li><i class="fas fa-chevron-right"></i> <a href="{{ url_for('contact') }}">Contact Us</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h3>Contact Info</h3>
+                <ul>
+                    <li><i class="fas fa-map-marker-alt"></i> Jain University Campus, Bangalore, Karnataka, India</li>
+                    <li><i class="fas fa-phone"></i> +91 8088743251</li>
+                    <li><i class="fas fa-envelope"></i> contact@jainuniversity.ac.in</li>
+                    <li><i class="fas fa-clock"></i> Mon-Fri: 9:00 AM - 5:00 PM</li>
+                </ul>
+            </div>
+        </div>
+        <div class="copyright">
+            <p>&copy; 2025 Jain (Deemed-to-be University). All Rights Reserved. | <a href="#" style="color: #ccc;">Privacy Policy</a> | <a href="#" style="color: #ccc;">Terms of Service</a></p>
+        </div>
+    </footer>
+
+    <script>
+        // PDF Modal Functions
+        function openPdfModal(pdfUrl) {
+            document.getElementById('pdfIframe').src = pdfUrl;
+            document.getElementById('pdfModal').style.display = 'block';
+            document.body.style.overflow = 'hidden'; // Prevent scrolling
+        }
+
+        function closePdfModal() {
+            document.getElementById('pdfModal').style.display = 'none';
+            document.getElementById('pdfIframe').src = '';
+            document.body.style.overflow = 'auto'; // Re-enable scrolling
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('pdfModal');
+            if (event.target == modal) {
+                closePdfModal();
+            }
+        }
+
+        // Pause notice animation on hover
+        const noticesContainer = document.querySelector('.notices-container');
+        noticesContainer.addEventListener('mouseenter', () => {
+            noticesContainer.style.animationPlayState = 'paused';
+        });
+
+        noticesContainer.addEventListener('mouseleave', () => {
+            noticesContainer.style.animationPlayState = 'running';
+        });
+
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>

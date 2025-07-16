@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: jain_research
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --timeout 120
+    envVars:
+      - key: MONGO_URI
+
+        value: mongodb+srv://jainresearch:jain@cluster0.9imrqqp.mongodb.net/jain?retryWrites=true&w=majority&appName=Cluster0'
