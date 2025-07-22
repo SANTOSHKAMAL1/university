@@ -2,46 +2,129 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Edit UGC Requirement</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jain University - UGC Requirements</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            padding: 30px;
+        :root {
+            --jain-blue: #003366;
+            --jain-gold: #FFD700;
+            --light-bg: #f4f4f4;
         }
 
-        header {
-            background-color: #003366;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background-color: var(--light-bg);
+            padding-top: 70px; /* Space for fixed navbar */
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* Navigation Bar */
+        .navbar {
+            background-color: var(--jain-blue);
             color: white;
-            padding: 20px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            padding: 10px 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-container {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
-        .logout-btn {
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-section img {
+            height: 40px;
+            width: auto;
+        }
+
+        .logo-text h1 {
+            font-size: 1.2rem;
+            margin: 0;
+            color: white;
+        }
+
+        .logo-text span {
+            font-size: 0.7rem;
+            color: white;
+            display: block;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .nav-links a {
             color: white;
             text-decoration: none;
-            font-weight: bold;
-            background-color: #c0392b;
-            padding: 6px 12px;
-            border-radius: 5px;
+            font-weight: 500;
+            transition: color 0.3s;
+            padding: 5px 0;
         }
 
-        h2 {
-            margin-top: 30px;
-            color: #003366;
+        .nav-links a:hover {
+            color: var(--jain-gold);
         }
 
+        .logout-link {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+
+        .logout-link:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .hamburger {
+            display: none;
+            cursor: pointer;
+            font-size: 1.5rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+
+        /* Form Styles */
         .upload-toggle {
-            background-color: #005288;
+            background-color: var(--jain-blue);
             color: white;
             padding: 12px 18px;
+            border-radius: 6px;
+            margin: 20px 0;
+            display: inline-block;
             cursor: pointer;
             font-weight: bold;
-            border-radius: 6px;
-            margin-top: 20px;
-            display: inline-block;
+            transition: background 0.3s;
+        }
+
+        .upload-toggle:hover {
+            background-color: #002244;
         }
 
         .upload-form {
@@ -49,113 +132,358 @@
             background: white;
             padding: 20px;
             border-radius: 10px;
-            margin-top: 15px;
+            margin: 15px 0;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
 
-        textarea {
-            width: 100%;
-            height: 120px;
-            padding: 10px;
+        .form-group {
             margin-bottom: 15px;
-            resize: vertical;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        textarea, input[type="url"], input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
             font-size: 14px;
         }
 
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
         input[type="file"] {
-            margin-bottom: 15px;
+            margin-top: 5px;
         }
 
         button {
-            background-color: #003366;
+            background-color: var(--jain-blue);
             color: white;
             padding: 10px 15px;
             border: none;
-            cursor: pointer;
             border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
         }
 
-        .flash {
-            color: green;
-            font-weight: bold;
-            margin-top: 10px;
+        button:hover {
+            background-color: #002244;
+        }
+
+        /* Records Section */
+        .records-section {
+            margin-top: 30px;
+        }
+
+        .records-section h2 {
+            color: var(--jain-blue);
+            margin-bottom: 15px;
+            border-bottom: 2px solid var(--jain-blue);
+            padding-bottom: 5px;
         }
 
         .ugc-record {
             background: white;
-            margin-top: 25px;
-            padding: 15px;
+            margin: 20px 0;
+            padding: 20px;
             border-radius: 10px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
+        .ugc-record h3 {
+            color: var(--jain-blue);
+            margin-bottom: 10px;
+        }
+
         .ugc-record p {
-            margin: 5px 0;
+            margin: 8px 0;
         }
 
         .ugc-record ul {
+            margin: 10px 0;
             padding-left: 20px;
+        }
+
+        .ugc-record li {
+            margin: 5px 0;
+        }
+
+        .ugc-record a {
+            color: var(--jain-blue);
+            text-decoration: none;
+        }
+
+        .ugc-record a:hover {
+            text-decoration: underline;
+        }
+
+        .ugc-record img {
+            max-width: 200px;
+            margin-top: 10px;
+            border: 1px solid #eee;
+        }
+
+        .flash-message {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            padding: 10px 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+
+        /* Button styles */
+        .btn {
+            display: inline-block;
+            padding: 6px 12px;
+            margin-right: 8px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
+        .btn-primary {
+            background-color: var(--jain-blue);
+            color: white;
+            border: 1px solid var(--jain-blue);
+        }
+
+        .btn-primary:hover {
+            background-color: #002244;
+            border-color: #002244;
+        }
+
+        .bg-red-500 {
+            background-color: #ef4444;
+        }
+
+        .hover\:bg-red-600:hover {
+            background-color: #060505;
+        }
+
+        .text-white {
+            color: white;
+        }
+
+        .text-sm {
+            font-size: 0.875rem;
+        }
+
+        .font-medium {
+            font-weight: 500;
+        }
+
+        .py-1 {
+            padding-top: 0.25rem;
+            padding-bottom: 0.25rem;
+        }
+
+        .px-3 {
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
+        }
+
+        .rounded {
+            border-radius: 0.25rem;
+        }
+
+        .shadow {
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            .hamburger {
+                display: block;
+            }
+
+            .nav-links {
+                position: fixed;
+                top: 70px;
+                left: -100%;
+                width: 100%;
+                height: calc(100vh - 70px);
+                background-color: var(--jain-blue);
+                flex-direction: column;
+                align-items: center;
+                padding: 20px 0;
+                gap: 15px;
+                transition: left 0.3s ease;
+            }
+
+            .nav-links.active {
+                left: 0;
+            }
+
+            .logo-text h1 {
+                font-size: 1rem;
+            }
+
+            .logo-text span {
+                font-size: 0.6rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo-section img {
+                height: 30px;
+            }
+
+            .logo-text h1 {
+                font-size: 0.9rem;
+            }
+
+            .logo-text span {
+                display: none;
+            }
+
+            .navbar {
+                padding: 10px 15px;
+            }
+
+            .main-content {
+                padding: 0 15px;
+            }
+
+            .ugc-record {
+                padding: 15px;
+            }
         }
     </style>
 </head>
 <body>
-
-<header>
-    <div>
-        <h1>UGC Editor</h1>
-        <p>Logged in as: {{ session['email'] }}</p>
-    </div>
-    <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
-</header>
-
-<h2>UGC Requirement Section</h2>
-
-{% with messages = get_flashed_messages() %}
-  {% if messages %}
-    <div class="flash">{{ messages[0] }}</div>
-  {% endif %}
-{% endwith %}
-
-<!-- Toggle Button -->
-<div class="upload-toggle" onclick="toggleUploadForm()">+ Upload New UGC Requirement</div>
-
-<!-- Upload Form -->
-<div id="uploadForm" class="upload-form">
-    <form method="POST" enctype="multipart/form-data">
-        <label for="text_data"><strong>Description / Content:</strong></label><br>
-        <textarea name="text_data" required></textarea><br>
-
-        <label for="files"><strong>Upload Files (PDF, DOCX, Images):</strong></label><br>
-        <input type="file" name="files" multiple required><br>
-
-        <button type="submit">Upload</button>
-    </form>
-</div>
-
-<!-- Uploaded Records -->
-{% if records %}
-    <h2>Previous Uploads</h2>
-    {% for item in records %}
-        <div class="ugc-record">
-            <p><strong>Uploaded By:</strong> {{ item.admin_email }}</p>
-            <p><strong>Date:</strong> {{ item.uploaded_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
-            <p><strong>Description:</strong> {{ item.text_data }}</p>
-            <p><strong>Files:</strong></p>
-            <ul>
-                {% for file in item.files %}
-                    <li><a href="{{ url_for('static', filename='uploads/' + file) }}" target="_blank">{{ file }}</a></li>
-                {% endfor %}
-            </ul>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo-section">
+                <img src="{{ url_for('static', filename='images/logo12345.png') }}" alt="Jain University Logo">
+                <div class="logo-text">
+                    <h1>Jain University</h1>
+                    <span>Jain Group Of Institutions</span>
+                </div>
+            </div>
+            
+            <div class="hamburger" onclick="toggleMenu()">☰</div>
+            
+            <div class="nav-links" id="navLinks">
+                <a href="{{ url_for('about') }}">About Us</a>
+                <a href="{{ url_for('edit_ugc') }}">UGC Requirement</a>
+                <a href="{{ url_for('edit_monthly') }}">Monthly Engagement</a>
+                <a href="{{ url_for('logout') }}" class="logout-link" onclick="return confirm('Are you sure you want to logout?')">Logout</a>
+            </div>
         </div>
-    {% endfor %}
-{% endif %}
+    </nav>
 
-<script>
-    function toggleUploadForm() {
-        const form = document.getElementById('uploadForm');
-        form.style.display = form.style.display === 'none' || form.style.display === '' ? 'block' : 'none';
-    }
-</script>
+    <!-- Main Content -->
+    <div class="main-content">
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <div class="flash-message">{{ messages[0] }}</div>
+          {% endif %}
+        {% endwith %}
 
+        <!-- Toggle Button -->
+        <div class="upload-toggle" onclick="toggleUploadForm()">+ Upload New UGC Requirement</div>
+
+        <!-- Upload Form -->
+        <div id="uploadForm" class="upload-form">
+            <form method="POST" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="text_data">Description / Content:</label>
+                    <textarea name="text_data" id="text_data" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="external_link">External Link (optional):</label>
+                    <input type="url" name="external_link" id="external_link" placeholder="https://example.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="files">Upload Files (PDF, JPG, PNG):</label>
+                    <input type="file" name="files" id="files" multiple accept=".pdf,.jpg,.jpeg,.png">
+                </div>
+
+                <button type="submit">Upload</button>
+            </form>
+        </div>
+
+        <!-- Uploaded Records -->
+        <div class="records-section">
+            <h2>Previous Uploads</h2>
+
+            {% if records %}
+                {% for item in records %}
+                    <div class="ugc-record">
+                        <h3>Uploaded By: {{ item.admin_email }}</h3>
+                        <p><strong>Date:</strong> {{ item.uploaded_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                        <p><strong>Description:</strong> {{ item.text_data }}</p>
+
+                        {% if item.external_link %}
+                            <p><strong>External Link:</strong> 
+                                <a href="{{ item.external_link }}" target="_blank">{{ item.external_link }}</a>
+                            </p>
+                        {% endif %}
+
+                        {% if item.files %}
+                            <p><strong>Files:</strong></p>
+                            <ul>
+                                {% for file in item.files %}
+                                    <li>
+                                        {% if file.endswith(('.png', '.jpg', '.jpeg')) %}
+                                            <img src="{{ url_for('uploaded_file', filename=file) }}" alt="{{ file }}" style="max-width:150px;">
+                                        {% else %}
+                                            <a href="{{ url_for('uploaded_file', filename=file) }}" target="_blank">{{ file }}</a>
+                                        {% endif %}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+
+                        <!-- Edit and Delete Buttons -->
+                        <div style="margin-top: 10px;">
+                            <a href="{{ url_for('edit_ugc_record', record_id=item._id) }}">Edit</a>
+                            <a href="{{ url_for('delete_ugc', record_id=item._id) }}"
+                               class="bg-red-500 hover:bg-red-600 text-white text-sm font-medium py-1 px-3 rounded shadow"
+                               onclick="return confirm('Are you sure you want to delete this UGC record?');">
+                               Delete
+                            </a>
+                        </div>
+                        
+                        <p style="margin-top: 10px; font-size: 0.9rem; color: #666;">Uploaded by {{ item.admin_email }}</p>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p>No records found.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        // Toggle mobile menu
+        function toggleMenu() {
+            const navLinks = document.getElementById('navLinks');
+            navLinks.classList.toggle('active');
+        }
+
+        // Toggle upload form visibility
+        function toggleUploadForm() {
+            const form = document.getElementById('uploadForm');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+    </script>
 </body>
 </html>

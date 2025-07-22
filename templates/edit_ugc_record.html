@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Monthly Engagement</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --jain-blue: #003366;
+      --jain-gold: #FFD700;
+      --light-bg: #f4f4f4;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background-color: var(--light-bg);
+      margin: 0;
+      padding: 0;
+      padding-top: 80px;
+    }
+
+    /* Header Styles */
+    .header-container {
+      background-color: var(--jain-blue);
+      color: white;
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1000;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .logo-section {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .logo-section img {
+      height: 50px;
+    }
+
+    .logo-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .logo-text h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      color: white;
+      font-weight: 600;
+    }
+
+    .logo-text span {
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      transition: color 0.3s;
+      font-weight: 500;
+      padding: 0.5rem 0;
+      position: relative;
+    }
+
+    .nav-links a:hover {
+      color: var(--jain-gold);
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background-color: var(--jain-gold);
+      transition: width 0.3s;
+    }
+
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+
+    .user-email {
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.9);
+      margin-left: 1rem;
+    }
+
+    /* Main Content Styles */
+    .container {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    .form-container {
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+      margin-bottom: 2rem;
+    }
+
+    h2 {
+      color: var(--jain-blue);
+      font-size: 1.8rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--jain-gold);
+    }
+
+    /* Form Styles */
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: #444;
+    }
+
+    input[type="text"],
+    input[type="file"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 1rem;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    input[type="text"]:focus,
+    input[type="file"]:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--jain-blue);
+      box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.1);
+      outline: none;
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .checkbox-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: 5px;
+      transition: background 0.2s;
+    }
+
+    .checkbox-label:hover {
+      background: rgba(0, 51, 102, 0.05);
+    }
+
+    .checkbox-label input {
+      margin-right: 0.75rem;
+      width: 1.1em;
+      height: 1.1em;
+    }
+
+    /* File Preview Styles */
+    .file-preview {
+      margin: 1.5rem 0;
+    }
+
+    .file-preview h3 {
+      font-size: 1.1rem;
+      color: #555;
+      margin-bottom: 0.75rem;
+    }
+
+    .image-preview {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .image-preview img {
+      width: 120px;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+      transition: transform 0.3s;
+    }
+
+    .image-preview img:hover {
+      transform: scale(1.05);
+    }
+
+    .pdf-list {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    .pdf-list li {
+      margin-bottom: 0.5rem;
+    }
+
+    .pdf-list a {
+      color: var(--jain-blue);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem;
+      border-radius: 5px;
+      transition: background 0.2s;
+    }
+
+    .pdf-list a:hover {
+      background: rgba(0, 51, 102, 0.05);
+      text-decoration: underline;
+    }
+
+    /* Button Styles */
+    .btn-submit {
+      background-color: var(--jain-blue);
+      color: white;
+      padding: 0.75rem 1.75rem;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.2s;
+      margin-top: 1rem;
+    }
+
+    .btn-submit:hover {
+      background-color: #002244;
+      transform: translateY(-2px);
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+      .header-container {
+        flex-direction: column;
+        padding: 1rem 0.5rem;
+      }
+
+      .logo-section {
+        margin-bottom: 1rem;
+      }
+
+      .nav-links {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1rem;
+      }
+
+      .form-container {
+        padding: 1.5rem;
+      }
+
+      .checkbox-container {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-container">
+      <div class="logo-section">
+        <img src="{{ url_for('static', filename='images/logo12345.png') }}" alt="Jain University Logo">
+        <div class="logo-text">
+          <h1>Jain University</h1>
+          <span>Jain Group Of Institutions</span>
+        </div>
+      </div>
+      <nav class="nav-links">
+        <a href="{{ url_for('about') }}">About Us</a>
+        <a href="{{ url_for('edit_ugc') }}">UGC Requirement</a>
+        <a href="{{ url_for('edit_monthly') }}">Edit Monthly Engagement</a>
+        <a href="{{ url_for('logout') }}" class="logout-link" onclick="return confirm('Are you sure you want to logout?')">Logout</a>
+        <div class="user-email">{{ session['email'] }}</div>
+      </nav>
+    </div>
+  </header>
+<body class="bg-gray-50 min-h-screen p-6">
+  <div class="max-w-3xl mx-auto bg-white shadow-lg p-6 rounded-lg">
+    <h1 class="text-2xl font-bold mb-4 text-blue-700">Edit UGC Record</h1>
+
+    <form method="POST" enctype="multipart/form-data" class="space-y-4">
+      <!-- Text Data -->
+      <div>
+        <label class="block font-semibold mb-1">Text Description</label>
+        <textarea name="text_data" rows="4" class="w-full border border-gray-300 p-3 rounded" required>{{ record.text_data }}</textarea>
+      </div>
+
+      <!-- External Link -->
+      <div>
+        <label class="block font-semibold mb-1">External Link (Optional)</label>
+        <input type="url" name="external_link" class="w-full border border-gray-300 p-3 rounded" value="{{ record.external_link or '' }}">
+      </div>
+
+      <!-- Existing Files -->
+      {% if record.files %}
+        <div>
+          <label class="block font-semibold mb-2">Previously Uploaded Files:</label>
+          <div class="grid grid-cols-2 gap-4">
+            {% for file in record.files %}
+              {% if file.endswith(('.png', '.jpg', '.jpeg')) %}
+                <div>
+                  <img src="{{ url_for('uploaded_file', filename=file) }}" alt="Image" class="rounded shadow h-32 object-cover"/>
+                  <p class="text-sm text-center mt-1">{{ file }}</p>
+                </div>
+              {% else %}
+                <div class="p-2 border rounded text-sm">
+                  📄 <a href="{{ url_for('uploaded_file', filename=file) }}" target="_blank" class="text-blue-600 underline">{{ file }}</a>
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      <!-- Upload New Files -->
+      <div>
+        <label class="block font-semibold mb-1">Upload More Files (Images or PDFs)</label>
+        <input type="file" name="files" multiple class="w-full border border-gray-300 p-2 rounded">
+      </div>
+
+      <!-- Submit Button -->
+      <div class="pt-4">
+        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded">
+          Update Record
+        </button>
+        <a href="{{ url_for('home') }}" class="ml-4 text-gray-600 hover:underline">Cancel</a>
+      </div>
+    </form>
+  </div>
+</body>
+</html>

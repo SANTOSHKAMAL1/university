@@ -50,6 +50,11 @@
             color: #ccc;
         }
 
+        nav {
+            display: flex;
+            align-items: center;
+        }
+
         nav a {
             color: white;
             text-decoration: none;
@@ -64,6 +69,16 @@
             color: var(--jain-gold);
         }
 
+        .logout-link {
+            color: #ff9999 !important;
+            font-weight: bold;
+        }
+
+        .logout-link:hover {
+            color: #ff6666 !important;
+            text-decoration: underline !important;
+        }
+
         h2 {
             text-align: center;
             color: var(--jain-blue);
@@ -72,19 +87,6 @@
 
         p {
             text-align: center;
-        }
-
-        a.logout-link {
-            display: block;
-            text-align: center;
-            color: #c0392b;
-            font-weight: bold;
-            text-decoration: none;
-            margin: 10px auto;
-        }
-
-        a.logout-link:hover {
-            text-decoration: underline;
         }
 
         table {
@@ -141,11 +143,13 @@
 
             nav {
                 margin-top: 40px;
+                flex-direction: column;
             }
 
             nav a {
                 display: inline-block;
                 padding: 8px 10px;
+                margin: 5px 0;
             }
         }
     </style>
@@ -164,7 +168,7 @@
         <nav class="nav-links">
             <a href="{{ url_for('about') }}">About Us</a>
             <a href="{{ url_for('edit_ugc') }}">UGC Requirement</a>
-            <a href="#">Monthly Engagement</a>
+            <a href="{{ url_for('edit_monthly') }}">Edit Monthly Engagement</a>
             <a href="{{ url_for('logout') }}" class="logout-link" onclick="return confirm('Are you sure you want to logout?')">Logout</a>
         </nav>
     </div>

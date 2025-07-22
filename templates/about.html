@@ -1,4 +1,6 @@
-<!DOCTYPE html>
+
+      
+      <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -15,7 +17,6 @@
             --jain-red: #f35444;
             --jain-teal: #008080;
             --jain-purple: #6a5acd;
-            --jain-yellow: #FFC107;
             --card-shadow: 0 10px 30px -15px rgba(0, 51, 102, 0.3);
             --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
@@ -137,32 +138,18 @@
             margin-right: 8px;
         }
         
-        /* Date Display */
-        .date-display {
-            background-color: var(--jain-yellow);
-            color: var(--jain-blue);
-            padding: 15px;
-            text-align: center;
-            font-weight: 600;
-            font-size: 1.2rem;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-            position: relative;
-            z-index: 10;
-        }
-        
         /* Quote Carousel */
         .quote-carousel {
             background: linear-gradient(135deg, var(--jain-blue) 0%, #004080 100%);
             color: white;
-            padding: 80px 0 40px;
+            padding: 80px 0;
             text-align: center;
             position: relative;
             overflow: hidden;
-            margin-top: -5px;
         }
         
         .carousel-container {
-            max-width: 1200px;
+            max-width: 800px;
             margin: 0 auto;
             padding: 0 20px;
             position: relative;
@@ -177,30 +164,12 @@
             display: block;
         }
         
-        .carousel-content {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-        }
-        
-        .carousel-image {
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 5px solid var(--jain-gold);
-            margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-        
         .carousel-quote {
             font-size: 1.8rem;
             font-weight: 300;
             line-height: 1.5;
             margin-bottom: 30px;
             position: relative;
-            max-width: 800px;
         }
         
         .carousel-quote::before,
@@ -810,9 +779,6 @@
         /* Monthly Engagement Section */
         .engagement-section {
             margin: 80px 0;
-            background-color: var(--jain-yellow);
-            padding: 60px 0;
-            clip-path: polygon(0 5%, 100% 0, 100% 95%, 0% 100%);
         }
 
         .engagement-title {
@@ -822,7 +788,7 @@
 
         .engagement-title h2 {
             font-size: 2.2rem;
-            color: var(--jain-blue);
+            color: var(--jain-purple);
             position: relative;
             display: inline-block;
             padding-bottom: 15px;
@@ -836,16 +802,15 @@
             transform: translateX(-50%);
             width: 100px;
             height: 4px;
-            background: linear-gradient(90deg, var(--jain-blue), var(--jain-gold));
+            background: linear-gradient(90deg, var(--jain-purple), var(--jain-teal));
             border-radius: 2px;
         }
 
         .engagement-title p {
-            color: var(--jain-blue);
+            color: #666;
             max-width: 700px;
             margin: 0 auto;
             font-size: 1.1rem;
-            opacity: 0.9;
         }
 
         .engagement-grid {
@@ -871,7 +836,7 @@
         }
 
         .engagement-card-header {
-            background: linear-gradient(135deg, var(--jain-blue) 0%, var(--jain-teal) 100%);
+            background: linear-gradient(135deg, var(--jain-purple) 0%, var(--jain-teal) 100%);
             color: white;
             padding: 15px 20px;
             font-size: 1.3rem;
@@ -1307,7 +1272,7 @@
               
             </div>
             <nav class="nav-links">
-                <a href="#">Home</a>
+                <a href="{{ url_for('home') }}">Home</a>
                 <a href="{{ url_for('about') }}">About Us</a>
                 <a href="{{ url_for('ugc') }}">UGC Requirement</a>
                 <a href="{{ url_for('monthlyengagement') }}">Monthly Engagement</a>
@@ -1315,306 +1280,14 @@
                 <a href="{{ url_for('login') }}" class="login-btn"><i class="fas fa-sign-in-alt"></i> Login</a>
             </nav>
         </div>
-    </header>
-
-    <!-- Date Display -->
-    <div class="date-display" id="currentDate">
-        <!-- Date will be inserted by JavaScript -->
-    </div>
-
-    <!-- Quote Carousel with Images -->
-    <section class="quote-carousel">
-        <div class="carousel-container">
-            <div class="carousel-slide active">
-                <div class="carousel-content">
-                    <img src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="Education" class="carousel-image">
-                    <p class="carousel-quote">"Education is the most powerful weapon which you can use to change the world."</p>
-                    <p class="carousel-author">- Nelson Mandela</p>
-                </div>
-            </div>
-            <div class="carousel-slide">
-                <div class="carousel-content">
-                    <img src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="Learning" class="carousel-image">
-                    <p class="carousel-quote">"The function of education is to teach one to think intensively and to think critically. Intelligence plus character - that is the goal of true education."</p>
-                    <p class="carousel-author">- Martin Luther King Jr.</p>
-                </div>
-            </div>
-            <div class="carousel-slide">
-                <div class="carousel-content">
-                    <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="Jain University" class="carousel-image">
-                    <p class="carousel-quote">"At Jain University, we don't just teach students, we transform lives and empower future leaders."</p>
-                    <p class="carousel-author">- Jain University Vision</p>
-                </div>
-            </div>
-            <div class="carousel-dots">
-                <span class="carousel-dot active" onclick="currentSlide(1)"></span>
-                <span class="carousel-dot" onclick="currentSlide(2)"></span>
-                <span class="carousel-dot" onclick="currentSlide(3)"></span>
-            </div>
+    </header><!-- About Section -->
+        <div class="section-title">
+            <h2>About Jain University</h2>
         </div>
-    </section>
-
-    <div class="container">
-        <!-- UGC Notices Section with Auto-scrolling -->
-        <div class="notice-section">
-            <div class="card-header">
-                <i class="fas fa-bullhorn"></i> Latest UGC Notices & Announcements
-            </div>
-            <div class="scrolling-content">
-                <div class="notices-container">
-                    {% if records %}
-                        {% for item in records %}
-                            <div class="ugc-notice">
-                                <p><i class="fas fa-calendar-alt"></i> Published on: 
-                                    {% if item.uploaded_at %}
-                                        {{ item.uploaded_at.strftime('%d/%m/%Y') if item.uploaded_at.__class__.__name__ == 'datetime' else item.uploaded_at }}
-                                    {% endif %}
-                                </p>
-                                <p><i class="fas fa-file-alt"></i> {{ item.text_data }}</p>
-                                {% if item.files %}
-                                    <ul>
-                                        {% for file in item.files %}
-                                            <li>
-                                                <i class="fas fa-file-pdf"></i> 
-                                                <a href="#" onclick="openPdfModal('{{ url_for('static', filename='uploads/' + file) }}')">{{ file }}</a>
-                                            </li>
-                                        {% endfor %}
-                                    </ul>
-                                {% endif %}
-                            </div>
-                        {% endfor %}
-                    {% else %}
-                        <div class="ugc-notice">
-                            <p><i class="fas fa-info-circle"></i> No notices available at this time.</p>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-            <div class="read-more">
-                <a href="{{ url_for('ugc') }}"><i class="fas fa-eye"></i> View All Notices</a>
-            </div>
-        </div>
-
-        <!-- PDF Viewer Modal -->
-        <div id="pdfModal" class="pdf-modal">
-            <span class="close-modal" onclick="closePdfModal()">&times;</span>
-            <div class="pdf-modal-content">
-                <iframe id="pdfIframe" class="pdf-iframe" src=""></iframe>
-            </div>
-        </div>
-
-    <!-- Monthly Engagement Section in Yellow -->
-    <div class="engagement-section">
-        <div class="container">
-            <div class="engagement-title">
-                <h2>Academic Engagements & Events</h2>
-                <p>Discover our monthly academic activities, workshops, and events that shape the future of education</p>
-            </div>
-            
-            <div class="engagement-grid">
-                {% if monthly_records %}
-                    {% for record in monthly_records %}
-                        <div class="engagement-card">
-                            <div class="engagement-card-header">
-                                {{ record.heading }}
-                            </div>
-                            <div class="engagement-card-body">
-                                <p>{{ record.description }}</p>
-                                
-                                <div class="engagement-meta">
-                                    <span><i class="fas fa-university"></i> {{ record.school }}</span>
-                                    <span><i class="fas fa-building"></i> {{ record.department }}</span>
-                                </div>
-                                
-                                {% if record.tags %}
-                                <div class="engagement-tags">
-                                    {% for tag in record.tags %}
-                                        <span class="engagement-tag">{{ tag }}</span>
-                                    {% endfor %}
-                                </div>
-                                {% endif %}
-                                
-                                {% if record.files %}
-                                    {% for file in record.files %}
-                                        {% if file.endswith('.pdf') %}
-                                            <div class="engagement-media">
-                                                <div class="pdf-preview">
-                                                    <i class="fas fa-file-pdf"></i>
-                                                    <span>PDF Document</span>
-                                                </div>
-                                                <div class="engagement-media-overlay">
-                                                    <a href="{{ url_for('static', filename='uploads/' ~ file) }}" target="_blank" class="media-view-btn">View PDF</a>
-                                                </div>
-                                            </div>
-                                        {% elif file.endswith('.jpg') or file.endswith('.png') or file.endswith('.jpeg') %}
-                                            <div class="engagement-media">
-                                                <img src="{{ url_for('static', filename='uploads/' ~ file) }}" alt="Event Image">
-                                                <div class="engagement-media-overlay">
-                                                    <a href="{{ url_for('static', filename='uploads/' ~ file) }}" target="_blank" class="media-view-btn">View Image</a>
-                                                </div>
-                                            </div>
-                                        {% endif %}
-                                    {% endfor %}
-                                {% endif %}
-                            </div>
-                        </div>
-                    {% endfor %}
-                {% else %}
-                    <div class="engagement-card" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
-                        <h3>No engagement records available at this time</h3>
-                        <p>Check back later for upcoming academic events and activities</p>
-                    </div>
-                {% endif %}
-            </div>
-            
-            <div style="text-align: center; margin-top: 50px;">
-                <a href="{{ url_for('monthlyengagement') }}" class="hero-btn" style="background-color: var(--jain-blue); border-color: var(--jain-blue);">
-                    <i class="fas fa-calendar-check"></i> View All Engagements
-                </a>
-            </div>
+        <div class="about-content">
+            <p>Jain (Deemed-to-be University) is one of India's premier academic institutions, committed to excellence in education and research. With a rich legacy of academic distinction, the University has established itself as a trusted leader in higher education.</p>
+            <p>Our expert faculty and dedicated teams are committed to maintaining the highest standards while delivering quality education tailored to individual goals. The university offers a wide range of undergraduate, postgraduate, and doctoral programs across various disciplines.</p>
+            <p>With state-of-the-art infrastructure, innovative teaching methodologies, and strong industry collaborations, Jain University provides an enriching learning environment that fosters intellectual growth and professional development.</p>
+            <p>Recognized by UGC and accredited with 'A' grade by NAAC, Jain University continues to set benchmarks in higher education with its cutting-edge research, global collaborations, and commitment to student success.</p>
         </div>
     </div>
-
-    <!-- Stats Section -->
-    <div class="stats-section">
-        <div class="stats-container">
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <div class="stat-number">30+</div>
-                    <div class="stat-label">Years of Excellence</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">150+</div>
-                    <div class="stat-label">Programs Offered</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">500+</div>
-                    <div class="stat-label">Faculty Members</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">40,000+</div>
-                    <div class="stat-label">Students Enrolled</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <footer>
-        <div class="footer-wave"></div>
-        <div class="footer-container">
-            <div class="footer-column">
-                <h3>Jain (Deemed-to-be University)</h3>
-                <p>Empowering innovation through education, research, and holistic development.</p>
-                <div class="social-links">
-                    <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-                    <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-                    <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-                    <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
-                    <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
-                </div>
-            </div>
-            <div class="footer-column">
-                <h3>Quick Links</h3>
-                <ul>
-                    <li><i class="fas fa-chevron-right"></i><a href="#">Home</a></li>
-                    <li><i class="fas fa-chevron-right"></i><a href="{{ url_for('about') }}">About Us</a></li>
-                    <li><i class="fas fa-chevron-right"></i><a href="{{ url_for('ugc') }}">UGC Requirement</a></li>
-                    <li><i class="fas fa-chevron-right"></i><a href="{{ url_for('monthlyengagement') }}">Monthly Engagement</a></li>
-                    <li><i class="fas fa-chevron-right"></i><a href="{{ url_for('contact') }}">Contact Us</a></li>
-                </ul>
-            </div>
-            <div class="footer-column">
-                <h3>Contact Info</h3>
-                <ul>
-                    <li><i class="fas fa-map-marker-alt"></i><a href="#">#34, 1st Cross, JC Road, Bangalore - 560027</a></li>
-                    <li><i class="fas fa-phone-alt"></i><a href="tel:+918023456789">+91 80 2345 6789</a></li>
-                    <li><i class="fas fa-envelope"></i><a href="mailto:info@jainuniversity.ac.in">info@jainuniversity.ac.in</a></li>
-                    <li><i class="fas fa-clock"></i> Mon-Fri: 9:00 AM - 5:00 PM</li>
-                </ul>
-            </div>
-        </div>
-        <div class="copyright">
-            &copy; 2023 Jain (Deemed-to-be University). All Rights Reserved.
-        </div>
-    </footer>
-
-    <script>
-        // Current Date Display
-        function updateCurrentDate() {
-            const now = new Date();
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            const dateString = now.toLocaleDateString('en-US', options);
-            document.getElementById('currentDate').innerHTML = `<i class="fas fa-calendar-day"></i> Today is ${dateString}`;
-        }
-        
-        // Call the function when the page loads
-        updateCurrentDate();
-
-        // Carousel functionality
-        let slideIndex = 1;
-        showSlides(slideIndex);
-
-        function currentSlide(n) {
-            showSlides(slideIndex = n);
-        }
-
-        function showSlides(n) {
-            let i;
-            let slides = document.getElementsByClassName("carousel-slide");
-            let dots = document.getElementsByClassName("carousel-dot");
-            
-            if (n > slides.length) {slideIndex = 1}
-            if (n < 1) {slideIndex = slides.length}
-            
-            for (i = 0; i < slides.length; i++) {
-                slides[i].classList.remove("active");
-            }
-            
-            for (i = 0; i < dots.length; i++) {
-                dots[i].classList.remove("active");
-            }
-            
-            slides[slideIndex-1].classList.add("active");
-            dots[slideIndex-1].classList.add("active");
-        }
-
-        // Auto-advance carousel
-        setInterval(function() {
-            slideIndex++;
-            if (slideIndex > document.getElementsByClassName("carousel-slide").length) {
-                slideIndex = 1;
-            }
-            showSlides(slideIndex);
-        }, 5000);
-
-        // PDF Modal functionality
-        function openPdfModal(pdfUrl) {
-            const modal = document.getElementById('pdfModal');
-            const iframe = document.getElementById('pdfIframe');
-            iframe.src = pdfUrl;
-            modal.style.display = 'block';
-            setTimeout(() => {
-                modal.classList.add('show');
-            }, 10);
-        }
-
-        function closePdfModal() {
-            const modal = document.getElementById('pdfModal');
-            const iframe = document.getElementById('pdfIframe');
-            modal.classList.remove('show');
-            setTimeout(() => {
-                modal.style.display = 'none';
-                iframe.src = '';
-            }, 300);
-        }
-
-        // Close modal when clicking outside
-        window.onclick = function(event) {
-            const modal = document.getElementById('pdfModal');
-            if (event.target == modal) {
-                closePdfModal();
-            }
-        }
-    </script>
-</body>
-</html>

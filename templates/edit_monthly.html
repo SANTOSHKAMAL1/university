@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Edit Monthly Engagement</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --jain-blue: #003366;
+      --jain-gold: #FFD700;
+      --light-bg: #f4f4f4;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background-color: var(--light-bg);
+      margin: 0;
+      padding: 0;
+    }
+
+    .header-container {
+      background-color: var(--jain-blue);
+      color: white;
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo-section {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .logo-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .logo-text h1 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
+
+    .logo-text span {
+      font-size: 0.8rem;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+
+    .nav-links a:hover {
+      color: var(--jain-gold);
+    }
+
+    .main-container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    .form-container {
+      background: white;
+      padding: 2rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      margin-bottom: 2rem;
+    }
+
+    .records-container {
+      background: white;
+      padding: 2rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .checkbox-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+
+    .checkbox-container label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .record-card {
+      padding: 1.5rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.5rem;
+      margin-bottom: 1rem;
+      background-color: #f8fafc;
+    }
+
+    .record-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-container">
+      <div class="logo-section">
+        <img src="{{ url_for('static', filename='images/logo12345.png') }}" alt="Jain University Logo" width="60">
+        <div class="logo-text">
+          <h1>Jain University</h1>
+          <span>Jain Group Of Institutions</span>
+        </div>
+      </div>
+      <nav class="nav-links">
+        <a href="{{ url_for('about') }}">About Us</a>
+        <a href="{{ url_for('edit_ugc') }}">UGC Requirement</a>
+        <a href="{{ url_for('edit_monthly') }}">Edit Monthly Engagement</a>
+        <a href="{{ url_for('logout') }}" class="logout-link" onclick="return confirm('Are you sure you want to logout?')">Logout</a>
+        <p> {{ session['email'] }}</p>  
+      </nav>
+    </div>
+  </header>
+
+  <div class="main-container">
+    <div class="form-container">
+      <h1 class="text-2xl font-bold mb-6">Monthly Engagement Upload</h1>
+
+      <form method="POST" enctype="multipart/form-data" class="space-y-4">
+        <div>
+          <input type="text" name="heading" placeholder="Heading" class="border p-2 w-full rounded" required>
+        </div>
+
+        <div>
+          <textarea name="description" placeholder="Description" class="border p-2 w-full rounded" rows="4" required></textarea>
+        </div>
+
+        <div>
+          <label class="block mb-2 font-medium">School (optional)</label>
+          <select name="school" id="school" class="border p-2 w-full rounded" onchange="updateDepartments()">
+            <option value="">Select School</option>
+            <option value="School of Computer Science and Engineering">School of Computer Science and Engineering</option>
+            <option value="School of Aerospace Engineering">School of Aerospace Engineering</option>
+            <option value="School of Engineering & Technology">School of Engineering & Technology</option>
+            <option value="School of Humanities and Social Sciences">School of Humanities and Social Sciences</option>
+            <option value="School of Law">School of Law</option>
+            <option value="School of Sciences">School of Sciences</option>
+            <option value="School of Allied Healthcare and Sciences">School of Allied Healthcare and Sciences</option>
+            <option value="School of Sports Science & Research">School of Sports Science & Research</option>
+            <option value="School of Computer Science & Information Technology">School of Computer Science & Information Technology</option>
+            <option value="School of Commerce">School of Commerce</option>
+            <option value="CMS Business School">CMS Business School</option>
+            <option value="School of Aviation and Aerospace Management">School of Aviation and Aerospace Management</option>
+            <option value="School of Design, Media and Creative Arts">School of Design, Media and Creative Arts</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block mb-2 font-medium">Department (optional)</label>
+          <select name="department" id="department" class="border p-2 w-full rounded">
+            <option value="">Select Department</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block mb-2 font-medium">Tags (choose 1 or more)</label>
+          <div class="checkbox-container">
+            <label><input type="checkbox" name="tags" value="Sports"> Sports</label>
+            <label><input type="checkbox" name="tags" value="Education"> Education</label>
+            <label><input type="checkbox" name="tags" value="Examination"> Examination</label>
+            <label><input type="checkbox" name="tags" value="Events"> Events</label>
+            <label><input type="checkbox" name="tags" value="Co-Curricular Activities"> Co-Curricular Activities</label>
+          </div>
+        </div>
+
+        <div>
+          <label class="block mb-2 font-medium">Upload Image (optional)</label>
+          <input type="file" name="files" accept="image/*" class="block w-full">
+        </div>
+
+        <div>
+          <label class="block mb-2 font-medium">Upload PDF (optional)</label>
+          <input type="file" name="files" accept="application/pdf" class="block w-full">
+        </div>
+
+        <button type="submit" class="bg-blue-500 text-white px-4 py-2 mt-4 rounded hover:bg-blue-600 w-full">Submit</button>
+      </form>
+    </div>
+
+    <div class="records-container">
+      <h2 class="text-xl font-semibold mb-6">Uploaded Records</h2>
+
+      <div class="space-y-4">
+        {% for record in records %}
+        <div class="record-card">
+          <div class="mb-4">
+            <h3 class="text-lg font-bold">{{ record.heading }}</h3>
+            <p class="text-gray-700 mt-1">{{ record.description }}</p>
+          </div>
+
+          <div class="text-sm text-gray-600 space-y-1">
+            <p><strong>School:</strong> {{ record.school or 'N/A' }}</p>
+            <p><strong>Department:</strong> {{ record.department or 'N/A' }}</p>
+            <p><strong>Tags:</strong> 
+              {% for tag in record.tags %}
+                <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mr-1 mb-1">{{ tag }}</span>
+              {% endfor %}
+            </p>
+          </div>
+
+          {% if record.files %}
+            <div class="mt-4">
+              <strong class="block mb-2">Uploaded Files:</strong>
+              <ul class="space-y-2">
+                {% for file in record.files %}
+                  {% if file.endswith('.pdf') %}
+                    <li><a href="{{ url_for('uploaded_file', filename=file) }}" target="_blank" class="text-red-600 hover:underline flex items-center gap-1">📄 {{ file }}</a></li>
+                  {% else %}
+                    <li>
+                      <img src="{{ url_for('uploaded_file', filename=file) }}" alt="{{ file }}" class="w-40 h-auto rounded border mt-2">
+                    </li>
+                  {% endif %}
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+
+          <div class="record-actions">
+            <a href="{{ url_for('edit_record', record_id=record._id) }}" class="text-blue-600 hover:underline flex items-center gap-1">✏️ Edit</a>
+            <form method="POST" action="{{ url_for('delete_record', record_id=record._id) }}" onsubmit="return confirm('Are you sure you want to delete this entry?');">
+              <button type="submit" class="text-red-600 hover:underline flex items-center gap-1">🗑️ Delete</button>
+            </form>
+          </div>
+
+          <div class="text-xs text-gray-500 mt-3">
+            Uploaded at: {{ record.uploaded_at.strftime('%Y-%m-%d %H:%M:%S') }} by {{ record.admin_email }}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const departments = {
+      "School of Computer Science and Engineering": [
+        "Department of Computer Science and Engineering",
+        "Department of Information Science and Engineering"
+      ],
+      "School of Aerospace Engineering": [
+        "Department of Aerospace Engineering"
+      ],
+      "School of Engineering & Technology": [
+        "Department of Civil Engineering",
+        "Department of Mechanical Engineering",
+        "Department of Electrical and Electronics Engineering",
+        "Department of Electronics and Communication Engineering",
+        "Department of Food Technology"
+      ],
+      "School of Humanities and Social Sciences": [
+        "Department of Humanities & Social Sciences",
+        "Department of Economics",
+        "Department of Performing Arts and Cultural Studies",
+        "Department of Languages",
+        "Department of Journalism and Mass Communication"
+      ],
+      "School of Law": ["Department of Law"],
+      "School of Sciences": [
+        "Department of Chemistry and Biochemistry",
+        "Department of Biotechnology and Genetics",
+        "Department of Microbiology and Botany",
+        "Department of Data Analytics and Mathematical Science",
+        "Department of Forensic Science",
+        "Department of Physics and Electronics",
+        "Department of Psychology and Allied Sciences"
+      ],
+      "School of Allied Healthcare and Sciences": ["Department of Allied Healthcare and Sciences"],
+      "School of Sports Science & Research": ["Department of Allied Healthcare and Sciences"],
+      "School of Computer Science & Information Technology": [
+        "Department of Computer Science and IT",
+        "Department of Animation and Virtual Reality"
+      ],
+      "School of Commerce": ["Department of Commerce"],
+      "CMS Business School": ["Department of Management Studies"],
+      "School of Aviation and Aerospace Management": ["Department of Management Studies"],
+      "School of Design, Media and Creative Arts": [
+        "Department of Design",
+        "Department of Art and Design"
+      ]
+    };
+
+    function updateDepartments() {
+      const schoolSelect = document.getElementById("school");
+      const departmentSelect = document.getElementById("department");
+
+      const selectedSchool = schoolSelect.value;
+      const deptOptions = departments[selectedSchool] || [];
+
+      departmentSelect.innerHTML = `<option value="">Select Department</option>`;
+      deptOptions.forEach(dept => {
+        const option = document.createElement("option");
+        option.value = dept;
+        option.textContent = dept;
+        departmentSelect.appendChild(option);
+      });
+    }
+  </script>
+</body>
+</html>
