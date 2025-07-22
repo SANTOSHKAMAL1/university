@@ -81,40 +81,84 @@
             font-weight: 300;
         }
 
-        nav {
-            display: flex;
-            align-items: center;
-        }
+      /* Base styles */
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    background-color: white;
+    padding: 10px 20px;
+}
 
-        nav a {
-            color: var(--jain-blue);
-            text-decoration: none;
-            padding: 10px 15px;
-            font-weight: 500;
-            transition: var(--transition);
-            margin: 0 5px;
-            position: relative;
-            font-size: 15px;
-        }
-        
-        nav a:hover {
-            color: var(--jain-gold);
-        }
-        
-        nav a::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background-color: var(--jain-gold);
-            transition: var(--transition);
-        }
-        
-        nav a:hover::after {
-            width: 100%;
-        }
+.nav-toggle {
+    display: none;
+    background: none;
+    font-size: 24px;
+    border: none;
+    cursor: pointer;
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
+}
+
+/* Links styling (from your code) */
+nav a {
+    color: var(--jain-blue);
+    text-decoration: none;
+    padding: 10px 15px;
+    font-weight: 500;
+    transition: var(--transition);
+    margin: 0 5px;
+    position: relative;
+    font-size: 15px;
+}
+
+nav a:hover {
+    color: var(--jain-gold);
+}
+
+nav a::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background-color: var(--jain-gold);
+    transition: var(--transition);
+}
+
+nav a:hover::after {
+    width: 100%;
+}
+
+/* Responsive (Mobile) */
+@media (max-width: 768px) {
+    .nav-toggle {
+        display: block;
+    }
+
+    .nav-links {
+        flex-direction: column;
+        width: 100%;
+        display: none;
+    }
+
+    .nav-links.show {
+        display: flex;
+    }
+
+    nav a {
+        padding: 10px;
+        width: 100%;
+        text-align: center;
+        border-top: 1px solid #eee;
+    }
+}
+
         
         .login-btn {
             background-color: var(--jain-blue);
@@ -1303,9 +1347,13 @@
    <header>
         <div class="header-container">
             <div class="logo-section">
+                
                 <img src="{{ url_for('static', filename='images/logo12345.png') }}" onerror="this.src='https://via.placeholder.com/60?text=JU+Logo';" alt="Jain University Logo">
-              
-            </div>
+                
+             <button class="nav-toggle" aria-label="Toggle navigation">
+    ☰
+  </button>
+          
             <nav class="nav-links">
                 <a href="#">Home</a>
                 <a href="{{ url_for('about') }}">About Us</a>
@@ -1526,7 +1574,7 @@
             <div class="footer-column">
                 <h3>Contact Info</h3>
                 <ul>
-                    <li><i class="fas fa-map-marker-alt"></i><a href="#">#34, 1st Cross, JC Road, Bangalore - 560027</a></li>
+                    <li><i class="fas fa-map-marker-alt"></i><a href="#"> Bangalore - 560069</a></li>
                     <li><i class="fas fa-phone-alt"></i><a href="tel:+918023456789">+91 80 2345 6789</a></li>
                     <li><i class="fas fa-envelope"></i><a href="mailto:info@jainuniversity.ac.in">info@jainuniversity.ac.in</a></li>
                     <li><i class="fas fa-clock"></i> Mon-Fri: 9:00 AM - 5:00 PM</li>
@@ -1534,11 +1582,20 @@
             </div>
         </div>
         <div class="copyright">
-            &copy; 2023 Jain (Deemed-to-be University). All Rights Reserved.
+            &copy; 2025 Jain (Deemed-to-be University). All Rights Reserved.
         </div>
     </footer>
 
     <script>
+
+        const toggle = document.querySelector(".nav-toggle");
+    const navLinks = document.querySelector(".nav-links");
+
+    toggle.addEventListener("click", () => {
+        navLinks.classList.toggle("show");
+    });
+
+    
         // Current Date Display
         function updateCurrentDate() {
             const now = new Date();
