@@ -7,6 +7,11 @@ from datetime import datetime
 import os
 from config import Config
 from utils import get_indian_time # MongoDB URI in config.py
+from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask_mail import Mail, Message
+from flask_pymongo import PyMongo
+from werkzeug.security import generate_password_hash
+import random
 
 # Initialize app
 app = Flask(__name__)
@@ -28,6 +33,16 @@ db = mongo.db
 # Allowed file type check
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+# Mail Config (use your Gmail + app password)
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = 'info.loginpanel@gmail.com'
+app.config['MAIL_PASSWORD'] = 'wedbfepklgtwtugf'  # no spaces
+
+mail = Mail(app)
 
 # ===================== Pages =====================
 
@@ -64,6 +79,7 @@ def edit_ugc():
     if request.method == 'POST':
         text_data = request.form.get('text_data')
         external_link = request.form.get('external_link')
+        selected_categories = request.form.getlist('categories')  # ✅ collect selected checkboxes
         files = request.files.getlist('files')
 
         uploaded_files = []
@@ -75,15 +91,15 @@ def edit_ugc():
                 uploaded_files.append(filename)
 
         db.ugc_data.insert_one({
-    "admin_email": session['email'],
-    "uploaded_at": get_indian_time(),  # 👈 use IST time
-    "text_data": text_data,
-    "external_link": external_link,
-    "files": uploaded_files
-})
+            "admin_email": session['email'],
+            "uploaded_at": get_indian_time(),
+            "categories": selected_categories,  # ✅ store categories
+            "text_data": text_data,
+            "external_link": external_link,
+            "files": uploaded_files
+        })
 
-
-        flash('UGC data, link, and files uploaded successfully.')
+        flash('UGC/University Notice data uploaded successfully.')
         return redirect(url_for('edit_ugc'))
 
     records = list(db.ugc_data.find().sort('uploaded_at', -1))
@@ -98,11 +114,12 @@ def edit_ugc_record(record_id):
     record = db.ugc_data.find_one({'_id': ObjectId(record_id)})
 
     if request.method == 'POST':
-        updated_text = request.form.get('text_data')
-        updated_link = request.form.get('external_link')
+        text_data = request.form.get('text_data')
+        external_link = request.form.get('external_link')
+        selected_categories = request.form.getlist('categories')
         files = request.files.getlist('files')
 
-        updated_files = record.get('files', [])
+        updated_files = record.get('files', [])  # Keep existing files
 
         for file in files:
             if file and allowed_file(file.filename):
@@ -111,19 +128,22 @@ def edit_ugc_record(record_id):
                 file.save(filepath)
                 updated_files.append(filename)
 
+        # ✅ Update the record, don’t insert new
         db.ugc_data.update_one(
             {'_id': ObjectId(record_id)},
             {'$set': {
-                'text_data': updated_text,
-                'external_link': updated_link,
+                'text_data': text_data,
+                'external_link': external_link,
+                'categories': selected_categories,
                 'files': updated_files
             }}
         )
 
-        flash("UGC record updated successfully.")
+        flash('UGC/University Notice data updated successfully.')
         return redirect(url_for('edit_ugc'))
 
     return render_template('edit_ugc_record.html', record=record)
+
 
 
 from bson.objectid import ObjectId
@@ -232,24 +252,65 @@ def delete_record(record_id):
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    if 'step' not in session:
+        session['step'] = 1
+
     if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
+        # Step 1: Email input and OTP send
+        if session['step'] == 1:
+            email = request.form.get('email')
+            if not email.endswith('@jainuniversity.ac.in'):
+                flash('Only @jainuniversity.ac.in emails allowed', 'error')
+                return redirect(url_for('register'))
 
-        if not email.endswith('@jainuniversity.ac.in'):
-            flash('Only @jainuniversity.ac.in emails allowed', 'error')
+            if db.users.find_one({'email': email}):
+                flash('Email already registered', 'error')
+                return redirect(url_for('register'))
+
+            otp = str(random.randint(100000, 999999))
+            session['email'] = email
+            session['otp'] = otp
+
+            msg = Message('Your OTP for Registration', sender=app.config['MAIL_USERNAME'], recipients=[email])
+            msg.body = f'Your OTP is: {otp}\nPlease use this to complete your registration.'
+            mail.send(msg)
+
+            session['step'] = 2
+            flash('OTP sent to your email. Please check and enter it.', 'info')
             return redirect(url_for('register'))
 
-        if db.users.find_one({'email': email}):
-            flash('Email already registered', 'error')
-            return redirect(url_for('register'))
+        # Step 2: OTP Verification
+        elif session['step'] == 2:
+            entered_otp = request.form.get('otp')
+            if entered_otp == session.get('otp'):
+                session['otp_verified'] = True
+                session['step'] = 3
+                flash('OTP verified. Now set your password.', 'success')
+                return redirect(url_for('register'))
+            else:
+                flash('Invalid OTP. Please try again.', 'error')
+                return redirect(url_for('register'))
 
-        hashed_pw = generate_password_hash(password)
-        db.users.insert_one({'email': email, 'password': hashed_pw, 'role': 'user'})
-        flash('Registration successful. Please log in.', 'success')
-        return redirect(url_for('login'))
+        # Step 3: Set password
+        elif session['step'] == 3:
+            password = request.form.get('password')
+            hashed_pw = generate_password_hash(password)
+            db.users.insert_one({'email': session['email'], 'password': hashed_pw, 'role': 'user'})
 
-    return render_template('register.html')
+            # Clear session
+            session.pop('email', None)
+            session.pop('otp', None)
+            session.pop('step', None)
+            session.pop('otp_verified', None)
+
+            flash('Registration complete! You can now log in.', 'success')
+            return redirect(url_for('login'))
+
+    # For GET or re-render
+    otp_sent = session.get('step', 1) >= 2
+    otp_verified = session.get('step', 1) == 3
+    return render_template('register.html', otp_sent=otp_sent, otp_verified=otp_verified)
+
 
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():

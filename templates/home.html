@@ -81,84 +81,92 @@
             font-weight: 300;
         }
 
-      /* Base styles */
-nav {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    background-color: white;
-    padding: 10px 20px;
-}
+        /* Navigation */
+        .nav-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--jain-blue);
+            margin-left: auto;
+            padding: 10px;
+        }
 
-.nav-toggle {
-    display: none;
-    background: none;
-    font-size: 24px;
-    border: none;
-    cursor: pointer;
-}
+        .nav-links {
+            display: flex;
+            align-items: center;
+        }
 
-.nav-links {
-    display: flex;
-    align-items: center;
-}
+        nav a {
+            color: var(--jain-blue);
+            text-decoration: none;
+            padding: 10px 15px;
+            font-weight: 500;
+            transition: var(--transition);
+            margin: 0 5px;
+            position: relative;
+            font-size: 15px;
+        }
 
-/* Links styling (from your code) */
-nav a {
-    color: var(--jain-blue);
-    text-decoration: none;
-    padding: 10px 15px;
-    font-weight: 500;
-    transition: var(--transition);
-    margin: 0 5px;
-    position: relative;
-    font-size: 15px;
-}
+        nav a:hover {
+            color: var(--jain-gold);
+        }
 
-nav a:hover {
-    color: var(--jain-gold);
-}
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: var(--jain-gold);
+            transition: var(--transition);
+        }
 
-nav a::after {
-    content: '';
-    position: absolute;
-    bottom: -5px;
-    left: 0;
-    width: 0;
-    height: 2px;
-    background-color: var(--jain-gold);
-    transition: var(--transition);
-}
+        nav a:hover::after {
+            width: 100%;
+        }
 
-nav a:hover::after {
-    width: 100%;
-}
+        /* Responsive Navigation */
+        @media (max-width: 768px) {
+            .header-container {
+                flex-wrap: wrap;
+            }
+            
+            .nav-toggle {
+                display: block;
+            }
 
-/* Responsive (Mobile) */
-@media (max-width: 768px) {
-    .nav-toggle {
-        display: block;
-    }
+            .nav-links {
+                flex-direction: column;
+                width: 100%;
+                display: none;
+                background: white;
+                padding: 10px 0;
+                margin-top: 15px;
+                border-top: 1px solid #eee;
+            }
 
-    .nav-links {
-        flex-direction: column;
-        width: 100%;
-        display: none;
-    }
+            .nav-links.show {
+                display: flex;
+            }
 
-    .nav-links.show {
-        display: flex;
-    }
+            nav a {
+                width: 100%;
+                text-align: center;
+                padding: 12px;
+                margin: 0;
+                border-bottom: 1px solid #f5f5f5;
+            }
 
-    nav a {
-        padding: 10px;
-        width: 100%;
-        text-align: center;
-        border-top: 1px solid #eee;
-    }
-}
-
+            .login-btn {
+                margin: 10px auto;
+                display: block;
+                width: 80%;
+                text-align: center;
+            }
+        }
         
         .login-btn {
             background-color: var(--jain-blue);
@@ -297,436 +305,190 @@ nav a:hover::after {
             to { opacity: 1; }
         }
         
-        .hero {
-            background: white;
-            color: var(--jain-blue);
-            padding: 60px 20px;
-            text-align: center;
-            position: relative;
-        }
-        
-        .hero h2 {
-            font-size: 2.8rem;
-            margin-bottom: 20px;
-            font-weight: 700;
-        }
-        
-        .hero p {
-            font-size: 1.3rem;
-            max-width: 800px;
-            margin: 0 auto 30px;
-            color: #555;
-        }
-        
-        .hero-btn {
-            display: inline-block;
+        /* University Updates Marquee */
+        .university-updates {
             background-color: var(--jain-blue);
             color: white;
-            padding: 12px 30px;
-            border-radius: 4px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: var(--transition);
-            border: 2px solid var(--jain-blue);
+            padding: 15px 0;
+            margin-top: -5px;
+            overflow: hidden;
         }
         
-        .hero-btn:hover {
-            background-color: transparent;
-            color: var(--jain-blue);
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 60px 20px;
-        }
-        
-        .section-title {
-            text-align: center;
-            margin-bottom: 60px;
-            position: relative;
-        }
-        
-        .section-title h2 {
-            font-size: 2.2rem;
-            color: var(--jain-blue);
-            display: inline-block;
-            padding-bottom: 15px;
-            font-weight: 700;
-        }
-        
-        .section-title h2::after {
-            content: "";
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100px;
-            height: 4px;
-            background: linear-gradient(90deg, var(--jain-blue), var(--jain-gold));
-            border-radius: 2px;
-        }
-
-        /* Features Grid */
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            margin-top: 40px;
-        }
-        
-        .feature-card {
-            background: white;
-            border-radius: 8px;
-            padding: 30px;
-            box-shadow: var(--card-shadow);
-            transition: var(--transition);
-            text-align: center;
-            border-top: 3px solid var(--jain-gold);
-        }
-        
-        .feature-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
-        }
-        
-        .feature-icon {
-            font-size: 2.5rem;
-            color: var(--jain-blue);
-            margin-bottom: 20px;
-        }
-        
-        .feature-card h3 {
-            color: var(--jain-blue);
-            margin-bottom: 15px;
-        }
-        
-        .feature-card p {
-            color: #666;
-        }
-
-        /* Stats Section */
-        .stats-section {
-            background: linear-gradient(135deg, var(--jain-blue) 0%, var(--jain-teal) 100%);
-            padding: 80px 0;
-            color: white;
-            clip-path: polygon(0 15%, 100% 0, 100% 85%, 0% 100%);
-            margin: 80px 0;
-        }
-        
-        .stats-container {
+        .updates-container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 0 20px;
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 30px;
-            text-align: center;
-        }
-        
-        .stat-item {
-            padding: 20px;
-            transition: var(--transition);
-        }
-        
-        .stat-item:hover {
-            transform: translateY(-5px);
-        }
-        
-        .stat-number {
-            font-size: 3rem;
-            font-weight: 700;
-            margin-bottom: 10px;
-            color: var(--jain-gold);
-        }
-        
-        .stat-label {
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
-
-        /* Footer */
-        footer {
-            background: linear-gradient(to right, #111, #222);
-            color: white;
-            padding: 80px 0 20px;
-            position: relative;
-        }
-        
-        .footer-wave {
-            position: absolute;
-            top: -50px;
-            left: 0;
-            width: 100%;
-            height: 50px;
-            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z' opacity='.25' fill='%23f5f5f5'%3E%3C/path%3E%3Cpath d='M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z' fill='%23f5f5f5'%3E%3C/path%3E%3C/svg%3E");
-            background-size: cover;
-            background-repeat: no-repeat;
-        }
-        
-        .footer-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 40px;
-            padding: 0 20px;
-        }
-        
-        .footer-column h3 {
-            color: var(--jain-gold);
-            margin-top: 0;
-            font-size: 1.3rem;
-            position: relative;
-            padding-bottom: 15px;
-        }
-        
-        .footer-column h3::after {
-            content: "";
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 50px;
-            height: 3px;
-            background: linear-gradient(to right, var(--jain-red), var(--jain-gold));
-            border-radius: 3px;
-        }
-        
-        .footer-column ul {
-            list-style: none;
-            padding: 0;
-            margin-top: 20px;
-        }
-        
-        .footer-column ul li {
-            margin-bottom: 12px;
-        }
-        
-        .footer-column ul li a {
-            color: #ccc;
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-        
-        .footer-column ul li a:hover {
-            color: var(--jain-gold);
-        }
-        
-        .social-links {
-            display: flex;
-            gap: 15px;
-            margin-top: 25px;
-        }
-        
-        .social-links a {
-            color: white;
-            background-color: rgba(255, 255, 255, 0.1);
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
             display: flex;
             align-items: center;
-            justify-content: center;
-            transition: var(--transition);
         }
         
-        .social-links a:hover {
+        .updates-label {
             background-color: var(--jain-gold);
             color: var(--jain-blue);
-            transform: translateY(-5px);
+            padding: 8px 15px;
+            border-radius: 4px;
+            font-weight: 600;
+            margin-right: 20px;
+            white-space: nowrap;
         }
         
-        .copyright {
-            text-align: center;
-            padding-top: 40px;
-            margin-top: 40px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            color: #999;
-            font-size: 0.9rem;
+        .updates-marquee {
+            flex-grow: 1;
+            overflow: hidden;
         }
-
-        /* Responsive Styles */
-        @media (max-width: 992px) {
-            .hero h2 {
-                font-size: 2.3rem;
-            }
-            
-            .hero p {
-                font-size: 1.1rem;
-            }
-            
-            .section-title h2 {
-                font-size: 1.8rem;
-            }
-            
-            .carousel-quote {
-                font-size: 1.5rem;
-            }
+        
+        .updates-marquee p {
+            margin: 0;
+            white-space: nowrap;
+            display: inline-block;
+            padding-left: 100%;
+            animation: marquee 20s linear infinite;
         }
-
-        @media (max-width: 768px) {
-            .header-container {
-                flex-direction: column;
-                text-align: center;
-            }
-            
-            .logo-section {
-                justify-content: center;
-                margin-bottom: 15px;
-            }
-            
-            nav {
-                margin-top: 15px;
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-            
-            nav a {
-                padding: 8px 12px;
-                font-size: 0.9rem;
-            }
-            
-            .login-btn {
-                margin: 10px 0 0 0;
-            }
-            
-            .hero {
-                padding: 60px 15px;
-            }
-            
-            .hero h2 {
-                font-size: 1.8rem;
-            }
-            
-            .carousel-quote {
-                font-size: 1.3rem;
-            }
-            
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
+        
+        .updates-marquee a {
+            color: white;
+            text-decoration: none;
+            margin-right: 30px;
+            transition: var(--transition);
         }
-
-        @media (max-width: 576px) {
-            .hero h2 {
-                font-size: 1.6rem;
-            }
-            
-            .section-title h2 {
-                font-size: 1.5rem;
-            }
-            
-            .features-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .footer-container {
-                grid-template-columns: 1fr;
-                gap: 30px;
-            }
-            
-            .carousel-quote {
-                font-size: 1.1rem;
-            }
+        
+        .updates-marquee a:hover {
+            color: var(--jain-gold);
         }
-
-        /* Animated Notices Section */
+        
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-100%); }
+        }
+        
+        /* Notices Section */
+        .notices-container {
+            display: flex;
+            gap: 30px;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            margin: 40px auto;
+            max-width: 1200px;
+            padding: 0 20px;
+        }
+        
         .notice-section {
-            width: 100%;
-            max-height: 400px;
+            flex: 1;
+            min-width: 300px;
             background: white;
-            border-radius: 15px;
+            border-radius: 8px;
             box-shadow: var(--card-shadow);
             overflow: hidden;
-            margin: 30px 0;
             transition: var(--transition);
-            border: 1px solid rgba(0,0,0,0.1);
+            border: 1px solid rgba(0,0,0,0.05);
+            position: relative;
+            height: 350px;
         }
-
+        
         .notice-section:hover {
             transform: translateY(-5px);
             box-shadow: 0 15px 30px -10px rgba(0, 51, 102, 0.4);
         }
-
+        
         .card-header {
             background: linear-gradient(135deg, var(--jain-red) 0%, #ff6b6b 100%);
-            padding: 15px;
+            padding: 12px 15px;
             font-weight: 600;
             color: white;
-            font-size: 1.2rem;
+            font-size: 1rem;
             text-align: center;
             letter-spacing: 0.5px;
         }
-
+        
         .scrolling-content {
-            height: 250px;
+            height: 300px;
             overflow: hidden;
             position: relative;
-            padding: 0;
         }
-
-        .notices-container {
+        
+        .scrolling-wrapper {
             position: absolute;
             width: 100%;
             animation: scrollNotices 30s linear infinite;
         }
-
+        
         @keyframes scrollNotices {
             0% { transform: translateY(0); }
-            100% { transform: translateY(calc(-100% + 250px)); }
+            100% { transform: translateY(calc(-100% + 300px)); }
         }
-
+        
         .ugc-notice {
-            padding: 20px;
+            padding: 12px;
             border-bottom: 1px solid rgba(0,0,0,0.05);
-            margin: 0;
+            margin-bottom: 10px;
             transition: var(--transition);
         }
-
+        
         .ugc-notice:hover {
             background-color: rgba(0, 51, 102, 0.03);
         }
-
+        
         .ugc-notice:last-child {
             border-bottom: none;
         }
-
+        
         .ugc-notice p {
             margin: 8px 0;
             color: #555;
+            font-size: 0.9rem;
         }
-
+        
         .ugc-notice ul {
-            margin: 12px 0 0 25px;
+            margin: 10px 0 0 20px;
             padding: 0;
         }
-
+        
         .ugc-notice li {
             margin-bottom: 5px;
+            font-size: 0.85rem;
         }
-
+        
         .ugc-notice a {
             color: var(--jain-blue);
             text-decoration: none;
             font-weight: 500;
             transition: var(--transition);
             display: inline-block;
+            font-size: 0.85rem;
         }
-
+        
         .ugc-notice a:hover {
             color: var(--jain-red);
-            transform: translateX(5px);
+            transform: translateX(3px);
         }
-
+        
+        .read-more {
+            text-align: center;
+            padding: 12px;
+            background: linear-gradient(to right, #f5f5f5, #e9e9e9);
+        }
+        
+        .read-more a {
+            display: inline-block;
+            border: 2px solid var(--jain-blue);
+            border-radius: 50px;
+            padding: 8px 20px;
+            color: var(--jain-blue);
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+            background-color: white;
+            font-size: 0.9rem;
+        }
+        
+        .read-more a:hover {
+            background-color: var(--jain-blue);
+            color: white;
+            border-color: var(--jain-blue);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 51, 102, 0.2);
+        }
+        
         /* PDF Viewer Modal */
         .pdf-modal {
             display: none;
@@ -740,11 +502,12 @@ nav a:hover::after {
             opacity: 0;
             transition: opacity 0.3s ease;
         }
-
+        
         .pdf-modal.show {
             opacity: 1;
+            display: block;
         }
-
+        
         .pdf-modal-content {
             position: absolute;
             top: 50%;
@@ -758,17 +521,17 @@ nav a:hover::after {
             box-shadow: 0 15px 50px rgba(0,0,0,0.3);
             transition: transform 0.3s ease;
         }
-
+        
         .pdf-modal.show .pdf-modal-content {
             transform: translate(-50%, -50%) scale(1);
         }
-
+        
         .pdf-iframe {
             width: 100%;
             height: 100%;
             border: none;
         }
-
+        
         .close-modal {
             position: absolute;
             top: 15px;
@@ -781,76 +544,12 @@ nav a:hover::after {
             transition: var(--transition);
             text-shadow: 0 2px 5px rgba(0,0,0,0.3);
         }
-
+        
         .close-modal:hover {
             color: var(--jain-gold);
             transform: rotate(90deg);
         }
-
-        .read-more {
-            text-align: center;
-            padding: 15px;
-            background: linear-gradient(to right, #f5f5f5, #e9e9e9);
-        }
-
-        .read-more a {
-            display: inline-block;
-            border: 2px solid var(--jain-blue);
-            border-radius: 50px;
-            padding: 10px 25px;
-            color: var(--jain-blue);
-            text-decoration: none;
-            font-weight: 600;
-            transition: var(--transition);
-            background-color: white;
-        }
-
-        .read-more a:hover {
-            background-color: var(--jain-blue);
-            color: white;
-            border-color: var(--jain-blue);
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0, 51, 102, 0.2);
-        }
-
-        /* About Content */
-        .about-content {
-            background: white;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: var(--card-shadow);
-            line-height: 1.8;
-            position: relative;
-            overflow: hidden;
-            border: 1px solid rgba(0,0,0,0.05);
-        }
-
-        .about-content::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 5px;
-            height: 100%;
-            background: linear-gradient(to bottom, var(--jain-blue), var(--jain-gold));
-        }
-
-        .about-content p {
-            margin-bottom: 20px;
-            color: #444;
-            position: relative;
-            padding-left: 20px;
-        }
-
-        .about-content p::before {
-            content: "•";
-            position: absolute;
-            left: 0;
-            color: var(--jain-gold);
-            font-size: 1.5rem;
-            line-height: 0;
-        }
-
+        
         /* Monthly Engagement Section */
         .engagement-section {
             margin: 80px 0;
@@ -858,12 +557,12 @@ nav a:hover::after {
             padding: 60px 0;
             clip-path: polygon(0 5%, 100% 0, 100% 95%, 0% 100%);
         }
-
+        
         .engagement-title {
             text-align: center;
             margin-bottom: 50px;
         }
-
+        
         .engagement-title h2 {
             font-size: 2.2rem;
             color: var(--jain-blue);
@@ -871,7 +570,7 @@ nav a:hover::after {
             display: inline-block;
             padding-bottom: 15px;
         }
-
+        
         .engagement-title h2::after {
             content: "";
             position: absolute;
@@ -883,7 +582,7 @@ nav a:hover::after {
             background: linear-gradient(90deg, var(--jain-blue), var(--jain-gold));
             border-radius: 2px;
         }
-
+        
         .engagement-title p {
             color: var(--jain-blue);
             max-width: 700px;
@@ -891,14 +590,14 @@ nav a:hover::after {
             font-size: 1.1rem;
             opacity: 0.9;
         }
-
+        
         .engagement-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
             gap: 30px;
             margin-top: 40px;
         }
-
+        
         .engagement-card {
             background: white;
             border-radius: 15px;
@@ -908,12 +607,12 @@ nav a:hover::after {
             border: 1px solid rgba(0,0,0,0.05);
             position: relative;
         }
-
+        
         .engagement-card:hover {
             transform: translateY(-10px);
             box-shadow: 0 15px 35px -10px rgba(0, 51, 102, 0.4);
         }
-
+        
         .engagement-card-header {
             background: linear-gradient(135deg, var(--jain-blue) 0%, var(--jain-teal) 100%);
             color: white;
@@ -921,16 +620,16 @@ nav a:hover::after {
             font-size: 1.3rem;
             font-weight: 600;
         }
-
+        
         .engagement-card-body {
             padding: 20px;
         }
-
+        
         .engagement-card p {
             color: #555;
             margin-bottom: 15px;
         }
-
+        
         .engagement-meta {
             display: flex;
             justify-content: space-between;
@@ -940,14 +639,14 @@ nav a:hover::after {
             color: #777;
             font-size: 0.9rem;
         }
-
+        
         .engagement-tags {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
             margin-top: 15px;
         }
-
+        
         .engagement-tag {
             background-color: rgba(0, 51, 102, 0.1);
             color: var(--jain-blue);
@@ -956,25 +655,25 @@ nav a:hover::after {
             font-size: 0.8rem;
             font-weight: 500;
         }
-
+        
         .engagement-media {
             margin-top: 15px;
             border-radius: 10px;
             overflow: hidden;
             position: relative;
         }
-
+        
         .engagement-media img {
             width: 100%;
             height: 200px;
             object-fit: cover;
             transition: var(--transition);
         }
-
+        
         .engagement-card:hover .engagement-media img {
             transform: scale(1.05);
         }
-
+        
         .engagement-media-overlay {
             position: absolute;
             top: 0;
@@ -988,11 +687,11 @@ nav a:hover::after {
             opacity: 0;
             transition: var(--transition);
         }
-
+        
         .engagement-card:hover .engagement-media-overlay {
             opacity: 1;
         }
-
+        
         .media-view-btn {
             color: white;
             background-color: rgba(255, 255, 255, 0.2);
@@ -1003,13 +702,13 @@ nav a:hover::after {
             backdrop-filter: blur(5px);
             transition: var(--transition);
         }
-
+        
         .media-view-btn:hover {
             background-color: var(--jain-gold);
             color: var(--jain-blue);
             border-color: var(--jain-gold);
         }
-
+        
         .pdf-preview {
             height: 200px;
             background-color: #f0f0f0;
@@ -1019,12 +718,12 @@ nav a:hover::after {
             flex-direction: column;
             color: var(--jain-blue);
         }
-
+        
         .pdf-preview i {
             font-size: 3rem;
             margin-bottom: 10px;
         }
-
+        
         /* Stats Section */
         .stats-section {
             background: linear-gradient(135deg, var(--jain-blue) 0%, var(--jain-teal) 100%);
@@ -1033,41 +732,41 @@ nav a:hover::after {
             clip-path: polygon(0 15%, 100% 0, 100% 85%, 0% 100%);
             margin: 80px 0;
         }
-
+        
         .stats-container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 0 20px;
         }
-
+        
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 30px;
             text-align: center;
         }
-
+        
         .stat-item {
             padding: 20px;
             transition: var(--transition);
         }
-
+        
         .stat-item:hover {
             transform: translateY(-5px);
         }
-
+        
         .stat-number {
             font-size: 3rem;
             font-weight: 700;
             margin-bottom: 10px;
             color: var(--jain-gold);
         }
-
+        
         .stat-label {
             font-size: 1.1rem;
             opacity: 0.9;
         }
-
+        
         /* Footer */
         footer {
             background: linear-gradient(to right, #111, #222);
@@ -1075,7 +774,7 @@ nav a:hover::after {
             padding: 80px 0 20px;
             position: relative;
         }
-
+        
         .footer-wave {
             position: absolute;
             top: -50px;
@@ -1188,28 +887,6 @@ nav a:hover::after {
             z-index: 1;
         }
 
-        /* Animations */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-
-        .pulse {
-            animation: pulse 2s infinite;
-        }
-
         /* Responsive Styles */
         @media (max-width: 992px) {
             .hero h2 {
@@ -1227,99 +904,71 @@ nav a:hover::after {
             .engagement-grid {
                 grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             }
-            
-            .carousel {
-                height: 400px;
-            }
-            
-            .carousel-content h2 {
-                font-size: 2.5rem;
-            }
-            
-            .carousel-content p {
-                font-size: 1.2rem;
-            }
         }
 
         @media (max-width: 768px) {
             .header-container {
+                flex-wrap: wrap;
+            }
+            
+            .nav-toggle {
+                display: block;
+            }
+
+            .nav-links {
                 flex-direction: column;
+                width: 100%;
+                display: none;
+                background: white;
+                padding: 10px 0;
+                margin-top: 15px;
+                border-top: 1px solid #eee;
+            }
+
+            .nav-links.show {
+                display: flex;
+            }
+
+            nav a {
+                width: 100%;
+                text-align: center;
+                padding: 12px;
+                margin: 0;
+                border-bottom: 1px solid #f5f5f5;
+            }
+
+            .login-btn {
+                margin: 10px auto;
+                display: block;
+                width: 80%;
                 text-align: center;
             }
             
-            .logo-section {
-                justify-content: center;
-                margin-bottom: 15px;
+            .updates-container {
+                flex-direction: column;
+                align-items: flex-start;
             }
             
-            nav {
-                margin-top: 15px;
-                justify-content: center;
+            .updates-label {
+                margin-bottom: 10px;
+                margin-right: 0;
             }
             
-            nav a {
-                padding: 8px 12px;
-                font-size: 0.9rem;
+            .updates-marquee {
+                width: 100%;
             }
             
-            .login-btn {
-                margin-left: 0;
-                margin-top: 10px;
+            .notices-container {
+                flex-direction: column;
             }
             
-            .hero {
-                padding: 80px 15px;
-                clip-path: polygon(0 0, 100% 0, 100% 95%, 0 100%);
-                margin-bottom: -30px;
-            }
-
-            .hero h2 {
-                font-size: 1.8rem;
-            }
-
-            .hero p {
-                font-size: 1rem;
-            }
-
-            .pdf-modal-content {
-                width: 95%;
-                height: 70%;
-            }
-            
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .carousel {
-                height: 350px;
-            }
-            
-            .carousel-content h2 {
-                font-size: 2rem;
-            }
-            
-            .carousel-content p {
-                font-size: 1rem;
+            .notice-section {
+                width: 100%;
+                margin-bottom: 20px;
             }
         }
 
         @media (max-width: 576px) {
-            .hero {
-                padding: 60px 15px;
-            }
-            
-            .hero h2 {
-                font-size: 1.6rem;
-            }
-            
-            .section-title h2, .engagement-title h2 {
-                font-size: 1.5rem;
-            }
-
-            .notices-container {
-                animation-duration: 60s;
-            }
-            
             .engagement-grid {
                 grid-template-columns: 1fr;
             }
@@ -1332,27 +981,23 @@ nav a:hover::after {
                 grid-template-columns: 1fr;
                 gap: 30px;
             }
-            
-            .carousel {
-                height: 300px;
-            }
-            
-            .carousel-content h2 {
-                font-size: 1.8rem;
-            }
         }
     </style>
 </head>
 <body>
-   <header>
+    <header>
         <div class="header-container">
             <div class="logo-section">
-                
                 <img src="{{ url_for('static', filename='images/logo12345.png') }}" onerror="this.src='https://via.placeholder.com/60?text=JU+Logo';" alt="Jain University Logo">
-                
-             <button class="nav-toggle" aria-label="Toggle navigation">
-    ☰
-  </button>
+                <div class="logo-text">
+                    <h1>Jain (Deemed-to-be University)</h1>
+                    <span>Excellence in Education</span>
+                </div>
+            </div>
+            
+            <button class="nav-toggle" aria-label="Toggle navigation">
+                <i class="fas fa-bars"></i>
+            </button>
           
             <nav class="nav-links">
                 <a href="#">Home</a>
@@ -1402,54 +1047,145 @@ nav a:hover::after {
         </div>
     </section>
 
-    <div class="container">
-        <!-- UGC Notices Section with Auto-scrolling -->
+    <!-- University Updates Marquee -->
+    <div class="university-updates">
+        <div class="updates-container">
+            <div class="updates-label">
+                <i class="fas fa-bullhorn"></i> University Updates
+            </div>
+            <div class="updates-marquee">
+                <p>
+                    {% for item in records if 'University Notice' in item.categories %}
+                        {% if loop.index <= 5 %}
+                            <a href="#">{{ item.text_data }}</a> •
+                        {% endif %}
+                    {% endfor %}
+                    <a href="{{ url_for('ugc') }}">View all updates</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notices Section -->
+    <div class="notices-container">
+        <!-- UGC Notices Section -->
         <div class="notice-section">
             <div class="card-header">
-                <i class="fas fa-bullhorn"></i> Latest UGC Notices & Announcements
+                <i class="fas fa-bullhorn"></i> UGC Notices & Announcements
             </div>
             <div class="scrolling-content">
-                <div class="notices-container">
-                    {% if records %}
-                        {% for item in records %}
-                            <div class="ugc-notice">
-                                <p><i class="fas fa-calendar-alt"></i> Published on: 
-                                    {% if item.uploaded_at %}
-                                        {{ item.uploaded_at.strftime('%d/%m/%Y') if item.uploaded_at.__class__.__name__ == 'datetime' else item.uploaded_at }}
-                                    {% endif %}
-                                </p>
-                                <p><i class="fas fa-file-alt"></i> {{ item.text_data }}</p>
-                                {% if item.files %}
-                                    <ul>
-                                        {% for file in item.files %}
-                                            <li>
-                                                <i class="fas fa-file-pdf"></i> 
-                                                <a href="#" onclick="openPdfModal('{{ url_for('static', filename='uploads/' + file) }}')">{{ file }}</a>
-                                            </li>
-                                        {% endfor %}
-                                    </ul>
-                                {% endif %}
-                            </div>
-                        {% endfor %}
-                    {% else %}
+                <div class="scrolling-wrapper">
+                    {% for item in records if 'UGC' in item.categories %}
                         <div class="ugc-notice">
-                            <p><i class="fas fa-info-circle"></i> No notices available at this time.</p>
+                            <p><i class="fas fa-calendar-alt"></i> Published on:
+                                {% if item.uploaded_at %}
+                                    {{ item.uploaded_at.strftime('%d/%m/%Y') if item.uploaded_at.__class__.__name__ == 'datetime' else item.uploaded_at }}
+                                {% endif %}
+                            </p>
+                            <p><i class="fas fa-file-alt"></i> {{ item.text_data }}</p>
+                            {% if item.files %}
+                                <ul>
+                                    {% for file in item.files %}
+                                        <li>
+                                            <i class="fas fa-file-pdf"></i>
+                                            <a href="#" onclick="openPdfModal('{{ url_for('uploaded_file', filename=file) }}')">{{ file }}</a>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
                         </div>
-                    {% endif %}
+                    {% endfor %}
+                    <!-- Duplicate content for seamless looping -->
+                    {% for item in records if 'UGC' in item.categories %}
+                        <div class="ugc-notice">
+                            <p><i class="fas fa-calendar-alt"></i> Published on:
+                                {% if item.uploaded_at %}
+                                    {{ item.uploaded_at.strftime('%d/%m/%Y') if item.uploaded_at.__class__.__name__ == 'datetime' else item.uploaded_at }}
+                                {% endif %}
+                            </p>
+                            <p><i class="fas fa-file-alt"></i> {{ item.text_data }}</p>
+                            {% if item.files %}
+                                <ul>
+                                    {% for file in item.files %}
+                                        <li>
+                                            <i class="fas fa-file-pdf"></i>
+                                            <a href="#" onclick="openPdfModal('{{ url_for('uploaded_file', filename=file) }}')">{{ file }}</a>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
                 </div>
             </div>
             <div class="read-more">
-                <a href="{{ url_for('ugc') }}"><i class="fas fa-eye"></i> View All Notices</a>
+                <a href="{{ url_for('ugc') }}"><i class="fas fa-eye"></i> View All UGC Notices</a>
             </div>
         </div>
 
-        <!-- PDF Viewer Modal -->
-        <div id="pdfModal" class="pdf-modal">
-            <span class="close-modal" onclick="closePdfModal()">&times;</span>
-            <div class="pdf-modal-content">
-                <iframe id="pdfIframe" class="pdf-iframe" src=""></iframe>
+        <!-- University Notices Section -->
+        <div class="notice-section">
+            <div class="card-header">
+                <i class="fas fa-university"></i> University Notices
+            </div>
+            <div class="scrolling-content">
+                <div class="scrolling-wrapper">
+                    {% for item in records if 'University Notice' in item.categories %}
+                        <div class="ugc-notice">
+                            <p><i class="fas fa-calendar-alt"></i> Published on:
+                                {% if item.uploaded_at %}
+                                    {{ item.uploaded_at.strftime('%d/%m/%Y') if item.uploaded_at.__class__.__name__ == 'datetime' else item.uploaded_at }}
+                                {% endif %}
+                            </p>
+                            <p><i class="fas fa-file-alt"></i> {{ item.text_data }}</p>
+                            {% if item.files %}
+                                <ul>
+                                    {% for file in item.files %}
+                                        <li>
+                                            <i class="fas fa-file-pdf"></i>
+                                            <a href="#" onclick="openPdfModal('{{ url_for('uploaded_file', filename=file) }}')">{{ file }}</a>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                    <!-- Duplicate content for seamless looping -->
+                    {% for item in records if 'University Notice' in item.categories %}
+                        <div class="ugc-notice">
+                            <p><i class="fas fa-calendar-alt"></i> Published on:
+                                {% if item.uploaded_at %}
+                                    {{ item.uploaded_at.strftime('%d/%m/%Y') if item.uploaded_at.__class__.__name__ == 'datetime' else item.uploaded_at }}
+                                {% endif %}
+                            </p>
+                            <p><i class="fas fa-file-alt"></i> {{ item.text_data }}</p>
+                            {% if item.files %}
+                                <ul>
+                                    {% for file in item.files %}
+                                        <li>
+                                            <i class="fas fa-file-pdf"></i>
+                                            <a href="#" onclick="openPdfModal('{{ url_for('uploaded_file', filename=file) }}')">{{ file }}</a>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="read-more">
+                <a href="{{ url_for('ugc') }}"><i class="fas fa-eye"></i> View All University Notices</a>
             </div>
         </div>
+    </div>
+
+    <!-- PDF Viewer Modal -->
+    <div id="pdfModal" class="pdf-modal">
+        <span class="close-modal" onclick="closePdfModal()">&times;</span>
+        <div class="pdf-modal-content">
+            <iframe id="pdfIframe" class="pdf-iframe" src=""></iframe>
+        </div>
+    </div>
 
     <!-- Monthly Engagement Section in Yellow -->
     <div class="engagement-section">
@@ -1587,15 +1323,14 @@ nav a:hover::after {
     </footer>
 
     <script>
-
+        // Mobile Navigation Toggle
         const toggle = document.querySelector(".nav-toggle");
-    const navLinks = document.querySelector(".nav-links");
+        const navLinks = document.querySelector(".nav-links");
 
-    toggle.addEventListener("click", () => {
-        navLinks.classList.toggle("show");
-    });
+        toggle.addEventListener("click", () => {
+            navLinks.classList.toggle("show");
+        });
 
-    
         // Current Date Display
         function updateCurrentDate() {
             const now = new Date();
@@ -1649,10 +1384,7 @@ nav a:hover::after {
             const modal = document.getElementById('pdfModal');
             const iframe = document.getElementById('pdfIframe');
             iframe.src = pdfUrl;
-            modal.style.display = 'block';
-            setTimeout(() => {
-                modal.classList.add('show');
-            }, 10);
+            modal.classList.add('show');
         }
 
         function closePdfModal() {
@@ -1660,7 +1392,6 @@ nav a:hover::after {
             const iframe = document.getElementById('pdfIframe');
             modal.classList.remove('show');
             setTimeout(() => {
-                modal.style.display = 'none';
                 iframe.src = '';
             }, 300);
         }
@@ -1672,6 +1403,17 @@ nav a:hover::after {
                 closePdfModal();
             }
         }
+
+        // Pause scrolling on hover for notice sections
+        document.querySelectorAll('.scrolling-wrapper').forEach(wrapper => {
+            wrapper.addEventListener('mouseenter', () => {
+                wrapper.style.animationPlayState = 'paused';
+            });
+            
+            wrapper.addEventListener('mouseleave', () => {
+                wrapper.style.animationPlayState = 'running';
+            });
+        });
     </script>
 </body>
 </html>

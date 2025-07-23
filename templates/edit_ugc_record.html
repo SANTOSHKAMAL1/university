@@ -353,6 +353,24 @@
         <label class="block font-semibold mb-1">Upload More Files (Images or PDFs)</label>
         <input type="file" name="files" multiple class="w-full border border-gray-300 p-2 rounded">
       </div>
+<!-- Category Checkboxes -->
+<div>
+  <label class="block font-semibold mb-1">Select Categories:</label>
+  <div class="flex gap-4">
+    <label class="inline-flex items-center">
+      <input type="checkbox" name="categories" value="UGC"
+        {% if 'UGC' in record.categories %}checked{% endif %} class="mr-2">
+      UGC
+    </label>
+    <label class="inline-flex items-center">
+      <input type="checkbox" name="categories" value="University Notice"
+        {% if 'University Notice' in record.categories %}checked{% endif %} class="mr-2">
+      University Notice
+    </label>
+  </div>
+</div>
+
+
 
       <!-- Submit Button -->
       <div class="pt-4">

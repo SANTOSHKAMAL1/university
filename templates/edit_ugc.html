@@ -388,7 +388,7 @@
         </div>
     </nav>
 
-    <!-- Main Content -->
+   <!-- Main Content -->
     <div class="main-content">
         {% with messages = get_flashed_messages() %}
           {% if messages %}
@@ -411,6 +411,18 @@
                     <label for="external_link">External Link (optional):</label>
                     <input type="url" name="external_link" id="external_link" placeholder="https://example.com">
                 </div>
+<div class="form-group">
+    <label>Select Categories:</label>
+    <div style="display: flex; gap: 20px;">
+        <label><input type="checkbox" name="categories" value="UGC"> UGC</label>
+        <label><input type="checkbox" name="categories" value="University Notice"> University Notice</label>
+    </div>
+</div>
+
+
+
+
+
 
                 <div class="form-group">
                     <label for="files">Upload Files (PDF, JPG, PNG):</label>
@@ -420,17 +432,51 @@
                 <button type="submit">Upload</button>
             </form>
         </div>
+<div style="margin-bottom: 1rem;">
+  <label for="categoryFilter">Filter by Category:</label>
+  <select id="categoryFilter" onchange="filterRecords()">
+    <option value="all">All</option>
+    <option value="UGC">UGC</option>
+    <option value="University Notice">University Notice</option>
+  </select>
+
+  <label for="sortOrder" style="margin-left: 1rem;">Sort by:</label>
+  <select id="sortOrder" onchange="filterRecords()">
+    <option value="newest">Newest First</option>
+    <option value="oldest">Oldest First</option>
+  </select>
+</div>
 
         <!-- Uploaded Records -->
         <div class="records-section">
             <h2>Previous Uploads</h2>
 
             {% if records %}
-                {% for item in records %}
-                    <div class="ugc-record">
-                        <h3>Uploaded By: {{ item.admin_email }}</h3>
-                        <p><strong>Date:</strong> {{ item.uploaded_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
-                        <p><strong>Description:</strong> {{ item.text_data }}</p>
+               {% for item in records %}
+    <div class="ugc-record"
+         data-category="{{ ' '.join(item.categories) }}"
+         data-date="{{ item.uploaded_at.strftime('%Y-%m-%dT%H:%M:%S') }}">
+        <h3>Uploaded By: {{ item.admin_email }}</h3>
+        <p><strong>Date:</strong> {{ item.uploaded_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+        <p><strong>Description:</strong> {{ item.text_data }}</p>
+
+        {% if item.categories %}
+        <p><strong>Categories:</strong>
+            {% for category in item.categories %}
+                {% if category == 'UGC' %}
+                    <span style="background-color: #003366; color: white; padding: 4px 8px; border-radius: 4px; font-size: 13px; margin-right: 5px;">UGC</span>
+                {% elif category == 'University Notice' %}
+                    <span style="background-color: #FFD700; color: #003366; padding: 4px 8px; border-radius: 4px; font-size: 13px; margin-right: 5px;">University Notice</span>
+                {% else %}
+                    <span style="background-color: gray; color: white; padding: 4px 8px; border-radius: 4px; font-size: 13px; margin-right: 5px;">{{ category }}</span>
+                {% endif %}
+        {% endfor %}
+    </p>
+{% endif %}
+
+
+
+
 
                         {% if item.external_link %}
                             <p><strong>External Link:</strong> 
@@ -462,7 +508,7 @@
                                Delete
                             </a>
                         </div>
-                        
+
                         <p style="margin-top: 10px; font-size: 0.9rem; color: #666;">Uploaded by {{ item.admin_email }}</p>
                     </div>
                 {% endfor %}
@@ -473,17 +519,43 @@
     </div>
 
     <script>
-        // Toggle mobile menu
-        function toggleMenu() {
-            const navLinks = document.getElementById('navLinks');
-            navLinks.classList.toggle('active');
-        }
+function filterRecords() {
+  const category = document.getElementById('categoryFilter').value;
+  const sortOrder = document.getElementById('sortOrder').value;
+  const records = Array.from(document.querySelectorAll('.ugc-record'));
 
-        // Toggle upload form visibility
-        function toggleUploadForm() {
-            const form = document.getElementById('uploadForm');
-            form.style.display = form.style.display === 'none' ? 'block' : 'none';
-        }
-    </script>
+  // Filter by category
+  records.forEach(record => {
+    const recordCategory = record.dataset.category;
+    if (category === 'all' || recordCategory.includes(category)) {
+      record.style.display = '';
+    } else {
+      record.style.display = 'none';
+    }
+  });
+
+  // Sort by date
+  const container = document.querySelector('.records-section');
+  const sorted = records.sort((a, b) => {
+    const dateA = new Date(a.dataset.date);
+    const dateB = new Date(b.dataset.date);
+    return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+  });
+
+  // Append sorted
+  sorted.forEach(record => container.appendChild(record));
+}
+
+function toggleMenu() {
+  const navLinks = document.getElementById('navLinks');
+  navLinks.classList.toggle('active');
+}
+
+function toggleUploadForm() {
+  const form = document.getElementById('uploadForm');
+  form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+</script>
+
 </body>
 </html>
