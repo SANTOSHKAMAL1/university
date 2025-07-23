@@ -182,16 +182,16 @@
             <label><input type="checkbox" name="tags" value="Co-Curricular Activities"> Co-Curricular Activities</label>
           </div>
         </div>
+<div>
+  <label class="block mb-2 font-medium">Upload Image (optional)</label>
+  <input type="file" name="image_file" accept="image/*" class="block w-full">
+</div>
 
-        <div>
-          <label class="block mb-2 font-medium">Upload Image (optional)</label>
-          <input type="file" name="files" accept="image/*" class="block w-full">
-        </div>
+<div>
+  <label class="block mb-2 font-medium">Upload PDF (optional)</label>
+  <input type="file" name="pdf_file" accept="application/pdf" class="block w-full">
+</div>
 
-        <div>
-          <label class="block mb-2 font-medium">Upload PDF (optional)</label>
-          <input type="file" name="files" accept="application/pdf" class="block w-full">
-        </div>
 
         <button type="submit" class="bg-blue-500 text-white px-4 py-2 mt-4 rounded hover:bg-blue-600 w-full">Submit</button>
       </form>
@@ -234,6 +234,24 @@
               </ul>
             </div>
           {% endif %}
+
+          {% if record.files %}
+  <ul>
+    {% for file in record.files %}
+      {% if file.endswith(('.jpg', '.jpeg', '.png', '.gif')) %}
+        <li>
+          <img src="{{ url_for('static', filename='uploads/' + file) }}" alt="Image" style="max-width: 200px;">
+        </li>
+      {% elif file.endswith('.pdf') %}
+        <li>
+          <a href="{{ url_for('static', filename='uploads/' + file) }}" target="_blank">
+            <i class="fas fa-file-pdf"></i> {{ file }}
+          </a>
+        </li>
+      {% endif %}
+    {% endfor %}
+  </ul>
+{% endif %}
 
           <div class="record-actions">
             <a href="{{ url_for('edit_record', record_id=record._id) }}" class="text-blue-600 hover:underline flex items-center gap-1">✏️ Edit</a>

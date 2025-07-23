@@ -173,6 +173,7 @@ def edit_monthly():
         department = request.form.get('department', '')
         tags = request.form.getlist('tags')  # Checkboxes
 
+       
         image_file = request.files.get('image_file')
         pdf_file = request.files.get('pdf_file')
 
@@ -193,6 +194,7 @@ def edit_monthly():
             "school": school,
             "department": department,
             "tags": tags,
+            
             "files": uploaded_files
         })
 
