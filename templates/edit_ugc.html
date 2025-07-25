@@ -5,88 +5,79 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jain University - UGC Requirements</title>
     <style>
-        :root {
-            --jain-blue: #003366;
+      :root {
+            --jain-blue: #04043a;
             --jain-gold: #FFD700;
-            --light-bg: #f4f4f4;
+            --jain-light: #F5F5F5;
+            --jain-dark: #222;
         }
 
         * {
-            margin: 0;
-            padding: 0;
             box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-            background-color: var(--light-bg);
-            padding-top: 70px; /* Space for fixed navbar */
-            color: #333;
-            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background: var(--jain-light);
         }
 
-        /* Navigation Bar */
-        .navbar {
-            background-color: var(--jain-blue);
-            color: white;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            z-index: 1000;
-            padding: 10px 20px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        header {
+            background-color: white;
+            color: var(--jain-blue);
+            padding: 15px 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
-        .nav-container {
+        .header-container {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            max-width: 1200px;
-            margin: 0 auto;
+            flex-wrap: wrap;
         }
 
         .logo-section {
             display: flex;
             align-items: center;
-            gap: 15px;
         }
 
         .logo-section img {
-            height: 40px;
-            width: auto;
+            height: 50px;
+            margin-right: 10px;
         }
 
         .logo-text h1 {
-            font-size: 1.2rem;
+            font-size: 20px;
             margin: 0;
-            color: white;
+            color: var(--jain-blue);
         }
 
         .logo-text span {
-            font-size: 0.7rem;
-            color: white;
-            display: block;
+            font-size: 12px;
+            color: #666;
         }
 
-        .nav-links {
+        nav.nav-links {
             display: flex;
-            align-items: center;
-            gap: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
         }
 
-        .nav-links a {
-            color: white;
+        nav a {
+            color: var(--jain-blue);
             text-decoration: none;
+            padding: 8px 12px;
             font-weight: 500;
-            transition: color 0.3s;
-            padding: 5px 0;
+            border-radius: 6px;
+            transition: background-color 0.3s ease;
         }
 
-        .nav-links a:hover {
+        nav a:hover {
+            background-color: rgba(4, 4, 58, 0.1);
             color: var(--jain-gold);
         }
-
         .logout-link {
             background-color: rgba(255, 255, 255, 0.1);
             padding: 5px 10px;
@@ -306,82 +297,52 @@
         }
 
         /* Responsive Styles */
-        @media (max-width: 768px) {
-            .hamburger {
-                display: block;
-            }
-
-            .nav-links {
-                position: fixed;
-                top: 70px;
-                left: -100%;
-                width: 100%;
-                height: calc(100vh - 70px);
-                background-color: var(--jain-blue);
+         @media (max-width: 768px) {
+            .header-container {
                 flex-direction: column;
-                align-items: center;
-                padding: 20px 0;
-                gap: 15px;
-                transition: left 0.3s ease;
+                align-items: flex-start;
+                gap: 10px;
             }
 
-            .nav-links.active {
-                left: 0;
+            nav.nav-links {
+                flex-direction: column;
+                align-items: flex-start;
+                width: 100%;
+                padding-top: 10px;
             }
 
-            .logo-text h1 {
-                font-size: 1rem;
+            table, th, td {
+                font-size: 14px;
             }
 
-            .logo-text span {
-                font-size: 0.6rem;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .logo-section img {
-                height: 30px;
+            .action-btn {
+                padding: 6px 10px;
+                font-size: 13px;
             }
 
-            .logo-text h1 {
-                font-size: 0.9rem;
-            }
-
-            .logo-text span {
-                display: none;
-            }
-
-            .navbar {
-                padding: 10px 15px;
-            }
-
-            .main-content {
-                padding: 0 15px;
-            }
-
-            .ugc-record {
-                padding: 15px;
+            input, select {
+                font-size: 13px;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Navigation Bar -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="logo-section">
-                <img src="{{ url_for('static', filename='images/logo12345.png') }}" alt="Jain University Logo">
-                <div class="logo-text">
-                    <h1>Jain University</h1>
-                    <span>Jain Group Of Institutions</span>
-                </div>
+
+<header>
+    <div class="header-container">
+        <div class="logo-section">
+            <img src="{{ url_for('static', filename='images/jain.png') }}" alt="Jain University Logo">
+            <div class="logo-text">
+                <h1> Office of Academics(Admin) </h1>
+                
             </div>
-            
-            <div class="hamburger" onclick="toggleMenu()">☰</div>
-            
-            <div class="nav-links" id="navLinks">
-                <a href="{{ url_for('about') }}">About Us</a>
-                <a href="{{ url_for('edit_ugc') }}">UGC Requirement</a>
+        </div>
+        <nav class="nav-links">
+
+          
+       
+                
+                
                 <a href="{{ url_for('edit_monthly') }}">Monthly Engagement</a>
                 <a href="{{ url_for('logout') }}" class="logout-link" onclick="return confirm('Are you sure you want to logout?')">Logout</a>
             </div>

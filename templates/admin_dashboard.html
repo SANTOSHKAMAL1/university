@@ -4,22 +4,31 @@
     <meta charset="UTF-8">
     <title>Admin Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --jain-blue: #003366;
-            --jain-gold: #ffd700;
+            --jain-blue: #04043a;
+            --jain-gold: #FFD700;
+            --jain-light: #F5F5F5;
+            --jain-dark: #222;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
         }
 
         body {
-            font-family: Arial, sans-serif;
-            margin: 30px;
-            background-color: #f8f8f8;
+            margin: 0;
+            padding: 0;
+            background: var(--jain-light);
         }
 
         header {
-            background-color: var(--jain-blue);
-            color: white;
-            padding: 15px 30px;
+            background-color: white;
+            color: var(--jain-blue);
+            padding: 15px 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         .header-container {
@@ -35,48 +44,49 @@
         }
 
         .logo-section img {
-            height: 60px;
-            margin-right: 15px;
+            height: 50px;
+            margin-right: 10px;
         }
 
         .logo-text h1 {
-            font-size: 22px;
+            font-size: 20px;
             margin: 0;
-            line-height: 1.2;
+            color: var(--jain-blue);
         }
 
         .logo-text span {
-            font-size: 14px;
-            color: #ccc;
+            font-size: 12px;
+            color: #666;
         }
 
-        nav {
+        nav.nav-links {
             display: flex;
-            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
         }
 
         nav a {
-            color: white;
+            color: var(--jain-blue);
             text-decoration: none;
-            padding: 10px 15px;
+            padding: 8px 12px;
             font-weight: 500;
-            transition: all 0.3s ease;
-            border-radius: 4px;
+            border-radius: 6px;
+            transition: background-color 0.3s ease;
         }
 
         nav a:hover {
-            background-color: rgba(255, 255, 255, 0.2);
+            background-color: rgba(4, 4, 58, 0.1);
             color: var(--jain-gold);
         }
 
         .logout-link {
-            color: #ff9999 !important;
-            font-weight: bold;
+            color: #c0392b;
         }
 
         .logout-link:hover {
-            color: #ff6666 !important;
-            text-decoration: underline !important;
+            color: #e74c3c;
+            text-decoration: underline;
         }
 
         h2 {
@@ -87,69 +97,97 @@
 
         p {
             text-align: center;
+            color: #444;
+        }
+
+        .flash-message {
+            color: red;
+            text-align: center;
+            margin: 10px auto;
         }
 
         table {
-            width: 100%;
+            width: 95%;
+            max-width: 1000px;
+            margin: 25px auto;
             border-collapse: collapse;
-            margin-top: 25px;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border-radius: 8px;
+            overflow: hidden;
         }
 
         th, td {
-            border: 1px solid #ccc;
-            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            padding: 12px 16px;
             text-align: left;
         }
 
         th {
-            background-color: #003366;
+            background-color: var(--jain-blue);
             color: white;
         }
 
         tr:nth-child(even) {
-            background-color: #f2f2f2;
+            background-color: #f9f9f9;
         }
 
         input, select {
-            padding: 5px;
+            padding: 8px;
             width: 100%;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
         }
 
         .action-btn {
-            padding: 6px 12px;
-            background-color: #003366;
+            padding: 8px 14px;
+            background-color: var(--jain-blue);
             color: white;
             border: none;
-            cursor: pointer;
-            margin-right: 5px;
             border-radius: 4px;
+            cursor: pointer;
+            margin-right: 6px;
+            font-size: 14px;
+        }
+
+        .action-btn:hover {
+            background-color: #002244;
         }
 
         .delete-btn {
             background-color: #c0392b;
         }
 
-        .flash-message {
-            color: red;
-            text-align: center;
-            margin-top: 10px;
+        .delete-btn:hover {
+            background-color: #a93226;
         }
 
         @media (max-width: 768px) {
             .header-container {
                 flex-direction: column;
-                text-align: center;
+                align-items: flex-start;
+                gap: 10px;
             }
 
-            nav {
-                margin-top: 40px;
+            nav.nav-links {
                 flex-direction: column;
+                align-items: flex-start;
+                width: 100%;
+                padding-top: 10px;
             }
 
-            nav a {
-                display: inline-block;
-                padding: 8px 10px;
-                margin: 5px 0;
+            table, th, td {
+                font-size: 14px;
+            }
+
+            .action-btn {
+                padding: 6px 10px;
+                font-size: 13px;
+            }
+
+            input, select {
+                font-size: 13px;
             }
         }
     </style>
@@ -159,14 +197,14 @@
 <header>
     <div class="header-container">
         <div class="logo-section">
-            <img src="{{ url_for('static', filename='images/logo12345.png') }}" alt="Jain University Logo">
+            <img src="{{ url_for('static', filename='images/jain.png') }}" alt="Jain University Logo">
             <div class="logo-text">
-                <h1>Jain University</h1>
-                <span>Jain Group Of Institutions</span>
+                <h1> Office of Academics(Admin) </h1>
+                
             </div>
         </div>
         <nav class="nav-links">
-            <a href="{{ url_for('about') }}">About Us</a>
+            
             <a href="{{ url_for('edit_ugc') }}">UGC Requirement</a>
             <a href="{{ url_for('edit_monthly') }}">Edit Monthly Engagement</a>
             <a href="{{ url_for('logout') }}" class="logout-link" onclick="return confirm('Are you sure you want to logout?')">Logout</a>
@@ -174,10 +212,8 @@
     </div>
 </header>
 
-
 <h2>Admin Dashboard</h2>
 <p>Welcome, Admin {{ session['email'] }}</p>
-
 
 {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}

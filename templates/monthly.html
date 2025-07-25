@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Office of Academics at Jain University</title>
+
+  <!-- Font Awesome for icons -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  />
+
+  <!-- Google Fonts: Poppins -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    :root {
+      --jain-blue: #003366;
+      --jain-gold: #FFD700;
+      --jain-light: #f5f5f5;
+      --jain-dark: #222;
+      --jain-red: #f35444;
+      --jain-teal: #008080;
+      --jain-purple: #6a5acd;
+      --jain-yellow: #ffc107;
+
+      --transition: all 0.3s ease;
+    }
+
+    /* Reset & base */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--jain-light);
+      color: var(--jain-dark);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+      transition: var(--transition);
+    }
+
+    a:hover,
+    a:focus {
+      color: var(--jain-gold);
+      outline: none;
+    }
+
+    /* HEADER */
+    header {
+      background: white;
+      padding: 15px 30px;
+      box-shadow: 0 2px 15px rgba(0, 51, 102, 0.15);
+      position: sticky;
+      top: 0;
+      z-index: 10000;
+      border-radius: 0 0 30px 30px;
+      transition: box-shadow 0.3s ease;
+      display: flex;
+      justify-content: center;
+    }
+
+    header.scrolled {
+      box-shadow: 0 5px 25px rgba(0, 51, 102, 0.25);
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: saturate(180%) blur(15px);
+    }
+
+    .header-container {
+      max-width: 1200px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    /* Logo */
+    .logo-section {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .logo-section img {
+      height: 60px;
+      width: auto;
+      border-radius: 15px;
+      transition: transform 0.3s ease;
+      box-shadow: 0 5px 15px rgba(0, 51, 102, 0.25);
+    }
+
+    .logo-section:hover img {
+      transform: scale(1.05);
+    }
+
+    .logo-text h1 {
+      margin: 0;
+      font-weight: 700;
+      font-size: 1.4rem;
+      color: var(--jain-blue);
+      user-select: none;
+      letter-spacing: 0.05em;
+    }
+
+    .logo-text span {
+      font-weight: 300;
+      font-size: 0.9rem;
+      color: #666;
+      user-select: none;
+      letter-spacing: 0.025em;
+    }
+
+    /* NAVIGATION */
+    nav {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    nav a {
+      display: inline-block;
+      position: relative;
+      padding: 10px 20px;
+      font-weight: 600;
+      font-size: 1rem;
+      border-radius: 30px;
+      color: var(--jain-blue);
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: var(--transition);
+      background: transparent;
+      user-select: none;
+    }
+
+    nav a:hover,
+    nav a:focus {
+      background: var(--jain-gold);
+      color: var(--jain-blue);
+      box-shadow: 0 0 15px var(--jain-gold);
+      border-color: var(--jain-gold);
+      outline: none;
+      z-index: 10;
+    }
+
+    nav a.active {
+      background: var(--jain-gold);
+      color: var(--jain-blue);
+      box-shadow: 0 0 20px var(--jain-gold);
+      border-color: var(--jain-gold);
+      pointer-events: none;
+    }
+
+    /* Login Button */
+    .login-btn {
+      padding: 10px 25px;
+      background-color: var(--jain-blue);
+      color: white;
+      border-radius: 30px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 2px solid var(--jain-blue);
+      box-shadow: 0 6px 15px rgba(0, 51, 102, 0.35);
+      transition: var(--transition);
+      user-select: none;
+    }
+
+    .login-btn:hover,
+    .login-btn:focus {
+      background-color: var(--jain-gold);
+      color: var(--jain-blue);
+      border-color: var(--jain-gold);
+      box-shadow: 0 8px 20px rgba(255, 215, 0, 0.6);
+      outline: none;
+    }
+
+    /* Mobile Menu Toggle */
+    .nav-toggle {
+      display: none;
+      font-size: 1.6rem;
+      background: transparent;
+      border: none;
+      color: var(--jain-blue);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .nav-toggle:hover,
+    .nav-toggle:focus {
+      color: var(--jain-gold);
+      outline: none;
+    }
+
+    /* Responsive Navigation */
+    @media (max-width: 900px) {
+      header {
+        padding: 10px 20px;
+        border-radius: 0 0 20px 20px;
+      }
+
+      .header-container {
+        flex-wrap: wrap;
+        justify-content: space-between;
+      }
+
+      nav {
+        flex-basis: 100%;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+      }
+
+      nav.show {
+        max-height: 500px; /* enough to show all links */
+      }
+
+      .nav-toggle {
+        display: block;
+      }
+
+      nav a {
+        flex: 1 1 45%;
+        padding: 12px 15px;
+        text-align: center;
+        border-radius: 15px;
+        font-size: 1rem;
+      }
+
+      .login-btn {
+        flex: 1 1 90%;
+        justify-content: center;
+      }
+    }
+
+    /* Monthly Engagement Section placeholder */
+    main {
+      max-width: 1200px;
+      margin: 50px auto 80px;
+      padding: 0 20px;
+    }
+
+    .section-title {
+      text-align: center;
+      font-size: 2.4rem;
+      font-weight: 700;
+      color: var(--jain-blue);
+      margin-bottom: 15px;
+      position: relative;
+      display: inline-block;
+    }
+
+    .section-title::after {
+      content: "";
+      width: 120px;
+      height: 4px;
+      background: var(--jain-gold);
+      display: block;
+      margin: 10px auto 0;
+      border-radius: 2px;
+    }
+
+    /* Footer placeholder */
+    footer {
+      background: var(--jain-blue);
+      color: white;
+      padding: 25px 20px;
+      text-align: center;
+      user-select: none;
+    }
+
+    footer a {
+      color: var(--jain-gold);
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <header id="mainHeader">
+    <div class="header-container">
+      <div class="logo-section" role="banner" tabindex="0">
+        <img
+          src="{{ url_for('static', filename='images/jain.png') }}"
+          alt="Jain University Logo"
+          onerror="this.src='https://via.placeholder.com/60?text=JU+Logo';"
+          aria-hidden="true"
+        />
+        <div class="logo-text">
+          <h1>Office of Academics</h1>
+          <span>Excellence in Education</span>
+        </div>
+      </div>
+
+      <button
+        class="nav-toggle"
+        aria-label="Toggle navigation menu"
+        aria-expanded="false"
+        aria-controls="primary-navigation"
+      >
+        <i class="fas fa-bars"></i>
+      </button>
+
+      <nav id="primary-navigation" role="navigation" aria-label="Primary navigation" >
+        <a href="#" class="active" tabindex="0">Home</a>
+        <a href="{{ url_for('about') }}" tabindex="0">About Us</a>
+        <a href="{{ url_for('ugc') }}" tabindex="0">UGC Requirement</a>
+        <a href="{{ url_for('monthlyengagement') }}" tabindex="0">Monthly Engagement</a>
+        <a href="{{ url_for('contact') }}" tabindex="0">Contact Us</a>
+        <a href="{{ url_for('login') }}" class="login-btn" tabindex="0" aria-label="Login">
+          <i class="fas fa-sign-in-alt" aria-hidden="true"></i> Login
+        </a>
+      </nav>
+    </div>
+  </header>
