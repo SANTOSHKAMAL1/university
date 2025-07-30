@@ -319,7 +319,7 @@
         <!-- School -->
         <div class="form-group">
           <label for="school">School</label>
-          <select name="school" id="school" required class="w-full border px-4 py-2 rounded">
+          <select name="school" id="school" class="w-full border px-4 py-2 rounded">
             <option value="" disabled>Select School</option>
             {% set school_list = [
               "School of Computer Science and Engineering",
@@ -345,7 +345,7 @@
         <!-- Heading -->
         <div class="form-group">
           <label for="heading">Heading</label>
-          <input type="text" name="heading" id="heading" value="{{ record.heading }}" required>
+          <input type="text" name="heading" id="heading" value="{{ record.heading }}">
         </div>
 
         <!-- Description -->
@@ -357,7 +357,7 @@
         <!-- Department -->
         <div class="form-group">
           <label for="department">Department</label>
-          <select name="department" id="department" required>
+          <select name="department" id="department">
             <option value="" disabled {% if not record.department %}selected{% endif %}>Select Department</option>
             {% for dept in departments %}
               <option value="{{ dept }}" {% if record.department == dept %}selected{% endif %}>{{ dept }}</option>

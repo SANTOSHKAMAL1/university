@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, send_from_directory
+import re
+from flask import Flask, json, render_template, request, redirect, url_for, flash, session, send_from_directory
 from flask_pymongo import PyMongo
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -43,6 +44,16 @@ app.config['MAIL_USERNAME'] = 'info.loginpanel@gmail.com'
 app.config['MAIL_PASSWORD'] = 'wedbfepklgtwtugf'  # no spaces
 
 mail = Mail(app)
+def send_newsletter_email(title, content, image_filename, recipients):
+    msg = Message(subject=title, sender=app.config['MAIL_USERNAME'], recipients=recipients)
+    msg.html = content
+
+    if image_filename:
+        with app.open_resource(os.path.join(app.config['UPLOAD_FOLDER'], image_filename)) as img:
+            msg.attach(image_filename, "image/jpeg", img.read())
+
+    mail.send(msg)
+
 
 # ===================== Pages =====================
 
@@ -68,6 +79,10 @@ def monthlyengagement():
 @app.route('/ugc')
 def ugc():
     return render_template('ugc.html')
+
+@app.route('/jainevents')
+def jainevents():
+    return render_template('jainevents.html')
 
 # ===================== UGC Upload =====================
 
@@ -104,6 +119,192 @@ def edit_ugc():
 
     records = list(db.ugc_data.find().sort('uploaded_at', -1))
     return render_template('edit_ugc.html', records=records)
+
+@app.route('/usernewsletters')
+def usernewsletters():
+    newsletters = list(db.newsletters.find().sort('uploaded_at', -1))
+    return render_template('user_newsletters.html', records=newsletters)
+
+
+
+
+@app.route('/newsletter', methods=['GET', 'POST'])
+def newsletter():
+    if session.get('role') != 'admin':
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        title = request.form.get('title')
+        description = request.form.get('description')  # Rich text HTML
+        tags = request.form.getlist('tags')
+        image_file = request.files.get('image')
+        recipient_email_raw = request.form.get('recipient_email', '').strip()
+
+        # ✅ Initialize email_list before using it
+        email_list = []
+
+        # ✅ Email Parsing and Validation
+        def is_valid_email(email):
+            return re.match(r"[^@]+@[^@]+\.[^@]+", email)
+
+        try:
+            # Handle Tagify JSON input
+            parsed = json.loads(recipient_email_raw)
+            email_list = [e['value'].strip() for e in parsed if 'value' in e and is_valid_email(e['value'].strip())]
+        except:
+            # Fallback: comma-separated
+            email_list = [e.strip() for e in recipient_email_raw.split(',') if is_valid_email(e.strip())]
+
+        if not email_list:
+            flash("❌ No valid email addresses provided.", "error")
+            return redirect(url_for('newsletter'))
+
+        # Save image file
+        image_filename = None
+        if image_file and allowed_file(image_file.filename):
+            image_filename = secure_filename(image_file.filename)
+            image_path = os.path.join(app.config['UPLOAD_FOLDER'], image_filename)
+            image_file.save(image_path)
+
+        # ✅ Save to MongoDB (AFTER email_list is ready)
+        newsletter_data = {
+            "admin_email": session['email'],
+            "uploaded_at": get_indian_time(),
+            "title": title,
+            "description": description,
+            "tags": tags,
+            "image": image_filename,
+            "recipients": email_list  # now this works fine
+        }
+        db.newsletters.insert_one(newsletter_data)
+
+        # ✅ Send Emails
+        send_newsletter_email(title, description, image_filename, email_list)
+
+        flash('✅ Newsletter uploaded and emailed successfully.')
+        return redirect(url_for('newsletter'))
+
+    # GET method – show newsletter list
+    records = list(db.newsletters.find().sort('uploaded_at', -1))
+    return render_template('admin_newsletter.html', records=records)
+
+from bson import ObjectId
+
+@app.route('/edit_newsletter/<id>', methods=['GET'])
+def edit_newsletter(id):
+    if session.get('role') != 'admin':
+        return redirect(url_for('login'))
+
+    record = db.newsletters.find_one({'_id': ObjectId(id)})
+    if not record:
+        flash('Newsletter not found.', 'error')
+        return redirect(url_for('newsletter'))
+
+    return render_template('edit_newsletter.html', record=record)
+
+
+@app.route('/update_newsletter/<id>', methods=['POST'])
+def update_newsletter(id):
+    if session.get('role') != 'admin':
+        return redirect(url_for('login'))
+
+    record = db.newsletters.find_one({'_id': ObjectId(id)})
+    if not record:
+        flash('Newsletter not found.', 'error')
+        return redirect(url_for('newsletter'))
+
+    # Get form data
+    title = request.form.get('title')
+    description = request.form.get('description')
+    tags = request.form.getlist('tags')
+    recipient_emails = request.form.get('recipient_email', '').split(',')
+
+    # Clean recipient emails
+    recipient_emails = [email.strip() for email in recipient_emails if email.strip()]
+
+    # Handle image upload
+    image_file = request.files.get('image')
+    image_filename = record.get('image')  # keep old image if none uploaded
+
+    if image_file and image_file.filename:
+        filename = secure_filename(image_file.filename)
+        image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        image_file.save(image_path)
+        image_filename = filename
+
+    # Update document
+    db.newsletters.update_one(
+        {'_id': ObjectId(id)},
+        {
+            '$set': {
+                'title': title,
+                'description': description,
+                'tags': tags,
+                'recipients': recipient_emails,
+                'image': image_filename
+            }
+        }
+    )
+
+    flash('Newsletter updated successfully!', 'success')
+    return redirect(url_for('newsletter'))
+
+
+
+@app.route('/newsletter/delete/<id>')
+def delete_newsletter(id):
+    if session.get('role') != 'admin':
+        return redirect(url_for('login'))
+    
+    db.newsletters.delete_one({"_id": ObjectId(id)})
+    flash("Newsletter deleted.")
+    return redirect(url_for('newsletter'))
+
+
+
+
+from flask_mail import Message
+
+@app.route('/subscribe_newsletter', methods=['POST'])
+def subscribe_newsletter():
+    email = request.form.get('email')
+    
+    if not email:
+        flash("Email is required.", "error")
+        return redirect(request.referrer or url_for('public_newsletters'))
+
+    # Check if already subscribed
+    if db.subscribers.find_one({'email': email}):
+        flash("You are already subscribed!", "info")
+    else:
+        db.subscribers.insert_one({
+            'email': email,
+            'subscribed_at': datetime.now()
+        })
+
+        # ✅ Send confirmation email
+        try:
+            msg = Message(
+                subject="🎉 You're Subscribed to Our University Newsletter!",
+                sender=app.config['MAIL_USERNAME'],
+                recipients=[email]
+            )
+            msg.html = f"""
+            <h2>Thank you for subscribing!</h2>
+            <p>You’ll now receive updates, articles, and event highlights directly to your inbox.</p>
+            <p>If you did not request this, please ignore this message.</p>
+            <br><hr>
+            <small>This is an automated message from Jain University Newsletter system.</small>
+            """
+            mail.send(msg)
+            flash("Subscribed successfully! A confirmation email has been sent.", "success")
+        except Exception as e:
+            flash("Subscribed, but failed to send confirmation email.", "warning")
+            print(e)
+
+    return redirect(request.referrer or url_for('public_newsletters'))
+
+
 
 
 @app.route('/edit_ugc_record/<record_id>', methods=['GET', 'POST'])
@@ -215,19 +416,27 @@ def edit_record(record_id):
     record = collection.find_one({'_id': ObjectId(record_id)})
 
     if request.method == 'POST':
-        updated_data = {
-            'heading': request.form.get('heading', '').strip(),
-            'description': request.form.get('description', '').strip(),
-            'school': request.form.get('school', ''),
-            'department': request.form.get('department', ''),
-            'tags': request.form.getlist('tags'),
-        }
+        updated_data = {}
 
-        collection.update_one({'_id': ObjectId(record_id)}, {'$set': updated_data})
+        # Only include fields if they exist in the form
+        if 'heading' in request.form:
+            updated_data['heading'] = request.form.get('heading', '').strip()
+        if 'description' in request.form:
+            updated_data['description'] = request.form.get('description', '').strip()
+        if 'school' in request.form:
+            updated_data['school'] = request.form.get('school', '')
+        if 'department' in request.form:
+            updated_data['department'] = request.form.get('department', '')
+        if 'tags' in request.form:
+            updated_data['tags'] = request.form.getlist('tags')
+
+        # Only update if there's something to update
+        if updated_data:
+            collection.update_one({'_id': ObjectId(record_id)}, {'$set': updated_data})
+
         return redirect(url_for('edit_monthly'))
 
     return render_template('edit_record.html', record=record)
-
 
 from bson import ObjectId
 @app.route('/delete_record/<record_id>', methods=['POST'])

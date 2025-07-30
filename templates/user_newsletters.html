@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UnitNews Network</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --jain-blue: #003366;
+      --jain-gold: #FFD700;
+      --jain-light: #f5f5f5;
+      --jain-dark: #222;
+      --jain-red: #f35444;
+      --jain-teal: #008080;
+      --jain-purple: #6a5acd;
+      --jain-yellow: #ffc107;
+
+      --transition: all 0.3s ease;
+    }
+
+    /* Reset & base */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--jain-light);
+      color: var(--jain-dark);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+      transition: var(--transition);
+    }
+
+    a:hover,
+    a:focus {
+      color: var(--jain-gold);
+      outline: none;
+    }
+
+    /* HEADER */
+    header {
+      background: white;
+      padding: 15px 30px;
+      box-shadow: 0 2px 15px rgba(0, 51, 102, 0.15);
+      position: sticky;
+      top: 0;
+      z-index: 10000;
+      border-radius: 0 0 30px 30px;
+      transition: box-shadow 0.3s ease;
+      display: flex;
+      justify-content: center;
+    }
+
+    header.scrolled {
+      box-shadow: 0 5px 25px rgba(0, 51, 102, 0.25);
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: saturate(180%) blur(15px);
+    }
+
+    .header-container {
+      max-width: 1200px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    /* Logo */
+    .logo-section {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .logo-section img {
+      height: 60px;
+      width: auto;
+      border-radius: 15px;
+      transition: transform 0.3s ease;
+      box-shadow: 0 5px 15px rgba(0, 51, 102, 0.25);
+    }
+
+    .logo-section:hover img {
+      transform: scale(1.05);
+    }
+
+    .logo-text h1 {
+      margin: 0;
+      font-weight: 700;
+      font-size: 1.4rem;
+      color: var(--jain-blue);
+      user-select: none;
+      letter-spacing: 0.05em;
+    }
+
+    .logo-text span {
+      font-weight: 300;
+      font-size: 0.9rem;
+      color: #666;
+      user-select: none;
+      letter-spacing: 0.025em;
+    }
+
+    /* NAVIGATION */
+    nav {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    nav a {
+      display: inline-block;
+      position: relative;
+      padding: 10px 20px;
+      font-weight: 600;
+      font-size: 1rem;
+      border-radius: 30px;
+      color: var(--jain-blue);
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: var(--transition);
+      background: transparent;
+      user-select: none;
+    }
+
+    nav a:hover,
+    nav a:focus {
+      background: var(--jain-gold);
+      color: var(--jain-blue);
+      box-shadow: 0 0 15px var(--jain-gold);
+      border-color: var(--jain-gold);
+      outline: none;
+      z-index: 10;
+    }
+
+    nav a.active {
+      background: var(--jain-gold);
+      color: var(--jain-blue);
+      box-shadow: 0 0 20px var(--jain-gold);
+      border-color: var(--jain-gold);
+      pointer-events: none;
+    }
+
+    /* Login Button */
+    .login-btn {
+      padding: 10px 25px;
+      background-color: var(--jain-blue);
+      color: white;
+      border-radius: 30px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 2px solid var(--jain-blue);
+      box-shadow: 0 6px 15px rgba(0, 51, 102, 0.35);
+      transition: var(--transition);
+      user-select: none;
+    }
+
+    .login-btn:hover,
+    .login-btn:focus {
+      background-color: var(--jain-gold);
+      color: var(--jain-blue);
+      border-color: var(--jain-gold);
+      box-shadow: 0 8px 20px rgba(255, 215, 0, 0.6);
+      outline: none;
+    }
+
+    /* Mobile Menu Toggle */
+    .nav-toggle {
+      display: none;
+      font-size: 1.6rem;
+      background: transparent;
+      border: none;
+      color: var(--jain-blue);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .nav-toggle:hover,
+    .nav-toggle:focus {
+      color: var(--jain-gold);
+      outline: none;
+    }
+
+    /* Responsive Navigation */
+    @media (max-width: 900px) {
+      header {
+        padding: 10px 20px;
+        border-radius: 0 0 20px 20px;
+      }
+
+      .header-container {
+        flex-wrap: wrap;
+        justify-content: space-between;
+      }
+
+      nav {
+        flex-basis: 100%;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+      }
+
+      nav.show {
+        max-height: 500px; /* enough to show all links */
+      }
+
+      .nav-toggle {
+        display: block;
+      }
+
+      nav a {
+        flex: 1 1 45%;
+        padding: 12px 15px;
+        text-align: center;
+        border-radius: 15px;
+        font-size: 1rem;
+      }
+    }
+    
+    .active-view {
+      background-color: #2563eb;
+      color: white;
+    }
+    .trending-item:hover {
+      background-color: #f3f4f6;
+    }
+    .prose img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      margin: 1rem 0;
+    }
+    .prose iframe {
+      max-width: 100%;
+    }
+    .navbar {
+      backdrop-filter: blur(10px);
+      background-color: rgba(255, 255, 255, 0.9);
+    }
+    .tag-filter {
+      scrollbar-width: thin;
+      scrollbar-color: #3b82f6 #f1f1f1;
+    }
+    .tag-filter::-webkit-scrollbar {
+      height: 6px;
+    }
+    .tag-filter::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+    .tag-filter::-webkit-scrollbar-thumb {
+      background-color: #3b82f6;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-50 font-sans antialiased">
+  <header id="mainHeader">
+    <div class="header-container">
+      <div class="logo-section" role="banner" tabindex="0">
+        <img
+          src="{{ url_for('static', filename='images/jain.png') }}"
+          alt="Jain University Logo"
+          onerror="this.src='https://via.placeholder.com/60?text=JU+Logo';"
+          aria-hidden="true"
+        />
+        <div class="logo-text">
+          <h1>Office of Academics</h1>
+          <span>Excellence in Education</span>
+        </div>
+      </div>
+
+      <!-- Navigation Bar -->
+      <nav id="primary-navigation" role="navigation" aria-label="Primary navigation">
+        
+        <a href="{{ url_for('home') }}" tabindex="0">Home</a>
+        <a href="{{ url_for('ugc') }}" tabindex="0">UGC Requirement</a>
+        <a href="{{ url_for('monthlyengagement') }}" tabindex="0">Monthly Engagement</a>
+      
+        <a href="{{ url_for('login') }}" class="login-btn" tabindex="0" aria-label="Login">
+          <i class="fas fa-sign-in-alt" aria-hidden="true"></i> Login
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Tags Filter -->
+  <div class="bg-white shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+      <div class="tag-filter flex space-x-4 overflow-x-auto py-2">
+        <a href="#" class="inline-flex items-center px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-sm font-medium">All</a>
+        <a href="#" class="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-800 text-sm font-medium">Education</a>
+        <a href="#" class="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-800 text-sm font-medium">Sports</a>
+        <a href="#" class="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-800 text-sm font-medium">Cultural</a>
+        <a href="#" class="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-800 text-sm font-medium">Forum</a>
+        <a href="#" class="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-800 text-sm font-medium">Meeting</a>
+        <a href="#" class="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-800 text-sm font-medium">University Events</a>
+        <a href="#" class="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-800 text-sm font-medium">Fest</a>
+        <a href="#" class="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-800 text-sm font-medium">Festival</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="mb-6 space-y-2">
+          {% for category, message in messages %}
+            <div class="p-4 rounded-lg text-white 
+                        {% if category == 'success' %} bg-green-500 
+                        {% elif category == 'error' %} bg-red-500 
+                        {% elif category == 'warning' %} bg-yellow-500 
+                        {% else %} bg-blue-500 {% endif %}">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <div class="flex flex-col lg:flex-row gap-8">
+      <!-- Main Content -->
+      <div class="lg:w-2/3">
+        <!-- Featured Story -->
+        {% if records %}
+          {% set featured = records[0] %}
+          <div class="bg-white rounded-xl shadow-md overflow-hidden mb-8">
+            {% if featured.image %}
+              <img src="{{ url_for('static', filename='uploads/' ~ featured.image) }}" 
+                   class="w-full h-64 md:h-96 object-cover" alt="{{ featured.title }}">
+            {% endif %}
+            <div class="p-6">
+              <div class="flex items-center mb-2">
+                <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+                  {{ featured.tags[0] if featured.tags else 'News' }}
+                </span>
+                <span class="text-gray-500 text-sm ml-2">{{ featured.uploaded_at.strftime('%B %d, %Y') }}</span>
+              </div>
+              <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-3">{{ featured.title }}</h2>
+              <p class="text-gray-600 mb-4">{{ featured.description|striptags|truncate(200) }}</p>
+              <a href="#news-{{ featured.id }}" class="text-blue-600 hover:text-blue-800 font-medium">Read full story →</a>
+            </div>
+          </div>
+        {% endif %}
+
+        <!-- View Toggle -->
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-xl font-bold text-gray-900">Latest News</h2>
+          <div class="flex bg-gray-100 rounded-lg p-1">
+            <button id="grid-view" class="px-3 py-1 rounded-md active-view">
+              <i class="fas fa-th-large"></i>
+            </button>
+            <button id="list-view" class="px-3 py-1 rounded-md">
+              <i class="fas fa-list"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- News Grid -->
+        <div id="news-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {% for article in records %}
+            <div id="news-{{ article.id }}" class="news-card bg-white rounded-lg shadow-md overflow-hidden transition duration-300">
+              {% if article.image %}
+                <img src="{{ url_for('static', filename='uploads/' ~ article.image) }}" 
+                     class="w-full h-48 object-cover" alt="{{ article.title }}">
+              {% endif %}
+              <div class="p-4">
+                <div class="flex items-center mb-2">
+                  <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+                    {{ article.tags[0] if article.tags else 'Update' }}
+                  </span>
+                  <span class="text-gray-500 text-xs ml-2">{{ article.uploaded_at.strftime('%b %d') }}</span>
+                </div>
+                <h3 class="font-bold text-lg text-gray-900 mb-2">{{ article.title }}</h3>
+                <div class="prose max-w-none text-gray-600 text-sm mb-3">
+                  {% autoescape false %}{{ article.description }}{% endautoescape %}
+                </div>
+                <a href="#news-{{ article.id }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Read more →</a>
+              </div>
+            </div>
+          {% else %}
+            <p class="text-center text-gray-600 col-span-2 py-10">No newsletters found.</p>
+          {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        <div class="mt-8 flex justify-center">
+          <nav class="inline-flex rounded-md shadow">
+            <a href="#" class="px-3 py-2 rounded-l-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50">
+              Previous
+            </a>
+            <a href="#" class="px-3 py-2 border-t border-b border-gray-300 bg-white text-gray-500 hover:bg-gray-50">
+              1
+            </a>
+            <a href="#" class="px-3 py-2 border border-gray-300 bg-blue-50 text-blue-600">
+              2
+            </a>
+            <a href="#" class="px-3 py-2 border-t border-b border-gray-300 bg-white text-gray-500 hover:bg-gray-50">
+              3
+            </a>
+            <a href="#" class="px-3 py-2 rounded-r-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50">
+              Next
+            </a>
+          </nav>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="lg:w-1/3">
+        <!-- Subscribe Card -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h3 class="font-bold text-lg text-gray-900 mb-3">Stay Updated</h3>
+          <p class="text-gray-600 text-sm mb-4">Get the latest university news delivered to your inbox</p>
+          <form action="{{ url_for('subscribe_newsletter') }}" method="POST" class="space-y-3">
+            <input type="email" name="email" required placeholder="Your email address"
+                   class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button type="submit"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium">
+              Subscribe Now
+            </button>
+          </form>
+        </div>
+
+        <!-- Trending Now -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h3 class="font-bold text-lg text-gray-900 mb-4 flex items-center">
+            <i class="fas fa-fire text-red-500 mr-2"></i> Trending Now
+          </h3>
+          <div class="space-y-4">
+            {% if records and records|length > 0 %}
+              {% for article in records[:5] %}  <!-- Show first 5 articles -->
+                <a href="#news-{{ article.id }}" class="block trending-item p-2 rounded-lg transition hover:bg-gray-50">
+                  <div class="flex items-start">
+                    <div class="flex-shrink-0 w-16 h-16 bg-gray-200 rounded-md overflow-hidden">
+                      {% if article.image %}
+                        <img src="{{ url_for('static', filename='uploads/' ~ article.image) }}" 
+                             class="w-full h-full object-cover" alt="{{ article.title }}">
+                      {% else %}
+                        <div class="w-full h-full bg-gray-300 flex items-center justify-center">
+                          <i class="fas fa-newspaper text-gray-500"></i>
+                        </div>
+                      {% endif %}
+                    </div>
+                    <div class="ml-3">
+                      <h4 class="text-sm font-medium text-gray-900">{{ article.title }}</h4>
+                      <p class="text-xs text-gray-500 mt-1">
+                        {{ article.uploaded_at.strftime('%b %d, %Y') }}
+                        {% if article.tags and article.tags|length > 0 %}
+                          • <span class="text-blue-600">{{ article.tags[0] }}</span>
+                        {% endif %}
+                      </p>
+                    </div>
+                  </div>
+                </a>
+              {% endfor %}
+            {% else %}
+              <div class="text-center py-4 text-gray-500 text-sm">
+                No trending articles at the moment
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Upcoming Events -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h3 class="font-bold text-lg text-gray-900 mb-4 flex items-center">
+            <i class="far fa-calendar-alt text-blue-500 mr-2"></i> Upcoming Events
+          </h3>
+          <div class="space-y-4">
+            {% for event in upcoming_events %}
+              <div class="border-l-4 border-blue-500 pl-4 py-1">
+                <h4 class="text-sm font-medium text-gray-900">{{ event.title }}</h4>
+                <p class="text-xs text-gray-500">{{ event.date.strftime('%B %d, %Y') }} • {{ event.time }}</p>
+                <p class="text-xs text-gray-600 mt-1">{{ event.location }}</p>
+              </div>
+            {% endfor %}
+          </div>
+          <a href="#" class="mt-4 inline-block text-sm text-blue-600 hover:text-blue-800 font-medium">
+            View all events →
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="bg-gray-800 text-white py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div>
+          <h4 class="text-lg font-semibold mb-4">UnitNews Network</h4>
+          <p class="text-gray-400 text-sm">Bringing you the latest updates from our campus community.</p>
+        </div>
+        <div>
+          <h4 class="text-lg font-semibold mb-4">Quick Links</h4>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-gray-400 hover:text-white text-sm">Home</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white text-sm">Archives</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white text-sm">Submit News</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white text-sm">Contact</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-lg font-semibold mb-4">Categories</h4>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-gray-400 hover:text-white text-sm">Education</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white text-sm">Sports</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white text-sm">Cultural</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white text-sm">University Events</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-lg font-semibold mb-4">Connect</h4>
+          <div class="flex space-x-4">
+            <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-facebook-f"></i></a>
+            <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-twitter"></i></a>
+            <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-instagram"></i></a>
+            <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-linkedin-in"></i></a>
+          </div>
+          <p class="text-gray-400 text-sm mt-4">news@university.edu</p>
+        </div>
+      </div>
+      <div class="border-t border-gray-700 mt-8 pt-8 text-sm text-gray-400 text-center">
+        © 2025 UnitNews Network. All rights reserved.
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Toggle between grid and list views
+    document.getElementById('grid-view').addEventListener('click', function() {
+      document.getElementById('news-container').classList.remove('grid-cols-1');
+      document.getElementById('news-container').classList.add('grid-cols-1', 'md:grid-cols-2');
+      document.getElementById('grid-view').classList.add('active-view');
+      document.getElementById('list-view').classList.remove('active-view');
+      
+      // Update news cards for grid view
+      const newsCards = document.querySelectorAll('.news-card');
+      newsCards.forEach(card => {
+        card.classList.remove('flex', 'flex-row');
+        const img = card.querySelector('img');
+        if (img) {
+          img.classList.remove('w-32', 'h-32');
+          img.classList.add('w-full', 'h-48');
+        }
+      });
+    });
+    
+    document.getElementById('list-view').addEventListener('click', function() {
+      document.getElementById('news-container').classList.remove('grid-cols-1', 'md:grid-cols-2');
+      document.getElementById('news-container').classList.add('grid-cols-1');
+      document.getElementById('list-view').classList.add('active-view');
+      document.getElementById('grid-view').classList.remove('active-view');
+      
+      // Update news cards for list view
+      const newsCards = document.querySelectorAll('.news-card');
+      newsCards.forEach(card => {
+        card.classList.add('flex', 'flex-row');
+        const img = card.querySelector('img');
+        if (img) {
+          img.classList.add('w-32', 'h-32');
+          img.classList.remove('w-full', 'h-48');
+        }
+      });
+    });
+
+    // Smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        document.querySelector(this.getAttribute('href')).scrollIntoView({
+          behavior: 'smooth'
+        });
+      });
+    });
+
+    // Header scroll effect
+    window.addEventListener('scroll', function() {
+      const header = document.getElementById('mainHeader');
+      if (window.scrollY > 50) {
+        header.classList.add('scrolled');
+      } else {
+        header.classList.remove('scrolled');
+      }
+    });
+
+    // Mobile menu toggle
+    const navToggle = document.querySelector('.nav-toggle');
+    const primaryNav = document.getElementById('primary-navigation');
+    
+    if (navToggle && primaryNav) {
+      navToggle.addEventListener('click', function() {
+        primaryNav.classList.toggle('show');
+      });
+    }
+  </script>
+</body>
+</html>

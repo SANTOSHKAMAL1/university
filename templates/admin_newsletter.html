@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Office of Academics at Jain University</title>
+
+  <!-- Font Awesome for icons -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  />
+
+  <!-- Google Fonts: Poppins -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Tagify CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css" rel="stylesheet" />
+
+  <!-- TinyMCE -->
+  <script src="https://cdn.tiny.cloud/1/dajtx6n0n4g72ax5rev4uzy9j04aniffnzb8s4bgz1tw5v1w/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+
+  <style>
+    :root {
+      --jain-blue: #003366;
+      --jain-gold: #FFD700;
+      --jain-light: #f5f5f5;
+      --jain-dark: #222;
+      --jain-red: #f35444;
+      --jain-teal: #008080;
+      --jain-purple: #6a5acd;
+      --jain-yellow: #ffc107;
+
+      --transition: all 0.3s ease;
+    }
+
+    /* Reset & base */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--jain-light);
+      color: var(--jain-dark);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+      transition: var(--transition);
+    }
+
+    a:hover,
+    a:focus {
+      color: var(--jain-gold);
+      outline: none;
+    }
+
+    /* HEADER */
+    header {
+      background: white;
+      padding: 15px 30px;
+      box-shadow: 0 2px 15px rgba(0, 51, 102, 0.15);
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 10000;
+      border-radius: 0 0 30px 30px;
+      transition: all 0.4s ease;
+      display: flex;
+      justify-content: center;
+      transform: translateY(0);
+    }
+
+    header.hidden {
+      transform: translateY(-100%);
+    }
+
+    header.scrolled {
+      box-shadow: 0 5px 25px rgba(0, 51, 102, 0.25);
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: saturate(180%) blur(15px);
+      padding: 10px 30px;
+      border-radius: 0;
+    }
+
+    .header-container {
+      max-width: 1200px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    /* Logo */
+    .logo-section {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .logo-section img {
+      height: 60px;
+      width: auto;
+      border-radius: 15px;
+      transition: transform 0.3s ease;
+      box-shadow: 0 5px 15px rgba(0, 51, 102, 0.25);
+    }
+
+    .logo-section:hover img {
+      transform: scale(1.05);
+    }
+
+    .logo-text h1 {
+      margin: 0;
+      font-weight: 700;
+      font-size: 1.4rem;
+      color: var(--jain-blue);
+      user-select: none;
+      letter-spacing: 0.05em;
+    }
+
+    .logo-text span {
+      font-weight: 300;
+      font-size: 0.9rem;
+      color: #666;
+      user-select: none;
+      letter-spacing: 0.025em;
+    }
+
+    /* NAVIGATION */
+    nav {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    nav a {
+      display: inline-block;
+      position: relative;
+      padding: 10px 20px;
+      font-weight: 600;
+      font-size: 1rem;
+      border-radius: 30px;
+      color: var(--jain-blue);
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: var(--transition);
+      background: transparent;
+      user-select: none;
+    }
+
+    nav a:hover,
+    nav a:focus {
+      background: var(--jain-gold);
+      color: var(--jain-blue);
+      box-shadow: 0 0 15px var(--jain-gold);
+      border-color: var(--jain-gold);
+      outline: none;
+      z-index: 10;
+    }
+
+    nav a.active {
+      background: var(--jain-gold);
+      color: var(--jain-blue);
+      box-shadow: 0 0 20px var(--jain-gold);
+      border-color: var(--jain-gold);
+      pointer-events: none;
+    }
+
+    /* Login Button */
+    .login-btn {
+      padding: 10px 25px;
+      background-color: var(--jain-blue);
+      color: white;
+      border-radius: 30px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 2px solid var(--jain-blue);
+      box-shadow: 0 6px 15px rgba(0, 51, 102, 0.35);
+      transition: var(--transition);
+      user-select: none;
+    }
+
+    .login-btn:hover,
+    .login-btn:focus {
+      background-color: var(--jain-gold);
+      color: var(--jain-blue);
+      border-color: var(--jain-gold);
+      box-shadow: 0 8px 20px rgba(255, 215, 0, 0.6);
+      outline: none;
+    }
+
+    /* Mobile Menu Toggle */
+    .nav-toggle {
+      display: none;
+      font-size: 1.6rem;
+      background: transparent;
+      border: none;
+      color: var(--jain-blue);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .nav-toggle:hover,
+    .nav-toggle:focus {
+      color: var(--jain-gold);
+      outline: none;
+    }
+
+    /* Responsive Navigation */
+    @media (max-width: 900px) {
+      header {
+        padding: 10px 20px;
+        border-radius: 0 0 20px 20px;
+      }
+
+      .header-container {
+        flex-wrap: wrap;
+        justify-content: space-between;
+      }
+
+      nav {
+        flex-basis: 100%;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+      }
+
+      nav.show {
+        max-height: 500px;
+      }
+
+      .nav-toggle {
+        display: block;
+      }
+
+      nav a {
+        flex: 1 1 45%;
+        padding: 12px 15px;
+        text-align: center;
+        border-radius: 15px;
+        font-size: 1rem;
+      }
+
+      .login-btn {
+        flex: 1 1 90%;
+        justify-content: center;
+      }
+    }
+
+    /* Main Content */
+    main {
+      max-width: 1200px;
+      margin: 120px auto 80px;
+      padding: 0 20px;
+    }
+
+    .section-title {
+      text-align: center;
+      font-size: 2.4rem;
+      font-weight: 700;
+      color: var(--jain-blue);
+      margin-bottom: 15px;
+      position: relative;
+      display: inline-block;
+    }
+
+    .section-title::after {
+      content: "";
+      width: 120px;
+      height: 4px;
+      background: var(--jain-gold);
+      display: block;
+      margin: 10px auto 0;
+      border-radius: 2px;
+    }
+
+    /* Newsletter Form */
+    .newsletter-form {
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0, 51, 102, 0.1);
+      padding: 30px;
+      margin-top: 30px;
+      border: 1px solid rgba(0, 51, 102, 0.1);
+    }
+
+    .form-group {
+      margin-bottom: 25px;
+    }
+
+    .form-label {
+      display: block;
+      font-weight: 600;
+      color: var(--jain-blue);
+      margin-bottom: 8px;
+      font-size: 1rem;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 12px 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 1rem;
+      transition: var(--transition);
+    }
+
+    .form-input:focus {
+      border-color: var(--jain-blue);
+      box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.2);
+      outline: none;
+    }
+
+    .tag-select {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 1rem;
+      background-color: white;
+    }
+
+    .file-upload {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px;
+      border: 2px dashed #e0e0e0;
+      border-radius: 8px;
+      background-color: #f9f9f9;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .file-upload:hover {
+      border-color: var(--jain-blue);
+      background-color: #f0f7ff;
+    }
+
+    .file-upload-icon {
+      font-size: 2rem;
+      color: var(--jain-blue);
+      margin-bottom: 10px;
+    }
+
+    .file-upload-text {
+      text-align: center;
+      color: #666;
+    }
+
+    .file-upload-text span {
+      color: var(--jain-blue);
+      font-weight: 600;
+    }
+
+    .file-upload-input {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .submit-btn {
+      background-color: var(--jain-blue);
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .submit-btn:hover {
+      background-color: #002244;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 51, 102, 0.3);
+    }
+
+    /* Tagify customization */
+    .tagify {
+      --tags-border-color: #e0e0e0;
+      --tags-hover-border-color: var(--jain-blue);
+      --tags-focus-border-color: var(--jain-blue);
+      --tag-bg: #e6f0ff;
+      --tag-hover: #d0e2ff;
+      --tag-text-color: var(--jain-blue);
+      --tag-remove-btn-color: #8cb3ff;
+      --tag-remove-btn-bg--hover: var(--jain-blue);
+    }
+
+    /* TinyMCE customization */
+    .tox-tinymce {
+      border-radius: 8px !important;
+      border: 2px solid #e0e0e0 !important;
+    }
+
+    /* Footer */
+    footer {
+      background: var(--jain-blue);
+      color: white;
+      padding: 25px 20px;
+      text-align: center;
+      user-select: none;
+    }
+
+    footer a {
+      color: var(--jain-gold);
+      text-decoration: underline;
+    }
+    
+    /* Previous Newsletters Section */
+    .previous-newsletters {
+      margin-top: 60px;
+      padding-top: 40px;
+      border-top: 1px solid rgba(0, 51, 102, 0.1);
+    }
+
+    .section-subtitle {
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: var(--jain-blue);
+      margin-bottom: 25px;
+      position: relative;
+      padding-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .section-subtitle::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 60px;
+      height: 3px;
+      background: var(--jain-gold);
+    }
+
+    .view-toggle {
+      display: flex;
+      gap: 10px;
+    }
+
+    .view-toggle-btn {
+      background: white;
+      border: 2px solid #e0e0e0;
+      color: #666;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .view-toggle-btn.active {
+      background: var(--jain-blue);
+      color: white;
+      border-color: var(--jain-blue);
+    }
+
+    .view-toggle-btn:hover {
+      border-color: var(--jain-blue);
+      color: var(--jain-blue);
+    }
+
+    .newsletter-card {
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 5px 15px rgba(0, 51, 102, 0.1);
+      margin-bottom: 25px;
+      transition: var(--transition);
+      border: 1px solid rgba(0, 51, 102, 0.1);
+    }
+
+    .newsletter-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0, 51, 102, 0.2);
+    }
+
+    .newsletter-image {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+    }
+
+    .newsletter-content {
+      padding: 20px;
+    }
+
+    .newsletter-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: var(--jain-blue);
+      margin-bottom: 8px;
+    }
+
+    .newsletter-date {
+      font-size: 0.85rem;
+      color: #666;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .newsletter-description {
+      color: #444;
+      margin-bottom: 15px;
+      line-height: 1.6;
+    }
+
+    .newsletter-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 15px;
+    }
+
+    .newsletter-tag {
+      background: #e6f0ff;
+      color: var(--jain-blue);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .no-newsletters {
+      text-align: center;
+      padding: 40px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0, 51, 102, 0.1);
+    }
+
+    .no-newsletters i {
+      font-size: 3rem;
+      color: #e0e0e0;
+      margin-bottom: 15px;
+    }
+
+    .no-newsletters h3 {
+      color: var(--jain-blue);
+      margin-bottom: 10px;
+    }
+
+    .no-newsletters p {
+      color: #666;
+    }
+
+    /* Grid View */
+    .newsletters-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 25px;
+    }
+
+    /* List View */
+    .newsletters-list {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .newsletters-list .newsletter-card {
+      display: flex;
+      flex-direction: row;
+      max-height: 200px;
+    }
+
+    .newsletters-list .newsletter-image {
+      width: 200px;
+      height: 100%;
+      flex-shrink: 0;
+    }
+
+    .newsletters-list .newsletter-content {
+      flex-grow: 1;
+      overflow: hidden;
+    }
+
+    .newsletters-list .newsletter-description {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    @media (max-width: 768px) {
+      .newsletters-list .newsletter-card {
+        flex-direction: column;
+        max-height: none;
+      }
+
+      .newsletters-list .newsletter-image {
+        width: 100%;
+        height: 150px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header id="mainHeader">
+    <div class="header-container">
+      <div class="logo-section" role="banner" tabindex="0">
+        <img
+          src="{{ url_for('static', filename='images/jain.png') }}"
+          alt="Jain University Logo"
+          onerror="this.src='https://via.placeholder.com/60?text=JU+Logo';"
+          aria-hidden="true"
+        />
+        <div class="logo-text">
+          <h1>Office of Academics</h1>
+          <span>Excellence in Education</span>
+        </div>
+      </div>
+
+      <button
+        class="nav-toggle"
+        aria-label="Toggle navigation menu"
+        aria-expanded="false"
+        aria-controls="primary-navigation"
+      >
+        <i class="fas fa-bars"></i>
+      </button>
+
+        <nav class="nav-links">
+        <a href="{{ url_for('edit_ugc') }}">UGC Requirement</a>
+        <a href="{{ url_for('edit_monthly') }}">Edit Monthly Engagement</a>
+        <a href="{{ url_for('logout') }}" class="logout-link" onclick="return confirm('Are you sure you want to logout?')">Logout</a>
+        <p> {{ session['email'] }}</p>  
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <h1 class="section-title">Create Newsletter</h1>
+    
+    <form action="/newsletter" method="POST" enctype="multipart/form-data" class="newsletter-form">
+      <!-- Title -->
+      <div class="form-group">
+        <label class="form-label">Title <span style="color: var(--jain-red)">*</span></label>
+        <input type="text" name="title" required class="form-input" placeholder="Enter newsletter title">
+      </div>
+
+      <!-- Description (TinyMCE) -->
+      <div class="form-group">
+        <label class="form-label">Content <span style="color: var(--jain-red)">*</span></label>
+        <textarea id="description" name="description" class="form-input" style="min-height: 300px;"></textarea>
+      </div>
+
+      <!-- Tags -->
+      <div class="form-group">
+        <label class="form-label">Categories</label>
+        <select name="tags" multiple class="tag-select">
+          <option value="education">Education</option>
+          <option value="sports">Sports</option>
+          <option value="cultural">Cultural</option>
+          <option value="forum">Forum</option>
+          <option value="meeting">Meeting</option>
+          <option value="university_events">University Events</option>
+          <option value="fest">Fest</option>
+          <option value="festival">Festival</option>
+        </select>
+      </div>
+
+      <!-- Image Upload -->
+      <div class="form-group">
+        <label class="form-label">Featured Image</label>
+        <div class="file-upload">
+          <div class="file-upload-icon">
+            <i class="fas fa-cloud-upload-alt"></i>
+          </div>
+          <div class="file-upload-text">
+            <p>Drag & drop your image here or <span>browse</span></p>
+            <p style="font-size: 0.8rem; margin-top: 5px;">Supports: JPG, PNG, GIF (Max 5MB)</p>
+          </div>
+          <input type="file" name="image" accept="image/*" class="file-upload-input">
+        </div>
+      </div>
+
+      <!-- Email Tags Input -->
+      <div class="form-group">
+        <label class="form-label">Recipients (Emails)</label>
+        <input name="recipient_email" placeholder="Type email and press Enter" class="email-input form-input">
+        <p style="font-size: 0.8rem; color: #666; margin-top: 5px;">Add multiple emails separated by commas</p>
+      </div>
+
+      <!-- Submit -->
+      <div class="form-group" style="text-align: right;">
+        <button type="submit" class="submit-btn">
+          <i class="fas fa-paper-plane"></i> Send Newsletter
+        </button>
+      </div>
+    </form>
+   
+    <div class="previous-newsletters">
+      <h2 class="section-subtitle">
+        Previous Newsletters
+        <div class="view-toggle">
+          <button class="view-toggle-btn active" data-view="grid">
+            <i class="fas fa-th"></i> Grid
+          </button>
+          <button class="view-toggle-btn" data-view="list">
+            <i class="fas fa-list"></i> List
+          </button>
+        </div>
+      </h2>
+      
+      {% if records %}
+  <div class="newsletters-grid" id="newsletters-view">
+    {% for record in records %}
+      <div class="newsletter-card bg-white shadow-md rounded-lg overflow-hidden">
+        {% if record.image %}
+          <img src="{{ url_for('uploaded_file', filename=record.image) }}"
+               alt="{{ record.title }}"
+               class="newsletter-image w-full h-48 object-cover" />
+        {% else %}
+          <div class="newsletter-image bg-gray-100 flex items-center justify-center h-48">
+            <i class="fas fa-newspaper text-4xl text-gray-400"></i>
+          </div>
+        {% endif %}
+
+        <div class="newsletter-content p-4">
+          <h3 class="newsletter-title text-xl font-semibold">{{ record.title }}</h3>
+          <p class="newsletter-date text-sm text-gray-500 mt-1">
+            <i class="far fa-calendar-alt"></i>
+            {{ record.uploaded_at.strftime('%b %d, %Y') }}
+          </p>
+
+          <div class="newsletter-description mt-2 text-gray-700">
+            {{ record.description|striptags|truncate(200) }}
+          </div>
+
+          <div class="newsletter-tags mt-2">
+            {% for tag in record.tags %}
+              <span class="newsletter-tag bg-blue-100 text-blue-700 px-2 py-1 text-xs rounded mr-1">
+                {{ tag }}
+              </span>
+            {% endfor %}
+          </div>
+
+          {% if record.recipients and session.get('role') == 'admin' %}
+            <div class="mt-3 text-sm text-gray-600">
+              <strong>Recipients:</strong>
+              <ul class="list-disc ml-5">
+                {% for email in record.recipients %}
+                  <li>{{ email }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+
+         {% if session.get('role') == 'admin' %}
+  <div class="flex gap-4 mt-4 text-sm">
+    <a href="{{ url_for('edit_newsletter', id=record._id) }}"
+       class="text-yellow-600 hover:underline">✏️ Edit</a>
+    <a href="{{ url_for('delete_newsletter', id=record._id) }}"
+       class="text-red-600 hover:underline"
+       onclick="return confirm('Delete this newsletter?')">🗑️ Delete</a>
+  </div>
+{% endif %}
+
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="no-newsletters text-center text-gray-500">
+    <i class="fas fa-newspaper text-4xl mb-2"></i>
+    <h3 class="text-xl font-semibold">No Newsletters Yet</h3>
+    <p class="text-sm">Create your first newsletter to get started</p>
+  </div>
+{% endif %}
+</div>
+
+<hr class="my-10">
+
+
+
+
+  <footer>
+    <p>&copy; 2025 Office of Academics, Jain University. All rights reserved.</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.polyfills.min.js"></script>
+  
+  <script>
+    // Initialize TinyMCE
+    tinymce.init({
+      selector: '#description',
+      height: 400,
+      plugins: 'link image lists code table emoticons autoresize',
+      toolbar: 'undo redo | styles | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image table | code emoticons',
+      content_style: 'body { font-family: "Poppins", sans-serif; font-size: 16px }',
+      skin: 'oxide',
+      menubar: false,
+      branding: false,
+      images_upload_url: '/upload-image',
+      automatic_uploads: true,
+      file_picker_types: 'image',
+      relative_urls: false,
+      remove_script_host: false
+    });
+
+    // Initialize Tagify for emails
+    document.addEventListener('DOMContentLoaded', function () {
+      var input = document.querySelector('input[name=recipient_email]');
+      new Tagify(input, {
+        delimiters: ",| ",
+        pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+        dropdown: {
+          enabled: 0
+        }
+      });
+
+      // Mobile menu toggle
+      const navToggle = document.querySelector('.nav-toggle');
+      const navMenu = document.getElementById('primary-navigation');
+
+      navToggle.addEventListener('click', function() {
+        const isExpanded = this.getAttribute('aria-expanded') === 'true';
+        this.setAttribute('aria-expanded', !isExpanded);
+        navMenu.classList.toggle('show');
+      });
+
+      // View toggle functionality
+      const viewToggleBtns = document.querySelectorAll('.view-toggle-btn');
+      const newslettersView = document.getElementById('newsletters-view');
+      
+      viewToggleBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+          // Update active state
+          viewToggleBtns.forEach(b => b.classList.remove('active'));
+          this.classList.add('active');
+          
+          // Change view
+          if (this.dataset.view === 'grid') {
+            newslettersView.classList.remove('newsletters-list');
+            newslettersView.classList.add('newsletters-grid');
+          } else {
+            newslettersView.classList.remove('newsletters-grid');
+            newslettersView.classList.add('newsletters-list');
+          }
+        });
+      });
+
+      // File upload preview
+      const fileUpload = document.querySelector('.file-upload-input');
+      const fileUploadContainer = document.querySelector('.file-upload');
+
+      fileUpload.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function(event) {
+            fileUploadContainer.innerHTML = `
+              <div style="width: 100%; text-align: center;">
+                <img src="${event.target.result}" style="max-height: 200px; max-width: 100%; border-radius: 8px; margin-bottom: 10px;">
+                <p style="color: var(--jain-blue); font-weight: 600;">${file.name}</p>
+                <button type="button" style="background: var(--jain-red); color: white; border: none; padding: 5px 10px; border-radius: 5px; margin-top: 10px; cursor: pointer;">
+                  <i class="fas fa-trash-alt"></i> Remove
+                </button>
+              </div>
+            `;
+            
+            // Add remove functionality
+            fileUploadContainer.querySelector('button').addEventListener('click', function() {
+              fileUpload.value = '';
+              fileUploadContainer.innerHTML = `
+                <div class="file-upload-icon">
+                  <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <div class="file-upload-text">
+                  <p>Drag & drop your image here or <span>browse</span></p>
+                  <p style="font-size: 0.8rem; margin-top: 5px;">Supports: JPG, PNG, GIF (Max 5MB)</p>
+                </div>
+                <input type="file" name="image" accept="image/*" class="file-upload-input">
+              `;
+              // Re-attach event listener to new input
+              document.querySelector('.file-upload-input').addEventListener('change', arguments.callee);
+            });
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+
+      // Hide/show header on scroll
+      const header = document.getElementById('mainHeader');
+      let lastScroll = 0;
+      
+      window.addEventListener('scroll', function() {
+        const currentScroll = window.pageYOffset;
+        
+        if (currentScroll <= 0) {
+          header.classList.remove('hidden');
+          header.classList.remove('scrolled');
+          return;
+        }
+        
+        if (currentScroll > lastScroll && !header.classList.contains('hidden')) {
+          // Scrolling down
+          header.classList.add('hidden');
+        } else if (currentScroll < lastScroll && header.classList.contains('hidden')) {
+          // Scrolling up
+          header.classList.remove('hidden');
+        }
+        
+        // Add scrolled class for styling when not at top
+        if (currentScroll > 50) {
+          header.classList.add('scrolled');
+        } else {
+          header.classList.remove('scrolled');
+        }
+        
+        lastScroll = currentScroll;
+      });
+    });
+  </script>
+</body>
+</html>
