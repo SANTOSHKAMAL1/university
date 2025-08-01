@@ -56,12 +56,20 @@ def send_newsletter_email(title, content, image_filename, recipients):
 
 
 # ===================== Pages =====================
-
 @app.route('/')
 def home():
     records = list(db.ugc_data.find().sort('uploaded_at', -1))
     monthly_records = list(db.monthly_engagement.find().sort('uploaded_at', -1))
-    return render_template('home.html', records=records, monthly_records=monthly_records)
+    newsletter_records = list(db.newsletters.find().sort('uploaded_at', -1))
+
+    return render_template(
+        'home.html',
+        records=records,
+        monthly_records=monthly_records,
+        newsletter_records=newsletter_records  # ← Add this line
+    )
+
+
 
 
 @app.route('/about')
@@ -633,6 +641,7 @@ def uploaded_file(filename):
 import os
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))  # use Render's PORT env variable
-    app.run(host='0.0.0.0', port=port)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)
+
 

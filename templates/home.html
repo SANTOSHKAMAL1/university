@@ -18,6 +18,7 @@
       --jain-yellow: #ffc107;
 
       --transition: all 0.3s ease;
+      --card-shadow: 0 5px 15px rgba(0, 51, 102, 0.1);
     }
 
     /* Reset & base */
@@ -45,6 +46,39 @@
     a:focus {
       color: var(--jain-gold);
       outline: none;
+    }
+
+    /* Speak Bar */
+    .speak-bar {
+        background-color: var(--jain-blue);
+        color: white;
+        padding: 8px 0;
+        font-size: 0.9rem;
+        position: relative;
+        z-index: 10001;
+    }
+    
+    .speak-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        gap: 15px;
+        padding: 0 20px;
+    }
+    
+    .speak-bar a {
+        color: var(--jain-gold);
+        text-decoration: none;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .speak-bar a:hover {
+        color: white;
     }
 
     /* HEADER */
@@ -236,6 +270,10 @@
 
       .login-btn {
         flex: 1 1 90%;
+        justify-content: center;
+      }
+      
+      .speak-container {
         justify-content: center;
       }
     }
@@ -982,6 +1020,320 @@
         z-index: 1;
     }
 
+    /* Newsletter Section */
+    .newsletter-section {
+        flex: 1;
+        min-width: 300px;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 8px;
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+        transition: var(--transition);
+        border: 1px solid rgba(0,0,0,0.05);
+        position: relative;
+        height: 350px;
+        border-left: 4px solid var(--jain-purple);
+    }
+    
+    .newsletter-section:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px -10px rgba(0, 51, 102, 0.4);
+    }
+    
+    .newsletter-header {
+        background: linear-gradient(135deg, var(--jain-purple) 0%, #8a2be2 100%);
+        padding: 12px 15px;
+        font-weight: 600;
+        color: white;
+        font-size: 1rem;
+        text-align: center;
+        letter-spacing: 0.5px;
+    }
+    
+    .newsletter-scrolling-content {
+        height: 300px;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .newsletter-scrolling-wrapper {
+        position: absolute;
+        width: 100%;
+        animation: scrollNewsletters 60s linear infinite; /* Changed from 30s to 60s */
+    }
+    
+    @keyframes scrollNewsletters {
+        0% { transform: translateY(0); }
+        100% { transform: translateY(calc(-100% + 300px)); }
+    }
+    
+    .newsletter-item {
+        padding: 12px;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        margin-bottom: 10px;
+        transition: var(--transition);
+        display: flex;
+        gap: 15px;
+        align-items: center;
+        background-color: white;
+        border-radius: 8px;
+        margin: 10px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .newsletter-item:hover {
+        background-color: rgba(0, 51, 102, 0.03);
+    }
+    
+    .newsletter-item:last-child {
+        border-bottom: none;
+    }
+    
+    .newsletter-image {
+        width: 80px;
+        height: 80px;
+        border-radius: 8px;
+        overflow: hidden;
+        flex-shrink: 0;
+    }
+    
+    .newsletter-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .newsletter-content {
+        flex: 1;
+    }
+    
+    .newsletter-title {
+        font-weight: 600;
+        color: var(--jain-blue);
+        margin-bottom: 5px;
+        font-size: 0.95rem;
+    }
+    
+    .newsletter-date {
+        color: #777;
+        font-size: 0.8rem;
+        margin-bottom: 5px;
+    }
+    
+    .newsletter-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin-top: 5px;
+    }
+    
+    .newsletter-tag {
+        background-color: rgba(106, 90, 205, 0.1);
+        color: var(--jain-purple);
+        padding: 2px 8px;
+        border-radius: 50px;
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+    
+    /* Newsletter Grid View */
+    .newsletter-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 30px;
+        margin: 40px auto;
+        max-width: 1200px;
+        padding: 0 20px;
+    }
+    
+    .newsletter-card {
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: var(--card-shadow);
+        transition: var(--transition);
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+    
+    .newsletter-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 35px -10px rgba(0, 51, 102, 0.4);
+    }
+    
+    .newsletter-card-image {
+        height: 180px;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .newsletter-card-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+    
+    .newsletter-card:hover .newsletter-card-image img {
+        transform: scale(1.1);
+    }
+    
+    .newsletter-card-content {
+        padding: 20px;
+    }
+    
+    .newsletter-card-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--jain-blue);
+        margin-bottom: 10px;
+    }
+    
+    .newsletter-card-excerpt {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 15px;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    
+    .newsletter-card-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 15px;
+    }
+    
+    .newsletter-card-date {
+        color: #777;
+        font-size: 0.8rem;
+    }
+    
+    .newsletter-card-readmore {
+        color: var(--jain-purple);
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: var(--transition);
+    }
+    
+    .newsletter-card-readmore:hover {
+        color: var(--jain-blue);
+    }
+    
+    /* Modal for Newsletter Details */
+    .newsletter-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.8);
+        z-index: 1000;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .newsletter-modal.show {
+        opacity: 1;
+        display: block;
+    }
+    
+    .newsletter-modal-content {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0.9);
+        width: 80%;
+        max-width: 800px;
+        max-height: 90vh;
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+        transition: transform 0.3s ease;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .newsletter-modal.show .newsletter-modal-content {
+        transform: translate(-50%, -50%) scale(1);
+    }
+    
+    .newsletter-modal-header {
+        padding: 20px;
+        background: linear-gradient(135deg, var(--jain-purple) 0%, #8a2be2 100%);
+        color: white;
+        position: relative;
+    }
+    
+    .newsletter-modal-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0;
+    }
+    
+    .newsletter-modal-close {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        color: white;
+        font-size: 1.8rem;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+    
+    .newsletter-modal-close:hover {
+        color: var(--jain-gold);
+        transform: rotate(90deg);
+    }
+    
+    .newsletter-modal-body {
+        padding: 20px;
+        overflow-y: auto;
+        flex-grow: 1;
+    }
+    
+    .newsletter-modal-image {
+        width: 100%;
+        height: 250px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .newsletter-modal-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .newsletter-modal-description {
+        color: #333;
+        line-height: 1.7;
+    }
+    
+    .newsletter-modal-footer {
+        padding: 15px 20px;
+        background: #f9f9f9;
+        border-top: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .newsletter-modal-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    
+    .newsletter-modal-date {
+        color: #777;
+        font-size: 0.9rem;
+    }
+
     /* Responsive Styles */
     @media (max-width: 992px) {
         .hero h2 {
@@ -1010,6 +1362,10 @@
 
         .date-weekday {
             font-size: 1.5rem;
+        }
+        
+        .newsletter-grid {
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
         }
     }
 
@@ -1086,6 +1442,25 @@
         .date-day {
             font-size: 3.5rem;
         }
+        
+        .newsletter-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .newsletter-modal-content {
+            width: 90%;
+            max-height: 80vh;
+        }
+        
+        .newsletter-item {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .newsletter-image {
+            width: 100%;
+            height: 120px;
+        }
     }
 
     @media (max-width: 576px) {
@@ -1113,10 +1488,35 @@
         .date-weekday {
             font-size: 1.3rem;
         }
+        
+        .newsletter-modal-image {
+            height: 180px;
+        }
+        
+        .speak-container {
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .speak-bar a {
+            font-size: 0.8rem;
+        }
     }
     </style>
 </head>
 <body>
+    <!-- Speak Bar -->
+    <div class="speak-bar">
+        <div class="speak-container">
+            <a href="#"><i class="fas fa-volume-up"></i> Speak</a>
+            <a href="#"><i class="fas fa-eye"></i> Screen Reader</a>
+            <a href="#"><i class="fas fa-text-height"></i> Text Size: A A A</a>
+            <a href="#"><i class="fas fa-language"></i> International Cooperation</a>
+            <a href="#"><i class="fas fa-skip-forward"></i> Skip to main content</a>
+            <a href="#"><i class="fas fa-skip-forward"></i> Skip to Navigation</a>
+        </div>
+    </div>
+
     <header>
         <div class="header-container">
             <div class="logo-section">
@@ -1133,7 +1533,7 @@
           
             <nav class="nav-links">
                 <a href="#">Home</a>
-                <a href="{{ url_for('usernewsletters') }}">About Us</a>
+                <a href="{{ url_for('usernewsletters') }}">monthly</a>
                 <a href="{{ url_for('ugc') }}">UGC Requirement</a>
                 <a href="{{ url_for('monthlyengagement') }}">Monthly Engagement</a>
                 <a href="{{ url_for('jainevents') }}">Events</a>
@@ -1142,16 +1542,11 @@
         </div>
     </header>
 
-    
-        
-        
-    </div>
-
     <!-- University Updates Marquee -->
     <div class="university-updates">
         <div class="updates-container">
             <div class="updates-label">
-                </i> University Updates
+                <i class="fas fa-bullhorn"></i> University Updates
             </div>
             <div class="updates-marquee">
                 <p>
@@ -1166,7 +1561,7 @@
         </div>
     </div>
 
-    <!-- Notices Section -->
+    <!-- Notices Section with Newsletter -->
     <div class="notices-container">
         <!-- UGC Notices Section -->
         <div class="notice-section">
@@ -1277,6 +1672,126 @@
                 <a href="{{ url_for('ugc') }}"><i class="fas fa-eye"></i> View All University Notices</a>
             </div>
         </div>
+
+        <!-- Newsletter Section -->
+        <div class="newsletter-section">
+            <div class="newsletter-header">
+                <i class="fas fa-newspaper"></i> Latest Newsletters
+            </div>
+            <div class="newsletter-scrolling-content">
+                <div class="newsletter-scrolling-wrapper">
+                    {% if newsletter_records %}
+                        {% for news in newsletter_records %}
+                            <div class="newsletter-item" onclick="openNewsletterModal('{{ news.title }}', '{{ news.description }}', '{{ news.image }}', '{{ news.uploaded_at.strftime('%d %B %Y') if news.uploaded_at.__class__.__name__ == 'datetime' else news.uploaded_at }}', '{{ news.tags|join(",") if news.tags else "" }}')">
+                                {% if news.image %}
+                                <div class="newsletter-image">
+                                    <img src="{{ url_for('static', filename='uploads/' ~ news.image) }}" alt="{{ news.title }}">
+                                </div>
+                                {% else %}
+                                <div class="newsletter-image">
+                                    <img src="https://via.placeholder.com/80?text=Newsletter" alt="Default Newsletter Image">
+                                </div>
+                                {% endif %}
+                                <div class="newsletter-content">
+                                    <div class="newsletter-title">{{ news.title }}</div>
+                                    <div class="newsletter-date"><i class="far fa-calendar-alt"></i> {{ news.uploaded_at.strftime('%d %b %Y') if news.uploaded_at.__class__.__name__ == 'datetime' else news.uploaded_at }}</div>
+                                    {% if news.tags %}
+                                    <div class="newsletter-tags">
+                                        {% for tag in news.tags[:2] %}
+                                            <span class="newsletter-tag">{{ tag }}</span>
+                                        {% endfor %}
+                                        {% if news.tags|length > 2 %}
+                                            <span class="newsletter-tag">+{{ news.tags|length - 2 }} more</span>
+                                        {% endif %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                        <!-- Duplicate content for seamless looping -->
+                        {% for news in newsletter_records %}
+                            <div class="newsletter-item" onclick="openNewsletterModal('{{ news.title }}', '{{ news.description }}', '{{ news.image }}', '{{ news.uploaded_at.strftime('%d %B %Y') if news.uploaded_at.__class__.__name__ == 'datetime' else news.uploaded_at }}', '{{ news.tags|join(",") if news.tags else "" }}')">
+                                {% if news.image %}
+                                <div class="newsletter-image">
+                                    <img src="{{ url_for('static', filename='uploads/' ~ news.image) }}" alt="{{ news.title }}">
+                                </div>
+                                {% else %}
+                                <div class="newsletter-image">
+                                    <img src="https://via.placeholder.com/80?text=Newsletter" alt="Default Newsletter Image">
+                                </div>
+                                {% endif %}
+                                <div class="newsletter-content">
+                                    <div class="newsletter-title">{{ news.title }}</div>
+                                    <div class="newsletter-date"><i class="far fa-calendar-alt"></i> {{ news.uploaded_at.strftime('%d %b %Y') if news.uploaded_at.__class__.__name__ == 'datetime' else news.uploaded_at }}</div>
+                                    {% if news.tags %}
+                                    <div class="newsletter-tags">
+                                        {% for tag in news.tags[:2] %}
+                                            <span class="newsletter-tag">{{ tag }}</span>
+                                        {% endfor %}
+                                        {% if news.tags|length > 2 %}
+                                            <span class="newsletter-tag">+{{ news.tags|length - 2 }} more</span>
+                                        {% endif %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="newsletter-item">
+                            <div class="newsletter-content">
+                                <div class="newsletter-title">No newsletters available</div>
+                                <div class="newsletter-date">Check back later for updates</div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="read-more">
+                <a href="{{ url_for('usernewsletters') }}"><i class="fas fa-eye"></i> View All Newsletters</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Newsletter Grid View Section -->
+    <div class="section-title" style="margin-top: 60px;">
+        <h2>Featured Newsletters</h2>
+    </div>
+    
+    <div class="newsletter-grid">
+        {% if newsletter_records %}
+            {% for news in newsletter_records[:6] %}
+                <div class="newsletter-card" onclick="openNewsletterModal('{{ news.title }}', '{{ news.description }}', '{{ news.image }}', '{{ news.uploaded_at.strftime('%d %B %Y') if news.uploaded_at.__class__.__name__ == 'datetime' else news.uploaded_at }}', '{{ news.tags|join(",") if news.tags else "" }}')">
+                    <div class="newsletter-card-image">
+                        {% if news.image %}
+                            <img src="{{ url_for('static', filename='uploads/' ~ news.image) }}" alt="{{ news.title }}">
+                        {% else %}
+                            <img src="https://via.placeholder.com/300x180?text=Newsletter" alt="Default Newsletter Image">
+                        {% endif %}
+                    </div>
+                    <div class="newsletter-card-content">
+                        <h3 class="newsletter-card-title">{{ news.title }}</h3>
+                        <div class="newsletter-card-excerpt">
+                            {{ news.description|striptags|truncate(120) }}
+                        </div>
+                        <div class="newsletter-card-meta">
+                            <span class="newsletter-card-date"><i class="far fa-calendar-alt"></i> {{ news.uploaded_at.strftime('%d %b %Y') if news.uploaded_at.__class__.__name__ == 'datetime' else news.uploaded_at }}</span>
+                            <span class="newsletter-card-readmore">Read More <i class="fas fa-arrow-right"></i></span>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="newsletter-card" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                <h3>No newsletters available at this time</h3>
+                <p>Check back later for our latest academic newsletters</p>
+            </div>
+        {% endif %}
+    </div>
+    
+    <div style="text-align: center; margin: 40px 0;">
+        <a href="{{ url_for('usernewsletters') }}" class="hero-btn" style="background-color: var(--jain-purple); border-color: var(--jain-purple);">
+            <i class="fas fa-newspaper"></i> Browse All Newsletters
+        </a>
     </div>
 
     <!-- PDF Viewer Modal -->
@@ -1284,6 +1799,26 @@
         <span class="close-modal" onclick="closePdfModal()">&times;</span>
         <div class="pdf-modal-content">
             <iframe id="pdfIframe" class="pdf-iframe" src=""></iframe>
+        </div>
+    </div>
+
+    <!-- Newsletter Modal -->
+    <div id="newsletterModal" class="newsletter-modal">
+        <div class="newsletter-modal-content">
+            <div class="newsletter-modal-header">
+                <h3 class="newsletter-modal-title" id="modalNewsletterTitle"></h3>
+                <span class="newsletter-modal-close" onclick="closeNewsletterModal()">&times;</span>
+            </div>
+            <div class="newsletter-modal-body">
+                <div class="newsletter-modal-image" id="modalNewsletterImage">
+                    <img src="" alt="Newsletter Image" id="modalImageSrc">
+                </div>
+                <div class="newsletter-modal-description" id="modalNewsletterDescription"></div>
+            </div>
+            <div class="newsletter-modal-footer">
+                <div class="newsletter-modal-tags" id="modalNewsletterTags"></div>
+                <div class="newsletter-modal-date" id="modalNewsletterDate"></div>
+            </div>
         </div>
     </div>
 
@@ -1496,16 +2031,61 @@
             }, 300);
         }
 
-        // Close modal when clicking outside
+        // Newsletter Modal functionality
+        function openNewsletterModal(title, description, image, date, tags) {
+            const modal = document.getElementById('newsletterModal');
+            document.getElementById('modalNewsletterTitle').textContent = title;
+            document.getElementById('modalNewsletterDescription').innerHTML = description;
+            document.getElementById('modalNewsletterDate').innerHTML = `<i class="far fa-calendar-alt"></i> Published on: ${date}`;
+            
+            // Set image
+            const imageElement = document.getElementById('modalImageSrc');
+            if (image) {
+                imageElement.src = "{{ url_for('static', filename='uploads/') }}" + image;
+                imageElement.style.display = 'block';
+            } else {
+                imageElement.style.display = 'none';
+            }
+            
+            // Set tags
+            const tagsContainer = document.getElementById('modalNewsletterTags');
+            tagsContainer.innerHTML = '';
+            if (tags) {
+                const tagsArray = tags.split(',');
+                tagsArray.forEach(tag => {
+                    if (tag.trim()) {
+                        const tagElement = document.createElement('span');
+                        tagElement.className = 'newsletter-tag';
+                        tagElement.textContent = tag.trim();
+                        tagsContainer.appendChild(tagElement);
+                    }
+                });
+            }
+            
+            modal.classList.add('show');
+        }
+
+        function closeNewsletterModal() {
+            const modal = document.getElementById('newsletterModal');
+            modal.classList.remove('show');
+        }
+
+        // Close modals when clicking outside
         window.onclick = function(event) {
-            const modal = document.getElementById('pdfModal');
-            if (event.target == modal) {
+            const pdfModal = document.getElementById('pdfModal');
+            const newsletterModal = document.getElementById('newsletterModal');
+            
+            if (event.target == pdfModal) {
                 closePdfModal();
+            }
+            
+            if (event.target == newsletterModal) {
+                closeNewsletterModal();
             }
         }
 
         // Pause scrolling on hover for notice sections
-        document.querySelectorAll('.scrolling-wrapper').forEach(wrapper => {
+        document.querySelectorAll('.scrolling-wrapper, .newsletter-scrolling-wrapper').forEach(wrapper => {
             wrapper.addEventListener('mouseenter', () => {
                 wrapper.style.animationPlayState = 'paused';
             });
@@ -1513,6 +2093,33 @@
             wrapper.addEventListener('mouseleave', () => {
                 wrapper.style.animationPlayState = 'running';
             });
+        });
+        
+        // Text-to-speech functionality
+        document.querySelector('.speak-bar a[href="#"]').addEventListener('click', function(e) {
+            e.preventDefault();
+            if ('speechSynthesis' in window) {
+                // Get all the text content from the main sections
+                const mainContent = document.querySelector('main').textContent || document.body.textContent;
+                const speech = new SpeechSynthesisUtterance();
+                speech.text = mainContent;
+                speech.volume = 1;
+                speech.rate = 1;
+                speech.pitch = 1;
+                window.speechSynthesis.speak(speech);
+            } else {
+                alert('Text-to-speech is not supported in your browser.');
+            }
+        });
+        
+        // Header scroll effect
+        window.addEventListener('scroll', function() {
+            const header = document.querySelector('header');
+            if (window.scrollY > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
         });
     </script>
 </body>
