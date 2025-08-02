@@ -16,6 +16,8 @@
       --jain-teal: #008080;
       --jain-purple: #6a5acd;
       --jain-yellow: #ffc107;
+      --jain-dark-blue: #001a33;
+      --jain-orange: #ff7b25;
 
       --transition: all 0.3s ease;
       --card-shadow: 0 5px 15px rgba(0, 51, 102, 0.1);
@@ -34,6 +36,11 @@
       line-height: 1.6;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
+      background-image: url('https://www.jainuniversity.ac.in/images/bg-pattern.png');
+      background-attachment: fixed;
+      background-size: 400px;
+      background-blend-mode: overlay;
+      background-color: rgba(245, 245, 245, 0.95);
     }
 
     a {
@@ -50,12 +57,13 @@
 
     /* Speak Bar */
     .speak-bar {
-        background-color: var(--jain-blue);
+        background: linear-gradient(135deg, var(--jain-dark-blue) 0%, var(--jain-blue) 100%);
         color: white;
         padding: 8px 0;
         font-size: 0.9rem;
         position: relative;
         z-index: 10001;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
     
     .speak-container {
@@ -75,10 +83,13 @@
         display: flex;
         align-items: center;
         gap: 5px;
+        padding: 5px 10px;
+        border-radius: 4px;
     }
     
     .speak-bar a:hover {
         color: white;
+        background-color: rgba(255, 255, 255, 0.1);
     }
 
     /* HEADER */
@@ -90,15 +101,17 @@
       top: 0;
       z-index: 10000;
       border-radius: 0 0 30px 30px;
-      transition: box-shadow 0.3s ease;
+      transition: all 0.3s ease;
       display: flex;
       justify-content: center;
+      background-image: linear-gradient(to right, white 0%, #f9f9f9 100%);
     }
 
     header.scrolled {
       box-shadow: 0 5px 25px rgba(0, 51, 102, 0.25);
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: saturate(180%) blur(15px);
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(5px);
+      padding: 10px 30px;
     }
 
     .header-container {
@@ -125,6 +138,7 @@
       border-radius: 15px;
       transition: transform 0.3s ease;
       box-shadow: 0 5px 15px rgba(0, 51, 102, 0.25);
+      border: 2px solid var(--jain-gold);
     }
 
     .logo-section:hover img {
@@ -138,6 +152,7 @@
       color: var(--jain-blue);
       user-select: none;
       letter-spacing: 0.05em;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
     }
 
     .logo-text span {
@@ -222,12 +237,15 @@
       color: var(--jain-blue);
       cursor: pointer;
       transition: var(--transition);
+      padding: 10px;
+      border-radius: 50%;
     }
 
     .nav-toggle:hover,
     .nav-toggle:focus {
       color: var(--jain-gold);
       outline: none;
+      background-color: rgba(0, 51, 102, 0.1);
     }
 
     /* Responsive Navigation */
@@ -254,6 +272,7 @@
 
       nav.show {
         max-height: 500px; /* enough to show all links */
+        padding: 15px 0;
       }
 
       .nav-toggle {
@@ -313,6 +332,7 @@
         border-radius: 15px;
         box-shadow: 0 10px 30px rgba(0, 51, 102, 0.1);
         overflow: hidden;
+        border: 1px solid rgba(0,0,0,0.05);
     }
 
     .calendar-header {
@@ -327,6 +347,7 @@
         margin: 0;
         font-size: 1.8rem;
         font-weight: 600;
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
     }
 
     .calendar-date {
@@ -334,7 +355,7 @@
         justify-content: center;
         align-items: center;
         padding: 25px 20px;
-        background-color: var(--jain-gold);
+        background: linear-gradient(135deg, var(--jain-gold) 0%, #ffea80 100%);
         color: var(--jain-blue);
     }
 
@@ -347,6 +368,7 @@
         font-size: 5rem;
         font-weight: 700;
         line-height: 1;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
     }
 
     .date-month-year {
@@ -382,6 +404,7 @@
         background: rgba(0, 51, 102, 0.05);
         border-radius: 10px;
         transition: var(--transition);
+        border-left: 4px solid var(--jain-blue);
     }
 
     .event-item:hover {
@@ -440,11 +463,12 @@
         
     /* University Updates Marquee */
     .university-updates {
-        background-color: var(--jain-blue);
+        background: linear-gradient(135deg, var(--jain-dark-blue) 0%, var(--jain-blue) 100%);
         color: white;
         padding: 15px 0;
         margin-top: -5px;
         overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
     
     .updates-container {
@@ -456,13 +480,14 @@
     }
     
     .updates-label {
-        background-color: var(--jain-gold);
+        background: linear-gradient(135deg, var(--jain-gold) 0%, #ffea80 100%);
         color: var(--jain-blue);
         padding: 8px 15px;
         border-radius: 4px;
         font-weight: 600;
         margin-right: 20px;
         white-space: nowrap;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
     
     .updates-marquee {
@@ -483,10 +508,12 @@
         text-decoration: none;
         margin-right: 30px;
         transition: var(--transition);
+        font-weight: 500;
     }
     
     .updates-marquee a:hover {
         color: var(--jain-gold);
+        text-decoration: underline;
     }
     
     @keyframes marquee {
@@ -531,6 +558,15 @@
         font-size: 1rem;
         text-align: center;
         letter-spacing: 0.5px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .ugc-notice-section .card-header {
+        background: linear-gradient(135deg, var(--jain-blue) 0%, #004080 100%);
+    }
+    
+    .university-notice-section .card-header {
+        background: linear-gradient(135deg, var(--jain-orange) 0%, #ff9a56 100%);
     }
     
     .scrolling-content {
@@ -686,7 +722,7 @@
     /* Monthly Engagement Section */
     .engagement-section {
         margin: 80px 0;
-        background-color: var(--jain-yellow);
+        background: linear-gradient(135deg, var(--jain-yellow) 0%, #ffd55a 100%);
         padding: 60px 0;
         clip-path: polygon(0 5%, 100% 0, 100% 95%, 0% 100%);
     }
@@ -1048,6 +1084,7 @@
         font-size: 1rem;
         text-align: center;
         letter-spacing: 0.5px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
     
     .newsletter-scrolling-content {
@@ -1059,7 +1096,7 @@
     .newsletter-scrolling-wrapper {
         position: absolute;
         width: 100%;
-        animation: scrollNewsletters 60s linear infinite; /* Changed from 30s to 60s */
+        animation: scrollNewsletters 60s linear infinite;
     }
     
     @keyframes scrollNewsletters {
@@ -1083,6 +1120,7 @@
     
     .newsletter-item:hover {
         background-color: rgba(0, 51, 102, 0.03);
+        transform: translateY(-3px);
     }
     
     .newsletter-item:last-child {
@@ -1334,6 +1372,27 @@
         font-size: 0.9rem;
     }
 
+    /* Hero Button */
+    .hero-btn {
+        display: inline-block;
+        padding: 12px 30px;
+        background-color: var(--jain-blue);
+        color: white;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: var(--transition);
+        border: 2px solid var(--jain-blue);
+        text-decoration: none;
+        box-shadow: 0 4px 15px rgba(0, 51, 102, 0.3);
+    }
+    
+    .hero-btn:hover {
+        background-color: white;
+        color: var(--jain-blue);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0, 51, 102, 0.4);
+    }
+
     /* Responsive Styles */
     @media (max-width: 992px) {
         .hero h2 {
@@ -1501,6 +1560,10 @@
         .speak-bar a {
             font-size: 0.8rem;
         }
+        
+        .section-title {
+            font-size: 2rem;
+        }
     }
     </style>
 </head>
@@ -1508,12 +1571,9 @@
     <!-- Speak Bar -->
     <div class="speak-bar">
         <div class="speak-container">
-            <a href="#"><i class="fas fa-volume-up"></i> Speak</a>
-            <a href="#"><i class="fas fa-eye"></i> Screen Reader</a>
-            <a href="#"><i class="fas fa-text-height"></i> Text Size: A A A</a>
-            <a href="#"><i class="fas fa-language"></i> International Cooperation</a>
-            <a href="#"><i class="fas fa-skip-forward"></i> Skip to main content</a>
-            <a href="#"><i class="fas fa-skip-forward"></i> Skip to Navigation</a>
+            <a href="#text-size"><i class="fas fa-text-height"></i> Text Size: A A A</a>
+            <a href="#newsletter"><i class="fas fa-skip-forward"></i> Skip to Newsletter</a>
+            <a href="#main-content"><i class="fas fa-skip-forward"></i> Skip to Main Content</a>
         </div>
     </div>
 
@@ -1533,9 +1593,9 @@
           
             <nav class="nav-links">
                 <a href="#">Home</a>
-                <a href="{{ url_for('usernewsletters') }}">monthly</a>
+                <a href="{{ url_for('usernewsletters') }}">Newsletters</a>
                 <a href="{{ url_for('ugc') }}">UGC Requirement</a>
-                <a href="{{ url_for('monthlyengagement') }}">Monthly Engagement</a>
+                <a href="{{ url_for('monthlyengagement') }}">Engagement</a>
                 <a href="{{ url_for('jainevents') }}">Events</a>
                 <a href="{{ url_for('login') }}" class="login-btn"><i class="fas fa-sign-in-alt"></i> Login</a>
             </nav>
@@ -1561,10 +1621,13 @@
         </div>
     </div>
 
+    <!-- Main Content Anchor -->
+    <a id="main-content" style="position: absolute; top: -100px;"></a>
+
     <!-- Notices Section with Newsletter -->
     <div class="notices-container">
         <!-- UGC Notices Section -->
-        <div class="notice-section">
+        <div class="notice-section ugc-notice-section">
             <div class="card-header">
                 <i class="fas fa-bullhorn"></i> UGC Notices & Announcements
             </div>
@@ -1619,7 +1682,7 @@
         </div>
 
         <!-- University Notices Section -->
-        <div class="notice-section">
+        <div class="notice-section university-notice-section">
             <div class="card-header">
                 <i class="fas fa-university"></i> University Notices
             </div>
@@ -1674,7 +1737,7 @@
         </div>
 
         <!-- Newsletter Section -->
-        <div class="newsletter-section">
+        <div class="newsletter-section" id="newsletter">
             <div class="newsletter-header">
                 <i class="fas fa-newspaper"></i> Latest Newsletters
             </div>
@@ -1792,34 +1855,6 @@
         <a href="{{ url_for('usernewsletters') }}" class="hero-btn" style="background-color: var(--jain-purple); border-color: var(--jain-purple);">
             <i class="fas fa-newspaper"></i> Browse All Newsletters
         </a>
-    </div>
-
-    <!-- PDF Viewer Modal -->
-    <div id="pdfModal" class="pdf-modal">
-        <span class="close-modal" onclick="closePdfModal()">&times;</span>
-        <div class="pdf-modal-content">
-            <iframe id="pdfIframe" class="pdf-iframe" src=""></iframe>
-        </div>
-    </div>
-
-    <!-- Newsletter Modal -->
-    <div id="newsletterModal" class="newsletter-modal">
-        <div class="newsletter-modal-content">
-            <div class="newsletter-modal-header">
-                <h3 class="newsletter-modal-title" id="modalNewsletterTitle"></h3>
-                <span class="newsletter-modal-close" onclick="closeNewsletterModal()">&times;</span>
-            </div>
-            <div class="newsletter-modal-body">
-                <div class="newsletter-modal-image" id="modalNewsletterImage">
-                    <img src="" alt="Newsletter Image" id="modalImageSrc">
-                </div>
-                <div class="newsletter-modal-description" id="modalNewsletterDescription"></div>
-            </div>
-            <div class="newsletter-modal-footer">
-                <div class="newsletter-modal-tags" id="modalNewsletterTags"></div>
-                <div class="newsletter-modal-date" id="modalNewsletterDate"></div>
-            </div>
-        </div>
     </div>
 
     <!-- Monthly Engagement Section in Yellow -->
@@ -2020,12 +2055,14 @@
             const iframe = document.getElementById('pdfIframe');
             iframe.src = pdfUrl;
             modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
         }
 
         function closePdfModal() {
             const modal = document.getElementById('pdfModal');
             const iframe = document.getElementById('pdfIframe');
             modal.classList.remove('show');
+            document.body.style.overflow = 'auto';
             setTimeout(() => {
                 iframe.src = '';
             }, 300);
@@ -2063,11 +2100,13 @@
             }
             
             modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
         }
 
         function closeNewsletterModal() {
             const modal = document.getElementById('newsletterModal');
             modal.classList.remove('show');
+            document.body.style.overflow = 'auto';
         }
 
         // Close modals when clicking outside
@@ -2120,6 +2159,25 @@
             } else {
                 header.classList.remove('scrolled');
             }
+        });
+        
+        // Text size adjustment functionality
+        const textSizeLinks = document.querySelectorAll('.speak-bar a[href="#text-size"]');
+        textSizeLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const html = document.documentElement;
+                const currentSize = parseFloat(window.getComputedStyle(html, null).getPropertyValue('font-size'));
+                
+                // Toggle between different font sizes
+                if (currentSize === 16) {
+                    html.style.fontSize = '18px';
+                } else if (currentSize === 18) {
+                    html.style.fontSize = '20px';
+                } else {
+                    html.style.fontSize = '16px';
+                }
+            });
         });
     </script>
 </body>
