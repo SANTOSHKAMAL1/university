@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <style>
         /* Chart container styling */
         .chart-container {
@@ -18,52 +19,166 @@
         
         /* Dashboard styling */
         .dashboard-section {
-            padding: 2rem 0;
+            padding: 3rem 0;
             background-color: #f8f9fa;
         }
         
-        .dashboard-tabs {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
+        .dashboard-section h1 {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #2c3e50;
         }
         
-        .tab-btn {
-            padding: 0.75rem 1.5rem;
-            background: #e9ecef;
+        .dashboard-section h2 {
+            margin-bottom: 1.5rem;
+            color: #34495e;
+            font-size: 1.5rem;
+        }
+        
+        .dashboard-section h3 {
+            margin-bottom: 1rem;
+            color: #4e73df;
+            font-size: 1.2rem;
+        }
+        
+        .tab-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .tab-buttons button {
+            padding: 12px 25px;
+            background-color: #e9ecef;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
-            font-weight: 500;
+            font-weight: 600;
+            color: #495057;
             transition: all 0.3s ease;
         }
         
-        .tab-btn.active {
-            background: #4e73df;
+        .tab-buttons button.active {
+            background-color: #4e73df;
             color: white;
-        }
-        
-        .tab-content {
-            display: none;
-        }
-        
-        .tab-content.active-tab {
-            display: block;
+            box-shadow: 0 4px 8px rgba(78, 115, 223, 0.3);
         }
         
         .dashboard-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 20px;
         }
         
         .dashboard-card {
             background: white;
-            border-radius: 8px;
+            border-radius: 10px;
             padding: 1.5rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.12);
+        }
+        
+        .dashboard-card.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 250px;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        
+        .chart-summary {
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #495057;
+        }
+        
+        .section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .section.active-tab {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Newsletter grid styling */
+        .newsletter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .newsletter-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        .newsletter-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .newsletter-card-image {
+            height: 180px;
+            overflow: hidden;
+        }
+
+        .newsletter-card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .newsletter-card-content {
+            padding: 15px;
+        }
+
+        .newsletter-card-title {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+
+        .newsletter-card-excerpt {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .newsletter-card-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #888;
+        }
+
+        .newsletter-card-readmore {
+            color: #4e73df;
+            font-weight: bold;
+        }
+
         /* Other existing styles remain the same */
     </style>
 </head>
@@ -82,7 +197,6 @@
             <button id="textSizeToggle"><i class="fas fa-text-height"></i> Text Size: A A A</button>
             <a href="#newsletter"><i class="fas fa-skip-forward"></i> Skip to Newsletter</a>
             <a href="#main-content"><i class="fas fa-skip-forward"></i> Skip to Main Content</a>
-            
         </div>
     </div>
 
@@ -251,250 +365,257 @@
                 </div>
             </div>
         </div>
-<!-- Newsletter Grid View Section -->
-    <div class="section-title" style="margin-top: 60px;">
-        <h2>Featured Newsletters</h2>
-    </div>
-    
-    <div class="newsletter-grid">
-        {% if newsletter_records %}
-            {% for news in newsletter_records[:6] %}
-                <div class="newsletter-card" onclick="openNewsletterModal('{{ news.title }}', '{{ news.description }}', '{{ news.image }}', '{{ news.uploaded_at.strftime('%d %B %Y') if news.uploaded_at.__class__.__name__ == 'datetime' else news.uploaded_at }}', '{{ news.tags|join(",") if news.tags else "" }}')">
-                    <div class="newsletter-card-image">
-                        {% if news.image %}
-                            <img src="{{ url_for('static', filename='uploads/' ~ news.image) }}" alt="{{ news.title }}">
-                        {% else %}
-                            <img src="https://via.placeholder.com/300x180?text=Newsletter" alt="Default Newsletter Image">
-                        {% endif %}
-                    </div>
-                    <div class="newsletter-card-content">
-                        <h3 class="newsletter-card-title">{{ news.title }}</h3>
-                        <div class="newsletter-card-excerpt">
-                            {{ news.description|striptags|truncate(120) }}
-                        </div>
-                        <div class="newsletter-card-meta">
-                            <span class="newsletter-card-date"><i class="far fa-calendar-alt"></i> {{ news.uploaded_at.strftime('%d %b %Y') if news.uploaded_at.__class__.__name__ == 'datetime' else news.uploaded_at }}</span>
-                            <span class="newsletter-card-readmore">Read More <i class="fas fa-arrow-right"></i></span>
-                        </div>
-                    </div>
-                </div>
-            {% endfor %}
-        {% else %}
-            <div class="newsletter-card" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
-                <h3>No newsletters available at this time</h3>
-                <p>Check back later for our latest academic newsletters</p>
-            </div>
-        {% endif %}
-    </div>
-    
-    <div style="text-align: center; margin: 40px 0;">
-        <a href="{{ url_for('usernewsletters') }}" class="hero-btn" style="background-color: var(--jain-purple); border-color: var(--jain-purple);">
-            <i class="fas fa-newspaper"></i> Browse All Newsletters
-        </a>
-    </div>
-        <!-- Digital Learning Dashboard Section -->
-        <section class="dashboard-section">
-  <div class="container">
-                <div class="section-title">
-                    <h2>Digital Learning Dashboard</h2>
-                    <p>Interactive analytics of faculty and student engagement with digital learning resources</p>
-                </div>
-                
-                <div class="dashboard-tabs" role="tablist">
-                    <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="faculty-tab" id="faculty-tab-btn">Faculty Engagement</button>
-                    <button class="tab-btn" role="tab" aria-selected="false" aria-controls="student-tab" id="student-tab-btn">Student Engagement</button>
-                    <button class="tab-btn" role="tab" aria-selected="false" aria-controls="department-tab" id="department-tab-btn">Department Analysis</button>
-                </div>
-                
-                <!-- Faculty Engagement Tab -->
-                <div id="faculty-tab" class="tab-content active-tab" role="tabpanel">
-                    <div class="dashboard-grid">
-                        <div class="dashboard-card chart-card">
-                            <h3>Faculty Course Completion</h3>
-                            <div class="chart-container">
-                                <canvas id="facultyPieChart" aria-label="Faculty Course Completion Chart"></canvas>
-                            </div>
-                        </div>
-                        <div class="dashboard-card stats-card">
-                            <h3>Key Metrics</h3>
-                            <div class="metrics-grid">
-                                <div class="metric-item">
-                                    <div class="metric-value">847</div>
-                                    <div class="metric-label">Total Faculty</div>
-                                </div>
-                                <div class="metric-item">
-                                    <div class="metric-value">49.2%</div>
-                                    <div class="metric-label">Courses Completed</div>
-                                </div>
-                                <div class="metric-item">
-                                    <div class="metric-value">48.9%</div>
-                                    <div class="metric-label">In Progress</div>
-                                </div>
-                                <div class="metric-item">
-                                    <div class="metric-value">1.5%</div>
-                                    <div class="metric-label">Not Enrolled</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Student Engagement Tab -->
-                <div id="student-tab" class="tab-content" role="tabpanel" hidden>
-                    <div class="dashboard-grid">
-                        <div class="dashboard-card chart-card">
-                            <h3>Student Course Completion</h3>
-                            <div class="chart-container">
-                                <canvas id="studentBarChart" aria-label="Student Engagement Chart"></canvas>
-                            </div>
-                        </div>
-                        <div class="dashboard-card stats-card">
-                            <h3>Key Metrics</h3>
-                            <div class="metrics-grid">
-                                <div class="metric-item">
-                                    <div class="metric-value">18,716</div>
-                                    <div class="metric-label">Total Students</div>
-                                </div>
-                                <div class="metric-item">
-                                    <div class="metric-value">87%</div>
-                                    <div class="metric-label">Engaged</div>
-                                </div>
-                                <div class="metric-item">
-                                    <div class="metric-value">11.31%</div>
-                                    <div class="metric-label">In Progress</div>
-                                </div>
-                                <div class="metric-item">
-                                    <div class="metric-value">1.69%</div>
-                                    <div class="metric-label">Not Enrolled</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Department Analysis Tab -->
-                <div id="department-tab" class="tab-content" role="tabpanel" hidden>
-                    <div class="dashboard-grid">
-                        <div class="dashboard-card chart-card">
-                            <h3>Top Departments - Course Completions</h3>
-                            <div class="chart-container">
-                                <canvas id="departmentChart" aria-label="Department Analysis Chart"></canvas>
-                            </div>
-                        </div>
-                        <div class="dashboard-card stats-card">
-                            <h3>Course Completion Stats</h3>
-                            <div class="metrics-grid">
-                                <div class="metric-item">
-                                    <div class="metric-value">115,863</div>
-                                    <div class="metric-label">General Courses</div>
-                                </div>
-                                <div class="metric-item">
-                                    <div class="metric-value">23,543</div>
-                                    <div class="metric-label">Custom Courses</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
 
-
-    <!-- Monthly Engagement Section -->
-    <div class="engagement-section">
-        <div class="container">
-            <div class="engagement-title">
-                <h2>Academic Engagements & Events</h2>
-                <p>Discover our monthly academic activities, workshops, and events that shape the future of education</p>
-            </div>
-            
-            <div class="engagement-grid">
-                {% if monthly_records %}
-                    {% for record in monthly_records %}
-                        <div class="engagement-card">
-                            <div class="engagement-card-header">
-                                {{ record.heading }}
-                            </div>
-                            <div class="engagement-card-body">
-                                <p>{{ record.description }}</p>
-                                
-                                <div class="engagement-meta">
-                                    <span><i class="fas fa-university"></i> {{ record.school }}</span>
-                                    <span><i class="fas fa-building"></i> {{ record.department }}</span>
-                                </div>
-                                
-                                {% if record.tags %}
-                                <div class="engagement-tags">
-                                    {% for tag in record.tags %}
-                                        <span class="engagement-tag">{{ tag }}</span>
-                                    {% endfor %}
-                                </div>
-                                {% endif %}
-                                
-                                {% if record.files %}
-                                    {% for file in record.files %}
-                                        {% if file.endswith('.pdf') %}
-                                            <div class="engagement-media">
-                                                <div class="pdf-preview">
-                                                    <i class="fas fa-file-pdf"></i>
-                                                    <span>PDF Document</span>
-                                                </div>
-                                                <div class="engagement-media-overlay">
-                                                    <a href="{{ url_for('static', filename='uploads/' ~ file) }}" target="_blank" class="media-view-btn">View PDF</a>
-                                                </div>
-                                            </div>
-                                        {% elif file.endswith('.jpg') or file.endswith('.png') or file.endswith('.jpeg') %}
-                                            <div class="engagement-media">
-                                                <img src="{{ url_for('static', filename='uploads/' ~ file) }}" alt="Event Image">
-                                                <div class="engagement-media-overlay">
-                                                    <a href="{{ url_for('static', filename='uploads/' ~ file) }}" target="_blank" class="media-view-btn">View Image</a>
-                                                </div>
-                                            </div>
-                                        {% endif %}
-                                    {% endfor %}
-                                {% endif %}
-                            </div>
-                        </div>
-                    {% endfor %}
-                {% else %}
-                    <div class="engagement-card" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
-                        <h3>No engagement records available at this time</h3>
-                        <p>Check back later for upcoming academic events and activities</p>
-                    </div>
-                {% endif %}
-            </div>
-            
-            <div style="text-align: center; margin-top: 50px;">
-                <a href="{{ url_for('monthlyengagement') }}" class="hero-btn" style="background-color: var(--jain-blue); border-color: var(--jain-blue);">
-                    <i class="fas fa-calendar-check"></i> View All Engagements
-                </a>
-            </div>
+        <!-- Newsletter Grid View Section -->
+        <div class="section-title" style="margin-top: 60px;">
+            <h2>Featured Newsletters</h2>
         </div>
-    </div>
+        
+        <div class="newsletter-grid">
+            {% if newsletter_records %}
+                {% for news in newsletter_records[:6] %}
+                    <div class="newsletter-card" onclick="openNewsletterModal('{{ news.title }}', '{{ news.description }}', '{{ news.image }}', '{{ news.uploaded_at.strftime('%d %B %Y') if news.uploaded_at.__class__.__name__ == 'datetime' else news.uploaded_at }}', '{{ news.tags|join(",") if news.tags else "" }}')">
+                        <div class="newsletter-card-image">
+                            {% if news.image %}
+                                <img src="{{ url_for('static', filename='uploads/' ~ news.image) }}" alt="{{ news.title }}">
+                            {% else %}
+                                <img src="https://via.placeholder.com/300x180?text=Newsletter" alt="Default Newsletter Image">
+                            {% endif %}
+                        </div>
+                        <div class="newsletter-card-content">
+                            <h3 class="newsletter-card-title">{{ news.title }}</h3>
+                            <div class="newsletter-card-excerpt">
+                                {{ news.description|striptags|truncate(120) }}
+                            </div>
+                            <div class="newsletter-card-meta">
+                                <span class="newsletter-card-date"><i class="far fa-calendar-alt"></i> {{ news.uploaded_at.strftime('%d %b %Y') if news.uploaded_at.__class__.__name__ == 'datetime' else news.uploaded_at }}</span>
+                                <span class="newsletter-card-readmore">Read More <i class="fas fa-arrow-right"></i></span>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="newsletter-card" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                    <h3>No newsletters available at this time</h3>
+                    <p>Check back later for our latest academic newsletters</p>
+                </div>
+            {% endif %}
+        </div>
+        
+        <div style="text-align: center; margin: 40px 0;">
+            <a href="{{ url_for('usernewsletters') }}" class="hero-btn" style="background-color: var(--jain-purple); border-color: var(--jain-purple);">
+                <i class="fas fa-newspaper"></i> Browse All Newsletters
+            </a>
+        </div>
 
-    <!-- Stats Section -->
-    <div class="stats-section">
-        <div class="stats-container">
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <div class="stat-number">30+</div>
-                    <div class="stat-label">Years of Excellence</div>
+        <!-- University Engagement Dashboard -->
+        <div class="dashboard-section">
+            <div class="container">
+                <h1>University Engagement Dashboard</h1>
+
+                <!-- Tab Buttons -->
+                <div class="tab-buttons">
+                    <button class="active" onclick="openTab('students')">Students Engagement</button>
+                    <button onclick="openTab('faculty')">Faculty Engagement</button>
+                    <button onclick="openTab('learning')">Learning Analytics</button>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-number">150+</div>
-                    <div class="stat-label">Programs Offered</div>
+
+                <!-- Students Tab -->
+                <div id="students" class="section" style="display:block;">
+                    <h2>Students Activation and Engagement</h2>
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card">
+                            <h3>JGI Bengaluru</h3>
+                            <div class="chart-container">
+                                <canvas id="studentsChartBlr"></canvas>
+                            </div>
+                            <div class="chart-summary">
+                                Total Students: 19,716<br>
+                                87% engaged | 11.31% incomplete | 1.69% not enrolled
+                            </div>
+                        </div>
+                        <div class="dashboard-card">
+                            <h3>JGI Kochi</h3>
+                            <div class="chart-container">
+                                <canvas id="studentsChartKochi"></canvas>
+                            </div>
+                            <div class="chart-summary">
+                                Total Students: 725<br>
+                                78.21% engaged | 20.06% incomplete | 5.66% not enrolled
+                            </div>
+                        </div>
+                        <div class="dashboard-card">
+                            <h3>ARKA JAIN</h3>
+                            <div class="chart-container">
+                                <canvas id="studentsChartArka"></canvas>
+                            </div>
+                            <div class="chart-summary">
+                                Total Students: 4,190<br>
+                                88% engaged | 8.14% incomplete | 4% not enrolled
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-number">500+</div>
-                    <div class="stat-label">Faculty Members</div>
+
+                <!-- Faculty Tab -->
+                <div id="faculty" class="section">
+                    <h2>Faculty Members Activation and Engagement</h2>
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card">
+                            <h3>JGI Bengaluru</h3>
+                            <div class="chart-container">
+                                <canvas id="facultyChartBlr"></canvas>
+                            </div>
+                            <div class="chart-summary">
+                                Total Faculty: 847<br>
+                                49.2% completed | 48.9% incomplete | 1.9% not enrolled
+                            </div>
+                        </div>
+                        <div class="dashboard-card">
+                            <h3>JGI Kochi</h3>
+                            <div class="chart-container">
+                                <canvas id="facultyChartKochi"></canvas>
+                            </div>
+                            <div class="chart-summary">
+                                Total Faculty: 79<br>
+                                57% completed | 38% incomplete | 5.1% not enrolled
+                            </div>
+                        </div>
+                        <div class="dashboard-card">
+                            <h3>ARKA JAIN</h3>
+                            <div class="chart-container">
+                                <canvas id="facultyChartArka"></canvas>
+                            </div>
+                            <div class="chart-summary">
+                                Total Faculty: 186<br>
+                                54.8% completed | 43.5% incomplete | 1.6% not enrolled
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-number">40,000+</div>
-                    <div class="stat-label">Students Enrolled</div>
+
+                <!-- Learning Tab -->
+                <div id="learning" class="section">
+                    <h2>Learning Hours Trend</h2>
+                    <div class="dashboard-card full-width">
+                        <div class="chart-container" style="height: 400px;">
+                            <canvas id="learningChart"></canvas>
+                        </div>
+                        <div class="chart-summary">
+                            Learner engagement peaked in Nov 2024 with 47,944 total hours. Standalone courses were most accessed. 
+                            Activity dropped in May 2025 due to exams/vacation.
+                        </div>
+                    </div>
+                    
+                    <h2 style="margin-top: 40px;">Monthly Completions</h2>
+                    <div class="dashboard-card full-width">
+                        <div class="chart-container" style="height: 400px;">
+                            <canvas id="completionsChart"></canvas>
+                        </div>
+                        <div class="chart-summary">
+                            March 2025 had the highest completions (29,842). Declines in April & May linked to exams and reduced activity.
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+
+        <!-- Monthly Engagement Section -->
+        <div class="engagement-section">
+            <div class="container">
+                <div class="engagement-title">
+                    <h2>Academic Engagements & Events</h2>
+                    <p>Discover our monthly academic activities, workshops, and events that shape the future of education</p>
+                </div>
+                
+                <div class="engagement-grid">
+                    {% if monthly_records %}
+                        {% for record in monthly_records %}
+                            <div class="engagement-card">
+                                <div class="engagement-card-header">
+                                    {{ record.heading }}
+                                </div>
+                                <div class="engagement-card-body">
+                                    <p>{{ record.description }}</p>
+                                    
+                                    <div class="engagement-meta">
+                                        <span><i class="fas fa-university"></i> {{ record.school }}</span>
+                                        <span><i class="fas fa-building"></i> {{ record.department }}</span>
+                                    </div>
+                                    
+                                    {% if record.tags %}
+                                    <div class="engagement-tags">
+                                        {% for tag in record.tags %}
+                                            <span class="engagement-tag">{{ tag }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if record.files %}
+                                        {% for file in record.files %}
+                                            {% if file.endswith('.pdf') %}
+                                                <div class="engagement-media">
+                                                    <div class="pdf-preview">
+                                                        <i class="fas fa-file-pdf"></i>
+                                                        <span>PDF Document</span>
+                                                    </div>
+                                                    <div class="engagement-media-overlay">
+                                                        <a href="{{ url_for('static', filename='uploads/' ~ file) }}" target="_blank" class="media-view-btn">View PDF</a>
+                                                    </div>
+                                                </div>
+                                            {% elif file.endswith('.jpg') or file.endswith('.png') or file.endswith('.jpeg') %}
+                                                <div class="engagement-media">
+                                                    <img src="{{ url_for('static', filename='uploads/' ~ file) }}" alt="Event Image">
+                                                    <div class="engagement-media-overlay">
+                                                        <a href="{{ url_for('static', filename='uploads/' ~ file) }}" target="_blank" class="media-view-btn">View Image</a>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="engagement-card" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                            <h3>No engagement records available at this time</h3>
+                            <p>Check back later for upcoming academic events and activities</p>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div style="text-align: center; margin-top: 50px;">
+                    <a href="{{ url_for('monthlyengagement') }}" class="hero-btn" style="background-color: var(--jain-blue); border-color: var(--jain-blue);">
+                        <i class="fas fa-calendar-check"></i> View All Engagements
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Section -->
+        <div class="stats-section">
+            <div class="stats-container">
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-number">30+</div>
+                        <div class="stat-label">Years of Excellence</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">150+</div>
+                        <div class="stat-label">Programs Offered</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">500+</div>
+                        <div class="stat-label">Faculty Members</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">40,000+</div>
+                        <div class="stat-label">Students Enrolled</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
 
     <footer>
         <div class="footer-wave"></div>
@@ -564,209 +685,371 @@
     </div>
 
     <script>
-         
         // Initialize charts when DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {
             // Initialize all charts
-            initFacultyChart();
-            initStudentChart();
-            initDepartmentChart();
+            initStudentsCharts();
+            initFacultyCharts();
+            initLearningChart();
+            initCompletionsChart();
             
-            // Set up tab functionality
-            setupTabs();
+            // Activate first tab by default
+            openTab('students');
             
-            // Other existing JavaScript functions
+            // Setup other functionality
             setupMobileNavigation();
             setupTextSizeToggle();
             setupTextToSpeech();
             setupScrollEffects();
-            setupModals();
         });
 
-        function setupTabs() {
-            const tabButtons = document.querySelectorAll('.tab-btn');
-            
-            tabButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    const tabId = this.getAttribute('aria-controls');
-                    openTab(tabId);
-                });
-            });
-            
-            // Activate first tab by default
-            openTab('faculty-tab');
-        }
-
+        // Tab switching function
         function openTab(tabId) {
-            // Hide all tab contents
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.setAttribute('hidden', 'true');
-                tab.classList.remove('active-tab');
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.style.display = 'none';
             });
             
             // Remove active class from all buttons
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.setAttribute('aria-selected', 'false');
-                btn.classList.remove('active');
+            document.querySelectorAll('.tab-buttons button').forEach(button => {
+                button.classList.remove('active');
             });
             
-            // Show the selected tab content
-            const activeTab = document.getElementById(tabId);
-            activeTab.removeAttribute('hidden');
-            activeTab.classList.add('active-tab');
-            
-            // Add active class to the clicked button
-            const activeButton = document.querySelector(`[aria-controls="${tabId}"]`);
-            activeButton.setAttribute('aria-selected', 'true');
-            activeButton.classList.add('active');
-            
-            // Redraw charts when tab becomes visible
-            setTimeout(() => {
-                if (tabId === 'faculty-tab' && window.facultyPieChart) {
-                    window.facultyPieChart.update();
-                } else if (tabId === 'student-tab' && window.studentBarChart) {
-                    window.studentBarChart.update();
-                } else if (tabId === 'department-tab' && window.departmentChart) {
-                    window.departmentChart.update();
-                }
-            }, 100);
+            // Show selected section and activate button
+            document.getElementById(tabId).style.display = 'block';
+            event.target.classList.add('active');
         }
 
-        function initFacultyChart() {
-            const ctx = document.getElementById('facultyPieChart');
-            if (!ctx) {
-                console.error('Faculty chart canvas not found');
-                return;
-            }
-            
-            window.facultyPieChart = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: ['Courses Completed', 'In Progress', 'Not Enrolled'],
-                    datasets: [{
-                        data: [49.2, 48.9, 1.5],
-                        backgroundColor: [
-                            'rgba(78, 115, 223, 0.8)',
-                            'rgba(28, 200, 138, 0.8)',
-                            'rgba(231, 74, 59, 0.8)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                font: {
-                                    size: 14
-                                }
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return `${context.label}: ${context.raw}%`;
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        function initStudentChart() {
-            const ctx = document.getElementById('studentBarChart');
-            if (!ctx) {
-                console.error('Student chart canvas not found');
-                return;
-            }
-            
-            window.studentBarChart = new Chart(ctx, {
+        // STUDENTS CHARTS
+        function initStudentsCharts() {
+            // Bangalore Students Chart
+            const ctxBlr = document.getElementById('studentsChartBlr').getContext('2d');
+            new Chart(ctxBlr, {
                 type: 'bar',
                 data: {
-                    labels: ['JGI Bengaluru', 'JGI Kochi', 'ARKA JAIN'],
+                    labels: ['Engaged', 'Incomplete', 'Not Enrolled'],
                     datasets: [{
-                        label: 'Engagement Rate (%)',
-                        data: [87, 78.21, 88],
+                        label: 'Students',
+                        data: [17152, 2230, 334],
                         backgroundColor: [
-                            'rgba(78, 115, 223, 0.8)',
-                            'rgba(28, 200, 138, 0.8)',
-                            'rgba(54, 185, 204, 0.8)'
+                            'rgba(75, 192, 192, 0.7)',
+                            'rgba(255, 206, 86, 0.7)',
+                            'rgba(255, 99, 132, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(255, 99, 132, 1)'
                         ],
                         borderWidth: 1
                     }]
                 },
+                options: getChartOptions('Students Distribution - Bangalore')
+            });
+
+            // Kochi Students Chart
+            const ctxKochi = document.getElementById('studentsChartKochi').getContext('2d');
+            new Chart(ctxKochi, {
+                type: 'bar',
+                data: {
+                    labels: ['Engaged', 'Incomplete', 'Not Enrolled'],
+                    datasets: [{
+                        label: 'Students',
+                        data: [567, 117, 41],
+                        backgroundColor: [
+                            'rgba(75, 192, 192, 0.7)',
+                            'rgba(255, 206, 86, 0.7)',
+                            'rgba(255, 99, 132, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(255, 99, 132, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: getChartOptions('Students Distribution - Kochi')
+            });
+
+            // Arka Students Chart
+            const ctxArka = document.getElementById('studentsChartArka').getContext('2d');
+            new Chart(ctxArka, {
+                type: 'bar',
+                data: {
+                    labels: ['Engaged', 'Incomplete', 'Not Enrolled'],
+                    datasets: [{
+                        label: 'Students',
+                        data: [3686, 341, 163],
+                        backgroundColor: [
+                            'rgba(75, 192, 192, 0.7)',
+                            'rgba(255, 206, 86, 0.7)',
+                            'rgba(255, 99, 132, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(255, 99, 132, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: getChartOptions('Students Distribution - ARKA')
+            });
+        }
+
+        // FACULTY CHARTS
+        function initFacultyCharts() {
+            // Bangalore Faculty Chart
+            const ctxBlr = document.getElementById('facultyChartBlr').getContext('2d');
+            new Chart(ctxBlr, {
+                type: 'bar',
+                data: {
+                    labels: ['Completed', 'Incomplete', 'Not Enrolled'],
+                    datasets: [{
+                        label: 'Faculty',
+                        data: [417, 414, 13],
+                        backgroundColor: [
+                            'rgba(54, 162, 235, 0.7)',
+                            'rgba(255, 159, 64, 0.7)',
+                            'rgba(255, 99, 132, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 159, 64, 1)',
+                            'rgba(255, 99, 132, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: getChartOptions('Faculty Distribution - Bangalore')
+            });
+
+            // Kochi Faculty Chart
+            const ctxKochi = document.getElementById('facultyChartKochi').getContext('2d');
+            new Chart(ctxKochi, {
+                type: 'bar',
+                data: {
+                    labels: ['Completed', 'Incomplete', 'Not Enrolled'],
+                    datasets: [{
+                        label: 'Faculty',
+                        data: [45, 30, 4],
+                        backgroundColor: [
+                            'rgba(54, 162, 235, 0.7)',
+                            'rgba(255, 159, 64, 0.7)',
+                            'rgba(255, 99, 132, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 159, 64, 1)',
+                            'rgba(255, 99, 132, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: getChartOptions('Faculty Distribution - Kochi')
+            });
+
+            // Arka Faculty Chart
+            const ctxArka = document.getElementById('facultyChartArka').getContext('2d');
+            new Chart(ctxArka, {
+                type: 'bar',
+                data: {
+                    labels: ['Completed', 'Incomplete', 'Not Enrolled'],
+                    datasets: [{
+                        label: 'Faculty',
+                        data: [102, 81, 3],
+                        backgroundColor: [
+                            'rgba(54, 162, 235, 0.7)',
+                            'rgba(255, 159, 64, 0.7)',
+                            'rgba(255, 99, 132, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 159, 64, 1)',
+                            'rgba(255, 99, 132, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: getChartOptions('Faculty Distribution - ARKA')
+            });
+        }
+
+        // LEARNING HOURS CHART
+        function initLearningChart() {
+            const ctx = document.getElementById('learningChart').getContext('2d');
+            window.learningChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['May 2025','Apr 2025','Mar 2025','Feb 2025','Jan 2025','Dec 2024','Nov 2024','Oct 2024','Sep 2024','Aug 2024','Jul 2024'],
+                    datasets: [
+                        { 
+                            type: 'bar', 
+                            label: 'Standalone Courses', 
+                            data: [14708,31130,40366,31346,23896,26433,47504,43910,28160,17861,1750], 
+                            backgroundColor: '#4682B4' 
+                        },
+                        { 
+                            type: 'line', 
+                            label: 'Total Learning Hours', 
+                            data: [14856,31300,40727,31597,24127,26616,47944,44287,28566,18258,1768], 
+                            borderColor: '#FFA500', 
+                            backgroundColor: '#FFA500', 
+                            fill: false 
+                        }
+                    ]
+                },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 100,
-                            ticks: {
-                                callback: function(value) {
-                                    return value + '%';
-                                }
+                    interaction: { 
+                        mode: 'index', 
+                        intersect: false 
+                    },
+                    plugins: { 
+                        legend: { 
+                            position: 'top', 
+                            labels: { 
+                                color: 'black' 
+                            } 
+                        }, 
+                        datalabels: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Monthly Learning Hours Trend',
+                            font: {
+                                size: 16
                             }
                         }
                     },
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
+                    scales: { 
+                        x: { 
+                            ticks: { 
+                                color: 'black' 
+                            } 
+                        }, 
+                        y: { 
+                            beginAtZero: true, 
+                            ticks: { 
+                                color: 'black',
+                                callback: function(value) {
+                                    return value.toLocaleString();
+                                }
+                            } 
+                        } 
                     }
                 }
             });
         }
 
-        function initDepartmentChart() {
-            const ctx = document.getElementById('departmentChart');
-            if (!ctx) {
-                console.error('Department chart canvas not found');
-                return;
-            }
-            
-            window.departmentChart = new Chart(ctx, {
-                type: 'doughnut',
+        // MONTHLY COMPLETIONS CHART
+        function initCompletionsChart() {
+            const ctx = document.getElementById('completionsChart').getContext('2d');
+            window.completionsChart = new Chart(ctx, {
+                type: 'bar',
                 data: {
-                    labels: ['Management', 'CSE and ISE', 'CSIT', 'Commerce + BMS', 'Forensic Science'],
-                    datasets: [{
-                        data: [32596, 27419, 23586, 15792, 2016],
-                        backgroundColor: [
-                            'rgba(78, 115, 223, 0.8)',
-                            'rgba(28, 200, 138, 0.8)',
-                            'rgba(54, 185, 204, 0.8)',
-                            'rgba(246, 194, 62, 0.8)',
-                            'rgba(231, 74, 59, 0.8)'
-                        ],
-                        borderWidth: 1
-                    }]
+                    labels: ['May','Apr','Mar','Feb','Jan','Dec','Nov','Oct','Sep','Aug','Jul'],
+                    datasets: [
+                        { 
+                            label: 'Completions', 
+                            data: [6294,15703,29842,17695,10697,13704,24266,14780,11660,5453,0], 
+                            backgroundColor: '#4682B4' 
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                font: {
-                                    size: 12
-                                }
+                    plugins: { 
+                        legend: { 
+                            display: false 
+                        }, 
+                        datalabels: { 
+                            anchor: 'end', 
+                            align: 'end', 
+                            color: 'black', 
+                            font: { 
+                                weight: 'bold' 
+                            },
+                            formatter: function(value) {
+                                return value.toLocaleString();
                             }
                         },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return `${context.label}: ${context.raw.toLocaleString()}`;
+                        title: {
+                            display: true,
+                            text: 'Monthly Course Completions',
+                            font: {
+                                size: 16
+                            }
+                        }
+                    },
+                    scales: { 
+                        x: { 
+                            ticks: { 
+                                color: 'black' 
+                            } 
+                        }, 
+                        y: { 
+                            ticks: { 
+                                color: 'black',
+                                callback: function(value) {
+                                    return value.toLocaleString();
                                 }
+                            } 
+                        } 
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+        }
+
+        function getChartOptions(title) {
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: title,
+                        font: {
+                            size: 16
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.raw.toLocaleString();
+                            }
+                        }
+                    },
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'top',
+                        formatter: function(value) {
+                            return value.toLocaleString();
+                        },
+                        font: {
+                            weight: 'bold'
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString();
                             }
                         }
                     }
                 }
-            });
+            };
         }
 
         function setupMobileNavigation() {
@@ -854,86 +1137,78 @@
             });
         }
 
-        function setupModals() {
-            // PDF Modal functionality
-            function openPdfModal(pdfUrl) {
-                const modal = document.getElementById('pdfModal');
-                const iframe = document.getElementById('pdfIframe');
-                iframe.src = pdfUrl;
-                modal.classList.add('show');
-                document.body.style.overflow = 'hidden';
-            }
+        // PDF Modal functionality
+        function openPdfModal(pdfUrl) {
+            const modal = document.getElementById('pdfModal');
+            const iframe = document.getElementById('pdfIframe');
+            iframe.src = pdfUrl;
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
 
-            function closePdfModal() {
-                const modal = document.getElementById('pdfModal');
-                const iframe = document.getElementById('pdfIframe');
-                modal.classList.remove('show');
-                document.body.style.overflow = 'auto';
-                setTimeout(() => {
-                    iframe.src = '';
-                }, 300);
-            }
+        function closePdfModal() {
+            const modal = document.getElementById('pdfModal');
+            const iframe = document.getElementById('pdfIframe');
+            modal.classList.remove('show');
+            document.body.style.overflow = 'auto';
+            setTimeout(() => {
+                iframe.src = '';
+            }, 300);
+        }
 
-            // Newsletter Modal functionality
-            function openNewsletterModal(title, description, image, date, tags) {
-                const modal = document.getElementById('newsletterModal');
-                document.getElementById('modalNewsletterTitle').textContent = title;
-                document.getElementById('modalNewsletterDescription').innerHTML = description;
-                document.getElementById('modalNewsletterDate').innerHTML = `<i class="far fa-calendar-alt"></i> Published on: ${date}`;
-                
-                // Set image
-                const imageElement = document.getElementById('modalImageSrc');
-                if (image) {
-                    imageElement.src = "{{ url_for('static', filename='uploads/') }}" + image;
-                    imageElement.style.display = 'block';
-                } else {
-                    imageElement.style.display = 'none';
-                }
-                
-                // Set tags
-                const tagsContainer = document.getElementById('modalNewsletterTags');
-                tagsContainer.innerHTML = '';
-                if (tags) {
-                    const tagsArray = tags.split(',');
-                    tagsArray.forEach(tag => {
-                        if (tag.trim()) {
-                            const tagElement = document.createElement('span');
-                            tagElement.className = 'newsletter-tag';
-                            tagElement.textContent = tag.trim();
-                            tagsContainer.appendChild(tagElement);
-                        }
-                    });
-                }
-                
-                modal.classList.add('show');
-                document.body.style.overflow = 'hidden';
+        // Newsletter Modal functionality
+        function openNewsletterModal(title, description, image, date, tags) {
+            const modal = document.getElementById('newsletterModal');
+            document.getElementById('modalNewsletterTitle').textContent = title;
+            document.getElementById('modalNewsletterDescription').innerHTML = description;
+            document.getElementById('modalNewsletterDate').innerHTML = `<i class="far fa-calendar-alt"></i> Published on: ${date}`;
+            
+            // Set image
+            const imageElement = document.getElementById('modalImageSrc');
+            if (image) {
+                imageElement.src = "{{ url_for('static', filename='uploads/') }}" + image;
+                imageElement.style.display = 'block';
+            } else {
+                imageElement.style.display = 'none';
             }
-
-            function closeNewsletterModal() {
-                const modal = document.getElementById('newsletterModal');
-                modal.classList.remove('show');
-                document.body.style.overflow = 'auto';
+            
+            // Set tags
+            const tagsContainer = document.getElementById('modalNewsletterTags');
+            tagsContainer.innerHTML = '';
+            if (tags) {
+                const tagsArray = tags.split(',');
+                tagsArray.forEach(tag => {
+                    if (tag.trim()) {
+                        const tagElement = document.createElement('span');
+                        tagElement.className = 'newsletter-tag';
+                        tagElement.textContent = tag.trim();
+                        tagsContainer.appendChild(tagElement);
+                    }
+                });
             }
+            
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
 
-            // Close modals when clicking outside
-            window.onclick = function(event) {
-                const pdfModal = document.getElementById('pdfModal');
-                const newsletterModal = document.getElementById('newsletterModal');
-                
-                if (event.target == pdfModal) {
-                    closePdfModal();
-                }
-                
-                if (event.target == newsletterModal) {
-                    closeNewsletterModal();
-                }
+        function closeNewsletterModal() {
+            const modal = document.getElementById('newsletterModal');
+            modal.classList.remove('show');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            const pdfModal = document.getElementById('pdfModal');
+            const newsletterModal = document.getElementById('newsletterModal');
+            
+            if (event.target == pdfModal) {
+                closePdfModal();
             }
-
-            // Expose modal functions to global scope for HTML onclick handlers
-            window.openPdfModal = openPdfModal;
-            window.openNewsletterModal = openNewsletterModal;
-            window.closePdfModal = closePdfModal;
-            window.closeNewsletterModal = closeNewsletterModal;
+            
+            if (event.target == newsletterModal) {
+                closeNewsletterModal();
+            }
         }
     </script>
 </body>

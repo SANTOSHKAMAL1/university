@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>University Engagement Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #2f6faf;
+        color: white;
+        margin: 0;
+        padding: 0;
+    }
+    h2 {
+        font-size: 22px;
+        text-decoration: underline;
+        margin-bottom: 5px;
+    }
+    .section {
+        margin: 30px auto;
+        max-width: 1100px;
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        color: black;
+    }
+    .summary-boxes {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        margin-top: 15px;
+        flex-wrap: wrap;
+    }
+    .summary {
+        background: white;
+        color: black;
+        border-radius: 10px;
+        padding: 15px;
+        width: 300px;
+        font-size: 13px;
+        box-shadow: 0px 2px 8px rgba(0,0,0,0.2);
+    }
+</style>
+</head>
+<body>
+
+<!-- STUDENTS CHART -->
+<div class="section">
+    <h2>Students Activation and Engagement Analysis</h2>
+    <p><b>BANGALORE / KOCHI / ARKA</b></p>
+    <canvas id="studentsChart"></canvas>
+    <div class="summary-boxes">
+        <div class="summary">(Total Students: 19,716): 87% engaged, 11.31% yet to complete, 1.69% non-enrollment.</div>
+        <div class="summary">(Total Students: 725): 78.21% engaged, 20.06% yet to complete, 5.66% non-enrollment.</div>
+        <div class="summary">(Total Students: 4,190): 88% engaged, 8.14% yet to complete, 4% non-enrollment.</div>
+    </div>
+</div>
+
+<!-- FACULTY CHART -->
+<div class="section">
+    <h2>Faculty Members Activation and Engagement Analysis</h2>
+    <p><b>BANGALORE / KOCHI / ARKA</b></p>
+    <canvas id="facultyChart"></canvas>
+    <div class="summary-boxes">
+        <div class="summary">(Total Faculty: 847): 49.2% completed, 48.9% yet to complete, 1.9% non-enrollment.</div>
+        <div class="summary">(Total Faculty: 79): 57% completed, 38% yet to complete, 5.1% non-enrollment.</div>
+        <div class="summary">(Total Faculty: 186): 54.8% completed, 43.5% yet to complete, 1.6% non-enrollment.</div>
+    </div>
+</div>
+
+<!-- LEARNING HOURS & COMPLETIONS -->
+<div class="section">
+    <h2>Trend Analysis of Learning Hours</h2>
+    <canvas id="learningChart"></canvas>
+    <div class="summary-boxes">
+        <div class="summary">
+            Learner engagement peaked in Nov 2024 with 47,944 total hours.  
+            Standalone courses were most accessed.  
+            Activity dropped in May 2025 due to exams/vacation.
+        </div>
+    </div>
+    <h2>Trend Analysis of Monthly Completions</h2>
+    <canvas id="completionsChart"></canvas>
+    <div class="summary-boxes">
+        <div class="summary">
+            March 2025 had the highest completions (29,842).  
+            Declines in April & May linked to exams and reduced activity.
+        </div>
+    </div>
+</div>
+
+<script>
+// STUDENTS CHART
+new Chart(document.getElementById('studentsChart'), {
+    type: 'bar',
+    data: {
+        labels: ['JGI Bengaluru', 'JGI Kochi', 'ARKA JAIN'],
+        datasets: [
+            { label: 'Engaged Students', data: [17152, 567, 3686], backgroundColor: '#c2e59c' },
+            { label: 'Non-completion', data: [2230, 117, 341], backgroundColor: '#f7b267' },
+            { label: 'Non-Enrollment', data: [334, 41, 163], backgroundColor: '#f77f00' }
+        ]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { position: 'top', labels: { color: 'black' } },
+            datalabels: { anchor: 'end', align: 'top', color: 'black', font: { weight: 'bold' } }
+        },
+        scales: { x: { ticks: { color: 'black' } }, y: { beginAtZero: true, ticks: { color: 'black' } } }
+    },
+    plugins: [ChartDataLabels]
+});
+
+// FACULTY CHART
+new Chart(document.getElementById('facultyChart'), {
+    type: 'bar',
+    data: {
+        labels: ['JGI Bengaluru', 'JGI Kochi', 'ARKA JAIN'],
+        datasets: [
+            { label: 'Engaged Faculty', data: [417, 45, 102], backgroundColor: '#c2e59c' },
+            { label: 'Non-completion', data: [414, 30, 81], backgroundColor: '#f7b267' },
+            { label: 'Non-Enrollment', data: [13, 4, 3], backgroundColor: '#f77f00' }
+        ]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { position: 'top', labels: { color: 'black' } },
+            datalabels: { anchor: 'end', align: 'top', color: 'black', font: { weight: 'bold' } }
+        },
+        scales: { x: { ticks: { color: 'black' } }, y: { beginAtZero: true, ticks: { color: 'black' } } }
+    },
+    plugins: [ChartDataLabels]
+});
+
+// LEARNING HOURS CHART
+new Chart(document.getElementById('learningChart'), {
+    type: 'bar',
+    data: {
+        labels: ['May 2025','Apr 2025','Mar 2025','Feb 2025','Jan 2025','Dec 2024','Nov 2024','Oct 2024','Sep 2024','Aug 2024','Jul 2024'],
+        datasets: [
+            { type: 'bar', label: 'Standalone Courses', data: [14708,31130,40366,31346,23896,26433,47504,43910,28160,17861,1750], backgroundColor: '#4682B4' },
+            { type: 'line', label: 'Total Learning Hours', data: [14856,31300,40727,31597,24127,26616,47944,44287,28566,18258,1768], borderColor: '#FFA500', backgroundColor: '#FFA500', fill: false, yAxisID: 'y' }
+        ]
+    },
+    options: {
+        responsive: true,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+            legend: { position: 'top', labels: { color: 'black' } },
+            datalabels: { anchor: 'end', align: 'top', color: 'black', font: { weight: 'bold', size: 10 } }
+        },
+        scales: { x: { ticks: { color: 'black' } }, y: { beginAtZero: true, ticks: { color: 'black' } } }
+    },
+    plugins: [ChartDataLabels]
+});
+
+// MONTHLY COMPLETIONS CHART
+new Chart(document.getElementById('completionsChart'), {
+    type: 'bar',
+    data: {
+        labels: ['May','Apr','Mar','Feb','Jan','Dec','Nov','Oct','Sep','Aug','Jul'],
+        datasets: [
+            { label: 'Completions', data: [6294,15703,29842,17695,10697,13704,24266,14780,11660,5453,0], backgroundColor: '#4682B4' }
+        ]
+    },
+    options: {
+        indexAxis: 'y',
+        responsive: true,
+        plugins: {
+            legend: { display: false },
+            datalabels: { anchor: 'end', align: 'right', color: 'black', font: { weight: 'bold' } }
+        },
+        scales: { x: { ticks: { color: 'black' } }, y: { ticks: { color: 'black' } } }
+    },
+    plugins: [ChartDataLabels]
+});
+</script>
+
+</body>
+</html>
