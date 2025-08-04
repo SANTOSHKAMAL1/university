@@ -1878,6 +1878,54 @@
     font-weight: 500;
 }
 
+.dashboard-section {
+  padding: 60px 20px;
+  background: #f9f9f9;
+  text-align: center;
+}
+
+.section-title h2 {
+  font-size: 28px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #003366;
+}
+
+.section-title p {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 30px;
+}
+
+.dashboard-tabs {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.tab-btn {
+  padding: 10px 20px;
+  font-size: 14px;
+  background-color: #003366;
+  color: white;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease;
+}
+
+.tab-btn:hover {
+  background-color: #005599;
+}
+
+.tab-btn.active {
+  background-color: #FFD700;
+  color: #000;
+  font-weight: bold;
+}
 
  /* Basic Reset */
         * {
