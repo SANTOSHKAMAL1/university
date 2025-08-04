@@ -720,7 +720,7 @@
             event.target.classList.add('active');
         }
 
-        // STUDENTS CHARTS
+        // STUDENTS CHARTS - Now shows percentages and counts always visible
         function initStudentsCharts() {
             // Bangalore Students Chart
             const ctxBlr = document.getElementById('studentsChartBlr').getContext('2d');
@@ -744,7 +744,50 @@
                         borderWidth: 1
                     }]
                 },
-                options: getChartOptions('Students Distribution - Bangalore')
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Students Distribution - Bangalore',
+                            font: {
+                                size: 16
+                            }
+                        },
+                        tooltip: {
+                            enabled: false
+                        },
+                        datalabels: {
+                            anchor: 'center',
+                            align: 'center',
+                            color: 'black',
+                            font: {
+                                weight: 'bold',
+                                size: 12
+                            },
+                            formatter: function(value, context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = Math.round((value / total) * 100);
+                                return `${percentage}%\n(${value.toLocaleString()})`;
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
             });
 
             // Kochi Students Chart
@@ -769,7 +812,50 @@
                         borderWidth: 1
                     }]
                 },
-                options: getChartOptions('Students Distribution - Kochi')
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Students Distribution - Kochi',
+                            font: {
+                                size: 16
+                            }
+                        },
+                        tooltip: {
+                            enabled: false
+                        },
+                        datalabels: {
+                            anchor: 'center',
+                            align: 'center',
+                            color: 'black',
+                            font: {
+                                weight: 'bold',
+                                size: 12
+                            },
+                            formatter: function(value, context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = Math.round((value / total) * 100);
+                                return `${percentage}%\n(${value.toLocaleString()})`;
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
             });
 
             // Arka Students Chart
@@ -794,11 +880,54 @@
                         borderWidth: 1
                     }]
                 },
-                options: getChartOptions('Students Distribution - ARKA')
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Students Distribution - ARKA',
+                            font: {
+                                size: 16
+                            }
+                        },
+                        tooltip: {
+                            enabled: false
+                        },
+                        datalabels: {
+                            anchor: 'center',
+                            align: 'center',
+                            color: 'black',
+                            font: {
+                                weight: 'bold',
+                                size: 12
+                            },
+                            formatter: function(value, context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = Math.round((value / total) * 100);
+                                return `${percentage}%\n(${value.toLocaleString()})`;
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
             });
         }
 
-        // FACULTY CHARTS
+        // FACULTY CHARTS - Now shows percentages and counts always visible
         function initFacultyCharts() {
             // Bangalore Faculty Chart
             const ctxBlr = document.getElementById('facultyChartBlr').getContext('2d');
@@ -822,7 +951,50 @@
                         borderWidth: 1
                     }]
                 },
-                options: getChartOptions('Faculty Distribution - Bangalore')
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Faculty Distribution - Bangalore',
+                            font: {
+                                size: 16
+                            }
+                        },
+                        tooltip: {
+                            enabled: false
+                        },
+                        datalabels: {
+                            anchor: 'center',
+                            align: 'center',
+                            color: 'black',
+                            font: {
+                                weight: 'bold',
+                                size: 12
+                            },
+                            formatter: function(value, context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = Math.round((value / total) * 100);
+                                return `${percentage}%\n(${value.toLocaleString()})`;
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
             });
 
             // Kochi Faculty Chart
@@ -847,7 +1019,50 @@
                         borderWidth: 1
                     }]
                 },
-                options: getChartOptions('Faculty Distribution - Kochi')
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Faculty Distribution - Kochi',
+                            font: {
+                                size: 16
+                            }
+                        },
+                        tooltip: {
+                            enabled: false
+                        },
+                        datalabels: {
+                            anchor: 'center',
+                            align: 'center',
+                            color: 'black',
+                            font: {
+                                weight: 'bold',
+                                size: 12
+                            },
+                            formatter: function(value, context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = Math.round((value / total) * 100);
+                                return `${percentage}%\n(${value.toLocaleString()})`;
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
             });
 
             // Arka Faculty Chart
@@ -872,7 +1087,50 @@
                         borderWidth: 1
                     }]
                 },
-                options: getChartOptions('Faculty Distribution - ARKA')
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Faculty Distribution - ARKA',
+                            font: {
+                                size: 16
+                            }
+                        },
+                        tooltip: {
+                            enabled: false
+                        },
+                        datalabels: {
+                            anchor: 'center',
+                            align: 'center',
+                            color: 'black',
+                            font: {
+                                weight: 'bold',
+                                size: 12
+                            },
+                            formatter: function(value, context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = Math.round((value / total) * 100);
+                                return `${percentage}%\n(${value.toLocaleString()})`;
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
             });
         }
 
@@ -915,7 +1173,16 @@
                             } 
                         }, 
                         datalabels: {
-                            display: false
+                            display: true,
+                            anchor: 'end',
+                            align: 'top',
+                            color: 'black',
+                            font: {
+                                weight: 'bold'
+                            },
+                            formatter: function(value) {
+                                return value.toLocaleString();
+                            }
                         },
                         title: {
                             display: true,
@@ -941,7 +1208,8 @@
                             } 
                         } 
                     }
-                }
+                },
+                plugins: [ChartDataLabels]
             });
         }
 
@@ -972,7 +1240,8 @@
                             align: 'end', 
                             color: 'black', 
                             font: { 
-                                weight: 'bold' 
+                                weight: 'bold',
+                                size: 12
                             },
                             formatter: function(value) {
                                 return value.toLocaleString();
@@ -1004,52 +1273,6 @@
                 },
                 plugins: [ChartDataLabels]
             });
-        }
-
-        function getChartOptions(title) {
-            return {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    title: {
-                        display: true,
-                        text: title,
-                        font: {
-                            size: 16
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return context.dataset.label + ': ' + context.raw.toLocaleString();
-                            }
-                        }
-                    },
-                    datalabels: {
-                        anchor: 'end',
-                        align: 'top',
-                        formatter: function(value) {
-                            return value.toLocaleString();
-                        },
-                        font: {
-                            weight: 'bold'
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return value.toLocaleString();
-                            }
-                        }
-                    }
-                }
-            };
         }
 
         function setupMobileNavigation() {
