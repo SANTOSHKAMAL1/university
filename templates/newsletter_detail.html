@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ news.title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="newsletter-detail-container">
+        <h1>{{ news.title }}</h1>
+        <div class="newsletter-detail-image">
+            {% if news.image %}
+                <img src="{{ url_for('static', filename='uploads/' ~ news.image) }}" alt="{{ news.title }}">
+            {% else %}
+                <img src="https://via.placeholder.com/300x180?text=Newsletter" alt="Default Newsletter Image">
+            {% endif %}
+        </div>
+        <div class="newsletter-detail-description">
+            {{ news.description|safe }}
+        </div>
+        <div class="newsletter-detail-meta">
+            <span><i class="far fa-calendar-alt"></i> {{ news.uploaded_at.strftime('%d %B %Y') if news.uploaded_at.__class__.__name__ == 'datetime' else news.uploaded_at }}</span>
+            {% if news.tags %}
+                <div class="newsletter-detail-tags">
+                    {% for tag in news.tags %}
+                        <span class="newsletter-modal-tag">{{ tag }}</span>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

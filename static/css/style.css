@@ -1,5 +1,4 @@
-
-    :root {
+:root {
       --jain-blue: #003366;
       --jain-gold: #FFD700;
       --jain-light: #f5f5f5;
@@ -188,10 +187,9 @@
     .logo-section img {
       height: 60px;
       width: auto;
-      border-radius: 15px;
+      
       transition: transform 0.3s ease;
-      box-shadow: 0 5px 15px rgba(0, 51, 102, 0.25);
-      border: 2px solid var(--jain-gold);
+      
     }
 
     .logo-section:hover img {
@@ -348,8 +346,92 @@
       .speak-container {
         justify-content: center;
       }
+
+      .nav-links {
+        display: none;
+        flex-direction: column;
+        background: #fff;
+        position: absolute;
+        top: 70px;
+        left: 0;
+        width: 100%;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        z-index: 100;
+      }
+      .nav-links.show {
+        display: flex;
+      }
+      .nav-toggle {
+        display: block;
+      }
     }
 
+    @media (min-width: 901px) {
+      .nav-links {
+        display: flex !important;
+        position: static;
+        flex-direction: row;
+        background: none;
+        box-shadow: none;
+      }
+      .nav-toggle {
+        display: none;
+      }
+    }
+/* LinkedIn Learning Specific Styles */
+.highlight-news .dashboard-card {
+    background: white;
+    border-radius: 10px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.highlight-news .dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.12);
+}
+
+.highlight-news .dashboard-card.full-width {
+    grid-column: 1 / -1;
+}
+
+.highlight-news .stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #0a66c2;
+    margin: 10px 0;
+}
+
+.highlight-news .stat-description {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.highlight-news .engagement-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.highlight-news .engagement-table th, 
+.highlight-news .engagement-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.highlight-news .engagement-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+.highlight-news .engagement-table tr:hover {
+    background-color: #f5f5f5;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
     /* Monthly Engagement Section placeholder */
     main {
       max-width: 1200px;
@@ -1406,8 +1488,10 @@
     }
     
     .newsletter-modal-description {
-        color: #333;
-        line-height: 1.7;
+        max-height: 400px;
+        overflow-y: auto;
+        font-size: 16px;
+        line-height: 1.6;
     }
     
     .newsletter-modal-footer {
@@ -2151,3 +2235,297 @@
             color: #2c3e50;
         }
     
+
+         /* Leaderboard specific styles */
+        .leaderboard-section {
+            padding: 4rem 0;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ed 100%);
+        }
+        
+        .leaderboard-title {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+        
+        .leaderboard-title h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(45deg, #4f46e5, #10b981);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: inline-block;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .leaderboard-title p {
+            font-size: 1.2rem;
+            color: #4b5563;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        .leaderboard-title::after {
+            content: "";
+            display: block;
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(90deg, #4f46e5, #10b981);
+            margin: 1.5rem auto 0;
+            border-radius: 2px;
+        }
+        
+        .leaderboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .leaderboard-tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .leaderboard-tab {
+            padding: 0.75rem 1.5rem;
+            background-color: #e5e7eb;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #4b5563;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+        
+        .leaderboard-tab.active {
+            background: linear-gradient(90deg, #4f46e5, #6366f1);
+            color: white;
+            box-shadow: 0 4px 6px rgba(79, 70, 229, 0.3);
+        }
+        
+        .leaderboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+        
+        .leaderboard-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.75rem;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            border-top: 5px solid;
+        }
+        
+        .leaderboard-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.12);
+        }
+        
+        .leaderboard-card.gold {
+            border-color: #f59e0b;
+        }
+        
+        .leaderboard-card.silver {
+            border-color: #9ca3af;
+        }
+        
+        .leaderboard-card.bronze {
+            border-color: #b45309;
+        }
+        
+        .leaderboard-card.other {
+            border-color: #4f46e5;
+        }
+        
+        .leaderboard-rank {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+            font-size: 1rem;
+        }
+        
+        .rank-1 {
+            background-color: #f59e0b;
+        }
+        
+        .rank-2 {
+            background-color: #9ca3af;
+        }
+        
+        .rank-3 {
+            background-color: #b45309;
+        }
+        
+        .rank-other {
+            background-color: #4f46e5;
+        }
+        
+        .student-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+        
+        .student-program {
+            font-size: 0.9rem;
+            color: #6b7280;
+            margin-bottom: 1.5rem;
+            line-height: 1.4;
+        }
+        
+        .student-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .stat-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8rem;
+        }
+        
+        .stat-enrolled .stat-icon {
+            background-color: #3b82f6;
+        }
+        
+        .stat-completed .stat-icon {
+            background-color: #10b981;
+        }
+        
+        .stat-pending .stat-icon {
+            background-color: #f59e0b;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #4b5563;
+            flex-grow: 1;
+        }
+        
+        .stat-value {
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .leaderboard-badge {
+            position: absolute;
+            top: 0;
+            left: 0;
+            padding: 5px 15px;
+            border-bottom-right-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .badge-gold {
+            background-color: #f59e0b;
+        }
+        
+        .badge-silver {
+            background-color: #9ca3af;
+        }
+        
+        .badge-bronze {
+            background-color: #b45309;
+        }
+        
+        .badge-other {
+            background-color: #4f46e5;
+        }
+        
+        .leaderboard-footer {
+            text-align: center;
+            margin-top: 3rem;
+        }
+        
+        .view-all-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0.75rem 1.75rem;
+            background: linear-gradient(90deg, #4f46e5, #6366f1);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(79, 70, 229, 0.3);
+        }
+        
+        .view-all-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(79, 70, 229, 0.4);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .leaderboard-title h1 {
+                font-size: 2.2rem;
+            }
+            
+            .leaderboard-title p {
+                font-size: 1rem;
+            }
+            
+            .leaderboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Animation for cards */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .leaderboard-card {
+            animation: fadeInUp 0.6s ease forwards;
+            opacity: 0;
+        }
+        
+        .leaderboard-card:nth-child(1) { animation-delay: 0.1s; }
+        .leaderboard-card:nth-child(2) { animation-delay: 0.2s; }
+        .leaderboard-card:nth-child(3) { animation-delay: 0.3s; }
+        .leaderboard-card:nth-child(4) { animation-delay: 0.4s; }
+        .leaderboard-card:nth-child(5) { animation-delay: 0.5s; }

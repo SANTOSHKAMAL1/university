@@ -179,7 +179,85 @@
             font-weight: bold;
         }
 
-        /* Other existing styles remain the same */
+        /* Highlight tiles styling */
+        .highlight-tile {
+            background: #f5f5f5;
+            border: 2px solid #4e73df;
+            border-radius: 10px;
+            padding: 12px 28px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+            color: #4e73df;
+            display: flex;
+            align-items: center;
+        }
+        .highlight-tile.active, .highlight-tile:hover {
+            background: #4e73df;
+            color: #fff;
+        }
+
+        /* Faculty leaderboard styling */
+        .faculty-leaderboard {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.9em;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .faculty-leaderboard thead tr {
+            background-color: #4e73df;
+            color: #ffffff;
+            text-align: left;
+        }
+
+        .faculty-leaderboard th,
+        .faculty-leaderboard td {
+            padding: 12px 15px;
+        }
+
+        .faculty-leaderboard tbody tr {
+            border-bottom: 1px solid #dddddd;
+        }
+
+        .faculty-leaderboard tbody tr:nth-of-type(even) {
+            background-color: #f3f3f3;
+        }
+
+        .faculty-leaderboard tbody tr:last-of-type {
+            border-bottom: 2px solid #4e73df;
+        }
+
+        .faculty-leaderboard tbody tr:hover {
+            background-color: #f1f5fd;
+        }
+
+        /* Engagement tabs styling */
+        .engagement-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .engagement-tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-bottom: none;
+            margin-right: 5px;
+            background-color: #f1f1f1;
+            border-radius: 5px 5px 0 0;
+        }
+
+        .engagement-tab.active {
+            background-color: #4e73df;
+            color: white;
+            border-color: #ddd;
+            border-bottom: 1px solid white;
+            margin-bottom: -1px;
+        }
     </style>
 </head>
 <body>
@@ -192,21 +270,14 @@
     </div>
 
     <!-- Accessibility Bar -->
-    <div class="accessibility-bar">
-        <div class="accessibility-container">
-            <button id="textSizeToggle"><i class="fas fa-text-height"></i> Text Size: A A A</button>
-            <a href="#newsletter"><i class="fas fa-skip-forward"></i> Skip to Newsletter</a>
-            <a href="#main-content"><i class="fas fa-skip-forward"></i> Skip to Main Content</a>
-        </div>
-    </div>
-
+    
     <header>
         <div class="header-container">
             <div class="logo-section">
-                <img src="{{ url_for('static', filename='images/jain.png') }}" onerror="this.src='https://via.placeholder.com/60?text=JU+Logo';" alt="Jain University Logo">
+                <img src="{{ url_for('static', filename='images/jainu.png') }}" onerror="this.src='https://via.placeholder.com/60?text=JU+Logo';" alt="Jain University Logo">
                 <div class="logo-text">
-                    <h1>Office of Academics</h1>
-                    <span>Excellence in Education</span>
+                    <h3>Office of Academics</h3>
+                    
                 </div>
             </div>
             
@@ -216,9 +287,9 @@
           
             <nav class="nav-links">
                 <a href="#">Home</a>
-                <a href="{{ url_for('usernewsletters') }}">Newsletters</a>
+                <a href="{{ url_for('usernewsletters') }}">Newsletter</a>
                 <a href="{{ url_for('ugc') }}">UGC Requirement</a>
-                <a href="{{ url_for('monthlyengagement') }}">Engagement</a>
+                <a href="{{ url_for('monthlyengagement') }}"> Monthly Engagement</a>
                 <a href="{{ url_for('jainevents') }}">Events</a>
                 <a href="{{ url_for('login') }}" class="login-btn"><i class="fas fa-sign-in-alt"></i> Login</a>
             </nav>
@@ -229,12 +300,12 @@
     <div class="university-updates" aria-live="polite">
         <div class="updates-container">
             <div class="updates-label">
-                <i class="fas fa-bullhorn"></i> University Updates
+                <i class="fas fa-bullhorn"></i> Office of Academic Updates
             </div>
             <div class="updates-marquee">
                 <p>
                     {% for item in records if 'University Notice' in item.categories %}
-                        {% if loop.index <= 10 %}
+                        {% if loop.index <= 1 %}
                             <a href="#">{{ item.text_data }}</a> •
                         {% endif %}
                     {% endfor %}
@@ -286,7 +357,7 @@
             <!-- University Notices Section -->
             <div class="notice-section university-notice-section">
                 <div class="card-header">
-                    <i class="fas fa-university"></i> University Notices
+                    <i class="fas fa-university"></i> Office of Academic Notices
                 </div>
                 <div class="scrolling-content">
                     <div class="scrolling-wrapper">
@@ -368,158 +439,324 @@
 
         <!-- Newsletter Grid View Section -->
         <div class="section-title" style="margin-top: 60px;">
-            <h2>Featured Newsletters</h2>
+            <h2>Digital Innovation </h2>
+        </div>
+        <div class="highlight-tiles" style="display: flex; gap: 20px; justify-content: center; margin-bottom: 30px;">
+            <button id="courseraTile" 
+                class="highlight-tile active flex items-center px-4 py-2 rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition"
+                onclick="showHighlight('coursera')">
+                <img src="{{ url_for('static', filename='images/coursera.png') }}" 
+                     alt="Coursera" 
+                     style="height:28px; margin-right:10px;">
+                <span>Coursera</span>
+            </button>
+
+            <button id="linkedinTile" class="highlight-tile" onclick="showHighlight('linkedin')">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/c/ca/LinkedIn_logo_initials.png" alt="LinkedIn Learning" style="height:32px;vertical-align:middle;margin-right:8px;">
+                LinkedIn Learning
+            </button>
         </div>
         
-        <div class="newsletter-grid">
-            {% if newsletter_records %}
-                {% for news in newsletter_records[:6] %}
-                    <div class="newsletter-card" onclick="openNewsletterModal('{{ news.title }}', '{{ news.description }}', '{{ news.image }}', '{{ news.uploaded_at.strftime('%d %B %Y') if news.uploaded_at.__class__.__name__ == 'datetime' else news.uploaded_at }}', '{{ news.tags|join(",") if news.tags else "" }}')">
-                        <div class="newsletter-card-image">
-                            {% if news.image %}
-                                <img src="{{ url_for('static', filename='uploads/' ~ news.image) }}" alt="{{ news.title }}">
-                            {% else %}
-                                <img src="https://via.placeholder.com/300x180?text=Newsletter" alt="Default Newsletter Image">
-                            {% endif %}
-                        </div>
-                        <div class="newsletter-card-content">
-                            <h3 class="newsletter-card-title">{{ news.title }}</h3>
-                            <div class="newsletter-card-excerpt">
-                                {{ news.description|striptags|truncate(120) }}
-                            </div>
-                            <div class="newsletter-card-meta">
-                                <span class="newsletter-card-date"><i class="far fa-calendar-alt"></i> {{ news.uploaded_at.strftime('%d %b %Y') if news.uploaded_at.__class__.__name__ == 'datetime' else news.uploaded_at }}</span>
-                                <span class="newsletter-card-readmore">Read More <i class="fas fa-arrow-right"></i></span>
-                            </div>
-                        </div>
+        <!-- Coursera News -->
+        <div id="courseraHighlight" class="highlight-news" style="display:block;">
+            <div class="dashboard-section">
+                <h2>Students Activation and Engagement</h2>
+                
+                <!-- Summary Cards -->
+                <div class="dashboard-grid">
+                    <div class="dashboard-card">
+                        <h3>Total Enrollments</h3>
+                        <div class="stat-number">2,06,129</div>
+                        <div class="stat-description">Across all campuses</div>
                     </div>
-                {% endfor %}
-            {% else %}
-                <div class="newsletter-card" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
-                    <h3>No newsletters available at this time</h3>
-                    <p>Check back later for our latest academic newsletters</p>
-                </div>
-            {% endif %}
-        </div>
-        
-        <div style="text-align: center; margin: 40px 0;">
-            <a href="{{ url_for('usernewsletters') }}" class="hero-btn" style="background-color: var(--jain-purple); border-color: var(--jain-purple);">
-                <i class="fas fa-newspaper"></i> Browse All Newsletters
-            </a>
-        </div>
-
-        <!-- University Engagement Dashboard -->
-        <div class="dashboard-section">
-            <div class="container">
-                <h1>University Engagement Dashboard</h1>
-
-                <!-- Tab Buttons -->
-                <div class="tab-buttons">
-                    <button class="active" onclick="openTab('students')">Students Engagement</button>
-                    <button onclick="openTab('faculty')">Faculty Engagement</button>
-                    <button onclick="openTab('learning')">Learning Analytics</button>
-                </div>
-
-                <!-- Students Tab -->
-                <div id="students" class="section" style="display:block;">
-                    <h2>Students Activation and Engagement</h2>
-                    <div class="dashboard-grid">
-                        <div class="dashboard-card">
-                            <h3>JGI Bengaluru</h3>
-                            <div class="chart-container">
-                                <canvas id="studentsChartBlr"></canvas>
-                            </div>
-                            <div class="chart-summary">
-                                Total Students: 19,716<br>
-                                87% engaged | 11.31% incomplete | 1.69% not enrolled
-                            </div>
-                        </div>
-                        <div class="dashboard-card">
-                            <h3>JGI Kochi</h3>
-                            <div class="chart-container">
-                                <canvas id="studentsChartKochi"></canvas>
-                            </div>
-                            <div class="chart-summary">
-                                Total Students: 725<br>
-                                78.21% engaged | 20.06% incomplete | 5.66% not enrolled
-                            </div>
-                        </div>
-                        <div class="dashboard-card">
-                            <h3>ARKA JAIN</h3>
-                            <div class="chart-container">
-                                <canvas id="studentsChartArka"></canvas>
-                            </div>
-                            <div class="chart-summary">
-                                Total Students: 4,190<br>
-                                88% engaged | 8.14% incomplete | 4% not enrolled
-                            </div>
-                        </div>
+                    <div class="dashboard-card">
+                        <h3>Course Completions</h3>
+                        <div class="stat-number">1,03,954</div>
+                        <div class="stat-description">completion rate</div>
                     </div>
-                </div>
-
-                <!-- Faculty Tab -->
-                <div id="faculty" class="section">
-                    <h2>Faculty Members Activation and Engagement</h2>
-                    <div class="dashboard-grid">
-                        <div class="dashboard-card">
-                            <h3>JGI Bengaluru</h3>
-                            <div class="chart-container">
-                                <canvas id="facultyChartBlr"></canvas>
-                            </div>
-                            <div class="chart-summary">
-                                Total Faculty: 847<br>
-                                49.2% completed | 48.9% incomplete | 1.9% not enrolled
-                            </div>
-                        </div>
-                        <div class="dashboard-card">
-                            <h3>JGI Kochi</h3>
-                            <div class="chart-container">
-                                <canvas id="facultyChartKochi"></canvas>
-                            </div>
-                            <div class="chart-summary">
-                                Total Faculty: 79<br>
-                                57% completed | 38% incomplete | 5.1% not enrolled
-                            </div>
-                        </div>
-                        <div class="dashboard-card">
-                            <h3>ARKA JAIN</h3>
-                            <div class="chart-container">
-                                <canvas id="facultyChartArka"></canvas>
-                            </div>
-                            <div class="chart-summary">
-                                Total Faculty: 186<br>
-                                54.8% completed | 43.5% incomplete | 1.6% not enrolled
-                            </div>
-                        </div>
+                    <div class="dashboard-card">
+                        <h3>Active Learners</h3>
+                        <div class="stat-number">19,647</div>
+                        <div class="stat-description">enrolled students</div>
                     </div>
+                  <!--  <div class="dashboard-card">
+                        <h3>Certificates Earned</h3>
+                        <div class="stat-number">12,845</div>
+                        <div class="stat-description">52.4% certification rate</div>
+                    </div>-->
                 </div>
-
-                <!-- Learning Tab -->
-                <div id="learning" class="section">
-                    <h2>Learning Hours Trend</h2>
-                    <div class="dashboard-card full-width">
-                        <div class="chart-container" style="height: 400px;">
-                            <canvas id="learningChart"></canvas>
-                        </div>
-                        <div class="chart-summary">
-                            Learner engagement peaked in Nov 2024 with 47,944 total hours. Standalone courses were most accessed. 
-                            Activity dropped in May 2025 due to exams/vacation.
-                        </div>
-                    </div>
+                
+                <!-- Faculty Leaderboard -->
+                <div class="dashboard-card full-width">
+                    <h3>Toppers - Faculty Leaderboard</h3>
                     
-                    <h2 style="margin-top: 40px;">Monthly Completions</h2>
-                    <div class="dashboard-card full-width">
-                        <div class="chart-container" style="height: 400px;">
-                            <canvas id="completionsChart"></canvas>
+                    
+                    <div class="table-responsive">
+                        <table class="faculty-leaderboard">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Department</th>
+                                    <th>Enrolled Courses</th>
+                                    <th>Completed Courses</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Ms. S.Priya (Kochi)</td>
+                                    <td>Management</td>
+                                    <td>48</td>
+                                    <td>38</td>
+                                </tr>
+                                <tr>
+                                    <td>Deepak D</td>
+                                    <td>Commerce</td>
+                                    <td>31</td>
+                                    <td>28</td>
+                                </tr>
+                                <tr>
+                                    <td>Dr. Sanuja K V (Kochi)</td>
+                                    <td>Management</td>
+                                    <td>74</td>
+                                    <td>26</td>
+                                </tr>
+                               
+                                
+                                
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Student Engagement Charts -->
+                <div class="dashboard-grid">
+                    <div class="dashboard-card">
+                        <h3>JGI Bengaluru</h3>
+                        <div class="chart-container">
+                            <canvas id="studentsChartBlr"></canvas>
                         </div>
                         <div class="chart-summary">
-                            March 2025 had the highest completions (29,842). Declines in April & May linked to exams and reduced activity.
+                            Total Students: 19,716<br>
+                            87% engaged | 11.31% incomplete | 1.69% not enrolled
+                        </div>
+                    </div>
+                    <div class="dashboard-card">
+                        <h3>JGI Kochi</h3>
+                        <div class="chart-container">
+                            <canvas id="studentsChartKochi"></canvas>
+                        </div>
+                        <div class="chart-summary">
+                            Total Students: 725<br>
+                            78.21% engaged | 20.06% incomplete | 5.66% not enrolled
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Faculty Engagement Charts -->
+                <div class="dashboard-grid">
+                    <div class="dashboard-card">
+                        <h3>Faculty - JGI Bengaluru</h3>
+                        <div class="chart-container">
+                            <canvas id="facultyChartBlr"></canvas>
+                        </div>
+                        <div class="chart-summary">
+                            Total Faculty: 847<br>
+                            49.2% completed | 48.9% incomplete | 1.9% not enrolled
+                        </div>
+                    </div>
+                    <div class="dashboard-card">
+                        <h3>Faculty - JGI Kochi</h3>
+                        <div class="chart-container">
+                            <canvas id="facultyChartKochi"></canvas>
+                        </div>
+                        <div class="chart-summary">
+                            Total Faculty: 79<br>
+                            57% completed | 38% incomplete | 5.1% not enrolled
                         </div>
                     </div>
                 </div>
             </div>
+            
+            <div class="newsletter-grid">
+                {% set coursera_news = newsletter_records | selectattr("platform", "equalto", "Coursera") | list %}
+                
+                {% if coursera_news %}
+                    {% for news in coursera_news %}
+                        <div class="newsletter-card">
+                            <div class="newsletter-card-image">
+                                <img src="{{ url_for('static', filename='images/coursera.png') }}" 
+                                     width="300" height="180" 
+                                     alt="Coursera Logo"
+                                     onerror="this.onerror=null;this.src='https://via.placeholder.com/300x180?text=Coursera';">
+                            </div>
+
+                            <div class="newsletter-card-content">
+                                <h3 class="newsletter-card-title">{{ news.title }}</h3>
+                                <div class="newsletter-card-excerpt">
+                                    {{ news.description | striptags | truncate(120) }}
+                                </div>
+
+                                <div class="newsletter-card-meta">
+                                    <span class="newsletter-card-date">
+                                        <i class="far fa-calendar-alt"></i>
+                                        {{ news.uploaded_at.strftime('%d %b %Y') if news.uploaded_at.__class__.__name__ == 'datetime' else news.uploaded_at }}
+                                    </span>
+                                    <a href="{{ url_for('newsletter_view', newsletter_id=news._id) }}" class="newsletter-card-readmore" target="_blank">
+                                        Read More <i class="fas fa-arrow-right"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    
+                {% endif %}
+            </div>
         </div>
 
+        <!-- LinkedIn Learning News -->
+        <div id="linkedinHighlight" class="highlight-news" style="display:none;">
+            <div class="dashboard-section">
+                <h2>LinkedIn Learning Engagement Dashboard</h2>
+                
+                <!-- Summary Cards -->
+                <div class="dashboard-grid">
+                    <div class="dashboard-card">
+                        <h3>Total Licenses</h3>
+                        <div class="stat-number">11,101</div>
+                        <div class="stat-description">97.10% activation rate</div>
+                    </div>
+                    <div class="dashboard-card">
+                        <h3>Active Users</h3>
+                        <div class="stat-number">8,970</div>
+                        <div class="stat-description">80.8% of activated licenses</div>
+                    </div>
+                    <div class="dashboard-card">
+                        <h3>Courses Viewed</h3>
+                        <div class="stat-number">126,140</div>
+                        <div class="stat-description">Average 14.1 per user</div>
+                    </div>
+                    <div class="dashboard-card">
+                        <h3>Courses Completed</h3>
+                        <div class="stat-number">56,605</div>
+                        <div class="stat-description">44.9% completion rate</div>
+                    </div>
+                </div>
+                
+                <!-- Department Engagement Chart -->
+                <div class="dashboard-card full-width">
+                    <h3>Department Engagement</h3>
+                    <div class="chart-container" style="height: 400px;">
+                        <canvas id="linkedinDeptChart"></canvas>
+                    </div>
+                    <div class="chart-summary">
+                        Top departments: Management Studies (39,020 completions), Computer Science and IT (8,169 completions), Commerce (7,736 completions)
+                    </div>
+                </div>
+                
+                <!-- Activation vs Completion Chart -->
+                <div class="dashboard-grid">
+                    <div class="dashboard-card">
+                        <h3>License Activation Rate</h3>
+                        <div class="chart-container">
+                            <canvas id="linkedinActivationChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="dashboard-card">
+                        <h3>Course Completion Rate</h3>
+                        <div class="chart-container">
+                            <canvas id="linkedinCompletionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Top Departments Table -->
+                <div class="dashboard-card full-width">
+                    <h3>Department Performance</h3>
+                    <div class="table-responsive">
+                        <table class="engagement-table">
+                            <thead>
+                                <tr>
+                                    <th>Department</th>
+                                    <th>Invites Sent</th>
+                                    <th>Activated</th>
+                                    <th>Activation %</th>
+                                    <th>Users Logged In</th>
+                                    <th>Courses Viewed</th>
+                                    <th>Courses Completed</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Management Studies</td>
+                                    <td>4,964</td>
+                                    <td>4,943</td>
+                                    <td>99.58%</td>
+                                    <td>4,037</td>
+                                    <td>77,958</td>
+                                    <td>39,020</td>
+                                </tr>
+                                <tr>
+                                    <td>Computer Science and IT</td>
+                                    <td>1,935</td>
+                                    <td>1,922</td>
+                                    <td>99.33%</td>
+                                    <td>1,587</td>
+                                    <td>24,059</td>
+                                    <td>8,169</td>
+                                </tr>
+                                <tr>
+                                    <td>Commerce</td>
+                                    <td>3,029</td>
+                                    <td>2,788</td>
+                                    <td>92.37%</td>
+                                    <td>2,350</td>
+                                    <td>17,910</td>
+                                    <td>7,736</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <script>
+        function showHighlight(platform) {
+            document.getElementById('courseraHighlight').style.display = (platform === 'coursera') ? 'block' : 'none';
+            document.getElementById('linkedinHighlight').style.display = (platform === 'linkedin') ? 'block' : 'none';
+            document.getElementById('courseraTile').classList.toggle('active', platform === 'coursera');
+            document.getElementById('linkedinTile').classList.toggle('active', platform === 'linkedin');
+
+            // If LinkedIn is selected, re-initialize the charts
+            if (platform === 'linkedin') {
+                setTimeout(() => {
+                    initLinkedInCharts();
+                }, 100); // slight delay to ensure canvas is visible
+            }
+        }
+        </script>
+        
+        <style>
+        .highlight-tile {
+            background: #f5f5f5;
+            border: 2px solid #4e73df;
+            border-radius: 10px;
+            padding: 12px 28px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+            color: #4e73df;
+            display: flex;
+            align-items: center;
+        }
+        .highlight-tile.active, .highlight-tile:hover {
+            background: #4e73df;
+            color: #fff;
+        }
+        </style>
+        
         <!-- Monthly Engagement Section -->
         <div class="engagement-section">
             <div class="container">
@@ -665,774 +902,491 @@
     </div>
 
     <!-- Newsletter Modal -->
-    <div id="newsletterModal" class="newsletter-modal">
-        <div class="newsletter-modal-content">
-            <div class="newsletter-modal-header">
-                <h3 id="modalNewsletterTitle"></h3>
-                <span class="newsletter-modal-close" onclick="closeNewsletterModal()">&times;</span>
-            </div>
-            <div class="newsletter-modal-body">
-                <div class="newsletter-modal-image">
-                    <img id="modalImageSrc" src="" alt="Newsletter Image" style="display: none;">
-                </div>
-                <div id="modalNewsletterDescription" class="newsletter-modal-description"></div>
-            </div>
-            <div class="newsletter-modal-footer">
-                <div class="newsletter-modal-tags" id="modalNewsletterTags"></div>
-                <div class="newsletter-modal-date" id="modalNewsletterDate"></div>
-            </div>
+    <div class="newsletter-modal" id="newsletterModal">
+      <div class="newsletter-modal-content">
+        <div class="newsletter-modal-header">
+          <span class="newsletter-modal-title" id="modalTitle"></span>
+          <span class="newsletter-modal-close" onclick="closeNewsletterModal()">&times;</span>
         </div>
+        <div class="newsletter-modal-body">
+          <div class="newsletter-modal-image" id="modalImage"></div>
+          <div class="newsletter-modal-description" id="modalDescription"></div>
+        </div>
+        <div class="newsletter-modal-footer">
+          <span class="newsletter-modal-date" id="modalDate"></span>
+          <div class="newsletter-modal-tags" id="modalTags"></div>
+        </div>
+      </div>
     </div>
 
     <script>
-        // Initialize charts when DOM is loaded
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize all charts
-            initStudentsCharts();
-            initFacultyCharts();
-            initLearningChart();
-            initCompletionsChart();
-            
-            // Activate first tab by default
-            openTab('students');
-            
-            // Setup other functionality
-            setupMobileNavigation();
-            setupTextSizeToggle();
-            setupTextToSpeech();
-            setupScrollEffects();
+       document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all components
+    initCharts();
+    initUIComponents();
+});
+
+function initCharts() {
+    initStudentsCharts();
+    initFacultyCharts();
+    initLearningChart();
+    initCompletionsChart();
+    initLinkedInCharts();
+}
+
+function initUIComponents() {
+    openTab('students');
+    setupMobileNavigation();
+    setupTextSizeToggle();
+    setupTextToSpeech();
+    setupScrollEffects();
+    setupModals();
+    filterLeaderboard('all');
+}
+
+// Chart initialization functions
+function initStudentsCharts() {
+    createBarChart('studentsChartBlr', {
+        labels: ['Engaged', 'Incomplete', 'Not Enrolled'],
+        data: [17152, 2230, 334],
+        title: 'Students Distribution - Bangalore',
+        colors: ['rgba(75, 192, 192, 0.7)', 'rgba(255, 206, 86, 0.7)', 'rgba(255, 99, 132, 0.7)']
+    });
+
+    createBarChart('studentsChartKochi', {
+        labels: ['Engaged', 'Incomplete', 'Not Enrolled'],
+        data: [567, 117, 41],
+        title: 'Students Distribution - Kochi',
+        colors: ['rgba(75, 192, 192, 0.7)', 'rgba(255, 206, 86, 0.7)', 'rgba(255, 99, 132, 0.7)']
+    });
+}
+
+function initFacultyCharts() {
+    createBarChart('facultyChartBlr', {
+        labels: ['Completed', 'Incomplete', 'Not Enrolled'],
+        data: [417, 414, 13],
+        title: 'Faculty Distribution - Bangalore',
+        colors: ['rgba(54, 162, 235, 0.7)', 'rgba(255, 159, 64, 0.7)', 'rgba(255, 99, 132, 0.7)']
+    });
+
+    createBarChart('facultyChartKochi', {
+        labels: ['Completed', 'Incomplete', 'Not Enrolled'],
+        data: [45, 30, 4],
+        title: 'Faculty Distribution - Kochi',
+        colors: ['rgba(54, 162, 235, 0.7)', 'rgba(255, 159, 64, 0.7)', 'rgba(255, 99, 132, 0.7)']
+    });
+
+    // ARKA Faculty Chart (only if element exists)
+    if (document.getElementById('facultyChartArka')) {
+        createBarChart('facultyChartArka', {
+            labels: ['Completed', 'Incomplete', 'Not Enrolled'],
+            data: [102, 81, 3],
+            title: 'Faculty Distribution - ARKA',
+            colors: ['rgba(54, 162, 235, 0.7)', 'rgba(255, 159, 64, 0.7)', 'rgba(255, 99, 132, 0.7)']
         });
+    }
+}
 
-        // Tab switching function
-        function openTab(tabId) {
-            // Hide all sections
-            document.querySelectorAll('.section').forEach(section => {
-                section.style.display = 'none';
-            });
-            
-            // Remove active class from all buttons
-            document.querySelectorAll('.tab-buttons button').forEach(button => {
-                button.classList.remove('active');
-            });
-            
-            // Show selected section and activate button
-            document.getElementById(tabId).style.display = 'block';
-            event.target.classList.add('active');
-        }
+function initLearningChart() {
+    const ctx = getChartContext('learningChart');
+    if (!ctx) return;
 
-        // STUDENTS CHARTS - Now shows percentages and counts always visible
-        function initStudentsCharts() {
-            // Bangalore Students Chart
-            const ctxBlr = document.getElementById('studentsChartBlr').getContext('2d');
-            new Chart(ctxBlr, {
-                type: 'bar',
-                data: {
-                    labels: ['Engaged', 'Incomplete', 'Not Enrolled'],
-                    datasets: [{
-                        label: 'Students',
-                        data: [17152, 2230, 334],
-                        backgroundColor: [
-                            'rgba(75, 192, 192, 0.7)',
-                            'rgba(255, 206, 86, 0.7)',
-                            'rgba(255, 99, 132, 0.7)'
-                        ],
-                        borderColor: [
-                            'rgba(75, 192, 192, 1)',
-                            'rgba(255, 206, 86, 1)',
-                            'rgba(255, 99, 132, 1)'
-                        ],
-                        borderWidth: 1
-                    }]
+    window.learningChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['May 2025','Apr 2025','Mar 2025','Feb 2025','Jan 2025','Dec 2024','Nov 2024','Oct 2024','Sep 2024','Aug 2024','Jul 2024'],
+            datasets: [
+                { 
+                    type: 'bar', 
+                    label: 'Standalone Courses', 
+                    data: [14708,31130,40366,31346,23896,26433,47504,43910,28160,17861,1750], 
+                    backgroundColor: '#4682B4' 
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        title: {
-                            display: true,
-                            text: 'Students Distribution - Bangalore',
-                            font: {
-                                size: 16
-                            }
-                        },
-                        tooltip: {
-                            enabled: false
-                        },
-                        datalabels: {
-                            anchor: 'center',
-                            align: 'center',
-                            color: 'black',
-                            font: {
-                                weight: 'bold',
-                                size: 12
-                            },
-                            formatter: function(value, context) {
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = Math.round((value / total) * 100);
-                                return `${percentage}%\n(${value.toLocaleString()})`;
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return value.toLocaleString();
-                                }
-                            }
-                        }
-                    }
-                },
-                plugins: [ChartDataLabels]
-            });
-
-            // Kochi Students Chart
-            const ctxKochi = document.getElementById('studentsChartKochi').getContext('2d');
-            new Chart(ctxKochi, {
-                type: 'bar',
-                data: {
-                    labels: ['Engaged', 'Incomplete', 'Not Enrolled'],
-                    datasets: [{
-                        label: 'Students',
-                        data: [567, 117, 41],
-                        backgroundColor: [
-                            'rgba(75, 192, 192, 0.7)',
-                            'rgba(255, 206, 86, 0.7)',
-                            'rgba(255, 99, 132, 0.7)'
-                        ],
-                        borderColor: [
-                            'rgba(75, 192, 192, 1)',
-                            'rgba(255, 206, 86, 1)',
-                            'rgba(255, 99, 132, 1)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        title: {
-                            display: true,
-                            text: 'Students Distribution - Kochi',
-                            font: {
-                                size: 16
-                            }
-                        },
-                        tooltip: {
-                            enabled: false
-                        },
-                        datalabels: {
-                            anchor: 'center',
-                            align: 'center',
-                            color: 'black',
-                            font: {
-                                weight: 'bold',
-                                size: 12
-                            },
-                            formatter: function(value, context) {
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = Math.round((value / total) * 100);
-                                return `${percentage}%\n(${value.toLocaleString()})`;
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return value.toLocaleString();
-                                }
-                            }
-                        }
-                    }
-                },
-                plugins: [ChartDataLabels]
-            });
-
-            // Arka Students Chart
-            const ctxArka = document.getElementById('studentsChartArka').getContext('2d');
-            new Chart(ctxArka, {
-                type: 'bar',
-                data: {
-                    labels: ['Engaged', 'Incomplete', 'Not Enrolled'],
-                    datasets: [{
-                        label: 'Students',
-                        data: [3686, 341, 163],
-                        backgroundColor: [
-                            'rgba(75, 192, 192, 0.7)',
-                            'rgba(255, 206, 86, 0.7)',
-                            'rgba(255, 99, 132, 0.7)'
-                        ],
-                        borderColor: [
-                            'rgba(75, 192, 192, 1)',
-                            'rgba(255, 206, 86, 1)',
-                            'rgba(255, 99, 132, 1)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        title: {
-                            display: true,
-                            text: 'Students Distribution - ARKA',
-                            font: {
-                                size: 16
-                            }
-                        },
-                        tooltip: {
-                            enabled: false
-                        },
-                        datalabels: {
-                            anchor: 'center',
-                            align: 'center',
-                            color: 'black',
-                            font: {
-                                weight: 'bold',
-                                size: 12
-                            },
-                            formatter: function(value, context) {
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = Math.round((value / total) * 100);
-                                return `${percentage}%\n(${value.toLocaleString()})`;
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return value.toLocaleString();
-                                }
-                            }
-                        }
-                    }
-                },
-                plugins: [ChartDataLabels]
-            });
-        }
-
-        // FACULTY CHARTS - Now shows percentages and counts always visible
-        function initFacultyCharts() {
-            // Bangalore Faculty Chart
-            const ctxBlr = document.getElementById('facultyChartBlr').getContext('2d');
-            new Chart(ctxBlr, {
-                type: 'bar',
-                data: {
-                    labels: ['Completed', 'Incomplete', 'Not Enrolled'],
-                    datasets: [{
-                        label: 'Faculty',
-                        data: [417, 414, 13],
-                        backgroundColor: [
-                            'rgba(54, 162, 235, 0.7)',
-                            'rgba(255, 159, 64, 0.7)',
-                            'rgba(255, 99, 132, 0.7)'
-                        ],
-                        borderColor: [
-                            'rgba(54, 162, 235, 1)',
-                            'rgba(255, 159, 64, 1)',
-                            'rgba(255, 99, 132, 1)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        title: {
-                            display: true,
-                            text: 'Faculty Distribution - Bangalore',
-                            font: {
-                                size: 16
-                            }
-                        },
-                        tooltip: {
-                            enabled: false
-                        },
-                        datalabels: {
-                            anchor: 'center',
-                            align: 'center',
-                            color: 'black',
-                            font: {
-                                weight: 'bold',
-                                size: 12
-                            },
-                            formatter: function(value, context) {
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = Math.round((value / total) * 100);
-                                return `${percentage}%\n(${value.toLocaleString()})`;
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return value.toLocaleString();
-                                }
-                            }
-                        }
-                    }
-                },
-                plugins: [ChartDataLabels]
-            });
-
-            // Kochi Faculty Chart
-            const ctxKochi = document.getElementById('facultyChartKochi').getContext('2d');
-            new Chart(ctxKochi, {
-                type: 'bar',
-                data: {
-                    labels: ['Completed', 'Incomplete', 'Not Enrolled'],
-                    datasets: [{
-                        label: 'Faculty',
-                        data: [45, 30, 4],
-                        backgroundColor: [
-                            'rgba(54, 162, 235, 0.7)',
-                            'rgba(255, 159, 64, 0.7)',
-                            'rgba(255, 99, 132, 0.7)'
-                        ],
-                        borderColor: [
-                            'rgba(54, 162, 235, 1)',
-                            'rgba(255, 159, 64, 1)',
-                            'rgba(255, 99, 132, 1)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        title: {
-                            display: true,
-                            text: 'Faculty Distribution - Kochi',
-                            font: {
-                                size: 16
-                            }
-                        },
-                        tooltip: {
-                            enabled: false
-                        },
-                        datalabels: {
-                            anchor: 'center',
-                            align: 'center',
-                            color: 'black',
-                            font: {
-                                weight: 'bold',
-                                size: 12
-                            },
-                            formatter: function(value, context) {
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = Math.round((value / total) * 100);
-                                return `${percentage}%\n(${value.toLocaleString()})`;
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return value.toLocaleString();
-                                }
-                            }
-                        }
-                    }
-                },
-                plugins: [ChartDataLabels]
-            });
-
-            // Arka Faculty Chart
-            const ctxArka = document.getElementById('facultyChartArka').getContext('2d');
-            new Chart(ctxArka, {
-                type: 'bar',
-                data: {
-                    labels: ['Completed', 'Incomplete', 'Not Enrolled'],
-                    datasets: [{
-                        label: 'Faculty',
-                        data: [102, 81, 3],
-                        backgroundColor: [
-                            'rgba(54, 162, 235, 0.7)',
-                            'rgba(255, 159, 64, 0.7)',
-                            'rgba(255, 99, 132, 0.7)'
-                        ],
-                        borderColor: [
-                            'rgba(54, 162, 235, 1)',
-                            'rgba(255, 159, 64, 1)',
-                            'rgba(255, 99, 132, 1)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        title: {
-                            display: true,
-                            text: 'Faculty Distribution - ARKA',
-                            font: {
-                                size: 16
-                            }
-                        },
-                        tooltip: {
-                            enabled: false
-                        },
-                        datalabels: {
-                            anchor: 'center',
-                            align: 'center',
-                            color: 'black',
-                            font: {
-                                weight: 'bold',
-                                size: 12
-                            },
-                            formatter: function(value, context) {
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = Math.round((value / total) * 100);
-                                return `${percentage}%\n(${value.toLocaleString()})`;
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return value.toLocaleString();
-                                }
-                            }
-                        }
-                    }
-                },
-                plugins: [ChartDataLabels]
-            });
-        }
-
-        // LEARNING HOURS CHART
-        function initLearningChart() {
-            const ctx = document.getElementById('learningChart').getContext('2d');
-            window.learningChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['May 2025','Apr 2025','Mar 2025','Feb 2025','Jan 2025','Dec 2024','Nov 2024','Oct 2024','Sep 2024','Aug 2024','Jul 2024'],
-                    datasets: [
-                        { 
-                            type: 'bar', 
-                            label: 'Standalone Courses', 
-                            data: [14708,31130,40366,31346,23896,26433,47504,43910,28160,17861,1750], 
-                            backgroundColor: '#4682B4' 
-                        },
-                        { 
-                            type: 'line', 
-                            label: 'Total Learning Hours', 
-                            data: [14856,31300,40727,31597,24127,26616,47944,44287,28566,18258,1768], 
-                            borderColor: '#FFA500', 
-                            backgroundColor: '#FFA500', 
-                            fill: false 
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: { 
-                        mode: 'index', 
-                        intersect: false 
-                    },
-                    plugins: { 
-                        legend: { 
-                            position: 'top', 
-                            labels: { 
-                                color: 'black' 
-                            } 
-                        }, 
-                        datalabels: {
-                            display: true,
-                            anchor: 'end',
-                            align: 'top',
-                            color: 'black',
-                            font: {
-                                weight: 'bold'
-                            },
-                            formatter: function(value) {
-                                return value.toLocaleString();
-                            }
-                        },
-                        title: {
-                            display: true,
-                            text: 'Monthly Learning Hours Trend',
-                            font: {
-                                size: 16
-                            }
-                        }
-                    },
-                    scales: { 
-                        x: { 
-                            ticks: { 
-                                color: 'black' 
-                            } 
-                        }, 
-                        y: { 
-                            beginAtZero: true, 
-                            ticks: { 
-                                color: 'black',
-                                callback: function(value) {
-                                    return value.toLocaleString();
-                                }
-                            } 
-                        } 
-                    }
-                },
-                plugins: [ChartDataLabels]
-            });
-        }
-
-        // MONTHLY COMPLETIONS CHART
-        function initCompletionsChart() {
-            const ctx = document.getElementById('completionsChart').getContext('2d');
-            window.completionsChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['May','Apr','Mar','Feb','Jan','Dec','Nov','Oct','Sep','Aug','Jul'],
-                    datasets: [
-                        { 
-                            label: 'Completions', 
-                            data: [6294,15703,29842,17695,10697,13704,24266,14780,11660,5453,0], 
-                            backgroundColor: '#4682B4' 
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { 
-                        legend: { 
-                            display: false 
-                        }, 
-                        datalabels: { 
-                            anchor: 'end', 
-                            align: 'end', 
-                            color: 'black', 
-                            font: { 
-                                weight: 'bold',
-                                size: 12
-                            },
-                            formatter: function(value) {
-                                return value.toLocaleString();
-                            }
-                        },
-                        title: {
-                            display: true,
-                            text: 'Monthly Course Completions',
-                            font: {
-                                size: 16
-                            }
-                        }
-                    },
-                    scales: { 
-                        x: { 
-                            ticks: { 
-                                color: 'black' 
-                            } 
-                        }, 
-                        y: { 
-                            ticks: { 
-                                color: 'black',
-                                callback: function(value) {
-                                    return value.toLocaleString();
-                                }
-                            } 
-                        } 
-                    }
-                },
-                plugins: [ChartDataLabels]
-            });
-        }
-
-        function setupMobileNavigation() {
-            const toggle = document.querySelector(".nav-toggle");
-            const navLinks = document.querySelector(".nav-links");
-
-            toggle.addEventListener("click", () => {
-                const expanded = toggle.getAttribute('aria-expanded') === 'true';
-                toggle.setAttribute('aria-expanded', !expanded);
-                navLinks.classList.toggle("show");
-            });
-        }
-
-        function setupTextSizeToggle() {
-            const textSizeToggle = document.getElementById('textSizeToggle');
-            if (textSizeToggle) {
-                textSizeToggle.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const html = document.documentElement;
-                    const currentSize = parseFloat(window.getComputedStyle(html, null).getPropertyValue('font-size'));
-                    
-                    // Toggle between different font sizes
-                    if (currentSize === 16) {
-                        html.style.fontSize = '18px';
-                    } else if (currentSize === 18) {
-                        html.style.fontSize = '20px';
-                    } else {
-                        html.style.fontSize = '16px';
-                    }
-                });
-            }
-        }
-
-        function setupTextToSpeech() {
-            const speakButton = document.getElementById('speakContent');
-            if (speakButton && 'speechSynthesis' in window) {
-                speakButton.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const mainContent = document.querySelector('main').textContent || document.body.textContent;
-                    const speech = new SpeechSynthesisUtterance();
-                    speech.text = mainContent;
-                    speech.volume = 1;
-                    speech.rate = 1;
-                    speech.pitch = 1;
-                    window.speechSynthesis.speak(speech);
-                });
-            }
-        }
-
-        function setupScrollEffects() {
-            // Header scroll effect
-            window.addEventListener('scroll', function() {
-                const header = document.querySelector('header');
-                if (window.scrollY > 50) {
-                    header.classList.add('scrolled');
-                } else {
-                    header.classList.remove('scrolled');
+                { 
+                    type: 'line', 
+                    label: 'Total Learning Hours', 
+                    data: [14856,31300,40727,31597,24127,26616,47944,44287,28566,18258,1768], 
+                    borderColor: '#FFA500', 
+                    backgroundColor: '#FFA500', 
+                    fill: false 
                 }
-            });
+            ]
+        },
+        options: getChartOptions({
+            title: 'Monthly Learning Hours Trend',
+            isCombo: true
+        })
+    });
+}
 
-            // Add animation to elements when they come into view
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.style.opacity = '1';
-                        entry.target.style.transform = 'translateY(0)';
+function initCompletionsChart() {
+    const ctx = getChartContext('completionsChart');
+    if (!ctx) return;
+
+    window.completionsChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['May','Apr','Mar','Feb','Jan','Dec','Nov','Oct','Sep','Aug','Jul'],
+            datasets: [
+                { 
+                    label: 'Completions', 
+                    data: [6294,15703,29842,17695,10697,13704,24266,14780,11660,5453,0], 
+                    backgroundColor: '#4682B4' 
+                }
+            ]
+        },
+        options: getChartOptions({
+            title: 'Monthly Course Completions'
+        })
+    });
+}
+
+function initLinkedInCharts() {
+    // Department Engagement Chart
+    createBarChart('linkedinDeptChart', {
+        labels: ['Management', 'Computer Science', 'Commerce', 'Humanities', 'Animation', 'Healthcare', 'Journalism', 'Art/Design', 'Others'],
+        data: [39020, 8169, 7736, 652, 568, 81, 93, 84, 1202],
+        title: 'Courses Completed by Department',
+        colors: 'rgba(10, 102, 194, 0.7)',
+        dataLabelsPosition: 'top'
+    });
+
+    // Activation Rate Chart
+    createDoughnutChart('linkedinActivationChart', {
+        labels: ['Activated', 'Not Activated'],
+        data: [11101, 331],
+        title: 'License Activation (97.1%)',
+        colors: ['rgba(10, 102, 194, 0.7)', 'rgba(200, 200, 200, 0.7)']
+    });
+
+    // Completion Rate Chart
+    createDoughnutChart('linkedinCompletionChart', {
+        labels: ['Completed', 'In Progress', 'Not Started'],
+        data: [56605, 69535, 0],
+        title: 'Course Completion (44.9%)',
+        colors: ['rgba(10, 102, 194, 0.7)', 'rgba(10, 102, 194, 0.4)', 'rgba(200, 200, 200, 0.7)']
+    });
+}
+
+// Helper functions for charts
+function getChartContext(id) {
+    const element = document.getElementById(id);
+    return element ? element.getContext('2d') : null;
+}
+
+function createBarChart(elementId, {labels, data, title, colors, dataLabelsPosition = 'center'}) {
+    const ctx = getChartContext(elementId);
+    if (!ctx) return;
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: title,
+                data: data,
+                backgroundColor: Array.isArray(colors) ? colors : colors,
+                borderColor: Array.isArray(colors) ? colors.map(c => c.replace('0.7', '1')) : colors.replace('0.7', '1'),
+                borderWidth: 1
+            }]
+        },
+        options: getChartOptions({
+            title: title,
+            dataLabelsPosition: dataLabelsPosition
+        })
+    });
+}
+
+function createDoughnutChart(elementId, {labels, data, title, colors}) {
+    const ctx = getChartContext(elementId);
+    if (!ctx) return;
+
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: colors,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { 
+                legend: { position: 'bottom' },
+                title: { display: true, text: title },
+                datalabels: {
+                    formatter: (value, ctx) => {
+                        const sum = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                        const percentage = Math.round((value / sum) * 100);
+                        return `${percentage}%`;
+                    },
+                    color: '#fff',
+                    font: { weight: 'bold' }
+                }
+            }
+        },
+        plugins: [ChartDataLabels]
+    });
+}
+
+function getChartOptions({title, isCombo = false, dataLabelsPosition = 'center'}) {
+    return {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: isCombo,
+                position: 'top',
+                labels: { color: 'black' }
+            },
+            title: {
+                display: true,
+                text: title,
+                font: { size: 16 }
+            },
+            tooltip: {
+                enabled: !isCombo
+            },
+            datalabels: {
+                anchor: dataLabelsPosition,
+                align: dataLabelsPosition,
+                color: 'black',
+                font: {
+                    weight: 'bold',
+                    size: 12
+                },
+                formatter: function(value, context) {
+                    if (context.chart.data.datasets.length > 1) {
+                        return value.toLocaleString();
                     }
-                });
-            }, { threshold: 0.1 });
-
-            // Apply to newsletter cards
-            document.querySelectorAll('.newsletter-card').forEach(card => {
-                card.style.opacity = '0';
-                card.style.transform = 'translateY(20px)';
-                card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-                observer.observe(card);
-            });
-
-            // Apply to engagement cards
-            document.querySelectorAll('.engagement-card').forEach(card => {
-                card.style.opacity = '0';
-                card.style.transform = 'translateY(20px)';
-                card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-                observer.observe(card);
-            });
-        }
-
-        // PDF Modal functionality
-        function openPdfModal(pdfUrl) {
-            const modal = document.getElementById('pdfModal');
-            const iframe = document.getElementById('pdfIframe');
-            iframe.src = pdfUrl;
-            modal.classList.add('show');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closePdfModal() {
-            const modal = document.getElementById('pdfModal');
-            const iframe = document.getElementById('pdfIframe');
-            modal.classList.remove('show');
-            document.body.style.overflow = 'auto';
-            setTimeout(() => {
-                iframe.src = '';
-            }, 300);
-        }
-
-        // Newsletter Modal functionality
-        function openNewsletterModal(title, description, image, date, tags) {
-            const modal = document.getElementById('newsletterModal');
-            document.getElementById('modalNewsletterTitle').textContent = title;
-            document.getElementById('modalNewsletterDescription').innerHTML = description;
-            document.getElementById('modalNewsletterDate').innerHTML = `<i class="far fa-calendar-alt"></i> Published on: ${date}`;
-            
-            // Set image
-            const imageElement = document.getElementById('modalImageSrc');
-            if (image) {
-                imageElement.src = "{{ url_for('static', filename='uploads/') }}" + image;
-                imageElement.style.display = 'block';
-            } else {
-                imageElement.style.display = 'none';
+                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                    const percentage = Math.round((value / total) * 100);
+                    return `${percentage}%\n(${value.toLocaleString()})`;
+                }
             }
-            
-            // Set tags
-            const tagsContainer = document.getElementById('modalNewsletterTags');
-            tagsContainer.innerHTML = '';
-            if (tags) {
-                const tagsArray = tags.split(',');
-                tagsArray.forEach(tag => {
-                    if (tag.trim()) {
-                        const tagElement = document.createElement('span');
-                        tagElement.className = 'newsletter-tag';
-                        tagElement.textContent = tag.trim();
-                        tagsContainer.appendChild(tagElement);
-                    }
-                });
-            }
-            
-            modal.classList.add('show');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeNewsletterModal() {
-            const modal = document.getElementById('newsletterModal');
-            modal.classList.remove('show');
-            document.body.style.overflow = 'auto';
-        }
-
-        // Close modals when clicking outside
-        window.onclick = function(event) {
-            const pdfModal = document.getElementById('pdfModal');
-            const newsletterModal = document.getElementById('newsletterModal');
-            
-            if (event.target == pdfModal) {
-                closePdfModal();
-            }
-            
-            if (event.target == newsletterModal) {
-                closeNewsletterModal();
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    color: 'black',
+                    callback: value => value.toLocaleString()
+                }
+            },
+            x: {
+                ticks: { color: 'black' }
             }
         }
+    };
+}
+
+// UI Functions
+function openTab(tabId) {
+    // Hide all sections
+    document.querySelectorAll('.section').forEach(section => {
+        section.style.display = 'none';
+    });
+    
+    // Remove active class from all buttons
+    document.querySelectorAll('.tab-buttons button').forEach(button => {
+        button.classList.remove('active');
+    });
+    
+    // Show selected section and activate button
+    document.getElementById(tabId).style.display = 'block';
+    event.target.classList.add('active');
+}
+
+function setupMobileNavigation() {
+    const toggle = document.querySelector(".nav-toggle");
+    const navLinks = document.querySelector(".nav-links");
+
+    if (toggle && navLinks) {
+        toggle.addEventListener("click", () => {
+            const expanded = toggle.getAttribute('aria-expanded') === 'true';
+            toggle.setAttribute('aria-expanded', !expanded);
+            navLinks.classList.toggle("show");
+        });
+    }
+}
+
+function setupTextSizeToggle() {
+    const textSizeToggle = document.getElementById('textSizeToggle');
+    if (textSizeToggle) {
+        textSizeToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            const html = document.documentElement;
+            const currentSize = parseFloat(window.getComputedStyle(html, null).getPropertyValue('font-size'));
+            
+            // Cycle through font sizes
+            html.style.fontSize = currentSize === 16 ? '18px' : 
+                                currentSize === 18 ? '20px' : '16px';
+        });
+    }
+}
+
+function setupTextToSpeech() {
+    const speakButton = document.getElementById('speakContent');
+    if (speakButton && 'speechSynthesis' in window) {
+        speakButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            const mainContent = document.querySelector('main').textContent || document.body.textContent;
+            const speech = new SpeechSynthesisUtterance();
+            speech.text = mainContent;
+            speech.volume = 1;
+            speech.rate = 1;
+            speech.pitch = 1;
+            window.speechSynthesis.speak(speech);
+        });
+    }
+}
+
+function setupScrollEffects() {
+    // Header scroll effect
+    window.addEventListener('scroll', function() {
+        const header = document.querySelector('header');
+        if (header) {
+            header.classList.toggle('scrolled', window.scrollY > 50);
+        }
+    });
+
+    // Intersection Observer for animations
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, { threshold: 0.1 });
+
+    // Apply to animated elements
+    document.querySelectorAll('.newsletter-card, .engagement-card').forEach(card => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+        observer.observe(card);
+    });
+}
+
+function setupModals() {
+    // PDF Modal
+    const pdfModal = document.getElementById('pdfModal');
+    if (pdfModal) {
+        pdfModal.querySelector('.close').addEventListener('click', closePdfModal);
+    }
+
+    // Newsletter Modal
+    const newsletterModal = document.getElementById('newsletterModal');
+    if (newsletterModal) {
+        newsletterModal.querySelector('.close').addEventListener('click', closeNewsletterModal);
+    }
+
+    // Close modals when clicking outside
+    window.addEventListener('click', function(event) {
+        if (pdfModal && event.target === pdfModal) {
+            closePdfModal();
+        }
+        if (newsletterModal && event.target === newsletterModal) {
+            closeNewsletterModal();
+        }
+    });
+}
+
+function openPdfModal(pdfUrl) {
+    const modal = document.getElementById('pdfModal');
+    const iframe = document.getElementById('pdfIframe');
+    if (modal && iframe) {
+        iframe.src = pdfUrl;
+        modal.classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closePdfModal() {
+    const modal = document.getElementById('pdfModal');
+    const iframe = document.getElementById('pdfIframe');
+    if (modal && iframe) {
+        modal.classList.remove('show');
+        document.body.style.overflow = 'auto';
+        setTimeout(() => {
+            iframe.src = '';
+        }, 300);
+    }
+}
+
+function openNewsletterModal(title, description, image, date, tags) {
+    const modal = document.getElementById('newsletterModal');
+    if (!modal) return;
+
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalDescription').innerHTML = description;
+    document.getElementById('modalDate').textContent = date;
+
+    // Image
+    const modalImage = document.getElementById('modalImage');
+    if (modalImage) {
+        let imgHtml = '';
+        if (image && image !== 'None') {
+            const src = image.startsWith('http') ? image : `/static/uploads/${image}`;
+            imgHtml = `<img src="${src}" alt="${title}">`;
+        } else {
+            imgHtml = `<img src="https://via.placeholder.com/300x180?text=Newsletter" alt="Default Newsletter Image">`;
+        }
+        modalImage.innerHTML = imgHtml;
+    }
+
+    // Tags
+    const modalTags = document.getElementById('modalTags');
+    if (modalTags && tags) {
+        modalTags.innerHTML = tags.split(',')
+            .filter(tag => tag.trim())
+            .map(tag => `<span class="newsletter-modal-tag">${tag.trim()}</span>`)
+            .join('');
+    }
+
+    modal.classList.add('show');
+}
+
+function closeNewsletterModal() {
+    const modal = document.getElementById('newsletterModal');
+    if (modal) {
+        modal.classList.remove('show');
+    }
+}
+
+function filterLeaderboard(campus) {
+    // Update active tab
+    document.querySelectorAll('.leaderboard-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    
+    // Show/hide cards based on campus filter
+    document.querySelectorAll('.leaderboard-card').forEach(card => {
+        card.style.display = (campus === 'all' || card.getAttribute('data-campus') === campus) 
+            ? 'block' 
+            : 'none';
+    });
+}
+
+function showHighlight(platform) {
+    document.getElementById('courseraHighlight').style.display = 
+        (platform === 'coursera') ? 'block' : 'none';
+    document.getElementById('linkedinHighlight').style.display = 
+        (platform === 'linkedin') ? 'block' : 'none';
+    
+    document.getElementById('courseraTile').classList.toggle('active', platform === 'coursera');
+    document.getElementById('linkedinTile').classList.toggle('active', platform === 'linkedin');
+
+    // Re-initialize LinkedIn charts if selected
+    if (platform === 'linkedin') {
+        setTimeout(initLinkedInCharts, 100);
+    }
+}
     </script>
 </body>
 </html>

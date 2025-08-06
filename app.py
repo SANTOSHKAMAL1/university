@@ -61,12 +61,11 @@ def home():
     records = list(db.ugc_data.find().sort('uploaded_at', -1))
     monthly_records = list(db.monthly_engagement.find().sort('uploaded_at', -1))
     newsletter_records = list(db.newsletters.find().sort('uploaded_at', -1))
-
     return render_template(
         'home.html',
         records=records,
         monthly_records=monthly_records,
-        newsletter_records=newsletter_records  # ← Add this line
+        newsletter_records=newsletter_records
     )
 
 
@@ -637,11 +636,16 @@ def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 
-
+@app.route('/newsletter_view/<newsletter_id>')
+def newsletter_view(newsletter_id):
+    news = db.newsletters.find_one({'_id': ObjectId(newsletter_id)})
+    if not news:
+        os.abort(404)
+    news['_id'] = str(news['_id'])
+    return render_template('newsletter_detail.html', news=news)
 import os
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port, debug=True)
-
 
