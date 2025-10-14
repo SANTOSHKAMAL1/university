@@ -466,13 +466,55 @@
         </div>
 
        
-        <!-- Main Content -->
-    <main class="main-container">
-        <!-- Main Navigation Tabs -->
-        <div class="main-tabs">
-            <div class="main-tab active" onclick="showMainTab('digital')">Digital Innovation</div>
-            <div class="main-tab" onclick="showMainTab('capacity')">Capacity Building</div>
-        </div>
+      <style>
+    .main-tabs {
+        display: flex;
+        background: white;
+        border-radius: 50px;
+        padding: 6px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        width: fit-content;
+        margin: 20px auto;
+        gap: 5px;
+    }
+
+    .main-tab {
+        padding: 10px 18px;
+        border-radius: 50px;
+        cursor: pointer;
+        font-weight: 500;
+        color: #555;
+        transition: all 0.3s ease;
+    }
+
+    .main-tab.active {
+        background: linear-gradient(to right, #8e9efc, #4c6ef5);
+        color: white;
+        font-weight: 600;
+        box-shadow: 0 4px 12px rgba(76, 110, 245, 0.3);
+    }
+
+    .main-tab:hover {
+        background: #f4f4f4;
+    }
+</style>
+
+<div class="main-tabs">
+    <div class="main-tab active" onclick="showMainTab('digital')">Digital Innovation</div>
+    <div class="main-tab" onclick="showMainTab('capacity')">Capacity Building</div>
+    <div class="main-tab" onclick="showMainTab('academics')">Academics</div>
+    <div class="main-tab" onclick="showMainTab('calendar')">Calendar</div>
+</div>
+
+<script>
+    function showMainTab(tabName) {
+        document.querySelectorAll('.main-tab').forEach(tab => tab.classList.remove('active'));
+        event.target.classList.add('active');
+        // Add content-switching logic here
+        console.log("Switched to tab:", tabName);
+    }
+</script>
+
 
         <!-- Digital Innovation Section -->
         <div id="digitalTab" class="main-tab-content active-tab">

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Event</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8fafc;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin-top: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #1f2937;
+        }
+
+        form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .full-width {
+            grid-column: span 2;
+        }
+
+        label {
+            font-weight: bold;
+            margin-bottom: 6px;
+            display: block;
+            color: #374151;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        input[type="file"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            box-sizing: border-box;
+            background-color: #fff;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        img {
+            border-radius: 6px;
+            border: 1px solid #d1d5db;
+            margin-bottom: 8px;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #059669;
+            color: white;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #047857;
+        }
+
+        a {
+            color: #2563eb;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Edit Event</h1>
+
+    <form action="{{ url_for('update_event', event_id=event._id) }}" method="POST" enctype="multipart/form-data">
+        
+        <!-- Event Name -->
+        <div class="full-width">
+            <label>Event Name</label>
+            <input type="text" name="event_name" value="{{ event.event_name }}" required>
+        </div>
+
+        <!-- Description -->
+        <div class="full-width">
+            <label>Description</label>
+            <textarea name="description" rows="3" required>{{ event.description }}</textarea>
+        </div>
+
+        <!-- School -->
+        <div>
+            <label>School</label>
+            <select id="schoolSelect" name="school" required>
+                <option value="">-- Select School --</option>
+            </select>
+        </div>
+
+        <!-- Department -->
+        <div>
+            <label>Department</label>
+            <select id="departmentSelect" name="department" required>
+                <option value="">-- Select Department --</option>
+            </select>
+        </div>
+
+        <!-- Event Action -->
+        <div>
+            <label>Event Action</label>
+            <input type="text" name="event_action" value="{{ event.event_action }}">
+        </div>
+
+        <!-- Event Type -->
+        <div>
+            <label>Event Type</label>
+            <input type="text" name="event_type" value="{{ event.event_type }}">
+        </div>
+
+        <!-- Venue -->
+        <div>
+            <label>Venue</label>
+            <input type="text" name="venue" value="{{ event.venue }}">
+        </div>
+
+        <!-- Start Date -->
+        <div>
+            <label>Event Date</label>
+            <input type="date" name="event_date" value="{{ event.event_date }}">
+        </div>
+
+        <!-- End Date -->
+        <div>
+            <label>End Date</label>
+            <input type="date" name="end_date" value="{{ event.end_date }}">
+        </div>
+
+        <!-- Image -->
+        <div>
+            <label>Image</label>
+            {% if event.image %}
+                <img src="{{ event.image }}" class="w-32">
+            {% endif %}
+            <input type="file" name="image" accept="image/*">
+        </div>
+
+        <!-- PDF -->
+        <div>
+            <label>PDF</label>
+            {% if event.pdf %}
+                <a href="{{ event.pdf }}" target="_blank">View Current PDF</a>
+            {% endif %}
+            <input type="file" name="pdf" accept="application/pdf">
+        </div>
+
+        <!-- Submit -->
+        <div class="full-width">
+            <button type="submit">Update Event</button>
+        </div>
+    </form>
+</div>
+
+<!-- JavaScript -->
+<script>
+     const departmentMapping = {
+            'School of Computer Science and Engineering': [
+                'Department of Computer Science and Engineering',
+                'Department of Information Science and Engineering'
+            ],
+            'School of Aerospace Engineering': [
+                'Department of Aerospace Engineering'
+            ],
+            'School of Engineering & Technology': [
+                'Department of Civil Engineering',
+                'Department of Mechanical Engineering',
+                'Department of Electrical and Electronics Engineering',
+                'Department of Electronics and Communication Engineering',
+                'Department of Food Technology'
+            ],
+            'School of Humanities and Social Sciences': [
+                'Department of Humanities & Social Sciences',
+                'Department of Economics',
+                'Department of Performing Arts and Cultural Studies',
+                'Department of Languages',
+                'Department of Journalism and Mass Communication'
+            ],
+            'School of Law': [
+                'Department of Law'
+            ],
+            'School of Sciences': [
+                'Department of Chemistry and Biochemistry',
+                'Department of Biotechnology and Genetics',
+                'Department of Microbiology and Botany',
+                'Department of Data Analytics and Mathematical Science',
+                'Department of Forensic Science',
+                'Department of Physics and Electronics',
+                'Department of Psychology and Allied Sciences'
+            ],
+            'School of Allied Healthcare and Sciences': [
+                'Department of Allied Healthcare and Sciences'
+            ],
+            'School of Sports Science & Research': [
+                'Department of Allied Healthcare and Sciences'
+            ],
+            'School of Commerce': [
+                'Department of Commerce'
+            ],
+            'CMS Business School': [
+                'Department of Management Studies'
+            ],
+            'School of Aviation and Aerospace Management': [
+                'Department of Management Studies'
+            ],
+            'School of Design, Media and Creative Arts': [
+                'Department of Art and Design',
+                'Department of Design'
+            ],
+            'School of Computer Science & Information Technology': [
+                'Department of Computer Science & IT',
+                'Department of Animation and Virtual Reality'
+            ]
+        };
+
+        const eventTypes = [
+            'lecture', 'seminar', 'workshop', 'conference', 'symposium', 'webinar',
+            'training', 'orientation', 'fdp', 'guest lecture', 'event', 'nss',
+            'placements', 'sdp', 'other events',
+            'exam', 'midterm', 'final', 'quiz', 'viva', 'assessment',
+            'competition', 'hackathon', 'cultural', 'sports', 'fest',
+            'field trip', 'industrial visit', 'placement', 'career fair', 'alumni meet'
+        ];  
+
+    const schoolSelect = document.getElementById("schoolSelect");
+    const departmentSelect = document.getElementById("departmentSelect");
+
+    const currentSchool = "{{ event.school }}";
+    const currentDepartment = "{{ event.department }}";
+
+    Object.keys(departmentMapping).forEach(school => {
+        const opt = document.createElement("option");
+        opt.value = school;
+        opt.textContent = school;
+        if (school === currentSchool) opt.selected = true;
+        schoolSelect.appendChild(opt);
+    });
+
+    function populateDepartments(selectedSchool) {
+        departmentSelect.innerHTML = '<option value="">-- Select Department --</option>';
+        if (selectedSchool && departmentMapping[selectedSchool]) {
+            departmentMapping[selectedSchool].forEach(dept => {
+                const opt = document.createElement("option");
+                opt.value = dept;
+                opt.textContent = dept;
+                if (dept === currentDepartment) opt.selected = true;
+                departmentSelect.appendChild(opt);
+            });
+        }
+    }
+
+    populateDepartments(currentSchool);
+
+    schoolSelect.addEventListener("change", () => {
+        populateDepartments(schoolSelect.value);
+    });
+</script>
+</body>
+</html>

@@ -4,7 +4,7 @@ from flask_pymongo import PyMongo
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from bson import ObjectId
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 from config import Config
 from utils import get_indian_time # MongoDB URI in config.py
@@ -13,6 +13,7 @@ from flask_mail import Mail, Message
 from flask_pymongo import PyMongo
 from werkzeug.security import generate_password_hash
 import random
+from apscheduler.schedulers.background import BackgroundScheduler
 
 # Initialize app
 app = Flask(__name__)
@@ -44,6 +45,30 @@ app.config['MAIL_USERNAME'] = 'info.loginpanel@gmail.com'
 app.config['MAIL_PASSWORD'] = 'wedbfepklgtwtugf'  # no spaces
 
 mail = Mail(app)
+
+def send_daily_event_emails():
+    today = datetime.today().strftime("%Y-%m-%d")
+    upcoming = (datetime.today() + timedelta(days=7)).strftime("%Y-%m-%d")
+
+    subscribers = list(mongo.db.subscribers.find())
+    events = list(mongo.db.events.find({
+        "event_date": {"$gte": today, "$lte": upcoming}
+    }))
+
+    for sub in subscribers:
+        msg = Message("Upcoming University Events", sender=app.config['MAIL_USERNAME'], recipients=[sub['email']])
+        body = "Hello,\n\nHere are today's and upcoming events:\n\n"
+        for e in events:
+            if not sub.get('school') or e['school'] == sub['school']:
+                body += f"- {e['event_name']} on {e['event_date']} at {e['venue']}\n"
+        msg.body = body
+        mail.send(msg)
+
+scheduler = BackgroundScheduler()
+scheduler.add_job(send_daily_event_emails, 'cron', hour=7)  # every day at 7 AM
+scheduler.start()
+
+mail = Mail(app)
 def send_newsletter_email(title, content, image_filename, recipients):
     msg = Message(subject=title, sender=app.config['MAIL_USERNAME'], recipients=recipients)
     msg.html = content
@@ -70,6 +95,23 @@ def home():
 
 
 
+@app.route('/subscribe', methods=['POST'])
+def subscribe():
+    data = request.get_json()
+    email = data.get('email')
+    school = data.get('school', '')
+
+    if not email:
+        return jsonify({"message": "Email is required"}), 400
+
+    db.subscribers.update_one(
+        {"email": email},
+        {"$set": {"school": school}},
+        upsert=True
+    )
+
+    return jsonify({"message": "Subscribed successfully"}), 200
+
 
 @app.route('/about')
 def about():
@@ -89,7 +131,10 @@ def ugc():
 
 @app.route('/jainevents')
 def jainevents():
-    return render_template('jainevents.html')
+    events = list(mongo.db.events.find())  # Convert cursor to list
+    return render_template('jainevents.html', events=events)
+
+
 
 # ===================== UGC Upload =====================
 
@@ -643,6 +688,114 @@ def newsletter_view(newsletter_id):
         os.abort(404)
     news['_id'] = str(news['_id'])
     return render_template('newsletter_detail.html', news=news)
+
+
+
+
+@app.route("/admin/events")
+def admin_events():
+    if session.get('role') != 'admin':
+        return redirect(url_for('login'))
+    
+    events = list(mongo.db.events.find())
+    for e in events:
+        e["_id"] = str(e["_id"])
+    return render_template("admin_events.html", events=events)
+
+
+@app.route("/add_event", methods=["POST"])
+def add_event():
+    data = request.form.to_dict()
+    image_file = request.files.get("image")
+    pdf_file = request.files.get("pdf")
+
+    image_path = None
+    pdf_path = None
+
+    if image_file and image_file.filename:
+        image_path = os.path.join(app.config["UPLOAD_FOLDER"], image_file.filename)
+        image_file.save(image_path)
+        image_path = "/" + image_path.replace("\\", "/")
+
+    if pdf_file and pdf_file.filename:
+        pdf_path = os.path.join(app.config["UPLOAD_FOLDER"], pdf_file.filename)
+        pdf_file.save(pdf_path)
+        pdf_path = "/" + pdf_path.replace("\\", "/")
+
+    event = {
+        "event_name": data.get("event_name"),
+        "description": data.get("description"),
+        "school": data.get("school"),
+        "department": data.get("department"),
+        "event_action": data.get("event_action"),
+        "event_type": data.get("event_type"),
+        "venue": data.get("venue"),
+        "event_date": data.get("event_date"),
+        "end_date": data.get("end_date"),
+        "image": image_path,
+        "pdf": pdf_path
+    }
+
+    mongo.db.events.insert_one(event)
+    return redirect(url_for('admin_events'))
+from bson import ObjectId
+
+@app.route("/delete_event/<event_id>")
+def delete_event(event_id):
+    if session.get('role') != 'admin':
+        return redirect(url_for('login'))
+
+    mongo.db.events.delete_one({"_id": ObjectId(event_id)})
+    return redirect(url_for('admin_events'))
+
+@app.route("/edit_event/<event_id>", methods=["GET"])
+def edit_event(event_id):
+    if session.get('role') != 'admin':
+        return redirect(url_for('login'))
+
+    event = mongo.db.events.find_one({"_id": ObjectId(event_id)})
+    if not event:
+        return "Event not found", 404
+
+    event["_id"] = str(event["_id"])  # Convert for template
+    return render_template("edit_event.html", event=event)
+
+@app.route("/update_event/<event_id>", methods=["POST"])
+def update_event(event_id):
+    if session.get('role') != 'admin':
+        return redirect(url_for('login'))
+
+    data = request.form.to_dict()
+    image_file = request.files.get("image")
+    pdf_file = request.files.get("pdf")
+
+    update_data = {
+        "event_name": data.get("event_name"),
+        "description": data.get("description"),
+        "school": data.get("school"),
+        "department": data.get("department"),
+        "event_action": data.get("event_action"),
+        "event_type": data.get("event_type"),
+        "venue": data.get("venue"),
+        "event_date": data.get("event_date"),
+        "end_date": data.get("end_date"),
+    }
+
+    # Handle file updates only if new files are uploaded
+    if image_file and image_file.filename:
+        image_path = os.path.join(app.config["UPLOAD_FOLDER"], image_file.filename)
+        image_file.save(image_path)
+        update_data["image"] = "/" + image_path.replace("\\", "/")
+
+    if pdf_file and pdf_file.filename:
+        pdf_path = os.path.join(app.config["UPLOAD_FOLDER"], pdf_file.filename)
+        pdf_file.save(pdf_path)
+        update_data["pdf"] = "/" + pdf_path.replace("\\", "/")
+
+    mongo.db.events.update_one({"_id": ObjectId(event_id)}, {"$set": update_data})
+    return redirect(url_for('admin_events'))
+
+
 import os
 
 if __name__ == '__main__':

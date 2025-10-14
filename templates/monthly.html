@@ -1,335 +1,273 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Office of Academics at Jain University</title>
-
-  <!-- Font Awesome for icons -->
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    crossorigin="anonymous"
-    referrerpolicy="no-referrer"
-  />
-
-  <!-- Google Fonts: Poppins -->
-  <link
-    href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-    rel="stylesheet"
-  />
-
-  <style>
-    :root {
-      --jain-blue: #003366;
-      --jain-gold: #FFD700;
-      --jain-light: #f5f5f5;
-      --jain-dark: #222;
-      --jain-red: #f35444;
-      --jain-teal: #008080;
-      --jain-purple: #6a5acd;
-      --jain-yellow: #ffc107;
-
-      --transition: all 0.3s ease;
-    }
-
-    /* Reset & base */
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      font-family: 'Poppins', sans-serif;
-      background-color: var(--jain-light);
-      color: var(--jain-dark);
-      line-height: 1.6;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
-
-    a {
-      color: inherit;
-      text-decoration: none;
-      transition: var(--transition);
-    }
-
-    a:hover,
-    a:focus {
-      color: var(--jain-gold);
-      outline: none;
-    }
-
-    /* HEADER */
-    header {
-      background: white;
-      padding: 15px 30px;
-      box-shadow: 0 2px 15px rgba(0, 51, 102, 0.15);
-      position: sticky;
-      top: 0;
-      z-index: 10000;
-      border-radius: 0 0 30px 30px;
-      transition: box-shadow 0.3s ease;
-      display: flex;
-      justify-content: center;
-    }
-
-    header.scrolled {
-      box-shadow: 0 5px 25px rgba(0, 51, 102, 0.25);
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: saturate(180%) blur(15px);
-    }
-
-    .header-container {
-      max-width: 1200px;
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-    }
-
-    /* Logo */
-    .logo-section {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      cursor: pointer;
-      user-select: none;
-    }
-
-    .logo-section img {
-      height: 60px;
-      width: auto;
-      border-radius: 15px;
-      transition: transform 0.3s ease;
-      box-shadow: 0 5px 15px rgba(0, 51, 102, 0.25);
-    }
-
-    .logo-section:hover img {
-      transform: scale(1.05);
-    }
-
-    .logo-text h1 {
-      margin: 0;
-      font-weight: 700;
-      font-size: 1.4rem;
-      color: var(--jain-blue);
-      user-select: none;
-      letter-spacing: 0.05em;
-    }
-
-    .logo-text span {
-      font-weight: 300;
-      font-size: 0.9rem;
-      color: #666;
-      user-select: none;
-      letter-spacing: 0.025em;
-    }
-
-    /* NAVIGATION */
-    nav {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
-
-    nav a {
-      display: inline-block;
-      position: relative;
-      padding: 10px 20px;
-      font-weight: 600;
-      font-size: 1rem;
-      border-radius: 30px;
-      color: var(--jain-blue);
-      border: 2px solid transparent;
-      cursor: pointer;
-      transition: var(--transition);
-      background: transparent;
-      user-select: none;
-    }
-
-    nav a:hover,
-    nav a:focus {
-      background: var(--jain-gold);
-      color: var(--jain-blue);
-      box-shadow: 0 0 15px var(--jain-gold);
-      border-color: var(--jain-gold);
-      outline: none;
-      z-index: 10;
-    }
-
-    nav a.active {
-      background: var(--jain-gold);
-      color: var(--jain-blue);
-      box-shadow: 0 0 20px var(--jain-gold);
-      border-color: var(--jain-gold);
-      pointer-events: none;
-    }
-
-    /* Login Button */
-    .login-btn {
-      padding: 10px 25px;
-      background-color: var(--jain-blue);
-      color: white;
-      border-radius: 30px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      border: 2px solid var(--jain-blue);
-      box-shadow: 0 6px 15px rgba(0, 51, 102, 0.35);
-      transition: var(--transition);
-      user-select: none;
-    }
-
-    .login-btn:hover,
-    .login-btn:focus {
-      background-color: var(--jain-gold);
-      color: var(--jain-blue);
-      border-color: var(--jain-gold);
-      box-shadow: 0 8px 20px rgba(255, 215, 0, 0.6);
-      outline: none;
-    }
-
-    /* Mobile Menu Toggle */
-    .nav-toggle {
-      display: none;
-      font-size: 1.6rem;
-      background: transparent;
-      border: none;
-      color: var(--jain-blue);
-      cursor: pointer;
-      transition: var(--transition);
-    }
-
-    .nav-toggle:hover,
-    .nav-toggle:focus {
-      color: var(--jain-gold);
-      outline: none;
-    }
-
-    /* Responsive Navigation */
-    @media (max-width: 900px) {
-      header {
-        padding: 10px 20px;
-        border-radius: 0 0 20px 20px;
-      }
-
-      .header-container {
-        flex-wrap: wrap;
-        justify-content: space-between;
-      }
-
-      nav {
-        flex-basis: 100%;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 12px;
-        max-height: 0;
-        overflow: hidden;
-        transition: max-height 0.3s ease;
-      }
-
-      nav.show {
-        max-height: 500px; /* enough to show all links */
-      }
-
-      .nav-toggle {
-        display: block;
-      }
-
-      nav a {
-        flex: 1 1 45%;
-        padding: 12px 15px;
-        text-align: center;
-        border-radius: 15px;
-        font-size: 1rem;
-      }
-
-      .login-btn {
-        flex: 1 1 90%;
-        justify-content: center;
-      }
-    }
-
-    /* Monthly Engagement Section placeholder */
-    main {
-      max-width: 1200px;
-      margin: 50px auto 80px;
-      padding: 0 20px;
-    }
-
-    .section-title {
-      text-align: center;
-      font-size: 2.4rem;
-      font-weight: 700;
-      color: var(--jain-blue);
-      margin-bottom: 15px;
-      position: relative;
-      display: inline-block;
-    }
-
-    .section-title::after {
-      content: "";
-      width: 120px;
-      height: 4px;
-      background: var(--jain-gold);
-      display: block;
-      margin: 10px auto 0;
-      border-radius: 2px;
-    }
-
-    /* Footer placeholder */
-    footer {
-      background: var(--jain-blue);
-      color: white;
-      padding: 25px 20px;
-      text-align: center;
-      user-select: none;
-    }
-
-    footer a {
-      color: var(--jain-gold);
-      text-decoration: underline;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>University Event Calendar</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- FullCalendar CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+    <style>
+        /* All the CSS styles from your original code */
+        /* ... (copy all the CSS from your original code here) ... */
+    </style>
 </head>
 <body>
-
-  <header id="mainHeader">
-    <div class="header-container">
-      <div class="logo-section" role="banner" tabindex="0">
-        <img
-          src="{{ url_for('static', filename='images/jain.png') }}"
-          alt="Jain University Logo"
-          onerror="this.src='https://via.placeholder.com/60?text=JU+Logo';"
-          aria-hidden="true"
-        />
-        <div class="logo-text">
-          <h1>Office of Academics</h1>
-          <span>Excellence in Education</span>
+    <div class="container-fluid mt-4">
+        <!-- University Header -->
+        <div class="row mb-4">
+            <div class="col-12 text-center">
+                <h1 class="university-title display-5 fw-bold text-primary mb-3">
+                    Jain (Deemed-to-be University) Calendar Events
+                </h1>
+            </div>
         </div>
-      </div>
 
-      <button
-        class="nav-toggle"
-        aria-label="Toggle navigation menu"
-        aria-expanded="false"
-        aria-controls="primary-navigation"
-      >
-        <i class="fas fa-bars"></i>
-      </button>
+        <!-- School Buttons Navigation -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-3">
+                        <div class="d-flex flex-wrap gap-3 justify-content-center" id="schoolButtonsContainer">
+                            <!-- School buttons will be added here by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-      <nav id="primary-navigation" role="navigation" aria-label="Primary navigation" >
-        <a href="#" class="active" tabindex="0">Home</a>
-        <a href="{{ url_for('about') }}" tabindex="0">About Us</a>
-        <a href="{{ url_for('ugc') }}" tabindex="0">UGC Requirement</a>
-        <a href="{{ url_for('monthlyengagement') }}" tabindex="0">Monthly Engagement</a>
-        <a href="{{ url_for('contact') }}" tabindex="0">Contact Us</a>
-        <a href="{{ url_for('login') }}" class="login-btn" tabindex="0" aria-label="Login">
-          <i class="fas fa-sign-in-alt" aria-hidden="true"></i> Login
-        </a>
-      </nav>
+        <!-- Department Buttons (hidden by default) -->
+        <div class="row mb-4" id="departmentButtonsRow" style="display: none;">
+            <div class="col-md-12">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="fas fa-building me-2"></i>Departments</h5>
+                    </div>
+                    <div class="card-body p-3">
+                        <div class="d-flex flex-wrap gap-2" id="departmentButtonsContainer">
+                            <!-- Department buttons will be added here by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-body p-0">
+                        <div id="calendar"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card shadow-sm border-0 mb-4 sticky-top" style="top: 20px;">
+                    <div class="card-header bg-white text-black">
+                        <h5 class="mb-0"><i class="fas fa-calendar-day me-2"></i>Today's Events</h5>
+                    </div>
+                    <div class="card-body" id="todaysEvents" style="max-height: 250px; overflow: hidden;">
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-header" style="background-color: #fcf8fb; color: rgb(18, 14, 14);" class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-calendar-week me-2"></i>Events</h5>
+                        <input type="date" id="upcomingEventsDatePicker" class="form-control form-control-sm" style="width: 150px;">
+                    </div>
+                    
+                    <div class="card-body p-0">
+                        <div class="upcoming-events-container" id="upcomingEvents" style="max-height: 300px; overflow: hidden;">
+                            <div class="text-center py-4">
+                                <div class="spinner-border text-info" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Event Details Modal -->
+        <div class="modal fade" id="eventDetailsModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-white">
+                        <h4 class="modal-title">Event Details</h4>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="eventDetails">
+                        <!-- Event details will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+     
+        <!-- Image Modal -->
+        <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <img id="modalImage" src="" class="img-fluid" style="max-height: 80vh;">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Event Modal -->
+        <div class="modal fade" id="addEventModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">Add New Event</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="eventForm" enctype="multipart/form-data">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="eventName" class="form-label">Event Name</label>
+                                        <input type="text" class="form-control" id="eventName" name="event_name" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="eventDescription" class="form-label">Description</label>
+                                        <textarea class="form-control" id="eventDescription" name="description" rows="3"></textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="eventSchool" class="form-label">School</label>
+                                        <select class="form-select" id="eventSchool" name="school" required>
+                                            <option value="">Select School</option>
+                                            <option value="School of Computer Science and Engineering">School of Computer Science and Engineering</option>
+                                            <option value="School of Aerospace Engineering">School of Aerospace Engineering</option>
+                                            <option value="School of Engineering & Technology">School of Engineering & Technology</option>
+                                            <option value="School of Humanities and Social Sciences">School of Humanities and Social Sciences</option>
+                                            <option value="School of Law">School of Law</option>
+                                            <option value="School of Sciences">School of Sciences</option>
+                                            <option value="School of Allied Healthcare and Sciences">School of Allied Healthcare and Sciences</option>
+                                            <option value="School of Sports Science & Research">School of Sports Science & Research</option>
+                                            <option value="School of Computer Science & Information Technology">School of Computer Science & Information Technology</option>
+                                            <option value="School of Commerce">School of Commerce</option>
+                                            <option value="CMS Business School">CMS Business School</option>
+                                            <option value="School of Aviation and Aerospace Management">School of Aviation and Aerospace Management</option>
+                                            <option value="School of Design, Media and Creative Arts">School of Design, Media and Creative Arts</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="eventDepartment" class="form-label">Department</label>
+                                        <input type="text" class="form-control" id="eventDepartment" name="department">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="eventAction" class="form-label">Event Action</label>
+                                        <input type="text" class="form-control" id="eventAction" name="event_action">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="eventVenue" class="form-label">Venue</label>
+                                        <input type="text" class="form-control" id="eventVenue" name="venue">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="eventCoordinator" class="form-label">Coordinator</label>
+                                        <input type="text" class="form-control" id="eventCoordinator" name="coordinator">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="eventDate" class="form-label">Event Date</label>
+                                        <input type="date" class="form-control" id="eventDate" name="event_date" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="endDate" class="form-label">End Date (optional)</label>
+                                        <input type="date" class="form-control" id="endDate" name="end_date">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="eventImage" class="form-label">Event Image</label>
+                                        <input type="file" class="form-control" id="eventImage" name="image" accept="image/*">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="eventPdf" class="form-label">Event PDF</label>
+                                        <input type="file" class="form-control" id="eventPdf" name="pdf" accept=".pdf">
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" id="saveEventBtn">Save Event</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-  </header>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+
+    <script>
+        // All the JavaScript from your original code
+        // ... (copy all the JavaScript from your original code here) ...
+        
+        // Add this additional code for form handling
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add event button click handler
+            document.getElementById('saveEventBtn').addEventListener('click', function() {
+                const form = document.getElementById('eventForm');
+                const formData = new FormData(form);
+                
+                fetch('/add_event', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        alert('Error saving event');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error saving event');
+                });
+            });
+            
+            // School select change handler to update departments
+            document.getElementById('eventSchool').addEventListener('change', function() {
+                const school = this.value;
+                const departmentInput = document.getElementById('eventDepartment');
+                
+                if (school in departmentMapping) {
+                    // For a more advanced UI, you could create a select dropdown with departments
+                    // For now, we'll just leave it as a text input
+                    departmentInput.placeholder = "Enter department name";
+                } else {
+                    departmentInput.placeholder = "Enter department name";
+                }
+            });
+        });
+        
+        // Function to show the add event modal
+        function showAddEventModal() {
+            const modal = new bootstrap.Modal(document.getElementById('addEventModal'));
+            modal.show();
+        }
+    </script>
+</body>
+</html>

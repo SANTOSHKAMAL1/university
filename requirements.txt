@@ -16,3 +16,5 @@ colorama==0.4.6
 typing_extensions==4.14.1
 gunicorn
 pytz
+Flask-Mail
+APScheduler
