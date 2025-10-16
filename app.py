@@ -81,20 +81,31 @@ def send_newsletter_email(title, content, image_filename, recipients):
 
 
 # ===================== Pages =====================
+from datetime import datetime
+
 @app.route('/')
 def home():
     records = list(db.ugc_data.find().sort('uploaded_at', -1))
     monthly_records = list(db.monthly_engagement.find().sort('uploaded_at', -1))
     newsletter_records = list(db.newsletters.find().sort('uploaded_at', -1))
+    events = list(db.events.find().sort('event_date', 1))
+    
+    # Get today's date for filtering today's events
+    today = datetime.now().date()
+    
+    # Convert event_date strings to datetime objects if they are strings
+    for event in events:
+        if isinstance(event['event_date'], str):
+            event['event_date'] = datetime.strptime(event['event_date'], '%Y-%m-%d')
+    
     return render_template(
         'home.html',
         records=records,
         monthly_records=monthly_records,
-        newsletter_records=newsletter_records
+        newsletter_records=newsletter_records,
+        events=events,
+        today=today
     )
-
-
-
 @app.route('/subscribe', methods=['POST'])
 def subscribe():
     data = request.get_json()
@@ -120,10 +131,11 @@ def about():
 @app.route('/contact')
 def contact():
     return render_template('contact.html')
-
 @app.route('/monthlyengagement')
 def monthlyengagement():
-    return render_template('monthly.html')
+    events = list(mongo.db.monthly_engagement.find())  # Convert cursor to list
+    return render_template('monthly.html', monthly_records=events)
+   
 
 @app.route('/ugc')
 def ugc():
@@ -692,6 +704,10 @@ def newsletter_view(newsletter_id):
 
 
 
+from flask import jsonify
+from bson import ObjectId
+from datetime import datetime
+
 @app.route("/admin/events")
 def admin_events():
     if session.get('role') != 'admin':
@@ -701,7 +717,6 @@ def admin_events():
     for e in events:
         e["_id"] = str(e["_id"])
     return render_template("admin_events.html", events=events)
-
 
 @app.route("/add_event", methods=["POST"])
 def add_event():
@@ -733,12 +748,12 @@ def add_event():
         "event_date": data.get("event_date"),
         "end_date": data.get("end_date"),
         "image": image_path,
-        "pdf": pdf_path
+        "pdf": pdf_path,
+        "created_at": datetime.now()
     }
 
     mongo.db.events.insert_one(event)
     return redirect(url_for('admin_events'))
-from bson import ObjectId
 
 @app.route("/delete_event/<event_id>")
 def delete_event(event_id):
@@ -757,7 +772,7 @@ def edit_event(event_id):
     if not event:
         return "Event not found", 404
 
-    event["_id"] = str(event["_id"])  # Convert for template
+    event["_id"] = str(event["_id"])
     return render_template("edit_event.html", event=event)
 
 @app.route("/update_event/<event_id>", methods=["POST"])
@@ -779,9 +794,9 @@ def update_event(event_id):
         "venue": data.get("venue"),
         "event_date": data.get("event_date"),
         "end_date": data.get("end_date"),
+        "updated_at": datetime.now()
     }
 
-    # Handle file updates only if new files are uploaded
     if image_file and image_file.filename:
         image_path = os.path.join(app.config["UPLOAD_FOLDER"], image_file.filename)
         image_file.save(image_path)
@@ -794,6 +809,97 @@ def update_event(event_id):
 
     mongo.db.events.update_one({"_id": ObjectId(event_id)}, {"$set": update_data})
     return redirect(url_for('admin_events'))
+
+# NEW API ENDPOINTS FOR FRONTEND
+@app.route('/api/events')
+def get_events():
+    try:
+        # Get current date for filtering
+        current_date = datetime.now().strftime('%Y-%m-%d')
+        
+        # Fetch events from MongoDB - both upcoming and today's events
+        events = list(mongo.db.events.find({
+            "$or": [
+                {"event_date": {"$gte": current_date}},
+                {"end_date": {"$gte": current_date}}
+            ]
+        }).sort("event_date", 1))
+        
+        events_data = []
+        for event in events:
+            events_data.append({
+                'id': str(event['_id']),
+                'event_name': event.get('event_name', ''),
+                'event_date': event.get('event_date', ''),
+                'end_date': event.get('end_date', ''),
+                'event_time': event.get('event_time', 'All Day'),
+                'venue': event.get('venue', 'TBA'),
+                'description': event.get('description', ''),
+                'event_type': event.get('event_type', ''),
+                'school': event.get('school', ''),
+                'department': event.get('department', ''),
+                'image': event.get('image', ''),
+                'pdf': event.get('pdf', '')
+            })
+        
+        return jsonify(events_data)
+    except Exception as e:
+        print(f"Error fetching events: {e}")
+        return jsonify([])
+
+@app.route('/api/events/<event_id>')
+def get_event(event_id):
+    try:
+        event = mongo.db.events.find_one({"_id": ObjectId(event_id)})
+        if not event:
+            return jsonify({'error': 'Event not found'}), 404
+            
+        return jsonify({
+            'id': str(event['_id']),
+            'event_name': event.get('event_name', ''),
+            'event_date': event.get('event_date', ''),
+            'end_date': event.get('end_date', ''),
+            'event_time': event.get('event_time', 'All Day'),
+            'venue': event.get('venue', 'TBA'),
+            'description': event.get('description', ''),
+            'event_type': event.get('event_type', ''),
+            'school': event.get('school', ''),
+            'department': event.get('department', ''),
+            'image': event.get('image', ''),
+            'pdf': event.get('pdf', '')
+        })
+    except Exception as e:
+        print(f"Error fetching event {event_id}: {e}")
+        return jsonify({'error': 'Event not found'}), 404
+
+@app.route('/api/events/today')
+def get_today_events():
+    try:
+        today = datetime.now().strftime('%Y-%m-%d')
+        events = list(mongo.db.events.find({
+            "$or": [
+                {"event_date": today},
+                {"end_date": today},
+                {"$and": [
+                    {"event_date": {"$lte": today}},
+                    {"end_date": {"$gte": today}}
+                ]}
+            ]
+        }).sort("event_date", 1))
+        
+        events_data = []
+        for event in events:
+            events_data.append({
+                'id': str(event['_id']),
+                'event_name': event.get('event_name', ''),
+                'event_date': event.get('event_date', ''),
+                'venue': event.get('venue', 'TBA')
+            })
+        
+        return jsonify(events_data)
+    except Exception as e:
+        print(f"Error fetching today's events: {e}")
+        return jsonify([])
 
 
 import os

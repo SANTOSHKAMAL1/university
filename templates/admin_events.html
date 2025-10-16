@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Event Management</title>
+    <title>Admin Event Management - Office of Academics</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .gradient-bg {
-            background: linear-gradient(120deg, #f6d365, #fda085);
+            background: linear-gradient(120deg, #1e3c72, #2a5298);
         }
         .tag {
             background: #3498db;
@@ -16,174 +17,333 @@
             border-radius: 20px;
             cursor: pointer;
             transition: all 0.3s ease;
+            font-size: 0.8rem;
         }
         .tag:hover {
             transform: scale(1.05);
+            background: #2980b9;
         }
         .tag.selected {
-            background: #2ecc71;
+            background: #27ae60;
+        }
+        .event-card {
+            transition: all 0.3s ease;
+            border: 1px solid #e2e8f0;
+        }
+        .event-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .sidebar {
+            background: linear-gradient(135deg, #04043a 0%, #1e3c72 100%);
+        }
+        .nav-link {
+            transition: all 0.3s ease;
+            border-radius: 8px;
+        }
+        .nav-link:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateX(5px);
+        }
+        .nav-link.active {
+            background: rgba(255,215,0,0.2);
+            border-left: 4px solid #FFD700;
         }
     </style>
 </head>
-<body class="gradient-bg min-h-screen">
-    <header class="bg-gray-800 text-white py-4 px-6 shadow-lg">
-        <h1 class="text-2xl font-bold text-center">Admin Event Management</h1>
+<body class="bg-gray-100">
+    <!-- Header -->
+    <header class="bg-white shadow-lg">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <img src="{{ url_for('static', filename='images/jainu.png') }}" 
+                         onerror="this.src='https://via.placeholder.com/50?text=JU+Logo';" 
+                         alt="Jain University Logo" class="h-12">
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-800">Office of Academics</h1>
+                        <p class="text-sm text-gray-600">Admin Portal</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-gray-700">Welcome, Admin</span>
+                    <a href="{{ url_for('logout') }}" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition duration-200">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                    </a>
+                </div>
+            </div>
+        </div>
     </header>
 
-    <div class="container mx-auto px-4 py-8">
-        <!-- Flash Messages -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <div class="mb-6 space-y-2">
-                    {% for category, message in messages %}
-                        <div class="p-3 rounded-lg bg-{{ 'green' if category == 'success' else 'red' }}-200 text-{{ 'green' if category == 'success' else 'red' }}-800">
-                            {{ message }}
-                        </div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        {% endwith %}
-
-        <!-- Add Event Form -->
-        <div class="bg-white rounded-lg shadow-xl p-6 mb-8">
-            <h2 class="text-xl font-bold mb-4">Add New Event</h2>
-            <form action="{{ url_for('add_event') }}" method="POST" enctype="multipart/form-data" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Event Basic Info -->
-                <div class="md:col-span-2">
-                    <label class="block font-medium mb-1">Event Name</label>
-                    <input type="text" name="event_name" class="w-full p-2 border rounded-lg" required>
-                </div>
-
-                <div class="md:col-span-2">
-                    <label class="block font-medium mb-1">Description</label>
-                    <textarea name="description" class="w-full p-2 border rounded-lg" rows="3" required></textarea>
-                </div>
-
-                <!-- School and Department -->
-                <div>
-                    <label class="block font-medium mb-1">School</label>
-                    <select id="schoolSelect" name="school" class="w-full p-2 border rounded-lg" required>
-                        <option value="">-- Select School --</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block font-medium mb-1">Department</label>
-                    <select id="departmentSelect" name="department" class="w-full p-2 border rounded-lg" required>
-                        <option value="">-- Select Department --</option>
-                    </select>
-                </div>
-
-                <!-- Event Type and Action -->
-                <div>
-                    <label class="block font-medium mb-1">Event Type</label>
-                    <select name="event_type" class="w-full p-2 border rounded-lg" required>
-                        <option value="">-- Select Event Type --</option>
-                        <option value="Workshop">Workshop</option>
-                        <option value="Seminar">Seminar</option>
-                        <option value="Competition">Competition</option>
-                        <option value="Cultural">Cultural</option>
-                        <option value="Sports">Sports</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block font-medium mb-1">Event Action</label>
-                    <input type="text" id="eventActionInput" name="event_action" class="w-full p-2 border rounded-lg">
-                    <div id="eventTypeTags" class="flex flex-wrap gap-2 mt-2"></div>
-                </div>
-
-                <!-- Venue and Dates -->
-                <div>
-                    <label class="block font-medium mb-1">Venue</label>
-                    <input type="text" name="venue" class="w-full p-2 border rounded-lg">
-                </div>
-
-                <div>
-                    <label class="block font-medium mb-1">Event Date</label>
-                    <input type="date" name="event_date" class="w-full p-2 border rounded-lg" required>
-                </div>
-
-                <div>
-                    <label class="block font-medium mb-1">End Date</label>
-                    <input type="date" name="end_date" class="w-full p-2 border rounded-lg">
-                </div>
-
-                <!-- File Uploads -->
-                <div>
-                    <label class="block font-medium mb-1">Image</label>
-                    <input type="file" id="imageUpload" name="image" accept="image/*" class="w-full p-2 border rounded-lg">
-                    <div id="imagePreview" class="mt-2"></div>
-                </div>
-
-                <div>
-                    <label class="block font-medium mb-1">PDF</label>
-                    <input type="file" id="pdfUpload" name="pdf" accept="application/pdf" class="w-full p-2 border rounded-lg">
-                    <div id="pdfPreview" class="mt-2"></div>
-                </div>
-
-                <!-- Submit Button -->
-                <div class="md:col-span-2">
-                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200">
-                        Add Event
-                    </button>
-                </div>
-            </form>
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div class="sidebar w-64 text-white">
+            <nav class="p-6">
+                <h2 class="text-lg font-bold mb-6 text-gold-400 border-b border-gold-400 pb-2">Navigation</h2>
+                <ul class="space-y-2">
+                    <li>
+                        <a href="{{ url_for('admin_dashboard') }}" class="nav-link block py-2 px-4">
+                            <i class="fas fa-tachometer-alt mr-3"></i>Dashboard
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('admin_events') }}" class="nav-link active block py-2 px-4">
+                            <i class="fas fa-calendar-alt mr-3"></i>Event Management
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('ugc') }}" class="nav-link block py-2 px-4">
+                            <i class="fas fa-bullhorn mr-3"></i>UGC Notices
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('monthlyengagement') }}" class="nav-link block py-2 px-4">
+                            <i class="fas fa-chart-line mr-3"></i>Engagements
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('usernewsletters') }}" class="nav-link block py-2 px-4">
+                            <i class="fas fa-newspaper mr-3"></i>Newsletters
+                        </a>
+                    </li>
+                </ul>
+            </nav>
         </div>
 
-        <!-- Events List -->
-        <div class="bg-white rounded-lg shadow-xl p-6">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl font-bold">Events List</h2>
-                <a href="{{ url_for('add_event') }}" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200">
-                    Add Event
-                </a>
-            </div>
+        <!-- Main Content -->
+        <div class="flex-1 overflow-auto">
+            <div class="container mx-auto px-6 py-8">
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="mb-6 space-y-2">
+                            {% for category, message in messages %}
+                                <div class="p-4 rounded-lg {% if category == 'success' %}bg-green-100 text-green-800 border border-green-300{% else %}bg-red-100 text-red-800 border border-red-300{% endif %}">
+                                    <div class="flex items-center">
+                                        <i class="fas {% if category == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %} mr-2"></i>
+                                        {{ message }}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {% for event in events %}
-                <div class="bg-gray-50 p-4 rounded-lg shadow border border-gray-200">
-                    <h3 class="text-lg font-bold mb-2">{{ event.event_name }}</h3>
-                    <p class="text-gray-600 mb-3">{{ event.description }}</p>
-                    
-                    <div class="space-y-1 text-sm">
-                        <p><span class="font-semibold">School:</span> {{ event.school }}</p>
-                        <p><span class="font-semibold">Department:</span> {{ event.department }}</p>
-                        <p><span class="font-semibold">Type:</span> {{ event.event_type }}</p>
-                        <p><span class="font-semibold">Date:</span> {{ event.event_date }} {% if event.end_date %} - {{ event.end_date }}{% endif %}</p>
-                        <p><span class="font-semibold">Venue:</span> {{ event.venue }}</p>
+                <!-- Page Header -->
+                <div class="flex justify-between items-center mb-8">
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-800">Event Management</h1>
+                        <p class="text-gray-600 mt-2">Manage all university events and academic calendar</p>
                     </div>
-
-                    {% if event.image %}
-                        <img src="{{ event.image }}" class="mt-3 rounded-lg w-full h-40 object-cover border border-gray-300">
-                    {% endif %}
-
-                    {% if event.pdf %}
-                        <a href="{{ event.pdf }}" target="_blank" class="inline-block mt-3 text-blue-600 hover:text-blue-800 underline">
-                            View PDF
+                    <div class="flex space-x-3">
+                        <button onclick="toggleEventForm()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200 flex items-center">
+                            <i class="fas fa-plus mr-2"></i> Add New Event
+                        </button>
+                        <a href="{{ url_for('admin_dashboard') }}" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200 flex items-center">
+                            <i class="fas fa-arrow-left mr-2"></i> Back to Dashboard
                         </a>
-                    {% endif %}
-
-                   <div class="mt-4 pt-2 border-t border-gray-200 flex gap-4">
-    <a href="{{ url_for('edit_event', event_id=event._id) }}" 
-       class="text-blue-600 hover:text-blue-800 font-medium">
-        Edit Event
-    </a>
-    <a href="{{ url_for('delete_event', event_id=event._id) }}" 
-       onclick="return confirm('Are you sure you want to delete this event?')" 
-       class="text-red-600 hover:text-red-800 font-medium">
-        Delete Event
-    </a>
-
-
                     </div>
                 </div>
-                {% endfor %}
+
+                <!-- Add Event Form -->
+                <div id="eventForm" class="bg-white rounded-lg shadow-xl p-6 mb-8 transition-all duration-300">
+                    <h2 class="text-xl font-bold mb-4 text-gray-800 border-b pb-2">Add New Event</h2>
+                    <form action="{{ url_for('add_event') }}" method="POST" enctype="multipart/form-data" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Event Basic Info -->
+                        <div class="md:col-span-2">
+                            <label class="block font-medium mb-2 text-gray-700">Event Name *</label>
+                            <input type="text" name="event_name" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <label class="block font-medium mb-2 text-gray-700">Description *</label>
+                            <textarea name="description" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" rows="3" required></textarea>
+                        </div>
+
+                        <!-- School and Department -->
+                        <div>
+                            <label class="block font-medium mb-2 text-gray-700">School *</label>
+                            <select id="schoolSelect" name="school" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                                <option value="">-- Select School --</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block font-medium mb-2 text-gray-700">Department *</label>
+                            <select id="departmentSelect" name="department" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                                <option value="">-- Select Department --</option>
+                            </select>
+                        </div>
+
+                        <!-- Event Type and Action -->
+                        <div>
+                            <label class="block font-medium mb-2 text-gray-700">Event Type *</label>
+                            <select name="event_type" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                                <option value="">-- Select Event Type --</option>
+                                <option value="Workshop">Workshop</option>
+                                <option value="Seminar">Seminar</option>
+                                <option value="Conference">Conference</option>
+                                <option value="Symposium">Symposium</option>
+                                <option value="Webinar">Webinar</option>
+                                <option value="Training">Training</option>
+                                <option value="Competition">Competition</option>
+                                <option value="Cultural">Cultural Event</option>
+                                <option value="Sports">Sports Event</option>
+                                <option value="Academic">Academic</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block font-medium mb-2 text-gray-700">Event Action</label>
+                            <input type="text" id="eventActionInput" name="event_action" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <div class="text-sm text-gray-500 mt-1">Quick select from common actions:</div>
+                            <div id="eventTypeTags" class="flex flex-wrap gap-2 mt-2"></div>
+                        </div>
+
+                        <!-- Venue and Dates -->
+                        <div>
+                            <label class="block font-medium mb-2 text-gray-700">Venue *</label>
+                            <input type="text" name="venue" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                        </div>
+
+                        <div>
+                            <label class="block font-medium mb-2 text-gray-700">Event Date *</label>
+                            <input type="date" name="event_date" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                        </div>
+
+                        <div>
+                            <label class="block font-medium mb-2 text-gray-700">End Date</label>
+                            <input type="date" name="end_date" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+
+                        <!-- File Uploads -->
+                        <div>
+                            <label class="block font-medium mb-2 text-gray-700">Event Image</label>
+                            <input type="file" id="imageUpload" name="image" accept="image/*" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <div id="imagePreview" class="mt-3"></div>
+                        </div>
+
+                        <div>
+                            <label class="block font-medium mb-2 text-gray-700">Event PDF/Brochure</label>
+                            <input type="file" id="pdfUpload" name="pdf" accept="application/pdf" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <div id="pdfPreview" class="mt-3"></div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="md:col-span-2 flex justify-end space-x-4 pt-4 border-t">
+                            <button type="button" onclick="toggleEventForm()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-lg transition duration-200">
+                                Cancel
+                            </button>
+                            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg transition duration-200 flex items-center">
+                                <i class="fas fa-save mr-2"></i> Add Event
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Events List -->
+                <div class="bg-white rounded-lg shadow-xl p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">All Events ({{ events|length }})</h2>
+                        <div class="flex space-x-3">
+                            <input type="text" id="searchEvents" placeholder="Search events..." class="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <select id="filterType" class="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="">All Types</option>
+                                <option value="Workshop">Workshop</option>
+                                <option value="Seminar">Seminar</option>
+                                <option value="Conference">Conference</option>
+                                <option value="Competition">Competition</option>
+                                <option value="Cultural">Cultural</option>
+                                <option value="Sports">Sports</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    {% if events %}
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="eventsGrid">
+                        {% for event in events %}
+                        <div class="event-card bg-gray-50 p-6 rounded-lg border border-gray-200">
+                            <div class="flex justify-between items-start mb-4">
+                                <h3 class="text-lg font-bold text-gray-800 flex-1">{{ event.event_name }}</h3>
+                                <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                                    {{ event.event_type }}
+                                </span>
+                            </div>
+                            
+                            <p class="text-gray-600 mb-4 text-sm line-clamp-2">{{ event.description[:100] }}{% if event.description|length > 100 %}...{% endif %}</p>
+                            
+                            <div class="space-y-2 text-sm text-gray-700 mb-4">
+                                <div class="flex items-center">
+                                    <i class="fas fa-university text-blue-500 mr-2 w-4"></i>
+                                    <span class="font-medium">School:</span>
+                                    <span class="ml-1">{{ event.school }}</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-building text-green-500 mr-2 w-4"></i>
+                                    <span class="font-medium">Department:</span>
+                                    <span class="ml-1">{{ event.department }}</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-calendar-day text-purple-500 mr-2 w-4"></i>
+                                    <span class="font-medium">Date:</span>
+                                    <span class="ml-1">{{ event.event_date }}</span>
+                                    {% if event.end_date %}
+                                    <span class="mx-1">-</span>
+                                    <span>{{ event.end_date }}</span>
+                                    {% endif %}
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-map-marker-alt text-red-500 mr-2 w-4"></i>
+                                    <span class="font-medium">Venue:</span>
+                                    <span class="ml-1">{{ event.venue }}</span>
+                                </div>
+                            </div>
+
+                            {% if event.image %}
+                                <img src="{{ event.image }}" class="mt-3 rounded-lg w-full h-32 object-cover border border-gray-300 mb-3">
+                            {% endif %}
+
+                            {% if event.pdf %}
+                                <a href="{{ event.pdf }}" target="_blank" class="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4">
+                                    <i class="fas fa-file-pdf mr-2"></i>
+                                    View Event PDF
+                                </a>
+                            {% endif %}
+
+                            <div class="mt-4 pt-4 border-t border-gray-200 flex justify-between">
+                                <a href="{{ url_for('edit_event', event_id=event._id) }}" 
+                                   class="text-blue-600 hover:text-blue-800 font-medium flex items-center">
+                                    <i class="fas fa-edit mr-2"></i>
+                                    Edit
+                                </a>
+                                <a href="{{ url_for('delete_event', event_id=event._id) }}" 
+                                   onclick="return confirm('Are you sure you want to delete \"{{ event.event_name }}\"? This action cannot be undone.')" 
+                                   class="text-red-600 hover:text-red-800 font-medium flex items-center">
+                                    <i class="fas fa-trash mr-2"></i>
+                                    Delete
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-12">
+                        <i class="fas fa-calendar-times text-4xl text-gray-400 mb-4"></i>
+                        <h3 class="text-xl font-semibold text-gray-600 mb-2">No Events Found</h3>
+                        <p class="text-gray-500 mb-6">Get started by adding your first event using the form above.</p>
+                        <button onclick="toggleEventForm()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition duration-200">
+                            <i class="fas fa-plus mr-2"></i> Add First Event
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
 
     <script>
+        // Department and School Mapping
         const departmentMapping = {
             'School of Computer Science and Engineering': [
                 'Department of Computer Science and Engineering',
@@ -315,12 +475,52 @@
             preview.innerHTML = '';
             
             if (file) {
-                const url = URL.createObjectURL(file);
-                const iframe = document.createElement('iframe');
-                iframe.src = url;
-                iframe.className = 'rounded-lg border border-gray-300 w-full h-40';
-                preview.appendChild(iframe);
+                const fileName = document.createElement('div');
+                fileName.className = 'text-sm text-gray-600 bg-gray-100 p-2 rounded border';
+                fileName.innerHTML = `<i class="fas fa-file-pdf text-red-500 mr-2"></i>${file.name}`;
+                preview.appendChild(fileName);
             }
+        });
+
+        // Toggle event form visibility
+        function toggleEventForm() {
+            const form = document.getElementById('eventForm');
+            form.classList.toggle('hidden');
+        }
+
+        // Search and filter functionality
+        document.getElementById('searchEvents').addEventListener('input', filterEvents);
+        document.getElementById('filterType').addEventListener('change', filterEvents);
+
+        function filterEvents() {
+            const searchTerm = document.getElementById('searchEvents').value.toLowerCase();
+            const filterType = document.getElementById('filterType').value;
+            const eventCards = document.querySelectorAll('.event-card');
+
+            eventCards.forEach(card => {
+                const eventName = card.querySelector('h3').textContent.toLowerCase();
+                const eventType = card.querySelector('span.bg-blue-100').textContent;
+                const eventDesc = card.querySelector('p').textContent.toLowerCase();
+                
+                const matchesSearch = eventName.includes(searchTerm) || eventDesc.includes(searchTerm);
+                const matchesType = !filterType || eventType === filterType;
+                
+                if (matchesSearch && matchesType) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        // Hide form by default
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('eventForm').classList.add('hidden');
+            
+            // Set minimum date to today for date inputs
+            const today = new Date().toISOString().split('T')[0];
+            document.querySelector('input[name="event_date"]').min = today;
+            document.querySelector('input[name="end_date"]').min = today;
         });
     </script>
 </body>
