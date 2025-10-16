@@ -1692,6 +1692,7 @@
     <script>
         // Fetch events data from the server
         let eventsData = [];
+        let notificationsEnabled = false;
 
         // Function to fetch events from the server
         async function fetchEvents() {
@@ -2003,7 +2004,6 @@
 
         // Calendar Functions
         let flatpickrInstance;
-        let notificationsEnabled = false;
 
         function initCalendar() {
             if (flatpickrInstance) return;
@@ -2075,15 +2075,15 @@
                     </div>
                     <p style="margin-top: 8px; font-size: 0.85rem; color: #666;">${event.description}</p>
                     <div class="event-item-meta">
-                        <span><i class="fas fa-university"></i> ${event.school}</span>
-                        <span><i class="fas fa-building"></i> ${event.department}</span>
-                        <span><i class="fas fa-tag"></i> ${event.event_type}</span>
+                        <span><i class="fas fa-university"></i> ${event.school || 'N/A'}</span>
+                        <span><i class="fas fa-building"></i> ${event.department || 'N/A'}</span>
+                        <span><i class="fas fa-tag"></i> ${event.event_type || 'Event'}</span>
                     </div>
                     <div class="event-item-actions">
-                        <button class="event-action-btn" onclick="addToGoogleCalendar(${event.id})">
+                        <button class="event-action-btn" onclick='addToGoogleCalendar(${JSON.stringify(event).replace(/'/g, "\\'")})'>
                             <i class="fab fa-google"></i> Add to Calendar
                         </button>
-                        <button class="event-action-btn" onclick="setReminder(${event.id})">
+                        <button class="event-action-btn" onclick='setReminder(${JSON.stringify(event).replace(/'/g, "\\'")})'>
                             <i class="far fa-bell"></i> Set Reminder
                         </button>
                     </div>
@@ -2115,6 +2115,86 @@
             });
         }
 
+        // Google Calendar Functions
+        function addToGoogleCalendar(eventJson) {
+            const event = typeof eventJson === 'string' ? JSON.parse(eventJson) : eventJson;
+            if (!event) return;
+
+            // Format dates for Google Calendar
+            const startDate = new Date(event.event_date);
+            const endDate = event.end_date ? new Date(event.end_date) : new Date(startDate.getTime() + 2 * 60 * 60 * 1000); // Default 2 hours if no end date
+            
+            const formatDateForGoogle = (date) => {
+                return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+            };
+
+            const startStr = formatDateForGoogle(startDate);
+            const endStr = formatDateForGoogle(endDate);
+            
+            const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.event_name)}&dates=${startStr}/${endStr}&details=${encodeURIComponent(event.description)}&location=${encodeURIComponent(event.venue)}`;
+            
+            window.open(url, '_blank');
+            showToast(`Adding "${event.event_name}" to Google Calendar`, 'success');
+        }
+
+        function exportToGoogleCalendar() {
+            if (eventsData.length === 0) {
+                showToast("No events available to export", 'error');
+                return;
+            }
+            
+            showToast("Exporting all events to Google Calendar...", 'success');
+            
+            // Open each event in Google Calendar with a delay to avoid popup blockers
+            eventsData.forEach((event, index) => {
+                setTimeout(() => {
+                    addToGoogleCalendar(event);
+                }, index * 1000);
+            });
+        }
+
+        // Set Reminder Function
+        function setReminder(eventJson) {
+            const event = typeof eventJson === 'string' ? JSON.parse(eventJson) : eventJson;
+            if (!event) return;
+
+            if (!("Notification" in window)) {
+                showToast("Your browser doesn't support notifications", 'error');
+                return;
+            }
+
+            if (Notification.permission === "granted") {
+                // Calculate reminder time (1 hour before event)
+                const eventTime = new Date(event.event_date);
+                const reminderTime = new Date(eventTime.getTime() - 60 * 60 * 1000); // 1 hour before
+                
+                const now = new Date();
+                const timeUntilReminder = reminderTime - now;
+
+                if (timeUntilReminder > 0) {
+                    setTimeout(() => {
+                        new Notification("Event Reminder", {
+                            body: `"${event.event_name}" starts in 1 hour at ${event.venue}`,
+                            icon: "https://via.placeholder.com/100?text=JU",
+                            tag: `event-reminder-${event.id || event.event_name}`
+                        });
+                    }, timeUntilReminder);
+
+                    showToast(`Reminder set for "${event.event_name}" 1 hour before start`, 'success');
+                } else {
+                    showToast("This event has already started or is too soon", 'error');
+                }
+            } else if (Notification.permission !== "denied") {
+                Notification.requestPermission().then(permission => {
+                    if (permission === "granted") {
+                        setReminder(event); // Retry after permission granted
+                    }
+                });
+            } else {
+                showToast("Please enable notifications in your browser settings", 'error');
+            }
+        }
+
         // Notification Functions
         function toggleNotifications() {
             if (!("Notification" in window)) {
@@ -2125,70 +2205,88 @@
             if (Notification.permission === "granted") {
                 notificationsEnabled = !notificationsEnabled;
                 updateNotifyButton();
+                
+                if (notificationsEnabled) {
+                    // Schedule reminders for all upcoming events when notifications are enabled
+                    scheduleAllReminders();
+                }
+                
                 showToast(notificationsEnabled ? "Notifications enabled" : "Notifications disabled", 'success');
             } else if (Notification.permission !== "denied") {
                 Notification.requestPermission().then(permission => {
                     if (permission === "granted") {
                         notificationsEnabled = true;
                         updateNotifyButton();
+                        scheduleAllReminders();
                         showToast("Notifications enabled successfully", 'success');
+                    } else {
+                        showToast("Notifications permission denied", 'error');
                     }
                 });
+            } else {
+                showToast("Notifications were previously denied. Please enable them in browser settings.", 'error');
             }
         }
 
         function updateNotifyButton() {
             const btn = document.getElementById('notifyText');
-            btn.textContent = notificationsEnabled ? "Notifications On" : "Enable Notifications";
+            if (btn) {
+                btn.textContent = notificationsEnabled ? "Notifications On" : "Enable Notifications";
+            }
         }
 
+        function scheduleAllReminders() {
+            if (!notificationsEnabled) return;
+            
+            const now = new Date();
+            const upcomingEvents = eventsData.filter(e => {
+                const eventTime = new Date(e.event_date);
+                return eventTime > now;
+            });
+
+            upcomingEvents.forEach(event => {
+                // Set reminder for 1 hour before each event
+                const eventTime = new Date(event.event_date);
+                const reminderTime = new Date(eventTime.getTime() - 60 * 60 * 1000);
+                const timeUntilReminder = reminderTime - now;
+
+                if (timeUntilReminder > 0) {
+                    setTimeout(() => {
+                        if (notificationsEnabled && Notification.permission === "granted") {
+                            new Notification("Event Reminder", {
+                                body: `"${event.event_name}" starts in 1 hour at ${event.venue}`,
+                                icon: "https://via.placeholder.com/100?text=JU",
+                                tag: `event-reminder-${event.id || event.event_name}`
+                            });
+                        }
+                    }, timeUntilReminder);
+                }
+            });
+        }
+
+        // Check for upcoming events periodically
         function checkUpcomingEvents() {
             const now = new Date();
+            const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
+            
             const upcoming = eventsData.filter(e => {
-                const diff = new Date(e.event_date) - now;
-                return diff > 0 && diff < 3600000; // Within 1 hour
+                const eventTime = new Date(e.event_date);
+                return eventTime > now && eventTime <= oneHourFromNow;
             });
 
-            if (upcoming.length > 0 && notificationsEnabled) {
-                showNotification(upcoming[0]);
-            }
-        }
-
-        function showNotification(event) {
-            if (Notification.permission === "granted") {
-                new Notification("Upcoming Event", {
-                    body: `${event.event_name} starts soon at ${event.venue}`,
-                    icon: "https://via.placeholder.com/100?text=JU"
+            if (upcoming.length > 0 && notificationsEnabled && Notification.permission === "granted") {
+                // Show notification for events starting within the next hour
+                upcoming.forEach(event => {
+                    const eventTime = new Date(event.event_date);
+                    const minutesUntil = Math.round((eventTime - now) / (60 * 1000));
+                    
+                    new Notification("Upcoming Event", {
+                        body: `"${event.event_name}" starts in ${minutesUntil} minutes at ${event.venue}`,
+                        icon: "https://via.placeholder.com/100?text=JU",
+                        tag: `event-upcoming-${event.id || event.event_name}`
+                    });
                 });
             }
-        }
-
-        function setReminder(eventId) {
-            const event = eventsData.find(e => e.id === eventId);
-            if (event) {
-                showToast(`Reminder set for: ${event.event_name}`, 'success');
-            }
-        }
-
-        // Google Calendar Functions
-        function addToGoogleCalendar(eventId) {
-            const event = eventsData.find(e => e.id === eventId);
-            if (!event) return;
-
-            const startDate = new Date(event.event_date).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-            const endDate = new Date(new Date(event.event_date).getTime() + 3600000).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-            
-            const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.event_name)}&dates=${startDate}/${endDate}&details=${encodeURIComponent(event.description)}&location=${encodeURIComponent(event.venue)}`;
-            
-            window.open(url, '_blank');
-            showToast("Opening Google Calendar...", 'success');
-        }
-
-        function exportToGoogleCalendar() {
-            showToast("Adding all events to Google Calendar...", 'success');
-            eventsData.forEach((event, index) => {
-                setTimeout(() => addToGoogleCalendar(event.id), index * 1000);
-            });
         }
 
         // Toast Notification
@@ -2196,16 +2294,23 @@
             const toast = document.getElementById('toast');
             const toastMessage = document.getElementById('toastMessage');
             
-            toast.className = `toast ${type} show`;
-            toastMessage.textContent = message;
-            
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
+            if (toast && toastMessage) {
+                toast.className = `toast ${type} show`;
+                toastMessage.textContent = message;
+                
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
         }
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
+            // Request notification permission on page load
+            if ("Notification" in window && Notification.permission === "default") {
+                Notification.requestPermission();
+            }
+
             // Fetch events from server
             fetchEvents();
             
@@ -2237,16 +2342,33 @@
                 }
             });
 
-            // Show notification badge after 5 seconds
+            // Show notification badge if there are upcoming events
             setTimeout(() => {
-                const badge = document.getElementById('notificationBadge');
-                badge.classList.add('show');
+                const now = new Date();
+                const upcomingEvents = eventsData.filter(e => new Date(e.event_date) > now);
                 
-                setTimeout(() => {
-                    badge.classList.remove('show');
-                }, 5000);
-            }, 5000);
+                if (upcomingEvents.length > 0) {
+                    const badge = document.getElementById('notificationBadge');
+                    if (badge) {
+                        badge.innerHTML = `<i class="fas fa-bell"></i><span>You have ${upcomingEvents.length} upcoming event${upcomingEvents.length > 1 ? 's' : ''}!</span>`;
+                        badge.classList.add('show');
+                        
+                        // Make badge clickable to go to calendar tab
+                        badge.addEventListener('click', () => {
+                            switchTab(3); // Switch to calendar tab
+                            badge.classList.remove('show');
+                        });
+                        
+                        setTimeout(() => {
+                            badge.classList.remove('show');
+                        }, 10000);
+                    }
+                }
+            }, 3000);
         });
+
+        // Check for upcoming events every 15 minutes
+        setInterval(checkUpcomingEvents, 15 * 60 * 1000);
 
         // Responsive handling
         window.addEventListener('resize', () => {
