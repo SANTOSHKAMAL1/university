@@ -1690,73 +1690,107 @@
     </div>
 
     <script>
-        // Sample Events Data - Extended with more events
-        const eventsData = [
-            {
-                id: 1,
-                name: "Workshop on Outcome-Based Education",
-                date: new Date(),
-                venue: "Audi 3, Jayanagar Campus",
-                time: "9:30 AM - 5:00 PM",
-                description: "Full-day workshop on OBE principles, CO-PO-PSO mapping, and curriculum design"
-            },
-            {
-                id: 2,
-                name: "Faculty Development Program",
-                date: new Date(Date.now() + 86400000),
-                venue: "Conference Hall, Main Campus",
-                time: "10:00 AM - 4:00 PM",
-                description: "Professional development focused on innovative teaching methodologies"
-            },
-            {
-                id: 3,
-                name: "Research Symposium 2025",
-                date: new Date(Date.now() + 172800000),
-                venue: "Main Auditorium",
-                time: "9:00 AM - 6:00 PM",
-                description: "Annual research presentations featuring faculty and student projects"
-            },
-            {
-                id: 4,
-                name: "Industry Interaction Session",
-                date: new Date(Date.now() + 259200000),
-                venue: "Seminar Hall A",
-                time: "2:00 PM - 5:00 PM",
-                description: "Connect with industry experts and explore collaboration opportunities"
-            },
-            {
-                id: 5,
-                name: "Digital Learning Tools Workshop",
-                date: new Date(Date.now() + 345600000),
-                venue: "Computer Lab 3",
-                time: "11:00 AM - 3:00 PM",
-                description: "Hands-on training for LinkedIn Learning and Coursera integration"
-            },
-            {
-                id: 6,
-                name: "Academic Excellence Awards",
-                date: new Date(Date.now() + 432000000),
-                venue: "Central Auditorium",
-                time: "4:00 PM - 7:00 PM",
-                description: "Celebrating outstanding achievements in academics and research"
-            },
-            {
-                id: 7,
-                name: "Student Mentorship Program Launch",
-                date: new Date(Date.now() + 518400000),
-                venue: "Student Center",
-                time: "10:00 AM - 12:00 PM",
-                description: "Kickoff event for the new mentorship initiative"
-            },
-            {
-                id: 8,
-                name: "NAAC Preparation Workshop",
-                date: new Date(Date.now() + 604800000),
-                venue: "Faculty Lounge",
-                time: "9:00 AM - 5:00 PM",
-                description: "Comprehensive preparation for NAAC accreditation process"
+        // Fetch events data from the server
+        let eventsData = [];
+
+        // Function to fetch events from the server
+        async function fetchEvents() {
+            try {
+                const response = await fetch('/api/events');
+                if (response.ok) {
+                    eventsData = await response.json();
+                    console.log('Events loaded:', eventsData);
+                    
+                    // Update today's events marquee
+                    updateTodaysEventsMarquee();
+                    
+                    // Load events in calendar if calendar tab is active
+                    if (currentTab === 3) {
+                        loadEvents();
+                    }
+                } else {
+                    console.error('Failed to fetch events');
+                    // Fallback to sample data if fetch fails
+                    loadSampleEvents();
+                }
+            } catch (error) {
+                console.error('Error fetching events:', error);
+                // Fallback to sample data if fetch fails
+                loadSampleEvents();
             }
-        ];
+        }
+
+        // Sample events data as fallback
+        function loadSampleEvents() {
+            eventsData = [
+                {
+                    id: 1,
+                    event_name: "Workshop on Outcome-Based Education",
+                    event_date: new Date(),
+                    venue: "Audi 3, Jayanagar Campus",
+                    description: "Full-day workshop on OBE principles, CO-PO-PSO mapping, and curriculum design",
+                    event_type: "Workshop",
+                    school: "School of Engineering & Technology",
+                    department: "Department of Computer Science and Engineering"
+                },
+                {
+                    id: 2,
+                    event_name: "Faculty Development Program",
+                    event_date: new Date(Date.now() + 86400000),
+                    venue: "Conference Hall, Main Campus",
+                    description: "Professional development focused on innovative teaching methodologies",
+                    event_type: "Training",
+                    school: "CMS Business School",
+                    department: "Department of Management Studies"
+                },
+                {
+                    id: 3,
+                    event_name: "Research Symposium 2025",
+                    event_date: new Date(Date.now() + 172800000),
+                    venue: "Main Auditorium",
+                    description: "Annual research presentations featuring faculty and student projects",
+                    event_type: "Conference",
+                    school: "School of Sciences",
+                    department: "Department of Biotechnology and Genetics"
+                }
+            ];
+            
+            updateTodaysEventsMarquee();
+            if (currentTab === 3) {
+                loadEvents();
+            }
+        }
+
+        // Update today's events marquee
+        function updateTodaysEventsMarquee() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const todayEvents = eventsData.filter(e => {
+                const eventDate = new Date(e.event_date);
+                eventDate.setHours(0, 0, 0, 0);
+                return eventDate.getTime() === today.getTime();
+            });
+
+            const marquee = document.querySelector('.updates-marquee p');
+            if (marquee) {
+                let marqueeContent = '';
+                
+                if (todayEvents.length > 0) {
+                    todayEvents.forEach((event, index) => {
+                        marqueeContent += `<a href="{{ url_for('jainevents') }}">${event.event_name}</a>`;
+                        if (index < todayEvents.length - 1) {
+                            marqueeContent += ' • ';
+                        }
+                    });
+                } else {
+                    marqueeContent = `<a href="{{ url_for('jainevents') }}">No events scheduled for today</a>`;
+                }
+                
+                marqueeContent += ' • <a href="{{ url_for('jainevents') }}">View all events</a>';
+                marquee.innerHTML = marqueeContent;
+            }
+        }
 
         // Tab Navigation with Carousel
         let currentTab = 0;
@@ -1974,7 +2008,10 @@
         function initCalendar() {
             if (flatpickrInstance) return;
 
-            const eventDates = eventsData.map(e => e.date.toISOString().split('T')[0]);
+            const eventDates = eventsData.map(e => {
+                const date = new Date(e.event_date);
+                return date.toISOString().split('T')[0];
+            });
             
             flatpickrInstance = flatpickr("#calendarPicker", {
                 inline: true,
@@ -2001,13 +2038,13 @@
             today.setHours(0, 0, 0, 0);
             
             const todayEvents = eventsData.filter(e => {
-                const eventDate = new Date(e.date);
+                const eventDate = new Date(e.event_date);
                 eventDate.setHours(0, 0, 0, 0);
                 return eventDate.getTime() === today.getTime();
             });
 
             const upcomingEvents = eventsData.filter(e => {
-                const eventDate = new Date(e.date);
+                const eventDate = new Date(e.event_date);
                 eventDate.setHours(0, 0, 0, 0);
                 return eventDate.getTime() > today.getTime();
             });
@@ -2031,13 +2068,17 @@
 
             container.innerHTML = events.map(event => `
                 <div class="event-item ${category}">
-                    <div class="event-item-title">${event.name}</div>
+                    <div class="event-item-title">${event.event_name}</div>
                     <div class="event-item-meta">
-                        <span><i class="far fa-calendar-alt"></i> ${formatDate(event.date)}</span>
-                        <span><i class="far fa-clock"></i> ${event.time}</span>
+                        <span><i class="far fa-calendar-alt"></i> ${formatDate(event.event_date)}</span>
                         <span><i class="fas fa-map-marker-alt"></i> ${event.venue}</span>
                     </div>
                     <p style="margin-top: 8px; font-size: 0.85rem; color: #666;">${event.description}</p>
+                    <div class="event-item-meta">
+                        <span><i class="fas fa-university"></i> ${event.school}</span>
+                        <span><i class="fas fa-building"></i> ${event.department}</span>
+                        <span><i class="fas fa-tag"></i> ${event.event_type}</span>
+                    </div>
                     <div class="event-item-actions">
                         <button class="event-action-btn" onclick="addToGoogleCalendar(${event.id})">
                             <i class="fab fa-google"></i> Add to Calendar
@@ -2055,7 +2096,7 @@
             selectedDate.setHours(0, 0, 0, 0);
             
             const filteredEvents = eventsData.filter(e => {
-                const eventDate = new Date(e.date);
+                const eventDate = new Date(e.event_date);
                 eventDate.setHours(0, 0, 0, 0);
                 return eventDate.getTime() === selectedDate.getTime();
             });
@@ -2104,7 +2145,7 @@
         function checkUpcomingEvents() {
             const now = new Date();
             const upcoming = eventsData.filter(e => {
-                const diff = e.date - now;
+                const diff = new Date(e.event_date) - now;
                 return diff > 0 && diff < 3600000; // Within 1 hour
             });
 
@@ -2116,7 +2157,7 @@
         function showNotification(event) {
             if (Notification.permission === "granted") {
                 new Notification("Upcoming Event", {
-                    body: `${event.name} starts soon at ${event.venue}`,
+                    body: `${event.event_name} starts soon at ${event.venue}`,
                     icon: "https://via.placeholder.com/100?text=JU"
                 });
             }
@@ -2125,7 +2166,7 @@
         function setReminder(eventId) {
             const event = eventsData.find(e => e.id === eventId);
             if (event) {
-                showToast(`Reminder set for: ${event.name}`, 'success');
+                showToast(`Reminder set for: ${event.event_name}`, 'success');
             }
         }
 
@@ -2134,10 +2175,10 @@
             const event = eventsData.find(e => e.id === eventId);
             if (!event) return;
 
-            const startDate = event.date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-            const endDate = new Date(event.date.getTime() + 3600000).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+            const startDate = new Date(event.event_date).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+            const endDate = new Date(new Date(event.event_date).getTime() + 3600000).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
             
-            const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.name)}&dates=${startDate}/${endDate}&details=${encodeURIComponent(event.description)}&location=${encodeURIComponent(event.venue)}`;
+            const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.event_name)}&dates=${startDate}/${endDate}&details=${encodeURIComponent(event.description)}&location=${encodeURIComponent(event.venue)}`;
             
             window.open(url, '_blank');
             showToast("Opening Google Calendar...", 'success');
@@ -2165,6 +2206,9 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
+            // Fetch events from server
+            fetchEvents();
+            
             initTabs();
             initCharts();
             
@@ -2204,7 +2248,6 @@
             }, 5000);
         });
 
-        
         // Responsive handling
         window.addEventListener('resize', () => {
             if (tabs[currentTab]) {
