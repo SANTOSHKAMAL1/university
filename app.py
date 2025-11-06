@@ -1,5 +1,5 @@
 import re
-from flask import Flask, json, render_template, request, redirect, url_for, flash, session, send_from_directory
+from flask import Flask, json, render_template, request, redirect, url_for, flash, session, send_from_directory, jsonify
 from flask_pymongo import PyMongo
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -7,13 +7,17 @@ from bson import ObjectId
 from datetime import datetime, timedelta
 import os
 from config import Config
-from utils import get_indian_time # MongoDB URI in config.py
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from utils import get_indian_time
 from flask_mail import Mail, Message
-from flask_pymongo import PyMongo
-from werkzeug.security import generate_password_hash
 import random
 from apscheduler.schedulers.background import BackgroundScheduler
+import pandas as pd
+from io import StringIO
+import logging
+
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Initialize app
 app = Flask(__name__)
@@ -22,8 +26,9 @@ app.secret_key = 'your_secret_key_here'
 
 # Upload folder settings
 UPLOAD_FOLDER = 'static/uploads'
-ALLOWED_EXTENSIONS = {'pdf', 'docx', 'txt', 'png', 'jpg', 'jpeg', 'gif'}
+ALLOWED_EXTENSIONS = {'pdf', 'docx', 'txt', 'png', 'jpg', 'jpeg', 'gif', 'xlsx', 'csv', 'xls'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max file size
 
 # Ensure upload folder exists
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -37,12 +42,12 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-# Mail Config (use your Gmail + app password)
+# Mail Config
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = 'info.loginpanel@gmail.com'
-app.config['MAIL_PASSWORD'] = 'wedbfepklgtwtugf'  # no spaces
+app.config['MAIL_PASSWORD'] = 'wedbfepklgtwtugf'
 
 mail = Mail(app)
 
@@ -65,19 +70,202 @@ def send_daily_event_emails():
         mail.send(msg)
 
 scheduler = BackgroundScheduler()
-scheduler.add_job(send_daily_event_emails, 'cron', hour=7)  # every day at 7 AM
+scheduler.add_job(send_daily_event_emails, 'cron', hour=7)
 scheduler.start()
 
-mail = Mail(app)
-def send_newsletter_email(title, content, image_filename, recipients):
-    msg = Message(subject=title, sender=app.config['MAIL_USERNAME'], recipients=recipients)
-    msg.html = content
+# ===================== EXCEL UPLOAD WITH VALIDATION =====================
 
-    if image_filename:
-        with app.open_resource(os.path.join(app.config['UPLOAD_FOLDER'], image_filename)) as img:
-            msg.attach(image_filename, "image/jpeg", img.read())
+def validate_excel_data(df):
+    """
+    Validate Excel data before insertion
+    Returns: (is_valid, error_messages, cleaned_data)
+    """
+    errors = []
+    required_columns = ['event_name', 'description', 'school', 'department', 'event_type', 'venue', 'event_date']
+    
+    # Check required columns
+    missing_cols = [col for col in required_columns if col not in df.columns]
+    if missing_cols:
+        return False, [f"Missing required columns: {', '.join(missing_cols)}"], None
+    
+    cleaned_records = []
+    
+    for idx, row in df.iterrows():
+        record_errors = []
+        
+        # Validate event_name
+        if pd.isna(row.get('event_name')) or str(row['event_name']).strip() == '':
+            record_errors.append(f"Row {idx+2}: event_name is required")
+            continue
+        
+        # Validate description
+        if pd.isna(row.get('description')) or str(row['description']).strip() == '':
+            record_errors.append(f"Row {idx+2}: description is required")
+            continue
+        
+        # Validate school
+        if pd.isna(row.get('school')) or str(row['school']).strip() == '':
+            record_errors.append(f"Row {idx+2}: school is required")
+            continue
+        
+        # Validate department
+        if pd.isna(row.get('department')) or str(row['department']).strip() == '':
+            record_errors.append(f"Row {idx+2}: department is required")
+            continue
+        
+        # Validate event_type
+        if pd.isna(row.get('event_type')) or str(row['event_type']).strip() == '':
+            record_errors.append(f"Row {idx+2}: event_type is required")
+            continue
+        
+        # Validate venue
+        if pd.isna(row.get('venue')) or str(row['venue']).strip() == '':
+            record_errors.append(f"Row {idx+2}: venue is required")
+            continue
+        
+        # Validate event_date (must be valid date format)
+        try:
+            event_date = pd.to_datetime(row['event_date']).strftime('%Y-%m-%d')
+        except Exception as e:
+            record_errors.append(f"Row {idx+2}: Invalid event_date format (use YYYY-MM-DD)")
+            continue
+        
+        # Optional: Validate end_date if provided
+        end_date = None
+        if not pd.isna(row.get('end_date')):
+            try:
+                end_date = pd.to_datetime(row['end_date']).strftime('%Y-%m-%d')
+            except:
+                record_errors.append(f"Row {idx+2}: Invalid end_date format (use YYYY-MM-DD)")
+                continue
+        
+        if record_errors:
+            errors.extend(record_errors)
+            continue
+        
+        # Create clean record
+        clean_record = {
+            'event_name': str(row['event_name']).strip(),
+            'description': str(row['description']).strip(),
+            'school': str(row['school']).strip(),
+            'department': str(row['department']).strip(),
+            'event_type': str(row['event_type']).strip(),
+            'venue': str(row['venue']).strip(),
+            'event_date': event_date,
+            'end_date': end_date,
+            'event_action': str(row.get('event_action', '')).strip() or None,
+            'image': None,
+            'pdf': None,
+            'created_at': datetime.now()
+        }
+        
+        cleaned_records.append(clean_record)
+    
+    if errors:
+        return False, errors, None
+    
+    return True, [], cleaned_records
 
-    mail.send(msg)
+
+@app.route("/upload_events_excel", methods=["POST"])
+def upload_events_excel():
+    """
+    Upload and process Excel file with events
+    """
+    if session.get('role') != 'admin':
+        flash("Access denied. Admin only.", "error")
+        return redirect(url_for('login'))
+
+    file = request.files.get("excel_file")
+    if not file or file.filename == '':
+        flash("❌ No file selected. Please choose an Excel file.", "error")
+        return redirect(url_for('admin_events'))
+
+    # Validate file extension
+    if not allowed_file(file.filename):
+        flash("❌ Invalid file type. Please upload .xlsx, .xls, or .csv file.", "error")
+        return redirect(url_for('admin_events'))
+
+    try:
+        # Read Excel/CSV file
+        if file.filename.endswith('.csv'):
+            df = pd.read_csv(file)
+        else:
+            df = pd.read_excel(file, sheet_name=0)  # Read first sheet
+        
+        if df.empty:
+            flash("❌ Excel file is empty.", "error")
+            return redirect(url_for('admin_events'))
+
+        # Validate data
+        is_valid, errors, cleaned_records = validate_excel_data(df)
+        
+        if not is_valid:
+            error_msg = "❌ Validation errors:\n" + "\n".join(errors[:10])
+            if len(errors) > 10:
+                error_msg += f"\n... and {len(errors) - 10} more errors"
+            flash(error_msg, "error")
+            return redirect(url_for('admin_events'))
+
+        # Insert into MongoDB
+        if cleaned_records:
+            result = mongo.db.events.insert_many(cleaned_records)
+            flash(f"✅ Success! Added {len(result)} events to the database.", "success")
+            logger.info(f"Uploaded {len(result)} events from Excel file")
+        else:
+            flash("❌ No valid records found in the file.", "error")
+
+    except pd.errors.EmptyDataError:
+        flash("❌ Excel file is empty.", "error")
+    except Exception as e:
+        logger.error(f"Error uploading Excel: {str(e)}")
+        flash(f"❌ Error processing file: {str(e)}", "error")
+
+    return redirect(url_for('admin_events'))
+
+
+@app.route("/validate_excel_preview", methods=["POST"])
+def validate_excel_preview():
+    """
+    Preview and validate Excel before uploading
+    """
+    if session.get('role') != 'admin':
+        return jsonify({'error': 'Access denied'}), 403
+
+    file = request.files.get("excel_file")
+    if not file:
+        return jsonify({'error': 'No file provided'}), 400
+
+    try:
+        if file.filename.endswith('.csv'):
+            df = pd.read_csv(file)
+        else:
+            df = pd.read_excel(file, sheet_name=0)
+        
+        is_valid, errors, cleaned_records = validate_excel_data(df)
+        
+        # Prepare preview data (first 5 records)
+        preview_data = []
+        if cleaned_records:
+            for record in cleaned_records[:5]:
+                preview_data.append({
+                    'event_name': record['event_name'],
+                    'event_date': record['event_date'],
+                    'school': record['school'],
+                    'department': record['department']
+                })
+        
+        return jsonify({
+            'valid': is_valid,
+            'total_rows': len(df),
+            'valid_records': len(cleaned_records) if cleaned_records else 0,
+            'errors': errors[:10],  # Show first 10 errors
+            'error_count': len(errors),
+            'preview': preview_data
+        })
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
 
 
 # ===================== Pages =====================
@@ -90,10 +278,8 @@ def home():
     newsletter_records = list(db.newsletters.find().sort('uploaded_at', -1))
     events = list(db.events.find().sort('event_date', 1))
     
-    # Get today's date for filtering today's events
     today = datetime.now().date()
     
-    # Convert event_date strings to datetime objects if they are strings
     for event in events:
         if isinstance(event['event_date'], str):
             event['event_date'] = datetime.strptime(event['event_date'], '%Y-%m-%d')
@@ -106,6 +292,7 @@ def home():
         events=events,
         today=today
     )
+
 @app.route('/subscribe', methods=['POST'])
 def subscribe():
     data = request.get_json()
@@ -131,11 +318,11 @@ def about():
 @app.route('/contact')
 def contact():
     return render_template('contact.html')
+
 @app.route('/monthlyengagement')
 def monthlyengagement():
-    events = list(mongo.db.monthly_engagement.find())  # Convert cursor to list
+    events = list(mongo.db.monthly_engagement.find())
     return render_template('monthly.html', monthly_records=events)
-   
 
 @app.route('/ugc')
 def ugc():
@@ -143,9 +330,8 @@ def ugc():
 
 @app.route('/jainevents')
 def jainevents():
-    events = list(mongo.db.events.find())  # Convert cursor to list
+    events = list(mongo.db.events.find())
     return render_template('jainevents.html', events=events)
-
 
 
 # ===================== UGC Upload =====================
@@ -158,7 +344,7 @@ def edit_ugc():
     if request.method == 'POST':
         text_data = request.form.get('text_data')
         external_link = request.form.get('external_link')
-        selected_categories = request.form.getlist('categories')  # ✅ collect selected checkboxes
+        selected_categories = request.form.getlist('categories')
         files = request.files.getlist('files')
 
         uploaded_files = []
@@ -172,7 +358,7 @@ def edit_ugc():
         db.ugc_data.insert_one({
             "admin_email": session['email'],
             "uploaded_at": get_indian_time(),
-            "categories": selected_categories,  # ✅ store categories
+            "categories": selected_categories,
             "text_data": text_data,
             "external_link": external_link,
             "files": uploaded_files
@@ -190,8 +376,6 @@ def usernewsletters():
     return render_template('user_newsletters.html', records=newsletters)
 
 
-
-
 @app.route('/newsletter', methods=['GET', 'POST'])
 def newsletter():
     if session.get('role') != 'admin':
@@ -199,38 +383,32 @@ def newsletter():
 
     if request.method == 'POST':
         title = request.form.get('title')
-        description = request.form.get('description')  # Rich text HTML
+        description = request.form.get('description')
         tags = request.form.getlist('tags')
         image_file = request.files.get('image')
         recipient_email_raw = request.form.get('recipient_email', '').strip()
 
-        # ✅ Initialize email_list before using it
         email_list = []
 
-        # ✅ Email Parsing and Validation
         def is_valid_email(email):
             return re.match(r"[^@]+@[^@]+\.[^@]+", email)
 
         try:
-            # Handle Tagify JSON input
             parsed = json.loads(recipient_email_raw)
             email_list = [e['value'].strip() for e in parsed if 'value' in e and is_valid_email(e['value'].strip())]
         except:
-            # Fallback: comma-separated
             email_list = [e.strip() for e in recipient_email_raw.split(',') if is_valid_email(e.strip())]
 
         if not email_list:
             flash("❌ No valid email addresses provided.", "error")
             return redirect(url_for('newsletter'))
 
-        # Save image file
         image_filename = None
         if image_file and allowed_file(image_file.filename):
             image_filename = secure_filename(image_file.filename)
             image_path = os.path.join(app.config['UPLOAD_FOLDER'], image_filename)
             image_file.save(image_path)
 
-        # ✅ Save to MongoDB (AFTER email_list is ready)
         newsletter_data = {
             "admin_email": session['email'],
             "uploaded_at": get_indian_time(),
@@ -238,21 +416,17 @@ def newsletter():
             "description": description,
             "tags": tags,
             "image": image_filename,
-            "recipients": email_list  # now this works fine
+            "recipients": email_list
         }
         db.newsletters.insert_one(newsletter_data)
-
-        # ✅ Send Emails
         send_newsletter_email(title, description, image_filename, email_list)
 
         flash('✅ Newsletter uploaded and emailed successfully.')
         return redirect(url_for('newsletter'))
 
-    # GET method – show newsletter list
     records = list(db.newsletters.find().sort('uploaded_at', -1))
     return render_template('admin_newsletter.html', records=records)
 
-from bson import ObjectId
 
 @app.route('/edit_newsletter/<id>', methods=['GET'])
 def edit_newsletter(id):
@@ -277,18 +451,14 @@ def update_newsletter(id):
         flash('Newsletter not found.', 'error')
         return redirect(url_for('newsletter'))
 
-    # Get form data
     title = request.form.get('title')
     description = request.form.get('description')
     tags = request.form.getlist('tags')
     recipient_emails = request.form.get('recipient_email', '').split(',')
-
-    # Clean recipient emails
     recipient_emails = [email.strip() for email in recipient_emails if email.strip()]
 
-    # Handle image upload
     image_file = request.files.get('image')
-    image_filename = record.get('image')  # keep old image if none uploaded
+    image_filename = record.get('image')
 
     if image_file and image_file.filename:
         filename = secure_filename(image_file.filename)
@@ -296,7 +466,6 @@ def update_newsletter(id):
         image_file.save(image_path)
         image_filename = filename
 
-    # Update document
     db.newsletters.update_one(
         {'_id': ObjectId(id)},
         {
@@ -314,7 +483,6 @@ def update_newsletter(id):
     return redirect(url_for('newsletter'))
 
 
-
 @app.route('/newsletter/delete/<id>')
 def delete_newsletter(id):
     if session.get('role') != 'admin':
@@ -325,9 +493,16 @@ def delete_newsletter(id):
     return redirect(url_for('newsletter'))
 
 
+def send_newsletter_email(title, content, image_filename, recipients):
+    msg = Message(subject=title, sender=app.config['MAIL_USERNAME'], recipients=recipients)
+    msg.html = content
 
+    if image_filename:
+        with app.open_resource(os.path.join(app.config['UPLOAD_FOLDER'], image_filename)) as img:
+            msg.attach(image_filename, "image/jpeg", img.read())
 
-from flask_mail import Message
+    mail.send(msg)
+
 
 @app.route('/subscribe_newsletter', methods=['POST'])
 def subscribe_newsletter():
@@ -335,9 +510,8 @@ def subscribe_newsletter():
     
     if not email:
         flash("Email is required.", "error")
-        return redirect(request.referrer or url_for('public_newsletters'))
+        return redirect(request.referrer or url_for('jainevents'))
 
-    # Check if already subscribed
     if db.subscribers.find_one({'email': email}):
         flash("You are already subscribed!", "info")
     else:
@@ -346,7 +520,6 @@ def subscribe_newsletter():
             'subscribed_at': datetime.now()
         })
 
-        # ✅ Send confirmation email
         try:
             msg = Message(
                 subject="🎉 You're Subscribed to Our University Newsletter!",
@@ -355,7 +528,7 @@ def subscribe_newsletter():
             )
             msg.html = f"""
             <h2>Thank you for subscribing!</h2>
-            <p>You’ll now receive updates, articles, and event highlights directly to your inbox.</p>
+            <p>You'll now receive updates, articles, and event highlights directly to your inbox.</p>
             <p>If you did not request this, please ignore this message.</p>
             <br><hr>
             <small>This is an automated message from Jain University Newsletter system.</small>
@@ -364,11 +537,9 @@ def subscribe_newsletter():
             flash("Subscribed successfully! A confirmation email has been sent.", "success")
         except Exception as e:
             flash("Subscribed, but failed to send confirmation email.", "warning")
-            print(e)
+            logger.error(f"Email send error: {e}")
 
-    return redirect(request.referrer or url_for('public_newsletters'))
-
-
+    return redirect(request.referrer or url_for('jainevents'))
 
 
 @app.route('/edit_ugc_record/<record_id>', methods=['GET', 'POST'])
@@ -384,7 +555,7 @@ def edit_ugc_record(record_id):
         selected_categories = request.form.getlist('categories')
         files = request.files.getlist('files')
 
-        updated_files = record.get('files', [])  # Keep existing files
+        updated_files = record.get('files', [])
 
         for file in files:
             if file and allowed_file(file.filename):
@@ -393,7 +564,6 @@ def edit_ugc_record(record_id):
                 file.save(filepath)
                 updated_files.append(filename)
 
-        # ✅ Update the record, don’t insert new
         db.ugc_data.update_one(
             {'_id': ObjectId(record_id)},
             {'$set': {
@@ -410,9 +580,6 @@ def edit_ugc_record(record_id):
     return render_template('edit_ugc_record.html', record=record)
 
 
-
-from bson.objectid import ObjectId
-
 @app.route('/delete_ugc/<record_id>', methods=['GET'])
 def delete_ugc(record_id):
     if session.get('role') != 'admin':
@@ -421,7 +588,6 @@ def delete_ugc(record_id):
     db.ugc_data.delete_one({'_id': ObjectId(record_id)})
     flash('UGC record deleted successfully.')
     return redirect(url_for('edit_ugc'))
-
 
 
 # ===================== Monthly Engagement =====================
@@ -436,9 +602,8 @@ def edit_monthly():
         description = request.form.get('description', '').strip()
         school = request.form.get('school', '')
         department = request.form.get('department', '')
-        tags = request.form.getlist('tags')  # Checkboxes
+        tags = request.form.getlist('tags')
 
-       
         image_file = request.files.get('image_file')
         pdf_file = request.files.get('pdf_file')
 
@@ -459,7 +624,6 @@ def edit_monthly():
             "school": school,
             "department": department,
             "tags": tags,
-            
             "files": uploaded_files
         })
 
@@ -468,7 +632,6 @@ def edit_monthly():
 
     records = list(db.monthly_engagement.find().sort('uploaded_at', -1))
     return render_template('edit_monthly.html', records=records)
-
 
 
 @app.route('/edit_record/<record_id>', methods=['GET', 'POST'])
@@ -482,7 +645,6 @@ def edit_record(record_id):
     if request.method == 'POST':
         updated_data = {}
 
-        # Only include fields if they exist in the form
         if 'heading' in request.form:
             updated_data['heading'] = request.form.get('heading', '').strip()
         if 'description' in request.form:
@@ -494,7 +656,6 @@ def edit_record(record_id):
         if 'tags' in request.form:
             updated_data['tags'] = request.form.getlist('tags')
 
-        # Only update if there's something to update
         if updated_data:
             collection.update_one({'_id': ObjectId(record_id)}, {'$set': updated_data})
 
@@ -502,7 +663,7 @@ def edit_record(record_id):
 
     return render_template('edit_record.html', record=record)
 
-from bson import ObjectId
+
 @app.route('/delete_record/<record_id>', methods=['POST'])
 def delete_record(record_id):
     if session.get('role') != 'admin':
@@ -511,17 +672,15 @@ def delete_record(record_id):
     collection = mongo.db.monthly_engagement
     record = collection.find_one({'_id': ObjectId(record_id)})
 
-    # Delete uploaded files from disk
     if record and 'files' in record:
         for filename in record['files']:
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             if os.path.exists(file_path):
                 os.remove(file_path)
 
-    # Delete record from MongoDB
     collection.delete_one({'_id': ObjectId(record_id)})
-
     return redirect(url_for('edit_monthly'))
+
 
 # ===================== Authentication =====================
 
@@ -531,7 +690,6 @@ def register():
         session['step'] = 1
 
     if request.method == 'POST':
-        # Step 1: Email input and OTP send
         if session['step'] == 1:
             email = request.form.get('email')
             if not email.endswith('@jainuniversity.ac.in'):
@@ -554,7 +712,6 @@ def register():
             flash('OTP sent to your email. Please check and enter it.', 'info')
             return redirect(url_for('register'))
 
-        # Step 2: OTP Verification
         elif session['step'] == 2:
             entered_otp = request.form.get('otp')
             if entered_otp == session.get('otp'):
@@ -566,13 +723,11 @@ def register():
                 flash('Invalid OTP. Please try again.', 'error')
                 return redirect(url_for('register'))
 
-        # Step 3: Set password
         elif session['step'] == 3:
             password = request.form.get('password')
             hashed_pw = generate_password_hash(password)
             db.users.insert_one({'email': session['email'], 'password': hashed_pw, 'role': 'user'})
 
-            # Clear session
             session.pop('email', None)
             session.pop('otp', None)
             session.pop('step', None)
@@ -581,7 +736,6 @@ def register():
             flash('Registration complete! You can now log in.', 'success')
             return redirect(url_for('login'))
 
-    # For GET or re-render
     otp_sent = session.get('step', 1) >= 2
     otp_verified = session.get('step', 1) == 3
     return render_template('register.html', otp_sent=otp_sent, otp_verified=otp_verified)
@@ -608,6 +762,7 @@ def admin():
 
     return render_template('admin_register.html')
 
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -629,11 +784,13 @@ def login():
 
     return render_template('login.html')
 
+
 @app.route('/logout')
 def logout():
     session.clear()
     flash('You have been logged out.', 'info')
     return redirect(url_for('home'))
+
 
 # ===================== Dashboards =====================
 
@@ -645,12 +802,14 @@ def admin_dashboard():
     users = list(db.users.find())
     return render_template('admin_dashboard.html', users=users)
 
+
 @app.route('/user')
 def user_dashboard():
     if session.get('role') != 'user':
         return redirect(url_for('login'))
 
     return render_template('user_dashboard.html')
+
 
 # ===================== Admin User Controls =====================
 
@@ -662,6 +821,7 @@ def view_users():
 
     users = list(db.users.find())
     return render_template('admin_view_users.html', users=users)
+
 
 @app.route('/update_user/<user_id>', methods=['POST'])
 def update_user(user_id):
@@ -675,6 +835,7 @@ def update_user(user_id):
     flash('User updated successfully.', 'success')
     return redirect(url_for('admin_dashboard'))
 
+
 @app.route('/delete_user/<user_id>')
 def delete_user(user_id):
     if session.get('role') != 'admin':
@@ -684,9 +845,8 @@ def delete_user(user_id):
     flash('User deleted successfully.', 'success')
     return redirect(url_for('admin_dashboard'))
 
-# ===================== Run App =====================
-from flask import send_from_directory
-import os
+
+# ===================== File Serving =====================
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
@@ -697,16 +857,12 @@ def uploaded_file(filename):
 def newsletter_view(newsletter_id):
     news = db.newsletters.find_one({'_id': ObjectId(newsletter_id)})
     if not news:
-        os.abort(404)
+        return "Newsletter not found", 404
     news['_id'] = str(news['_id'])
     return render_template('newsletter_detail.html', news=news)
 
 
-
-
-from flask import jsonify
-from bson import ObjectId
-from datetime import datetime
+# ===================== Events Management =====================
 
 @app.route("/admin/events")
 def admin_events():
@@ -718,8 +874,12 @@ def admin_events():
         e["_id"] = str(e["_id"])
     return render_template("admin_events.html", events=events)
 
+
 @app.route("/add_event", methods=["POST"])
 def add_event():
+    if session.get('role') != 'admin':
+        return redirect(url_for('login'))
+
     data = request.form.to_dict()
     image_file = request.files.get("image")
     pdf_file = request.files.get("pdf")
@@ -728,12 +888,14 @@ def add_event():
     pdf_path = None
 
     if image_file and image_file.filename:
-        image_path = os.path.join(app.config["UPLOAD_FOLDER"], image_file.filename)
+        filename = secure_filename(image_file.filename)
+        image_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
         image_file.save(image_path)
         image_path = "/" + image_path.replace("\\", "/")
 
     if pdf_file and pdf_file.filename:
-        pdf_path = os.path.join(app.config["UPLOAD_FOLDER"], pdf_file.filename)
+        filename = secure_filename(pdf_file.filename)
+        pdf_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
         pdf_file.save(pdf_path)
         pdf_path = "/" + pdf_path.replace("\\", "/")
 
@@ -753,7 +915,9 @@ def add_event():
     }
 
     mongo.db.events.insert_one(event)
+    flash('✅ Event added successfully!', 'success')
     return redirect(url_for('admin_events'))
+
 
 @app.route("/delete_event/<event_id>")
 def delete_event(event_id):
@@ -761,7 +925,9 @@ def delete_event(event_id):
         return redirect(url_for('login'))
 
     mongo.db.events.delete_one({"_id": ObjectId(event_id)})
+    flash('✅ Event deleted successfully!', 'success')
     return redirect(url_for('admin_events'))
+
 
 @app.route("/edit_event/<event_id>", methods=["GET"])
 def edit_event(event_id):
@@ -770,10 +936,12 @@ def edit_event(event_id):
 
     event = mongo.db.events.find_one({"_id": ObjectId(event_id)})
     if not event:
-        return "Event not found", 404
+        flash('Event not found.', 'error')
+        return redirect(url_for('admin_events'))
 
     event["_id"] = str(event["_id"])
     return render_template("edit_event.html", event=event)
+
 
 @app.route("/update_event/<event_id>", methods=["POST"])
 def update_event(event_id):
@@ -798,26 +966,29 @@ def update_event(event_id):
     }
 
     if image_file and image_file.filename:
-        image_path = os.path.join(app.config["UPLOAD_FOLDER"], image_file.filename)
+        filename = secure_filename(image_file.filename)
+        image_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
         image_file.save(image_path)
         update_data["image"] = "/" + image_path.replace("\\", "/")
 
     if pdf_file and pdf_file.filename:
-        pdf_path = os.path.join(app.config["UPLOAD_FOLDER"], pdf_file.filename)
+        filename = secure_filename(pdf_file.filename)
+        pdf_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
         pdf_file.save(pdf_path)
         update_data["pdf"] = "/" + pdf_path.replace("\\", "/")
 
     mongo.db.events.update_one({"_id": ObjectId(event_id)}, {"$set": update_data})
+    flash('✅ Event updated successfully!', 'success')
     return redirect(url_for('admin_events'))
 
-# NEW API ENDPOINTS FOR FRONTEND
+
+# ===================== API Endpoints =====================
+
 @app.route('/api/events')
 def get_events():
     try:
-        # Get current date for filtering
         current_date = datetime.now().strftime('%Y-%m-%d')
         
-        # Fetch events from MongoDB - both upcoming and today's events
         events = list(mongo.db.events.find({
             "$or": [
                 {"event_date": {"$gte": current_date}},
@@ -844,8 +1015,9 @@ def get_events():
         
         return jsonify(events_data)
     except Exception as e:
-        print(f"Error fetching events: {e}")
+        logger.error(f"Error fetching events: {e}")
         return jsonify([])
+
 
 @app.route('/api/events/<event_id>')
 def get_event(event_id):
@@ -869,8 +1041,9 @@ def get_event(event_id):
             'pdf': event.get('pdf', '')
         })
     except Exception as e:
-        print(f"Error fetching event {event_id}: {e}")
+        logger.error(f"Error fetching event: {e}")
         return jsonify({'error': 'Event not found'}), 404
+
 
 @app.route('/api/events/today')
 def get_today_events():
@@ -898,13 +1071,12 @@ def get_today_events():
         
         return jsonify(events_data)
     except Exception as e:
-        print(f"Error fetching today's events: {e}")
+        logger.error(f"Error fetching today's events: {e}")    
         return jsonify([])
 
 
-import os
+# ===================== Run App =====================
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port, debug=True)
-

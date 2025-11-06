@@ -159,6 +159,143 @@
             0% { transform: translateX(0); }
             100% { transform: translateX(-100%); }
         }
+/* ======== Capacity Building Section ======== */
+.dashboard-section {
+    padding: 2.5rem;
+    background: #f9fafb;
+    border-radius: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+}
+
+.dashboard-section:hover {
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+}
+
+.dashboard-section h2 {
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #343a40;
+    margin-bottom: 1rem;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2rem;
+    margin-top: 1.5rem;
+}
+
+/* ======== Engagement Cards ======== */
+.dashboard-card.full-width {
+    width: 100%;
+}
+
+.engagement-card {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+}
+
+.engagement-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+/* ======== Card Header ======== */
+.engagement-card-header {
+    background: linear-gradient(135deg, #0056b3, #007bff);
+    color: #ffffff;
+    font-size: 1.2rem;
+    font-weight: 600;
+    padding: 1rem 1.5rem;
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+    letter-spacing: 0.3px;
+}
+
+/* ======== Card Body ======== */
+.engagement-card-body {
+    padding: 1.5rem;
+    color: #495057;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.engagement-card-body p {
+    margin-bottom: 1rem;
+}
+
+/* ======== Meta Info ======== */
+.engagement-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.engagement-meta span i {
+    color: #007bff;
+    margin-right: 6px;
+}
+
+/* ======== Tags ======== */
+.engagement-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.engagement-tag {
+    background: #e9f3ff;
+    color: #007bff;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.engagement-tag:hover {
+    background: #007bff;
+    color: #ffffff;
+}
+
+/* ======== Responsive ======== */
+@media (max-width: 768px) {
+    .dashboard-section {
+        padding: 1.5rem;
+    }
+    .dashboard-section h2 {
+        font-size: 1.6rem;
+    }
+    .engagement-card-body {
+        padding: 1rem;
+    }
+}
+.engagement-card {
+    opacity: 0;
+    animation: fadeInUp 0.8s ease forwards;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
 
         /* Main Container with Carousel */
         .main-container {
@@ -247,12 +384,15 @@
             border-radius: 10px;
             box-shadow: var(--shadow-sm);
             overflow: hidden;
+            height: 380px; /* Reduced height */
+            display: flex;
+            flex-direction: column;
         }
 
         .card-header {
-            padding: 15px 20px;
+            padding: 12px 20px; /* Reduced padding */
             font-weight: 600;
-            font-size: 1.1rem;
+            font-size: 1rem; /* Smaller font */
             color: white;
             display: flex;
             align-items: center;
@@ -269,9 +409,9 @@
 
         .newsletter-section .newsletter-header {
             background-color: #8b5cf6;
-            padding: 15px 20px;
+            padding: 12px 20px; /* Reduced padding */
             font-weight: 600;
-            font-size: 1.1rem;
+            font-size: 1rem; /* Smaller font */
             color: white;
             display: flex;
             align-items: center;
@@ -279,13 +419,28 @@
         }
 
         .scrolling-content, .newsletter-scrolling-content {
-            max-height: 400px;
-            overflow-y: auto;
-            padding: 15px;
+            flex: 1;
+            overflow-y: hidden;
+            padding: 10px; /* Reduced padding */
+            position: relative;
+        }
+
+        .scrolling-wrapper {
+            position: relative;
+            animation: scrollUp 30s linear infinite;
+        }
+
+        .scrolling-wrapper:hover {
+            animation-play-state: paused;
+        }
+
+        @keyframes scrollUp {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-100%); }
         }
 
         .ugc-notice, .newsletter-item {
-            padding: 15px;
+            padding: 12px; /* Reduced padding */
             border-bottom: 1px solid #f0f0f0;
             cursor: pointer;
             transition: background-color 0.3s;
@@ -300,24 +455,24 @@
         }
 
         .ugc-notice p {
-            margin-bottom: 8px;
+            margin-bottom: 6px; /* Reduced margin */
             color: #666;
-            font-size: 0.9rem;
+            font-size: 0.85rem; /* Smaller font */
         }
 
         .file-list {
             list-style: none;
-            margin-top: 10px;
+            margin-top: 8px; /* Reduced margin */
         }
 
         .file-list li {
-            margin: 5px 0;
+            margin: 4px 0; /* Reduced margin */
         }
 
         .file-list a {
             color: #1e40af;
             text-decoration: none;
-            font-size: 0.9rem;
+            font-size: 0.85rem; /* Smaller font */
         }
 
         .file-list a:hover {
@@ -326,15 +481,15 @@
 
         .newsletter-item {
             display: flex;
-            gap: 15px;
+            gap: 12px; /* Reduced gap */
             align-items: center;
         }
 
         .newsletter-image img {
-            width: 80px;
-            height: 80px;
+            width: 70px; /* Smaller image */
+            height: 70px; /* Smaller image */
             object-fit: cover;
-            border-radius: 8px;
+            border-radius: 6px; /* Smaller radius */
         }
 
         .newsletter-content {
@@ -344,12 +499,12 @@
         .newsletter-title {
             font-weight: 600;
             color: var(--jain-blue);
-            margin-bottom: 5px;
-            font-size: 0.95rem;
+            margin-bottom: 4px; /* Reduced margin */
+            font-size: 0.9rem; /* Smaller font */
         }
 
         .newsletter-date {
-            font-size: 0.85rem;
+            font-size: 0.8rem; /* Smaller font */
             color: #666;
             display: flex;
             align-items: center;
@@ -359,20 +514,20 @@
         .newsletter-tags {
             display: flex;
             gap: 5px;
-            margin-top: 5px;
+            margin-top: 4px; /* Reduced margin */
             flex-wrap: wrap;
         }
 
         .newsletter-tag {
             background-color: #e9ecef;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.75rem;
+            padding: 2px 6px; /* Reduced padding */
+            border-radius: 10px; /* Smaller radius */
+            font-size: 0.7rem; /* Smaller font */
             color: #495057;
         }
 
         .read-more {
-            padding: 15px;
+            padding: 12px; /* Reduced padding */
             text-align: center;
             border-top: 1px solid #f0f0f0;
         }
@@ -381,7 +536,7 @@
             color: var(--jain-blue);
             text-decoration: none;
             font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 0.85rem; /* Smaller font */
         }
 
         .read-more a:hover {
@@ -1690,7 +1845,8 @@
     </div>
 
     <script>
-        // Fetch events data from the server
+        // Store current tab in sessionStorage to persist across refreshes
+        let currentTab = parseInt(sessionStorage.getItem('currentTab')) || 0;
         let eventsData = [];
         let notificationsEnabled = false;
 
@@ -1794,14 +1950,25 @@
         }
 
         // Tab Navigation with Carousel
-        let currentTab = 0;
         const tabs = document.querySelectorAll('.main-tab');
         const indicator = document.getElementById('tabIndicator');
         const carouselContainer = document.getElementById('carouselContainer');
         const slides = document.querySelectorAll('.carousel-slide');
 
         function initTabs() {
-            updateIndicator(tabs[0]);
+            // Set initial active tab based on sessionStorage
+            tabs.forEach(t => t.classList.remove('active'));
+            tabs[currentTab].classList.add('active');
+            
+            updateIndicator(tabs[currentTab]);
+            
+            // Slide carousel to current tab
+            carouselContainer.style.transform = `translateX(-${currentTab * 25}%)`;
+            
+            // Update slide visibility
+            slides.forEach((slide, i) => {
+                slide.classList.toggle('active', i === currentTab);
+            });
             
             tabs.forEach((tab, index) => {
                 tab.addEventListener('click', () => {
@@ -1812,6 +1979,7 @@
 
         function switchTab(index) {
             currentTab = index;
+            sessionStorage.setItem('currentTab', currentTab);
             
             // Update active states
             tabs.forEach(t => t.classList.remove('active'));
@@ -2374,7 +2542,7 @@
         window.addEventListener('resize', () => {
             if (tabs[currentTab]) {
                 updateIndicator(tabs[currentTab]);
-            }
+            }   
         });
     </script>
 </body>

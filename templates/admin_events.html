@@ -49,6 +49,40 @@
             background: rgba(255,215,0,0.2);
             border-left: 4px solid #FFD700;
         }
+        .upload-area {
+            border: 3px dashed #3498db;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .upload-area:hover {
+            background: #e3f2fd;
+            border-color: #2196F3;
+        }
+        .upload-area.dragover {
+            background: #bbdefb;
+            border-color: #1976D2;
+        }
+        .progress-bar {
+            width: 0%;
+            height: 4px;
+            background: #4CAF50;
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+        .preview-table {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .error-list {
+            max-height: 200px;
+            overflow-y: auto;
+            background: #ffebee;
+            border: 1px solid #ffcdd2;
+        }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -58,7 +92,7 @@
             <div class="flex justify-between items-center">
                 <div class="flex items-center space-x-4">
                     <img src="{{ url_for('static', filename='images/jainu.png') }}" 
-                         onerror="this.src='https://via.placeholder.com/50?text=JU+Logo';" 
+                         onerror="this.src='https://via.placeholder.com/50?text=JU';" 
                          alt="Jain University Logo" class="h-12">
                     <div>
                         <h1 class="text-xl font-bold text-gray-800">Office of Academics</h1>
@@ -92,17 +126,17 @@
                         </a>
                     </li>
                     <li>
-                        <a href="{{ url_for('ugc') }}" class="nav-link block py-2 px-4">
+                        <a href="{{ url_for('edit_ugc') }}" class="nav-link block py-2 px-4">
                             <i class="fas fa-bullhorn mr-3"></i>UGC Notices
                         </a>
                     </li>
                     <li>
-                        <a href="{{ url_for('monthlyengagement') }}" class="nav-link block py-2 px-4">
+                        <a href="{{ url_for('edit_monthly') }}" class="nav-link block py-2 px-4">
                             <i class="fas fa-chart-line mr-3"></i>Engagements
                         </a>
                     </li>
                     <li>
-                        <a href="{{ url_for('usernewsletters') }}" class="nav-link block py-2 px-4">
+                        <a href="{{ url_for('newsletter') }}" class="nav-link block py-2 px-4">
                             <i class="fas fa-newspaper mr-3"></i>Newsletters
                         </a>
                     </li>
@@ -133,62 +167,168 @@
                 <div class="flex justify-between items-center mb-8">
                     <div>
                         <h1 class="text-3xl font-bold text-gray-800">Event Management</h1>
-                        <p class="text-gray-600 mt-2">Manage all university events and academic calendar</p>
+                        <p class="text-gray-600 mt-2">Manage university events and academic calendar</p>
                     </div>
                     <div class="flex space-x-3">
                         <button onclick="toggleEventForm()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200 flex items-center">
                             <i class="fas fa-plus mr-2"></i> Add New Event
                         </button>
-                        <a href="{{ url_for('admin_dashboard') }}" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200 flex items-center">
-                            <i class="fas fa-arrow-left mr-2"></i> Back to Dashboard
-                        </a>
+                        <button onclick="toggleExcelUpload()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200 flex items-center">
+                            <i class="fas fa-file-excel mr-2"></i> Bulk Upload Excel
+                        </button>
                     </div>
                 </div>
 
-                <!-- Add Event Form -->
-                <div id="eventForm" class="bg-white rounded-lg shadow-xl p-6 mb-8 transition-all duration-300">
+                <!-- Excel Upload Section -->
+                <div id="excelUploadSection" class="bg-white rounded-lg shadow-xl p-8 mb-8 hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">
+                            <i class="fas fa-upload mr-2 text-green-600"></i>Bulk Upload Events from Excel
+                        </h2>
+                        <button onclick="toggleExcelUpload()" class="text-gray-600 hover:text-gray-800">
+                            <i class="fas fa-times text-2xl"></i>
+                        </button>
+                    </div>
+
+                    <!-- Instructions -->
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                        <h3 class="font-bold text-blue-900 mb-2">
+                            <i class="fas fa-info-circle mr-2"></i>Excel File Requirements:
+                        </h3>
+                        <ul class="text-sm text-blue-800 space-y-1 ml-4">
+                            <li>✓ Required columns: <strong>event_name, description, school, department, event_type, venue, event_date</strong></li>
+                            <li>✓ Optional columns: <strong>event_action, end_date</strong></li>
+                            <li>✓ Date format: <strong>YYYY-MM-DD</strong> (e.g., 2024-12-25)</li>
+                            <li>✓ Supported formats: <strong>.xlsx, .xls, .csv</strong></li>
+                            <li>✓ Maximum file size: <strong>50MB</strong></li>
+                        </ul>
+                    </div>
+
+                    <!-- Upload Area -->
+                    <div id="uploadArea" class="upload-area mb-6" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                        <input type="file" id="excelInput" accept=".xlsx,.xls,.csv" class="hidden">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-blue-400 mb-3 block"></i>
+                        <p class="text-xl font-bold text-gray-700 mb-2">Drag & drop your Excel file here</p>
+                        <p class="text-gray-600 mb-4">or</p>
+                        <button type="button" onclick="document.getElementById('excelInput').click()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg">
+                            <i class="fas fa-folder-open mr-2"></i>Browse Files
+                        </button>
+                        <p class="text-xs text-gray-500 mt-4">Supported: .xlsx, .xls, .csv</p>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div id="progressContainer" class="hidden mb-6">
+                        <div class="flex justify-between mb-2">
+                            <span class="text-sm font-semibold text-gray-700">Processing...</span>
+                            <span id="progressPercent" class="text-sm font-semibold text-gray-700">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div id="progressBar" class="progress-bar"></div>
+                        </div>
+                    </div>
+
+                    <!-- Validation Results -->
+                    <div id="validationResults" class="hidden">
+                        <!-- Summary -->
+                        <div id="validationSummary" class="grid grid-cols-3 gap-4 mb-6">
+                            <div class="bg-white border-2 border-blue-200 rounded-lg p-4 text-center">
+                                <div class="text-2xl font-bold text-blue-600" id="totalRows">0</div>
+                                <div class="text-sm text-gray-600">Total Rows</div>
+                            </div>
+                            <div class="bg-white border-2 border-green-200 rounded-lg p-4 text-center">
+                                <div class="text-2xl font-bold text-green-600" id="validCount">0</div>
+                                <div class="text-sm text-gray-600">Valid Records</div>
+                            </div>
+                            <div class="bg-white border-2 border-red-200 rounded-lg p-4 text-center">
+                                <div class="text-2xl font-bold text-red-600" id="errorCount">0</div>
+                                <div class="text-sm text-gray-600">Errors</div>
+                            </div>
+                        </div>
+
+                        <!-- Preview Table -->
+                        <div id="previewSection" class="hidden mb-6">
+                            <h3 class="font-bold text-gray-800 mb-3">
+                                <i class="fas fa-eye mr-2 text-blue-600"></i>Preview (First 5 Records)
+                            </h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm border-collapse">
+                                    <thead>
+                                        <tr class="bg-blue-50">
+                                            <th class="border border-gray-300 px-4 py-2 text-left">Event Name</th>
+                                            <th class="border border-gray-300 px-4 py-2 text-left">Date</th>
+                                            <th class="border border-gray-300 px-4 py-2 text-left">School</th>
+                                            <th class="border border-gray-300 px-4 py-2 text-left">Department</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="previewTable">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Errors -->
+                        <div id="errorsSection" class="hidden">
+                            <h3 class="font-bold text-red-800 mb-3">
+                                <i class="fas fa-exclamation-triangle mr-2"></i>Validation Errors
+                            </h3>
+                            <div class="error-list p-4 rounded-lg">
+                                <ul id="errorList" class="text-sm text-red-700 space-y-1">
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex justify-end space-x-3 mt-6 pt-6 border-t">
+                            <button type="button" onclick="resetUpload()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg">
+                                <i class="fas fa-times mr-2"></i>Cancel
+                            </button>
+                            <button type="button" onclick="handleFormSubmit(event)" id="submitBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg" disabled>
+                                <i class="fas fa-check mr-2"></i>Upload & Insert Events
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add Single Event Form -->
+                <div id="eventForm" class="bg-white rounded-lg shadow-xl p-6 mb-8 hidden">
                     <h2 class="text-xl font-bold mb-4 text-gray-800 border-b pb-2">Add New Event</h2>
                     <form action="{{ url_for('add_event') }}" method="POST" enctype="multipart/form-data" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Event Basic Info -->
                         <div class="md:col-span-2">
                             <label class="block font-medium mb-2 text-gray-700">Event Name *</label>
-                            <input type="text" name="event_name" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                            <input type="text" name="event_name" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
                         </div>
 
                         <div class="md:col-span-2">
                             <label class="block font-medium mb-2 text-gray-700">Description *</label>
-                            <textarea name="description" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" rows="3" required></textarea>
+                            <textarea name="description" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" rows="3" required></textarea>
                         </div>
 
-                        <!-- School and Department -->
                         <div>
                             <label class="block font-medium mb-2 text-gray-700">School *</label>
-                            <select id="schoolSelect" name="school" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                            <select id="schoolSelect" name="school" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
                                 <option value="">-- Select School --</option>
                             </select>
                         </div>
 
                         <div>
                             <label class="block font-medium mb-2 text-gray-700">Department *</label>
-                            <select id="departmentSelect" name="department" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                            <select id="departmentSelect" name="department" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
                                 <option value="">-- Select Department --</option>
                             </select>
                         </div>
 
-                        <!-- Event Type and Action -->
                         <div>
                             <label class="block font-medium mb-2 text-gray-700">Event Type *</label>
-                            <select name="event_type" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
-                                <option value="">-- Select Event Type --</option>
+                            <select name="event_type" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                                <option value="">-- Select Type --</option>
                                 <option value="Workshop">Workshop</option>
                                 <option value="Seminar">Seminar</option>
                                 <option value="Conference">Conference</option>
-                                <option value="Symposium">Symposium</option>
                                 <option value="Webinar">Webinar</option>
                                 <option value="Training">Training</option>
                                 <option value="Competition">Competition</option>
-                                <option value="Cultural">Cultural Event</option>
-                                <option value="Sports">Sports Event</option>
+                                <option value="Cultural">Cultural</option>
+                                <option value="Sports">Sports</option>
                                 <option value="Academic">Academic</option>
                                 <option value="Other">Other</option>
                             </select>
@@ -196,46 +336,42 @@
 
                         <div>
                             <label class="block font-medium mb-2 text-gray-700">Event Action</label>
-                            <input type="text" id="eventActionInput" name="event_action" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            <div class="text-sm text-gray-500 mt-1">Quick select from common actions:</div>
+                            <input type="text" id="eventActionInput" name="event_action" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                             <div id="eventTypeTags" class="flex flex-wrap gap-2 mt-2"></div>
                         </div>
 
-                        <!-- Venue and Dates -->
                         <div>
                             <label class="block font-medium mb-2 text-gray-700">Venue *</label>
-                            <input type="text" name="venue" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                            <input type="text" name="venue" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
                         </div>
 
                         <div>
                             <label class="block font-medium mb-2 text-gray-700">Event Date *</label>
-                            <input type="date" name="event_date" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                            <input type="date" name="event_date" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
                         </div>
 
                         <div>
                             <label class="block font-medium mb-2 text-gray-700">End Date</label>
-                            <input type="date" name="end_date" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <input type="date" name="end_date" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                         </div>
 
-                        <!-- File Uploads -->
                         <div>
                             <label class="block font-medium mb-2 text-gray-700">Event Image</label>
-                            <input type="file" id="imageUpload" name="image" accept="image/*" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <input type="file" id="imageUpload" name="image" accept="image/*" class="w-full p-3 border border-gray-300 rounded-lg">
                             <div id="imagePreview" class="mt-3"></div>
                         </div>
 
                         <div>
-                            <label class="block font-medium mb-2 text-gray-700">Event PDF/Brochure</label>
-                            <input type="file" id="pdfUpload" name="pdf" accept="application/pdf" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <label class="block font-medium mb-2 text-gray-700">Event PDF</label>
+                            <input type="file" id="pdfUpload" name="pdf" accept="application/pdf" class="w-full p-3 border border-gray-300 rounded-lg">
                             <div id="pdfPreview" class="mt-3"></div>
                         </div>
 
-                        <!-- Submit Button -->
                         <div class="md:col-span-2 flex justify-end space-x-4 pt-4 border-t">
-                            <button type="button" onclick="toggleEventForm()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-lg transition duration-200">
+                            <button type="button" onclick="toggleEventForm()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-lg">
                                 Cancel
                             </button>
-                            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg transition duration-200 flex items-center">
+                            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg flex items-center">
                                 <i class="fas fa-save mr-2"></i> Add Event
                             </button>
                         </div>
@@ -247,15 +383,13 @@
                     <div class="flex justify-between items-center mb-6">
                         <h2 class="text-2xl font-bold text-gray-800">All Events ({{ events|length }})</h2>
                         <div class="flex space-x-3">
-                            <input type="text" id="searchEvents" placeholder="Search events..." class="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            <select id="filterType" class="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <input type="text" id="searchEvents" placeholder="Search events..." class="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <select id="filterType" class="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                                 <option value="">All Types</option>
                                 <option value="Workshop">Workshop</option>
                                 <option value="Seminar">Seminar</option>
                                 <option value="Conference">Conference</option>
                                 <option value="Competition">Competition</option>
-                                <option value="Cultural">Cultural</option>
-                                <option value="Sports">Sports</option>
                             </select>
                         </div>
                     </div>
@@ -263,7 +397,7 @@
                     {% if events %}
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="eventsGrid">
                         {% for event in events %}
-                        <div class="event-card bg-gray-50 p-6 rounded-lg border border-gray-200">
+                        <div class="event-card bg-gray-50 p-6 rounded-lg">
                             <div class="flex justify-between items-start mb-4">
                                 <h3 class="text-lg font-bold text-gray-800 flex-1">{{ event.event_name }}</h3>
                                 <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
@@ -271,57 +405,23 @@
                                 </span>
                             </div>
                             
-                            <p class="text-gray-600 mb-4 text-sm line-clamp-2">{{ event.description[:100] }}{% if event.description|length > 100 %}...{% endif %}</p>
+                            <p class="text-gray-600 mb-4 text-sm">{{ event.description[:100] }}{% if event.description|length > 100 %}...{% endif %}</p>
                             
                             <div class="space-y-2 text-sm text-gray-700 mb-4">
-                                <div class="flex items-center">
-                                    <i class="fas fa-university text-blue-500 mr-2 w-4"></i>
-                                    <span class="font-medium">School:</span>
-                                    <span class="ml-1">{{ event.school }}</span>
-                                </div>
-                                <div class="flex items-center">
-                                    <i class="fas fa-building text-green-500 mr-2 w-4"></i>
-                                    <span class="font-medium">Department:</span>
-                                    <span class="ml-1">{{ event.department }}</span>
-                                </div>
-                                <div class="flex items-center">
-                                    <i class="fas fa-calendar-day text-purple-500 mr-2 w-4"></i>
-                                    <span class="font-medium">Date:</span>
-                                    <span class="ml-1">{{ event.event_date }}</span>
-                                    {% if event.end_date %}
-                                    <span class="mx-1">-</span>
-                                    <span>{{ event.end_date }}</span>
-                                    {% endif %}
-                                </div>
-                                <div class="flex items-center">
-                                    <i class="fas fa-map-marker-alt text-red-500 mr-2 w-4"></i>
-                                    <span class="font-medium">Venue:</span>
-                                    <span class="ml-1">{{ event.venue }}</span>
-                                </div>
+                                <div><i class="fas fa-university text-blue-500 mr-2"></i>{{ event.school }}</div>
+                                <div><i class="fas fa-building text-green-500 mr-2"></i>{{ event.department }}</div>
+                                <div><i class="fas fa-calendar text-purple-500 mr-2"></i>{{ event.event_date }}</div>
+                                <div><i class="fas fa-map-marker-alt text-red-500 mr-2"></i>{{ event.venue }}</div>
                             </div>
 
-                            {% if event.image %}
-                                <img src="{{ event.image }}" class="mt-3 rounded-lg w-full h-32 object-cover border border-gray-300 mb-3">
-                            {% endif %}
-
-                            {% if event.pdf %}
-                                <a href="{{ event.pdf }}" target="_blank" class="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4">
-                                    <i class="fas fa-file-pdf mr-2"></i>
-                                    View Event PDF
-                                </a>
-                            {% endif %}
-
-                            <div class="mt-4 pt-4 border-t border-gray-200 flex justify-between">
-                                <a href="{{ url_for('edit_event', event_id=event._id) }}" 
-                                   class="text-blue-600 hover:text-blue-800 font-medium flex items-center">
-                                    <i class="fas fa-edit mr-2"></i>
-                                    Edit
+                            <div class="mt-4 pt-4 border-t flex justify-between">
+                                <a href="{{ url_for('edit_event', event_id=event._id) }}" class="text-blue-600 hover:text-blue-800">
+                                    <i class="fas fa-edit mr-1"></i>Edit
                                 </a>
                                 <a href="{{ url_for('delete_event', event_id=event._id) }}" 
-                                   onclick="return confirm('Are you sure you want to delete \"{{ event.event_name }}\"? This action cannot be undone.')" 
-                                   class="text-red-600 hover:text-red-800 font-medium flex items-center">
-                                    <i class="fas fa-trash mr-2"></i>
-                                    Delete
+                                   onclick="return confirm('Delete this event?')" 
+                                   class="text-red-600 hover:text-red-800">
+                                    <i class="fas fa-trash mr-1"></i>Delete
                                 </a>
                             </div>
                         </div>
@@ -331,9 +431,8 @@
                     <div class="text-center py-12">
                         <i class="fas fa-calendar-times text-4xl text-gray-400 mb-4"></i>
                         <h3 class="text-xl font-semibold text-gray-600 mb-2">No Events Found</h3>
-                        <p class="text-gray-500 mb-6">Get started by adding your first event using the form above.</p>
-                        <button onclick="toggleEventForm()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition duration-200">
-                            <i class="fas fa-plus mr-2"></i> Add First Event
+                        <button onclick="toggleEventForm()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg mt-4">
+                            <i class="fas fa-plus mr-2"></i> Add Event
                         </button>
                     </div>
                     {% endif %}
@@ -343,185 +442,325 @@
     </div>
 
     <script>
-        // Department and School Mapping
+        // Global variables
+        let selectedExcelFile = null;
+        let validationData = null;
+
         const departmentMapping = {
-            'School of Computer Science and Engineering': [
-                'Department of Computer Science and Engineering',
-                'Department of Information Science and Engineering'
-            ],
-            'School of Aerospace Engineering': [
-                'Department of Aerospace Engineering'
-            ],
-            'School of Engineering & Technology': [
-                'Department of Civil Engineering',
-                'Department of Mechanical Engineering',
-                'Department of Electrical and Electronics Engineering',
-                'Department of Electronics and Communication Engineering',
-                'Department of Food Technology'
-            ],
-            'School of Humanities and Social Sciences': [
-                'Department of Humanities & Social Sciences',
-                'Department of Economics',
-                'Department of Performing Arts and Cultural Studies',
-                'Department of Languages',
-                'Department of Journalism and Mass Communication'
-            ],
-            'School of Law': [
-                'Department of Law'
-            ],
-            'School of Sciences': [
-                'Department of Chemistry and Biochemistry',
-                'Department of Biotechnology and Genetics',
-                'Department of Microbiology and Botany',
-                'Department of Data Analytics and Mathematical Science',
-                'Department of Forensic Science',
-                'Department of Physics and Electronics',
-                'Department of Psychology and Allied Sciences'
-            ],
-            'School of Allied Healthcare and Sciences': [
-                'Department of Allied Healthcare and Sciences'
-            ],
-            'School of Sports Science & Research': [
-                'Department of Allied Healthcare and Sciences'
-            ],
-            'School of Commerce': [
-                'Department of Commerce'
-            ],
-            'CMS Business School': [
-                'Department of Management Studies'
-            ],
-            'School of Aviation and Aerospace Management': [
-                'Department of Management Studies'
-            ],
-            'School of Design, Media and Creative Arts': [
-                'Department of Art and Design',
-                'Department of Design'
-            ],
-            'School of Computer Science & Information Technology': [
-                'Department of Computer Science & IT',
-                'Department of Animation and Virtual Reality'
-            ]
+            'School of Computer Science and Engineering': ['Department of Computer Science and Engineering', 'Department of Information Science and Engineering'],
+            'School of Engineering & Technology': ['Department of Civil Engineering', 'Department of Mechanical Engineering', 'Department of Electrical and Electronics Engineering'],
+            'School of Sciences': ['Department of Chemistry and Biochemistry', 'Department of Biotechnology and Genetics', 'Department of Physics and Electronics'],
+            'CMS Business School': ['Department of Management Studies'],
+            'School of Commerce': ['Department of Commerce'],
+            'School of Law': ['Department of Law']
         };
 
-        const eventTypes = [
-            'lecture', 'seminar', 'workshop', 'conference', 'symposium', 'webinar',
-            'training', 'orientation', 'fdp', 'guest lecture', 'event', 'nss',
-            'placements', 'sdp', 'other events',
-            'exam', 'midterm', 'final', 'quiz', 'viva', 'assessment',
-            'competition', 'hackathon', 'cultural', 'sports', 'fest',
-            'field trip', 'industrial visit', 'placement', 'career fair', 'alumni meet'
-        ];
+        const eventTypes = ['lecture', 'seminar', 'workshop', 'conference', 'webinar', 'training', 'competition', 'hackathon', 'cultural', 'sports'];
 
-        // Initialize school and department dropdowns
-        const schoolSelect = document.getElementById('schoolSelect');
-        Object.keys(departmentMapping).forEach(school => {
-            const opt = document.createElement('option');
-            opt.value = school;
-            opt.textContent = school;
-            schoolSelect.appendChild(opt);
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSchoolDropdown();
+            initializeEventTypeTags();
+            initializeFileHandlers();
+            initializeExcelUpload();
+            document.getElementById('eventForm').classList.add('hidden');
         });
 
-        const departmentSelect = document.getElementById('departmentSelect');
-        schoolSelect.addEventListener('change', function() {
-            departmentSelect.innerHTML = '<option value="">-- Select Department --</option>';
-            if (this.value) {
-                departmentMapping[this.value].forEach(dept => {
-                    const opt = document.createElement('option');
-                    opt.value = dept;
-                    opt.textContent = dept;
-                    departmentSelect.appendChild(opt);
-                });
-            }
-        });
-
-        // Initialize event type tags
-        const eventTypeTags = document.getElementById('eventTypeTags');
-        const eventActionInput = document.getElementById('eventActionInput');
-        eventTypes.forEach(type => {
-            const tag = document.createElement('div');
-            tag.className = 'tag';
-            tag.textContent = type;
-            tag.addEventListener('click', () => {
-                document.querySelectorAll('.tag').forEach(t => t.classList.remove('selected'));
-                tag.classList.add('selected');
-                eventActionInput.value = type;
+        function initializeSchoolDropdown() {
+            const schoolSelect = document.getElementById('schoolSelect');
+            const departmentSelect = document.getElementById('departmentSelect');
+            
+            Object.keys(departmentMapping).forEach(school => {
+                const opt = document.createElement('option');
+                opt.value = school;
+                opt.textContent = school;
+                schoolSelect.appendChild(opt);
             });
-            eventTypeTags.appendChild(tag);
-        });
 
-        // Image preview
-        document.getElementById('imageUpload').addEventListener('change', e => {
-            const file = e.target.files[0];
-            const preview = document.getElementById('imagePreview');
-            preview.innerHTML = '';
-            
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(evt) {
-                    const img = document.createElement('img');
-                    img.src = evt.target.result;
-                    img.alt = 'Preview';
-                    img.className = 'rounded-lg border border-gray-300 max-h-40';
-                    preview.appendChild(img);
+            schoolSelect.addEventListener('change', function() {
+                departmentSelect.innerHTML = '<option value="">-- Select Department --</option>';
+                if (this.value) {
+                    departmentMapping[this.value].forEach(dept => {
+                        const opt = document.createElement('option');
+                        opt.value = dept;
+                        opt.textContent = dept;
+                        departmentSelect.appendChild(opt);
+                    });
                 }
-                reader.readAsDataURL(file);
-            }
-        });
-
-        // PDF preview
-        document.getElementById('pdfUpload').addEventListener('change', e => {
-            const file = e.target.files[0];
-            const preview = document.getElementById('pdfPreview');
-            preview.innerHTML = '';
-            
-            if (file) {
-                const fileName = document.createElement('div');
-                fileName.className = 'text-sm text-gray-600 bg-gray-100 p-2 rounded border';
-                fileName.innerHTML = `<i class="fas fa-file-pdf text-red-500 mr-2"></i>${file.name}`;
-                preview.appendChild(fileName);
-            }
-        });
-
-        // Toggle event form visibility
-        function toggleEventForm() {
-            const form = document.getElementById('eventForm');
-            form.classList.toggle('hidden');
+            });
         }
 
-        // Search and filter functionality
-        document.getElementById('searchEvents').addEventListener('input', filterEvents);
-        document.getElementById('filterType').addEventListener('change', filterEvents);
+        function initializeEventTypeTags() {
+            const eventTypeTags = document.getElementById('eventTypeTags');
+            const eventActionInput = document.getElementById('eventActionInput');
+            
+            eventTypes.forEach(type => {
+                const tag = document.createElement('div');
+                tag.className = 'tag';
+                tag.textContent = type;
+                tag.onclick = () => {
+                    document.querySelectorAll('.tag').forEach(t => t.classList.remove('selected'));
+                    tag.classList.add('selected');
+                    eventActionInput.value = type;
+                };
+                eventTypeTags.appendChild(tag);
+            });
+        }
+
+        function initializeFileHandlers() {
+            document.getElementById('imageUpload')?.addEventListener('change', e => {
+                const file = e.target.files[0];
+                const preview = document.getElementById('imagePreview');
+                preview.innerHTML = '';
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = evt => {
+                        preview.innerHTML = `<img src="${evt.target.result}" class="rounded-lg border max-h-40">`;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            document.getElementById('pdfUpload')?.addEventListener('change', e => {
+                const file = e.target.files[0];
+                const preview = document.getElementById('pdfPreview');
+                preview.innerHTML = file ? `<div class="text-sm bg-gray-100 p-2 rounded"><i class="fas fa-file-pdf text-red-500 mr-2"></i>${file.name}</div>` : '';
+            });
+        }
+
+        function initializeExcelUpload() {
+            const excelInput = document.getElementById('excelInput');
+            excelInput?.addEventListener('change', handleExcelSelect);
+        }
+
+        function handleExcelSelect(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const validTypes = ['.xlsx', '.xls', '.csv'];
+            if (!validTypes.some(type => file.name.toLowerCase().endsWith(type))) {
+                alert('❌ Invalid file type');
+                e.target.value = '';
+                return;
+            }
+
+            if (file.size > 50 * 1024 * 1024) {
+                alert('❌ File too large (max 50MB)');
+                e.target.value = '';
+                return;
+            }
+
+            selectedExcelFile = file;
+            previewExcelFile(file);
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            document.getElementById('uploadArea')?.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            document.getElementById('uploadArea')?.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const uploadArea = document.getElementById('uploadArea');
+            uploadArea?.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const excelInput = document.getElementById('excelInput');
+                excelInput.files = files;
+                handleExcelSelect({ target: excelInput });
+            }
+        }
+
+        function previewExcelFile(file) {
+            const formData = new FormData();
+            formData.append('excel_file', file);
+
+            document.getElementById('progressContainer')?.classList.remove('hidden');
+            document.getElementById('validationResults')?.classList.add('hidden');
+
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += Math.random() * 30;
+                if (progress > 90) progress = 90;
+                updateProgress(progress);
+            }, 100);
+
+            fetch('/validate_excel_preview', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Validation failed');
+                return response.json();
+            })
+            .then(data => {
+                clearInterval(progressInterval);
+                updateProgress(100);
+                validationData = data;
+                setTimeout(() => {
+                    document.getElementById('progressContainer')?.classList.add('hidden');
+                    displayValidationResults(data);
+                }, 500);
+            })
+            .catch(error => {
+                clearInterval(progressInterval);
+                alert('❌ Error: ' + error.message);
+                document.getElementById('progressContainer')?.classList.add('hidden');
+                resetUpload();
+            });
+        }
+
+        function updateProgress(percent) {
+            const bar = document.getElementById('progressBar');
+            const text = document.getElementById('progressPercent');
+            if (bar) bar.style.width = percent + '%';
+            if (text) text.textContent = Math.round(percent) + '%';
+        }
+
+        function displayValidationResults(data) {
+            document.getElementById('validationResults')?.classList.remove('hidden');
+
+            document.getElementById('totalRows').textContent = data.total_rows || 0;
+            document.getElementById('validCount').textContent = data.valid_records || 0;
+            document.getElementById('errorCount').textContent = data.error_count || 0;
+
+            if (data.valid_records > 0 && data.preview) {
+                document.getElementById('previewSection')?.classList.remove('hidden');
+                const previewTable = document.getElementById('previewTable');
+                if (previewTable) {
+                    previewTable.innerHTML = data.preview.map(record => `
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="border border-gray-300 px-4 py-2">${record.event_name || 'N/A'}</td>
+                            <td class="border border-gray-300 px-4 py-2">${record.event_date || 'N/A'}</td>
+                            <td class="border border-gray-300 px-4 py-2">${record.school || 'N/A'}</td>
+                            <td class="border border-gray-300 px-4 py-2">${record.department || 'N/A'}</td>
+                        </tr>
+                    `).join('');
+                }
+                document.getElementById('submitBtn').disabled = false;
+            } else {
+                document.getElementById('submitBtn').disabled = true;
+            }
+
+            if (data.error_count > 0 && data.errors) {
+                document.getElementById('errorsSection')?.classList.remove('hidden');
+                const errorList = document.getElementById('errorList');
+                if (errorList) {
+                    errorList.innerHTML = data.errors.map(error => `<li>• ${error}</li>`).join('');
+                }
+            }
+        }
+
+        function handleFormSubmit(event) {
+            if (event) event.preventDefault();
+            
+            if (!selectedExcelFile) {
+                alert('❌ No file selected');
+                return false;
+            }
+
+            if (!validationData || validationData.valid_records === 0) {
+                alert('❌ No valid records to upload');
+                return false;
+            }
+
+            const formData = new FormData();
+            formData.append('excel_file', selectedExcelFile);
+            
+            const submitBtn = document.getElementById('submitBtn');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Uploading...';
+            }
+
+            fetch('/upload_events_excel', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = '/admin/events?upload=success';
+                } else {
+                    throw new Error('Upload failed');
+                }
+            })
+            .catch(error => {
+                alert('❌ Upload error: ' + error.message);
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Upload & Insert Events';
+                }
+            });
+            
+            return false;
+        }
+
+        function resetUpload() {
+            selectedExcelFile = null;
+            validationData = null;
+            
+            const excelInput = document.getElementById('excelInput');
+            if (excelInput) excelInput.value = '';
+            
+            document.getElementById('progressContainer')?.classList.add('hidden');
+            document.getElementById('validationResults')?.classList.add('hidden');
+            
+            const progressBar = document.getElementById('progressBar');
+            if (progressBar) progressBar.style.width = '0%';
+            
+            const progressPercent = document.getElementById('progressPercent');
+            if (progressPercent) progressPercent.textContent = '0%';
+            
+            const submitBtn = document.getElementById('submitBtn');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Upload & Insert Events';
+            }
+        }
+
+        function toggleEventForm() {
+            document.getElementById('eventForm')?.classList.toggle('hidden');
+        }
+
+        function toggleExcelUpload() {
+            const section = document.getElementById('excelUploadSection');
+            if (section) {
+                section.classList.toggle('hidden');
+                if (section.classList.contains('hidden')) {
+                    resetUpload();
+                }
+            }
+        }
+
+        // Event search and filter
+        const searchInput = document.getElementById('searchEvents');
+        const filterSelect = document.getElementById('filterType');
+
+        if (searchInput) searchInput.addEventListener('input', filterEvents);
+        if (filterSelect) filterSelect.addEventListener('change', filterEvents);
 
         function filterEvents() {
-            const searchTerm = document.getElementById('searchEvents').value.toLowerCase();
-            const filterType = document.getElementById('filterType').value;
+            const searchTerm = (searchInput?.value || '').toLowerCase();
+            const filterType = filterSelect?.value || '';
             const eventCards = document.querySelectorAll('.event-card');
 
             eventCards.forEach(card => {
-                const eventName = card.querySelector('h3').textContent.toLowerCase();
-                const eventType = card.querySelector('span.bg-blue-100').textContent;
-                const eventDesc = card.querySelector('p').textContent.toLowerCase();
+                const eventName = card.querySelector('h3')?.textContent.toLowerCase() || '';
+                const eventTypeSpan = card.querySelector('span.bg-blue-100');
+                const eventType = eventTypeSpan?.textContent || '';
+                const eventDesc = card.querySelector('p')?.textContent.toLowerCase() || '';
                 
                 const matchesSearch = eventName.includes(searchTerm) || eventDesc.includes(searchTerm);
                 const matchesType = !filterType || eventType === filterType;
                 
-                if (matchesSearch && matchesType) {
-                    card.style.display = 'block';
-                } else {
-                    card.style.display = 'none';
-                }
+                card.style.display = (matchesSearch && matchesType) ? 'block' : 'none';
             });
         }
-
-        // Hide form by default
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('eventForm').classList.add('hidden');
-            
-            // Set minimum date to today for date inputs
-            const today = new Date().toISOString().split('T')[0];
-            document.querySelector('input[name="event_date"]').min = today;
-            document.querySelector('input[name="end_date"]').min = today;
-        });
     </script>
 </body>
 </html>

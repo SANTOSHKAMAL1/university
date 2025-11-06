@@ -1,708 +1,708 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Events Calendar | Office of Academics at Jain (Deemed-to-be University)</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Events Calendar | Office of Academics at Jain (Deemed-to-be University)</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- Google Fonts & Font Awesome -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <!-- Google Fonts & Font Awesome -->
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <style>
-        :root {
-            --jain-blue: #04043a;
-            --jain-gold: #FFD700;
-            --jain-light: #F5F5F5;
-            --jain-dark: #222;
-            --shadow-sm: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
-            --shadow-md: 0 4px 6px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.08);
-            --shadow-lg: 0 10px 25px rgba(0,0,0,0.1), 0 5px 10px rgba(0,0,0,0.05);
-        }
-
-        * {
-            box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            background: var(--jain-light);
-            color: var(--jain-dark);
-            line-height: 1.6;
-        }
-
-        /* Header Styles */
-        header {
-            background-color: white;
-            color: var(--jain-blue);
-            padding: 15px 30px;
-            box-shadow: var(--shadow-sm);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .header-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .logo-section {
-            display: flex;
-            align-items: center;
-        }
-
-        .logo-section img {
-            height: 60px;
-            margin-right: 15px;
-        }
-
-        .logo-text h3 {
-            font-size: 22px;
-            margin: 0;
-            line-height: 1.2;
-            color: var(--jain-blue);
-            font-weight: 700;
-        }
-
-        nav {
-            display: flex;
-            gap: 10px;
-        }
-
-        nav a {
-            color: var(--jain-blue);
-            text-decoration: none;
-            padding: 10px 15px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            border-radius: 4px;
-            font-size: 15px;
-        }
-
-        nav a:hover {
-            background-color: rgba(4, 4, 58, 0.1);
-            color: var(--jain-gold);
-        }
-
-        .login-btn {
-            background-color: var(--jain-blue);
-            color: white !important;
-            padding: 8px 20px !important;
-            border-radius: 30px;
-        }
-
-        .login-btn:hover {
-            background-color: var(--jain-gold) !important;
-            color: var(--jain-blue) !important;
-        }
-
-        /* Main Content Layout */
-        .container {
-            max-width: 1400px;
-            margin: 30px auto;
-            padding: 0 20px;
-            display: grid;
-            grid-template-columns: 250px 1fr 300px;
-            gap: 25px;
-        }
-
-        /* Sidebar Filters */
-        .sidebar {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: var(--shadow-sm);
-            height: fit-content;
-        }
-
-        .sidebar h2 {
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 15px;
-            color: var(--jain-blue);
-            padding-bottom: 10px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .sidebar h3 {
-            font-size: 15px;
-            font-weight: 600;
-            margin: 15px 0 10px;
-            color: var(--jain-blue);
-        }
-
-        .filter-btn {
-            border-radius: 20px;
-            padding: 6px 12px;
-            background: white;
-            border: 1px solid #ddd;
-            transition: all 0.2s ease;
-            font-size: 13px;
-            margin-bottom: 8px;
-            cursor: pointer;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 100%;
-            display: inline-block;
-        }
-
-        .filter-btn:hover {
-            border-color: var(--jain-blue);
-        }
-
-        .filter-btn.active {
-            background: var(--jain-blue);
-            color: white;
-            border-color: var(--jain-blue);
-        }
-
-        /* Calendar Section */
-        .calendar-container {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: var(--shadow-sm);
-        }
-
-        #calendar {
-            height: 650px;
-        }
-
-        /* Events Sidebar */
-        .events-sidebar {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: var(--shadow-sm);
-            height: fit-content;
-        }
-
-        .events-sidebar h2 {
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 15px;
-            color: var(--jain-blue);
-            padding-bottom: 10px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .event-card {
-            display: flex;
-            margin-bottom: 15px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .event-card:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-            padding-bottom: 0;
-        }
-
-        .event-image {
-            width: 80px;
-            height: 80px;
-            border-radius: 8px;
-            object-fit: cover;
-            margin-right: 12px;
-            flex-shrink: 0;
-        }
-
-        .event-details {
-            flex-grow: 1;
-        }
-
-        .event-title {
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 5px;
-            color: var(--jain-blue);
-        }
-
-        .event-date {
-            font-size: 12px;
-            color: #666;
-            margin-bottom: 5px;
-            display: flex;
-            align-items: center;
-        }
-
-        .event-date i {
-            margin-right: 5px;
-            color: var(--jain-gold);
-        }
-
-        .event-venue {
-            font-size: 12px;
-            color: #666;
-            display: flex;
-            align-items: center;
-        }
-
-        .event-venue i {
-            margin-right: 5px;
-            color: var(--jain-gold);
-        }
-
-        .today-label {
-            background: var(--jain-gold);
-            color: var(--jain-blue);
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 600;
-            margin-left: 8px;
-        }
-
-        /* Calendar Customization */
-        .fc .fc-toolbar-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--jain-blue);
-        }
-
-        .fc .fc-button {
-            background-color: var(--jain-blue);
-            border-color: var(--jain-blue);
-            color: white;
-            font-weight: 500;
-            padding: 5px 12px;
-            font-size: 13px;
-        }
-
-        .fc .fc-button:hover {
-            background-color: var(--jain-gold);
-            border-color: var(--jain-gold);
-            color: var(--jain-blue);
-        }
-
-        .fc .fc-button-primary:not(:disabled).fc-button-active {
-            background-color: var(--jain-gold);
-            border-color: var(--jain-gold);
-            color: var(--jain-blue);
-        }
-
-        .fc .fc-daygrid-day-number {
-            color: var(--jain-blue);
-            font-weight: 500;
-        }
-
-        .fc .fc-daygrid-day.fc-day-today {
-            background-color: rgba(255, 215, 0, 0.1);
-        }
-
-        .fc .fc-event {
-            background-color: var(--jain-blue);
-            border-color: var(--jain-blue);
-            padding: 3px 5px;
-            font-size: 12px;
-            border-radius: 4px;
-        }
-
-        .fc .fc-event:hover {
-            background-color: var(--jain-gold);
-            border-color: var(--jain-gold);
-            color: var(--jain-blue);
-        }
-
-        /* Responsive Design */
-        @media (max-width: 1200px) {
-            .container {
-                grid-template-columns: 250px 1fr;
+        <style>
+            :root {
+                --jain-blue: #04043a;
+                --jain-gold: #FFD700;
+                --jain-light: #F5F5F5;
+                --jain-dark: #222;
+                --shadow-sm: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+                --shadow-md: 0 4px 6px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.08);
+                --shadow-lg: 0 10px 25px rgba(0,0,0,0.1), 0 5px 10px rgba(0,0,0,0.05);
             }
-            
-            .events-sidebar {
-                grid-column: span 2;
-                display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-                gap: 20px;
-            }
-        }
 
-        @media (max-width: 768px) {
-            .container {
-                grid-template-columns: 1fr;
-                padding: 0 15px;
+            * {
+                box-sizing: border-box;
+                font-family: 'Inter', sans-serif;
+                margin: 0;
+                padding: 0;
             }
-            
+
+            body {
+                background: var(--jain-light);
+                color: var(--jain-dark);
+                line-height: 1.6;
+            }
+
+            /* Header Styles */
+            header {
+                background-color: white;
+                color: var(--jain-blue);
+                padding: 15px 30px;
+                box-shadow: var(--shadow-sm);
+                position: sticky;
+                top: 0;
+                z-index: 100;
+            }
+
             .header-container {
-                flex-direction: column;
-                align-items: flex-start;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                flex-wrap: wrap;
+                max-width: 1400px;
+                margin: 0 auto;
+            }
+
+            .logo-section {
+                display: flex;
+                align-items: center;
+            }
+
+            .logo-section img {
+                height: 60px;
+                margin-right: 15px;
+            }
+
+            .logo-text h3 {
+                font-size: 22px;
+                margin: 0;
+                line-height: 1.2;
+                color: var(--jain-blue);
+                font-weight: 700;
             }
 
             nav {
-                display: none;
-                flex-direction: column;
-                width: 100%;
-                background-color: white;
-                padding: 10px 0;
-                margin-top: 15px;
-            }
-
-            nav.show {
                 display: flex;
+                gap: 10px;
             }
 
-            .sidebar, .events-sidebar {
-                grid-column: span 1;
-            }
-            
-            #calendar {
-                height: 500px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .container {
-                grid-template-columns: 1fr;
-            }
-            
-            .logo-section img {
-                height: 50px;
-            }
-            
-            .logo-text h3 {
-                font-size: 18px;
-            }
-            
             nav a {
-                padding: 8px 12px;
+                color: var(--jain-blue);
+                text-decoration: none;
+                padding: 10px 15px;
+                font-weight: 500;
+                transition: all 0.3s ease;
+                border-radius: 4px;
+                font-size: 15px;
+            }
+
+            nav a:hover {
+                background-color: rgba(4, 4, 58, 0.1);
+                color: var(--jain-gold);
+            }
+
+            .login-btn {
+                background-color: var(--jain-blue);
+                color: white !important;
+                padding: 8px 20px !important;
+                border-radius: 30px;
+            }
+
+            .login-btn:hover {
+                background-color: var(--jain-gold) !important;
+                color: var(--jain-blue) !important;
+            }
+
+            /* Main Content Layout */
+            .container {
+                max-width: 1400px;
+                margin: 30px auto;
+                padding: 0 20px;
+                display: grid;
+                grid-template-columns: 250px 1fr 300px;
+                gap: 25px;
+            }
+
+            /* Sidebar Filters */
+            .sidebar {
+                background: white;
+                border-radius: 10px;
+                padding: 20px;
+                box-shadow: var(--shadow-sm);
+                height: fit-content;
+            }
+
+            .sidebar h2 {
+                font-size: 18px;
+                font-weight: 700;
+                margin-bottom: 15px;
+                color: var(--jain-blue);
+                padding-bottom: 10px;
+                border-bottom: 1px solid #eee;
+            }
+
+            .sidebar h3 {
+                font-size: 15px;
+                font-weight: 600;
+                margin: 15px 0 10px;
+                color: var(--jain-blue);
+            }
+
+            .filter-btn {
+                border-radius: 20px;
+                padding: 6px 12px;
+                background: white;
+                border: 1px solid #ddd;
+                transition: all 0.2s ease;
+                font-size: 13px;
+                margin-bottom: 8px;
+                cursor: pointer;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 100%;
+                display: inline-block;
+            }
+
+            .filter-btn:hover {
+                border-color: var(--jain-blue);
+            }
+
+            .filter-btn.active {
+                background: var(--jain-blue);
+                color: white;
+                border-color: var(--jain-blue);
+            }
+
+            /* Calendar Section */
+            .calendar-container {
+                background: white;
+                border-radius: 10px;
+                padding: 20px;
+                box-shadow: var(--shadow-sm);
+            }
+
+            #calendar {
+                height: 650px;
+            }
+
+            /* Events Sidebar */
+            .events-sidebar {
+                background: white;
+                border-radius: 10px;
+                padding: 20px;
+                box-shadow: var(--shadow-sm);
+                height: fit-content;
+            }
+
+            .events-sidebar h2 {
+                font-size: 18px;
+                font-weight: 700;
+                margin-bottom: 15px;
+                color: var(--jain-blue);
+                padding-bottom: 10px;
+                border-bottom: 1px solid #eee;
+            }
+
+            .event-card {
+                display: flex;
+                margin-bottom: 15px;
+                padding-bottom: 15px;
+                border-bottom: 1px solid #f0f0f0;
+            }
+
+            .event-card:last-child {
+                border-bottom: none;
+                margin-bottom: 0;
+                padding-bottom: 0;
+            }
+
+            .event-image {
+                width: 80px;
+                height: 80px;
+                border-radius: 8px;
+                object-fit: cover;
+                margin-right: 12px;
+                flex-shrink: 0;
+            }
+
+            .event-details {
+                flex-grow: 1;
+            }
+
+            .event-title {
                 font-size: 14px;
+                font-weight: 600;
+                margin-bottom: 5px;
+                color: var(--jain-blue);
             }
-        }
-    </style>
-</head>
-<body class="min-h-screen">
 
-    <!-- Header -->
-    <header>
-        <div class="header-container">
-            <div class="logo-section">
-                <img src="{{ url_for('static', filename='images/jainu.png') }}"
-                     onerror="this.src='https://via.placeholder.com/60?text=JU+Logo';"
-                     alt="Jain University Logo">
-                <div class="logo-text">
-                    <h3>Office of Academics</h3>
+            .event-date {
+                font-size: 12px;
+                color: #666;
+                margin-bottom: 5px;
+                display: flex;
+                align-items: center;
+            }
+
+            .event-date i {
+                margin-right: 5px;
+                color: var(--jain-gold);
+            }
+
+            .event-venue {
+                font-size: 12px;
+                color: #666;
+                display: flex;
+                align-items: center;
+            }
+
+            .event-venue i {
+                margin-right: 5px;
+                color: var(--jain-gold);
+            }
+
+            .today-label {
+                background: var(--jain-gold);
+                color: var(--jain-blue);
+                padding: 3px 8px;
+                border-radius: 4px;
+                font-size: 11px;
+                font-weight: 600;
+                margin-left: 8px;
+            }
+
+            /* Calendar Customization */
+            .fc .fc-toolbar-title {
+                font-size: 18px;
+                font-weight: 700;
+                color: var(--jain-blue);
+            }
+
+            .fc .fc-button {
+                background-color: var(--jain-blue);
+                border-color: var(--jain-blue);
+                color: white;
+                font-weight: 500;
+                padding: 5px 12px;
+                font-size: 13px;
+            }
+
+            .fc .fc-button:hover {
+                background-color: var(--jain-gold);
+                border-color: var(--jain-gold);
+                color: var(--jain-blue);
+            }
+
+            .fc .fc-button-primary:not(:disabled).fc-button-active {
+                background-color: var(--jain-gold);
+                border-color: var(--jain-gold);
+                color: var(--jain-blue);
+            }
+
+            .fc .fc-daygrid-day-number {
+                color: var(--jain-blue);
+                font-weight: 500;
+            }
+
+            .fc .fc-daygrid-day.fc-day-today {
+                background-color: rgba(255, 215, 0, 0.1);
+            }
+
+            .fc .fc-event {
+                background-color: var(--jain-blue);
+                border-color: var(--jain-blue);
+                padding: 3px 5px;
+                font-size: 12px;
+                border-radius: 4px;
+            }
+
+            .fc .fc-event:hover {
+                background-color: var(--jain-gold);
+                border-color: var(--jain-gold);
+                color: var(--jain-blue);
+            }
+
+            /* Responsive Design */
+            @media (max-width: 1200px) {
+                .container {
+                    grid-template-columns: 250px 1fr;
+                }
+                
+                .events-sidebar {
+                    grid-column: span 2;
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                    gap: 20px;
+                }
+            }
+
+            @media (max-width: 768px) {
+                .container {
+                    grid-template-columns: 1fr;
+                    padding: 0 15px;
+                }
+                
+                .header-container {
+                    flex-direction: column;
+                    align-items: flex-start;
+                }
+
+                nav {
+                    display: none;
+                    flex-direction: column;
+                    width: 100%;
+                    background-color: white;
+                    padding: 10px 0;
+                    margin-top: 15px;
+                }
+
+                nav.show {
+                    display: flex;
+                }
+
+                .sidebar, .events-sidebar {
+                    grid-column: span 1;
+                }
+                
+                #calendar {
+                    height: 500px;
+                }
+            }
+
+            @media (max-width: 480px) {
+                .container {
+                    grid-template-columns: 1fr;
+                }
+                
+                .logo-section img {
+                    height: 50px;
+                }
+                
+                .logo-text h3 {
+                    font-size: 18px;
+                }
+                
+                nav a {
+                    padding: 8px 12px;
+                    font-size: 14px;
+                }
+            }
+        </style>
+    </head>
+    <body class="min-h-screen">
+
+        <!-- Header -->
+        <header>
+            <div class="header-container">
+                <div class="logo-section">
+                    <img src="{{ url_for('static', filename='images/jainu.png') }}"
+                        onerror="this.src='https://via.placeholder.com/60?text=JU+Logo';"
+                        alt="Jain University Logo">
+                    <div class="logo-text">
+                        <h3>Office of Academics</h3>
+                    </div>
                 </div>
+                <nav class="nav-links">
+                    <a href="#">Home</a>
+                    <a href="{{ url_for('usernewsletters') }}">Newsletter</a>
+                    <a href="{{ url_for('ugc') }}">UGC Requirement</a>
+                    <a href="{{ url_for('monthlyengagement') }}">Monthly Engagement</a>
+                    <a href="{{ url_for('jainevents') }}">Events</a>
+                    <a href="{{ url_for('login') }}" class="login-btn"><i class="fas fa-sign-in-alt"></i> Login</a>
+                </nav>
+                <button class="menu-toggle md:hidden" onclick="toggleMenu()">
+                    <i class="fas fa-bars"></i>
+                </button>
             </div>
-            <nav class="nav-links">
-                <a href="#">Home</a>
-                <a href="{{ url_for('usernewsletters') }}">Newsletter</a>
-                <a href="{{ url_for('ugc') }}">UGC Requirement</a>
-                <a href="{{ url_for('monthlyengagement') }}">Monthly Engagement</a>
-                <a href="{{ url_for('jainevents') }}">Events</a>
-                <a href="{{ url_for('login') }}" class="login-btn"><i class="fas fa-sign-in-alt"></i> Login</a>
-            </nav>
-            <button class="menu-toggle md:hidden" onclick="toggleMenu()">
-                <i class="fas fa-bars"></i>
-            </button>
+        </header>
+
+        <!-- Main Container -->
+        <div class="container">
+            <!-- Sidebar Filters -->
+            <aside class="sidebar">
+                <h2>Filters</h2>
+                <h3>By School</h3>
+                <div id="school-filters" class="flex flex-col"></div>
+
+                <h3>By Department</h3>
+                <div id="department-filters" class="flex flex-col"></div>
+                
+                <button id="reset-filters" class="filter-btn mt-4 w-full text-center" style="background-color: #f0f0f0;">
+                    Reset All Filters
+                </button>
+            </aside>
+
+            <!-- Calendar -->
+            <main class="calendar-container">
+                <div id="calendar"></div>
+            </main>
+            
+            <!-- Events Sidebar -->
+            <aside class="events-sidebar">
+                <h2>Today's Events</h2>
+                <div id="todays-events">
+                    <!-- Will be populated by JavaScript -->
+                    <p class="text-gray-500 text-sm">Loading today's events...</p>
+                </div>
+                
+                <h2 style="margin-top: 25px;">Upcoming Events</h2>
+                <div id="upcoming-events">
+                    <!-- Will be populated by JavaScript -->
+                    <p class="text-gray-500 text-sm">Loading upcoming events...</p>
+                </div>
+            </aside>
         </div>
-    </header>
 
-    <!-- Main Container -->
-    <div class="container">
-        <!-- Sidebar Filters -->
-        <aside class="sidebar">
-            <h2>Filters</h2>
-            <h3>By School</h3>
-            <div id="school-filters" class="flex flex-col"></div>
+        <!-- FullCalendar -->
+        <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.9/index.global.min.js"></script>
 
-            <h3>By Department</h3>
-            <div id="department-filters" class="flex flex-col"></div>
-            
-            <button id="reset-filters" class="filter-btn mt-4 w-full text-center" style="background-color: #f0f0f0;">
-                Reset All Filters
-            </button>
-        </aside>
+        <script>
+            // School & Department Data
+            const schoolData = {
+                "School of Computer Science and Engineering": [
+                    "Department of Computer Science and Engineering",
+                    "Department of Information Science and Engineering"
+                ],
+                "School of Aerospace Engineering": [
+                    "Department of Aerospace Engineering"
+                ],
+                "School of Engineering & Technology": [
+                    "Department of Civil Engineering",
+                    "Department of Mechanical Engineering",
+                    "Department of Electrical and Electronics Engineering",
+                    "Department of Electronics and Communication Engineering",
+                    "Department of Food Technology"
+                ],
+                "School of Humanities and Social Sciences": [
+                    "Department of Humanities & Social Sciences",
+                    "Department of Economics",
+                    "Department of Performing Arts and Cultural Studies",
+                    "Department of Languages",
+                    "Department of Journalism and Mass Communication"
+                ],
+                "School of Law": [
+                    "Department of Law"
+                ],
+                "School of Sciences": [
+                    "Department of Chemistry and Biochemistry",
+                    "Department of Biotechnology and Genetics",
+                    "Department of Microbiology and Botany",
+                    "Department of Data Analytics and Mathematical Science",
+                    "Department of Forensic Science",
+                    "Department of Physics and Electronics",
+                    "Department of Psychology and Allied Sciences"
+                ],
+                "School of Allied Healthcare and Sciences": [
+                    "Department of Allied Healthcare and Sciences"
+                ],
+                "School of Sports Science & Research": [
+                    "Department of Allied Healthcare and Sciences"
+                ],
+                "School of Commerce": [
+                    "Department of Commerce"
+                ],
+                "CMS Business School": [
+                    "Department of Management Studies"
+                ],
+                "School of Aviation and Aerospace Management": [
+                    "Department of Management Studies"
+                ],
+                "School of Design, Media and Creative Arts": [
+                    "Department of Art and Design",
+                    "Department of Design"
+                ],
+                "School of Computer Science & Information Technology": [
+                    "Department of Computer Science & IT",
+                    "Department of Animation and Virtual Reality"
+                ]
+            };
 
-        <!-- Calendar -->
-        <main class="calendar-container">
-            <div id="calendar"></div>
-        </main>
-        
-        <!-- Events Sidebar -->
-        <aside class="events-sidebar">
-            <h2>Today's Events</h2>
-            <div id="todays-events">
-                <!-- Will be populated by JavaScript -->
-                <p class="text-gray-500 text-sm">Loading today's events...</p>
-            </div>
-            
-            <h2 style="margin-top: 25px;">Upcoming Events</h2>
-            <div id="upcoming-events">
-                <!-- Will be populated by JavaScript -->
-                <p class="text-gray-500 text-sm">Loading upcoming events...</p>
-            </div>
-        </aside>
-    </div>
-
-    <!-- FullCalendar -->
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.9/index.global.min.js"></script>
-
-    <script>
-        // School & Department Data
-        const schoolData = {
-            "School of Computer Science and Engineering": [
-                "Department of Computer Science and Engineering",
-                "Department of Information Science and Engineering"
-            ],
-            "School of Aerospace Engineering": [
-                "Department of Aerospace Engineering"
-            ],
-            "School of Engineering & Technology": [
-                "Department of Civil Engineering",
-                "Department of Mechanical Engineering",
-                "Department of Electrical and Electronics Engineering",
-                "Department of Electronics and Communication Engineering",
-                "Department of Food Technology"
-            ],
-            "School of Humanities and Social Sciences": [
-                "Department of Humanities & Social Sciences",
-                "Department of Economics",
-                "Department of Performing Arts and Cultural Studies",
-                "Department of Languages",
-                "Department of Journalism and Mass Communication"
-            ],
-            "School of Law": [
-                "Department of Law"
-            ],
-            "School of Sciences": [
-                "Department of Chemistry and Biochemistry",
-                "Department of Biotechnology and Genetics",
-                "Department of Microbiology and Botany",
-                "Department of Data Analytics and Mathematical Science",
-                "Department of Forensic Science",
-                "Department of Physics and Electronics",
-                "Department of Psychology and Allied Sciences"
-            ],
-            "School of Allied Healthcare and Sciences": [
-                "Department of Allied Healthcare and Sciences"
-            ],
-            "School of Sports Science & Research": [
-                "Department of Allied Healthcare and Sciences"
-            ],
-            "School of Commerce": [
-                "Department of Commerce"
-            ],
-            "CMS Business School": [
-                "Department of Management Studies"
-            ],
-            "School of Aviation and Aerospace Management": [
-                "Department of Management Studies"
-            ],
-            "School of Design, Media and Creative Arts": [
-                "Department of Art and Design",
-                "Department of Design"
-            ],
-            "School of Computer Science & Information Technology": [
-                "Department of Computer Science & IT",
-                "Department of Animation and Virtual Reality"
-            ]
-        };
-
-        // Sample Events Data (in a real app, this would come from your backend)
-        const eventsData = [
-            {% for event in events %}
-            {
-                id: "{{ event.id }}",
-                title: "{{ event.event_name }}",
-                start: "{{ event.event_date }}",
-                end: "{{ event.end_date }}",
-                description: "{{ event.description }}",
-                venue: "{{ event.venue }}",
-                school: "{{ event.school }}",
-                department: "{{ event.department }}",
-                image: "{{ event.image_url or 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80' }}"
-            },
-            {% endfor %}
-            
-        ];
-
-        let filteredEvents = [...eventsData];
-        let currentSchoolFilter = null;
-        let currentDeptFilter = null;
-
-        // Initialize FullCalendar
-        const calendarEl = document.getElementById('calendar');
-        const calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'dayGridMonth',
-            height: 'auto',
-            headerToolbar: {
-                left: 'prev,next today',
-                center: 'title',
-                right: 'dayGridMonth,timeGridWeek,timeGridDay'
-            },
-            events: filteredEvents,
-            eventClick: function(info) {
-                alert(
-                    `Event: ${info.event.title}\n` +
-                    `Date: ${info.event.start.toLocaleDateString()}\n` +
-                    `Time: ${info.event.start.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}\n` +
-                    `Venue: ${info.event.extendedProps.venue}\n` +
-                    `Description: ${info.event.extendedProps.description}`
-                );
-            },
-            eventContent: function(arg) {
-                // Custom event rendering to handle long titles
-                const titleEl = document.createElement('div');
-                titleEl.classList.add('fc-event-title');
-                titleEl.innerText = arg.event.title;
+            // Sample Events Data (in a real app, this would come from your backend)
+            const eventsData = [
+                {% for event in events %}
+                {
+                    id: "{{ event.id }}",
+                    title: "{{ event.event_name }}",
+                    start: "{{ event.event_date }}",
+                    end: "{{ event.end_date }}",
+                    description: "{{ event.description }}",
+                    venue: "{{ event.venue }}",
+                    school: "{{ event.school }}",
+                    department: "{{ event.department }}",
+                    image: "{{ event.image_url or 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80' }}"
+                },
+                {% endfor %}
                 
-                const arrayOfDomNodes = [titleEl];
-                return { domNodes: arrayOfDomNodes };
+            ];
+
+            let filteredEvents = [...eventsData];
+            let currentSchoolFilter = null;
+            let currentDeptFilter = null;
+
+            // Initialize FullCalendar
+            const calendarEl = document.getElementById('calendar');
+            const calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                height: 'auto',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                events: filteredEvents,
+                eventClick: function(info) {
+                    alert(
+                        `Event: ${info.event.title}\n` +
+                        `Date: ${info.event.start.toLocaleDateString()}\n` +
+                        `Time: ${info.event.start.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}\n` +
+                        `Venue: ${info.event.extendedProps.venue}\n` +
+                        `Description: ${info.event.extendedProps.description}`
+                    );
+                },
+                eventContent: function(arg) {
+                    // Custom event rendering to handle long titles
+                    const titleEl = document.createElement('div');
+                    titleEl.classList.add('fc-event-title');
+                    titleEl.innerText = arg.event.title;
+                    
+                    const arrayOfDomNodes = [titleEl];
+                    return { domNodes: arrayOfDomNodes };
+                }
+            });
+            calendar.render();
+
+            // Generate School Filter Buttons
+            const schoolFilters = document.getElementById('school-filters');
+            Object.keys(schoolData).forEach(school => {
+                const btn = document.createElement('button');
+                btn.textContent = school;
+                btn.className = 'filter-btn';
+                btn.onclick = () => {
+                    currentSchoolFilter = currentSchoolFilter === school ? null : school;
+                    currentDeptFilter = null; // Reset department filter when school changes
+                    
+                    // Update UI
+                    document.querySelectorAll('#school-filters .filter-btn').forEach(b => b.classList.remove('active'));
+                    if (currentSchoolFilter) btn.classList.add('active');
+                    
+                    document.querySelectorAll('#department-filters .filter-btn').forEach(b => b.classList.remove('active'));
+                    loadDepartments(currentSchoolFilter);
+                    applyFilters();
+                    updateEventSidebars();
+                };
+                schoolFilters.appendChild(btn);
+            });
+
+            // Load Departments for Selected School
+            function loadDepartments(school) {
+                const deptFilters = document.getElementById('department-filters');
+                deptFilters.innerHTML = '<button class="filter-btn" onclick="resetDepartmentFilter()">All Departments</button>';
+                
+                if (school) {
+                    schoolData[school].forEach(dept => {
+                        const btn = document.createElement('button');
+                        btn.textContent = dept;
+                        btn.className = 'filter-btn';
+                        btn.onclick = () => {
+                            currentDeptFilter = currentDeptFilter === dept ? null : dept;
+                            
+                            // Update UI
+                            document.querySelectorAll('#department-filters .filter-btn').forEach(b => b.classList.remove('active'));
+                            if (currentDeptFilter) btn.classList.add('active');
+                            
+                            applyFilters();
+                            updateEventSidebars();
+                        };
+                        deptFilters.appendChild(btn);
+                    });
+                }
             }
-        });
-        calendar.render();
 
-        // Generate School Filter Buttons
-        const schoolFilters = document.getElementById('school-filters');
-        Object.keys(schoolData).forEach(school => {
-            const btn = document.createElement('button');
-            btn.textContent = school;
-            btn.className = 'filter-btn';
-            btn.onclick = () => {
-                currentSchoolFilter = currentSchoolFilter === school ? null : school;
-                currentDeptFilter = null; // Reset department filter when school changes
-                
-                // Update UI
-                document.querySelectorAll('#school-filters .filter-btn').forEach(b => b.classList.remove('active'));
-                if (currentSchoolFilter) btn.classList.add('active');
-                
+            // Reset department filter
+            function resetDepartmentFilter() {
+                currentDeptFilter = null;
                 document.querySelectorAll('#department-filters .filter-btn').forEach(b => b.classList.remove('active'));
-                loadDepartments(currentSchoolFilter);
                 applyFilters();
                 updateEventSidebars();
-            };
-            schoolFilters.appendChild(btn);
-        });
+            }
 
-        // Load Departments for Selected School
-        function loadDepartments(school) {
-            const deptFilters = document.getElementById('department-filters');
-            deptFilters.innerHTML = '<button class="filter-btn" onclick="resetDepartmentFilter()">All Departments</button>';
-            
-            if (school) {
-                schoolData[school].forEach(dept => {
-                    const btn = document.createElement('button');
-                    btn.textContent = dept;
-                    btn.className = 'filter-btn';
-                    btn.onclick = () => {
-                        currentDeptFilter = currentDeptFilter === dept ? null : dept;
-                        
-                        // Update UI
-                        document.querySelectorAll('#department-filters .filter-btn').forEach(b => b.classList.remove('active'));
-                        if (currentDeptFilter) btn.classList.add('active');
-                        
-                        applyFilters();
-                        updateEventSidebars();
-                    };
-                    deptFilters.appendChild(btn);
+            // Apply Filters
+            function applyFilters() {
+                filteredEvents = eventsData.filter(e => {
+                    const matchSchool = currentSchoolFilter ? e.school === currentSchoolFilter : true;
+                    const matchDept = currentDeptFilter ? e.department === currentDeptFilter : true;
+                    return matchSchool && matchDept;
                 });
+                
+                calendar.removeAllEvents();
+                calendar.addEventSource(filteredEvents);
             }
-        }
 
-        // Reset department filter
-        function resetDepartmentFilter() {
-            currentDeptFilter = null;
-            document.querySelectorAll('#department-filters .filter-btn').forEach(b => b.classList.remove('active'));
-            applyFilters();
-            updateEventSidebars();
-        }
-
-        // Apply Filters
-        function applyFilters() {
-            filteredEvents = eventsData.filter(e => {
-                const matchSchool = currentSchoolFilter ? e.school === currentSchoolFilter : true;
-                const matchDept = currentDeptFilter ? e.department === currentDeptFilter : true;
-                return matchSchool && matchDept;
+            // Reset all filters
+            document.getElementById('reset-filters').addEventListener('click', function() {
+                currentSchoolFilter = null;
+                currentDeptFilter = null;
+                
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                document.getElementById('department-filters').innerHTML = '<button class="filter-btn" onclick="resetDepartmentFilter()">All Departments</button>';
+                
+                applyFilters();
+                updateEventSidebars();
             });
-            
-            calendar.removeAllEvents();
-            calendar.addEventSource(filteredEvents);
-        }
 
-        // Reset all filters
-        document.getElementById('reset-filters').addEventListener('click', function() {
-            currentSchoolFilter = null;
-            currentDeptFilter = null;
-            
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('department-filters').innerHTML = '<button class="filter-btn" onclick="resetDepartmentFilter()">All Departments</button>';
-            
-            applyFilters();
-            updateEventSidebars();
-        });
-
-        // Update Today's and Upcoming Events Sidebars
-        function updateEventSidebars() {
-            const today = new Date().toISOString().split('T')[0];
-            const todayEvents = filteredEvents.filter(event => event.start.split('T')[0] === today);
-            const upcomingEvents = filteredEvents.filter(event => event.start.split('T')[0] > today)
-                .sort((a, b) => new Date(a.start) - new Date(b.start))
-                .slice(0, 5); // Show max 5 upcoming events
-            
-            // Render Today's Events
-            const todayContainer = document.getElementById('todays-events');
-            if (todayEvents.length > 0) {
-                todayContainer.innerHTML = todayEvents.map(event => `
-                    <div class="event-card">
-                        <img src="${event.image}" alt="${event.title}" class="event-image">
-                        <div class="event-details">
-                            <h3 class="event-title">${event.title}</h3>
-                            <p class="event-date"><i class="fas fa-calendar-alt"></i> Today</p>
-                            <p class="event-venue"><i class="fas fa-map-marker-alt"></i> ${event.venue}</p>
-                        </div>
-                    </div>
-                `).join('');
-            } else {
-                todayContainer.innerHTML = '<p class="text-gray-500 text-sm">No events scheduled for today.</p>';
-            }
-            
-            // Render Upcoming Events
-            const upcomingContainer = document.getElementById('upcoming-events');
-            if (upcomingEvents.length > 0) {
-                upcomingContainer.innerHTML = upcomingEvents.map(event => {
-                    const eventDate = new Date(event.start);
-                    const formattedDate = eventDate.toLocaleDateString('en-US', { 
-                        weekday: 'short', 
-                        month: 'short', 
-                        day: 'numeric' 
-                    });
-                    
-                    return `
+            // Update Today's and Upcoming Events Sidebars
+            function updateEventSidebars() {
+                const today = new Date().toISOString().split('T')[0];
+                const todayEvents = filteredEvents.filter(event => event.start.split('T')[0] === today);
+                const upcomingEvents = filteredEvents.filter(event => event.start.split('T')[0] > today)
+                    .sort((a, b) => new Date(a.start) - new Date(b.start))
+                    .slice(0, 5); // Show max 5 upcoming events
+                
+                // Render Today's Events
+                const todayContainer = document.getElementById('todays-events');
+                if (todayEvents.length > 0) {
+                    todayContainer.innerHTML = todayEvents.map(event => `
                         <div class="event-card">
                             <img src="${event.image}" alt="${event.title}" class="event-image">
                             <div class="event-details">
                                 <h3 class="event-title">${event.title}</h3>
-                                <p class="event-date"><i class="fas fa-calendar-alt"></i> ${formattedDate}</p>
+                                <p class="event-date"><i class="fas fa-calendar-alt"></i> Today</p>
                                 <p class="event-venue"><i class="fas fa-map-marker-alt"></i> ${event.venue}</p>
                             </div>
                         </div>
-                    `;
-                }).join('');
-            } else {
-                upcomingContainer.innerHTML = '<p class="text-gray-500 text-sm">No upcoming events found.</p>';
+                    `).join('');
+                } else {
+                    todayContainer.innerHTML = '<p class="text-gray-500 text-sm">No events scheduled for today.</p>';
+                }
+                
+                // Render Upcoming Events
+                const upcomingContainer = document.getElementById('upcoming-events');
+                if (upcomingEvents.length > 0) {
+                    upcomingContainer.innerHTML = upcomingEvents.map(event => {
+                        const eventDate = new Date(event.start);
+                        const formattedDate = eventDate.toLocaleDateString('en-US', { 
+                            weekday: 'short', 
+                            month: 'short', 
+                            day: 'numeric' 
+                        });
+                        
+                        return `
+                            <div class="event-card">
+                                <img src="${event.image}" alt="${event.title}" class="event-image">
+                                <div class="event-details">
+                                    <h3 class="event-title">${event.title}</h3>
+                                    <p class="event-date"><i class="fas fa-calendar-alt"></i> ${formattedDate}</p>
+                                    <p class="event-venue"><i class="fas fa-map-marker-alt"></i> ${event.venue}</p>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    upcomingContainer.innerHTML = '<p class="text-gray-500 text-sm">No upcoming events found.</p>';
+                }
             }
-        }
 
-        // Toggle mobile menu
-        function toggleMenu() {
-            const nav = document.querySelector('nav');
-            nav.classList.toggle('show');
-        }
+            // Toggle mobile menu
+            function toggleMenu() {
+                const nav = document.querySelector('nav');
+                nav.classList.toggle('show');
+            }
 
-        // Initialize the page
-        document.addEventListener('DOMContentLoaded', function() {
-            updateEventSidebars();
-        });
-    </script>
-</body>
-</html>
+            // Initialize the page
+            document.addEventListener('DOMContentLoaded', function() {
+                updateEventSidebars();
+            });
+        </script>
+    </body>
+    </html>
