@@ -20,3 +20,5 @@ gunicorn
 pytz
 Flask-Mail
 APScheduler
+pandas
+openpyxl
