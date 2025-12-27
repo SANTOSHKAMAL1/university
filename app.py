@@ -1,11 +1,13 @@
 import re
+import os
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+
 from flask import Flask, json, render_template, request, redirect, url_for, flash, session, send_from_directory, jsonify
 from flask_pymongo import PyMongo
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from bson import ObjectId
 from datetime import datetime, timedelta
-import os
 from config import Config
 from utils import get_indian_time
 from flask_mail import Mail, Message
@@ -14,6 +16,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import pandas as pd
 from io import StringIO
 import logging
+import requests
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -51,6 +54,69 @@ app.config['MAIL_PASSWORD'] = 'wedbfepklgtwtugf'
 
 mail = Mail(app)
 
+# ===================== EVENT REMINDER SCHEDULER =====================
+
+def send_event_reminders():
+    """Send event reminders based on user preferences"""
+    try:
+        now = datetime.now()
+        
+        # Get all event reminders that need to be sent
+        reminders = list(db.event_reminders.find({
+            'reminder_time': {'$lte': now},
+            'sent': False
+        }))
+        
+        for reminder in reminders:
+            try:
+                event = db.events.find_one({'_id': reminder['event_id']})
+                if not event:
+                    continue
+                
+                user = db.users.find_one({'_id': reminder['user_id']})
+                if not user:
+                    continue
+                
+                # Send reminder email
+                msg = Message(
+                    subject=f"🔔 Event Reminder: {event['event_name']}",
+                    sender=app.config['MAIL_USERNAME'],
+                    recipients=[user['email']]
+                )
+                
+                msg.html = f"""
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #04043a;">Event Reminder</h2>
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                        <h3 style="color: #04043a; margin-top: 0;">{event['event_name']}</h3>
+                        <p><strong>📅 Date:</strong> {event['event_date']}</p>
+                        <p><strong>📍 Venue:</strong> {event['venue']}</p>
+                        <p><strong>🏢 Department:</strong> {event.get('department', 'N/A')}</p>
+                        <p><strong>📝 Description:</strong> {event.get('description', '')}</p>
+                    </div>
+                    <p>This is your reminder for the upcoming event!</p>
+                    <hr>
+                    <small style="color: #666;">Jain University Portal - Office of Academics</small>
+                </div>
+                """
+                
+                mail.send(msg)
+                
+                # Mark reminder as sent
+                db.event_reminders.update_one(
+                    {'_id': reminder['_id']},
+                    {'$set': {'sent': True}}
+                )
+                
+                logger.info(f"Sent reminder to {user['email']} for event {event['event_name']}")
+                
+            except Exception as e:
+                logger.error(f"Error sending reminder: {e}")
+                continue
+                
+    except Exception as e:
+        logger.error(f"Error in send_event_reminders: {e}")
+
 def send_daily_event_emails():
     today = datetime.today().strftime("%Y-%m-%d")
     upcoming = (datetime.today() + timedelta(days=7)).strftime("%Y-%m-%d")
@@ -70,16 +136,14 @@ def send_daily_event_emails():
         mail.send(msg)
 
 scheduler = BackgroundScheduler()
+scheduler.add_job(send_event_reminders, 'interval', minutes=5)  # Check every 5 minutes
 scheduler.add_job(send_daily_event_emails, 'cron', hour=7)
 scheduler.start()
 
 # ===================== EXCEL UPLOAD WITH VALIDATION =====================
 
 def validate_excel_data(df):
-    """
-    Validate Excel data before insertion
-    Returns: (is_valid, error_messages, cleaned_data)
-    """
+    """Validate Excel data before insertion"""
     errors = []
     required_columns = ['event_name', 'description', 'school', 'department', 'event_type', 'venue', 'event_date']
     
@@ -123,7 +187,7 @@ def validate_excel_data(df):
             record_errors.append(f"Row {idx+2}: venue is required")
             continue
         
-        # Validate event_date (must be valid date format)
+        # Validate event_date
         try:
             event_date = pd.to_datetime(row['event_date']).strftime('%Y-%m-%d')
         except Exception as e:
@@ -169,9 +233,7 @@ def validate_excel_data(df):
 
 @app.route("/upload_events_excel", methods=["POST"])
 def upload_events_excel():
-    """
-    Upload and process Excel file with events
-    """
+    """Upload and process Excel file with events"""
     if session.get('role') != 'admin':
         flash("Access denied. Admin only.", "error")
         return redirect(url_for('login'))
@@ -191,7 +253,7 @@ def upload_events_excel():
         if file.filename.endswith('.csv'):
             df = pd.read_csv(file)
         else:
-            df = pd.read_excel(file, sheet_name=0)  # Read first sheet
+            df = pd.read_excel(file, sheet_name=0)
         
         if df.empty:
             flash("❌ Excel file is empty.", "error")
@@ -210,8 +272,8 @@ def upload_events_excel():
         # Insert into MongoDB
         if cleaned_records:
             result = mongo.db.events.insert_many(cleaned_records)
-            flash(f"✅ Success! Added {len(result)} events to the database.", "success")
-            logger.info(f"Uploaded {len(result)} events from Excel file")
+            flash(f"✅ Success! Added {len(result.inserted_ids)} events to the database.", "success")
+            logger.info(f"Uploaded {len(result.inserted_ids)} events from Excel file")
         else:
             flash("❌ No valid records found in the file.", "error")
 
@@ -226,9 +288,7 @@ def upload_events_excel():
 
 @app.route("/validate_excel_preview", methods=["POST"])
 def validate_excel_preview():
-    """
-    Preview and validate Excel before uploading
-    """
+    """Preview and validate Excel before uploading"""
     if session.get('role') != 'admin':
         return jsonify({'error': 'Access denied'}), 403
 
@@ -259,7 +319,7 @@ def validate_excel_preview():
             'valid': is_valid,
             'total_rows': len(df),
             'valid_records': len(cleaned_records) if cleaned_records else 0,
-            'errors': errors[:10],  # Show first 10 errors
+            'errors': errors[:10],
             'error_count': len(errors),
             'preview': preview_data
         })
@@ -268,8 +328,7 @@ def validate_excel_preview():
         return jsonify({'error': str(e)}), 400
 
 
-# ===================== Pages =====================
-from datetime import datetime
+# ===================== PAGES =====================
 
 @app.route('/')
 def home():
@@ -284,13 +343,17 @@ def home():
         if isinstance(event['event_date'], str):
             event['event_date'] = datetime.strptime(event['event_date'], '%Y-%m-%d')
     
+    # Check if user is logged in
+    user_logged_in = 'email' in session
+    
     return render_template(
         'home.html',
         records=records,
         monthly_records=monthly_records,
         newsletter_records=newsletter_records,
         events=events,
-        today=today
+        today=today,
+        user_logged_in=user_logged_in
     )
 
 @app.route('/subscribe', methods=['POST'])
@@ -328,13 +391,17 @@ def monthlyengagement():
 def ugc():
     return render_template('ugc.html')
 
+@app.route('/base_user.html')
+def base_user():
+    return render_template('base_user.html')
+
 @app.route('/jainevents')
 def jainevents():
     events = list(mongo.db.events.find())
     return render_template('jainevents.html', events=events)
 
 
-# ===================== UGC Upload =====================
+# ===================== UGC UPLOAD =====================
 
 @app.route('/edit_ugc', methods=['GET', 'POST'])
 def edit_ugc():
@@ -364,7 +431,7 @@ def edit_ugc():
             "files": uploaded_files
         })
 
-        flash('UGC/University Notice data uploaded successfully.')
+        flash('✅ UGC/University Notice data uploaded successfully.')
         return redirect(url_for('edit_ugc'))
 
     records = list(db.ugc_data.find().sort('uploaded_at', -1))
@@ -479,7 +546,7 @@ def update_newsletter(id):
         }
     )
 
-    flash('Newsletter updated successfully!', 'success')
+    flash('✅ Newsletter updated successfully!', 'success')
     return redirect(url_for('newsletter'))
 
 
@@ -489,7 +556,7 @@ def delete_newsletter(id):
         return redirect(url_for('login'))
     
     db.newsletters.delete_one({"_id": ObjectId(id)})
-    flash("Newsletter deleted.")
+    flash("✅ Newsletter deleted.")
     return redirect(url_for('newsletter'))
 
 
@@ -534,7 +601,7 @@ def subscribe_newsletter():
             <small>This is an automated message from Jain University Newsletter system.</small>
             """
             mail.send(msg)
-            flash("Subscribed successfully! A confirmation email has been sent.", "success")
+            flash("✅ Subscribed successfully! A confirmation email has been sent.", "success")
         except Exception as e:
             flash("Subscribed, but failed to send confirmation email.", "warning")
             logger.error(f"Email send error: {e}")
@@ -574,7 +641,7 @@ def edit_ugc_record(record_id):
             }}
         )
 
-        flash('UGC/University Notice data updated successfully.')
+        flash('✅ UGC/University Notice data updated successfully.')
         return redirect(url_for('edit_ugc'))
 
     return render_template('edit_ugc_record.html', record=record)
@@ -586,11 +653,11 @@ def delete_ugc(record_id):
         return redirect(url_for('login'))
 
     db.ugc_data.delete_one({'_id': ObjectId(record_id)})
-    flash('UGC record deleted successfully.')
+    flash('✅ UGC record deleted successfully.')
     return redirect(url_for('edit_ugc'))
 
 
-# ===================== Monthly Engagement =====================
+# ===================== MONTHLY ENGAGEMENT =====================
 
 @app.route('/edit_monthly', methods=['GET', 'POST'])
 def edit_monthly():
@@ -627,7 +694,7 @@ def edit_monthly():
             "files": uploaded_files
         })
 
-        flash('Monthly engagement data uploaded successfully.')
+        flash('✅ Monthly engagement data uploaded successfully.')
         return redirect(url_for('edit_monthly'))
 
     records = list(db.monthly_engagement.find().sort('uploaded_at', -1))
@@ -682,7 +749,7 @@ def delete_record(record_id):
     return redirect(url_for('edit_monthly'))
 
 
-# ===================== Authentication =====================
+# ===================== AUTHENTICATION =====================
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -733,7 +800,7 @@ def register():
             session.pop('step', None)
             session.pop('otp_verified', None)
 
-            flash('Registration complete! You can now log in.', 'success')
+            flash('✅ Registration complete! You can now log in.', 'success')
             return redirect(url_for('login'))
 
     otp_sent = session.get('step', 1) >= 2
@@ -757,7 +824,7 @@ def admin():
 
         hashed_pw = generate_password_hash(password)
         db.users.insert_one({'email': email, 'password': hashed_pw, 'role': 'admin'})
-        flash('Admin registered successfully. Please log in.', 'success')
+        flash('✅ Admin registered successfully. Please log in.', 'success')
         return redirect(url_for('login'))
 
     return render_template('admin_register.html')
@@ -787,12 +854,82 @@ def login():
 
 @app.route('/logout')
 def logout():
+    # Clear ALL OAuth credentials and state
+    session.pop('drive_creds', None)
+    session.pop('gmail_creds', None)
+    session.pop('drive_state', None)
+    session.pop('gmail_state', None)
     session.clear()
     flash('You have been logged out.', 'info')
     return redirect(url_for('home'))
 
 
-# ===================== Dashboards =====================
+@app.route('/disconnect-google')
+def disconnect_google():
+    """Completely disconnect all Google OAuth connections"""
+    if session.get('role') != 'user':
+        return redirect(url_for('login'))
+    
+    try:
+        from google.oauth2.credentials import Credentials
+        
+        # Revoke Drive token
+        if 'drive_creds' in session:
+            try:
+                creds_data = session['drive_creds']
+                creds = Credentials(
+                    token=creds_data['token'],
+                    refresh_token=creds_data['refresh_token'],
+                    token_uri=creds_data['token_uri'],
+                    client_id=creds_data['client_id'],
+                    client_secret=creds_data['client_secret'],
+                    scopes=creds_data['scopes']
+                )
+                requests.post(
+                    'https://oauth2.googleapis.com/revoke',
+                    params={'token': creds.token},
+                    headers={'content-type': 'application/x-www-form-urlencoded'}
+                )
+            except Exception as e:
+                logger.warning(f"Could not revoke Drive token: {e}")
+
+        # Revoke Gmail token
+        if 'gmail_creds' in session:
+            try:
+                creds_data = session['gmail_creds']
+                creds = Credentials(
+                    token=creds_data['token'],
+                    refresh_token=creds_data['refresh_token'],
+                    token_uri=creds_data['token_uri'],
+                    client_id=creds_data['client_id'],
+                    client_secret=creds_data['client_secret'],
+                    scopes=creds_data['scopes']
+                )
+                requests.post(
+                    'https://oauth2.googleapis.com/revoke',
+                    params={'token': creds.token},
+                    headers={'content-type': 'application/x-www-form-urlencoded'}
+                )
+            except Exception as e:
+                logger.warning(f"Could not revoke Gmail token: {e}")
+
+        # Clear from session
+        session.pop('drive_creds', None)
+        session.pop('gmail_creds', None)
+        session.pop('drive_state', None)
+        session.pop('gmail_state', None)
+        session.modified = True
+
+        flash('✅ All Google connections have been disconnected. You can reconnect anytime.', 'success')
+        return redirect(url_for('user_dashboard'))
+
+    except Exception as e:
+        logger.error(f"Error disconnecting Google: {e}")
+        flash('Error disconnecting Google services', 'error')
+        return redirect(url_for('user_dashboard'))
+
+
+# ===================== DASHBOARDS =====================
 
 @app.route('/admin_dashboard')
 def admin_dashboard():
@@ -808,10 +945,667 @@ def user_dashboard():
     if session.get('role') != 'user':
         return redirect(url_for('login'))
 
-    return render_template('user_dashboard.html')
+    today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    next_week = today + timedelta(days=7)
+
+    # Today's events
+    today_str = today.strftime('%Y-%m-%d')
+    today_events = list(db.events.find({
+        "$or": [
+            {"event_date": today_str},
+            {"end_date": today_str}
+        ]
+    }).sort('event_date', 1))
+
+    # Upcoming week events
+    upcoming_events = list(db.events.find({
+        "event_date": {
+            "$gte": (today + timedelta(days=1)).strftime('%Y-%m-%d'),
+            "$lte": next_week.strftime('%Y-%m-%d')
+        }
+    }).sort('event_date', 1))
+
+    return render_template(
+        'user_dashboard.html',
+        today_events=today_events,
+        upcoming_events=upcoming_events
+    )
 
 
-# ===================== Admin User Controls =====================
+# ===================== GOOGLE DRIVE & GMAIL - OAUTH FIX =====================
+
+from google_auth_oauthlib.flow import Flow
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
+
+# Define scopes separately to avoid conflicts
+DRIVE_SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
+GMAIL_SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
+
+
+@app.route('/connect-drive')
+def connect_drive():
+    if session.get('role') != 'user':
+        return redirect(url_for('login'))
+
+    try:
+        # Clear all Google credentials to avoid scope conflicts
+        session.pop('drive_creds', None)
+        session.pop('gmail_creds', None)
+        session.pop('drive_state', None)
+        session.pop('gmail_state', None)
+        
+        # Try to revoke old tokens if they exist
+        for cred_key in ['drive_creds', 'gmail_creds']:
+            if cred_key in session:
+                try:
+                    creds_data = session[cred_key]
+                    if creds_data.get('token'):
+                        requests.post(
+                            'https://oauth2.googleapis.com/revoke',
+                            params={'token': creds_data['token']},
+                            headers={'content-type': 'application/x-www-form-urlencoded'},
+                            timeout=5
+                        )
+                except:
+                    pass
+        
+        session.modified = True
+        
+        flow = Flow.from_client_secrets_file(
+            'client_secret.json',
+            scopes=DRIVE_SCOPES,
+            redirect_uri="http://localhost:5000/drive/callback"
+        )
+
+        auth_url, state = flow.authorization_url(
+            access_type='offline',
+            include_granted_scopes='false'
+        )
+
+        session['drive_state'] = state
+        session.modified = True
+        logger.info(f"Starting Drive OAuth with scopes: {DRIVE_SCOPES}")
+        return redirect(auth_url)
+    
+    except Exception as e:
+        logger.error(f"Drive connection error: {e}", exc_info=True)
+        flash(f'Error initiating Google Drive connection', 'error')
+        return redirect(url_for('user_dashboard'))
+
+
+@app.route('/drive/callback')
+def drive_callback():
+    try:
+        # Verify state for security
+        if session.get('drive_state') != request.args.get('state'):
+            flash('State mismatch. Authorization failed.', 'error')
+            return redirect(url_for('user_dashboard'))
+
+        flow = Flow.from_client_secrets_file(
+            'client_secret.json',
+            scopes=DRIVE_SCOPES,
+            redirect_uri="http://localhost:5000/drive/callback"
+        )
+
+        flow.fetch_token(authorization_response=request.url)
+        creds = flow.credentials
+
+        session['drive_creds'] = {
+            'token': creds.token,
+            'refresh_token': creds.refresh_token,
+            'token_uri': creds.token_uri,
+            'client_id': creds.client_id,
+            'client_secret': creds.client_secret,
+            'scopes': DRIVE_SCOPES
+        }
+        
+        session.pop('drive_state', None)
+        session.modified = True
+
+        flash('✅ Google Drive connected successfully!', 'success')
+        return redirect(url_for('drive_files'))
+
+    except Exception as e:
+        logger.error(f"Drive callback error: {e}")
+        flash(f'Error connecting to Google Drive', 'error')
+        return redirect(url_for('user_dashboard'))
+
+
+@app.route('/drive/files')
+def drive_files():
+    if 'drive_creds' not in session:
+        flash('Please connect your Google Drive first.', 'error')
+        return redirect(url_for('connect_drive'))
+
+    try:
+        creds_data = session['drive_creds']
+        creds = Credentials(
+            token=creds_data['token'],
+            refresh_token=creds_data['refresh_token'],
+            token_uri=creds_data['token_uri'],
+            client_id=creds_data['client_id'],
+            client_secret=creds_data['client_secret'],
+            scopes=creds_data['scopes']
+        )
+
+        service = build('drive', 'v3', credentials=creds)
+
+        # Fetch folders with more detailed fields
+        results = service.files().list(
+            q="trashed=false and mimeType='application/vnd.google-apps.folder'",
+            pageSize=50,
+            fields="files(id, name, mimeType, createdTime, webViewLink, iconLink)",
+            orderBy="name"
+        ).execute()
+
+        folders = results.get('files', [])
+
+        logger.info(f"Found {len(folders)} folders for user {session['email']}")
+
+        # Get user's saved folders
+        user_folders = db.user_navbars.find_one({'user_email': session['email']})
+        saved_folder_ids = [item['ref_id'] for item in user_folders['items']] if user_folders and 'items' in user_folders else []
+
+        # Add webViewLink if missing
+        for folder in folders:
+            if 'webViewLink' not in folder:
+                folder['webViewLink'] = f"https://drive.google.com/drive/folders/{folder['id']}"
+
+        logger.info(f"User has {len(saved_folder_ids)} saved folders")
+
+        return render_template('drive_files.html',
+                             folders=folders,
+                             saved_folder_ids=saved_folder_ids,
+                             total_folders=len(folders))
+
+    except Exception as e:
+        logger.error(f"Error fetching Drive folders: {str(e)}")
+        flash(f'Error connecting to Google Drive', 'error')
+        return redirect(url_for('user_dashboard'))
+
+
+@app.route('/api/drive/folder/<folder_id>')
+def get_drive_folder_contents(folder_id):
+    """Get contents of a specific folder - PRIVATE to logged-in user"""
+    if 'drive_creds' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+
+    try:
+        creds_data = session['drive_creds']
+        creds = Credentials(
+            token=creds_data['token'],
+            refresh_token=creds_data['refresh_token'],
+            token_uri=creds_data['token_uri'],
+            client_id=creds_data['client_id'],
+            client_secret=creds_data['client_secret'],
+            scopes=creds_data['scopes']
+        )
+
+        service = build('drive', 'v3', credentials=creds)
+
+        results = service.files().list(
+            q=f"'{folder_id}' in parents and trashed=false",
+            pageSize=100,
+            fields="files(id, name, mimeType, size, createdTime, webViewLink)"
+        ).execute()
+
+        files = results.get('files', [])
+        return jsonify(files)
+
+    except Exception as e:
+        logger.error(f"Error fetching folder contents: {e}")
+        return jsonify({'error': str(e)}), 400
+
+
+@app.route('/api/drive/search')
+def search_drive_files():
+    """Search Drive files/folders for the logged-in user"""
+    if 'drive_creds' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+
+    try:
+        query = request.args.get('q', '')
+        if not query:
+            return jsonify([])
+
+        creds_data = session['drive_creds']
+        creds = Credentials(
+            token=creds_data['token'],
+            refresh_token=creds_data['refresh_token'],
+            token_uri=creds_data['token_uri'],
+            client_id=creds_data['client_id'],
+            client_secret=creds_data['client_secret'],
+            scopes=creds_data['scopes']
+        )
+
+        service = build('drive', 'v3', credentials=creds)
+
+        # Search for files and folders
+        results = service.files().list(
+            q=f"name contains '{query}' and trashed=false",
+            pageSize=20,
+            fields="files(id, name, mimeType, webViewLink, iconLink)"
+        ).execute()
+
+        files = results.get('files', [])
+        return jsonify(files)
+
+    except Exception as e:
+        logger.error(f"Error searching Drive: {e}")
+        return jsonify({'error': str(e)}), 400
+
+
+@app.route('/user/navbar/add-folder', methods=['POST'])
+def add_folder_to_navbar():
+    """Add Google Drive folder to user's personal navbar"""
+    if session.get('role') != 'user':
+        return redirect(url_for('login'))
+
+    try:
+        folder_id = request.form['folder_id']
+        folder_name = request.form['folder_name']
+        email = session['email']
+
+        # Verify folder exists in user's Drive
+        creds_data = session['drive_creds']
+        creds = Credentials(
+            token=creds_data['token'],
+            refresh_token=creds_data['refresh_token'],
+            token_uri=creds_data['token_uri'],
+            client_id=creds_data['client_id'],
+            client_secret=creds_data['client_secret'],
+            scopes=creds_data['scopes']
+        )
+
+        service = build('drive', 'v3', credentials=creds)
+        file_metadata = service.files().get(fileId=folder_id, fields='id, name').execute()
+
+        if not file_metadata:
+            flash('Folder not found in your Drive', 'error')
+            return redirect(request.referrer)
+
+        # Add to user's navbar (PRIVATE - only this user can see)
+        db.user_navbars.update_one(
+            {"user_email": email},
+            {
+                "$addToSet": {
+                    "items": {
+                        "_id": ObjectId(),
+                        "type": "drive_folder",
+                        "label": folder_name,
+                        "ref_id": folder_id,
+                        "added_at": datetime.now()
+                    }
+                }
+            },
+            upsert=True
+        )
+
+        # Send confirmation email
+        try:
+            msg = Message(
+                subject="📁 Folder Added to Your University Portal",
+                sender=app.config['MAIL_USERNAME'],
+                recipients=[email]
+            )
+            msg.html = f"""
+            <h3>Folder Successfully Added!</h3>
+            <p>You've added "<strong>{folder_name}</strong>" to your personal navigation.</p>
+            <p>You can now quickly access this folder from your dashboard sidebar.</p>
+            <p>This folder is private and visible only to you.</p>
+            <hr>
+            <small>Jain University Portal</small>
+            """
+            mail.send(msg)
+        except Exception as e:
+            logger.error(f"Error sending email: {e}")
+
+        flash(f'✅ Folder "{folder_name}" added to your navigation!', 'success')
+        return redirect(request.referrer or url_for('drive_files'))
+
+    except Exception as e:
+        logger.error(f"Error adding folder: {e}")
+        flash('Error adding folder', 'error')
+        return redirect(request.referrer or url_for('drive_files'))
+
+
+@app.route('/user/navbar/remove-folder/<folder_id>', methods=['POST'])
+def remove_folder_from_navbar(folder_id):
+    """Remove folder from user's navbar"""
+    if session.get('role') != 'user':
+        return redirect(url_for('login'))
+
+    try:
+        email = session['email']
+        db.user_navbars.update_one(
+            {"user_email": email},
+            {"$pull": {"items": {"ref_id": folder_id}}}
+        )
+
+        flash('✅ Folder removed from your navigation', 'success')
+        return redirect(request.referrer or url_for('drive_files'))
+
+    except Exception as e:
+        logger.error(f"Error removing folder: {e}")
+        flash('Error removing folder', 'error')
+        return redirect(request.referrer or url_for('drive_files'))
+
+
+def get_user_navbar(email):
+    """Get only THIS user's navbar items - PRIVATE"""
+    nav = db.user_navbars.find_one({"user_email": email})
+    return nav['items'] if nav else []
+
+
+@app.context_processor
+def inject_user_navbar():
+    """Inject ONLY logged-in user's navbar - no cross-user visibility"""
+    if 'email' in session and session.get('role') == 'user':
+        navbar = get_user_navbar(session['email'])
+        return dict(user_navbar=navbar)
+    return dict(user_navbar=[])
+
+
+@app.route('/connect-gmail')
+def connect_gmail():
+    if session.get('role') != 'user':
+        return redirect(url_for('login'))
+
+    try:
+        session.pop('drive_creds', None)
+        session.pop('gmail_creds', None)
+        session.pop('drive_state', None)
+        session.pop('gmail_state', None)
+        
+        for cred_key in ['drive_creds', 'gmail_creds']:
+            if cred_key in session:
+                try:
+                    creds_data = session[cred_key]
+                    if creds_data.get('token'):
+                        requests.post(
+                            'https://oauth2.googleapis.com/revoke',
+                            params={'token': creds_data['token']},
+                            headers={'content-type': 'application/x-www-form-urlencoded'},
+                            timeout=5
+                        )
+                except:
+                    pass
+        
+        session.modified = True
+        
+        flow = Flow.from_client_secrets_file(
+            'client_secret.json',
+            scopes=GMAIL_SCOPES,
+            redirect_uri="http://localhost:5000/gmail/callback"
+        )
+
+        auth_url, state = flow.authorization_url(
+            access_type='offline',
+            include_granted_scopes='false'
+        )
+
+        session['gmail_state'] = state
+        session.modified = True
+        logger.info(f"Starting Gmail OAuth with scopes: {GMAIL_SCOPES}")
+        return redirect(auth_url)
+
+    except Exception as e:
+        logger.error(f"Gmail connection error: {e}", exc_info=True)
+        flash(f'Error initiating Gmail connection', 'error')
+        return redirect(url_for('user_dashboard'))
+
+
+@app.route('/gmail/callback')
+def gmail_callback():
+    try:
+        if session.get('gmail_state') != request.args.get('state'):
+            flash('State mismatch. Authorization failed.', 'error')
+            return redirect(url_for('user_dashboard'))
+
+        flow = Flow.from_client_secrets_file(
+            'client_secret.json',
+            scopes=GMAIL_SCOPES,
+            redirect_uri="http://localhost:5000/gmail/callback"
+        )
+
+        flow.fetch_token(authorization_response=request.url)
+        creds = flow.credentials
+
+        session['gmail_creds'] = {
+            'token': creds.token,
+            'refresh_token': creds.refresh_token,
+            'token_uri': creds.token_uri,
+            'client_id': creds.client_id,
+            'client_secret': creds.client_secret,
+            'scopes': GMAIL_SCOPES
+        }
+
+        session.pop('gmail_state', None)
+        session.modified = True
+
+        # Send confirmation email
+        try:
+            msg = Message(
+                subject="✅ Gmail Connected to Your University Portal",
+                sender=app.config['MAIL_USERNAME'],
+                recipients=[session['email']]
+            )
+            msg.html = """
+            <h3>Gmail Successfully Connected!</h3>
+            <p>Your Gmail account is now securely connected to the Jain University Portal.</p>
+            <p>You can now view your emails and attachments directly from your dashboard.</p>
+            <hr>
+            <small>Jain University Portal</small>
+            """
+            mail.send(msg)
+        except Exception as e:
+            logger.error(f"Error sending confirmation email: {e}")
+
+        flash('✅ Gmail connected successfully!', 'success')
+        return redirect(url_for('user_dashboard'))
+
+    except Exception as e:
+        logger.error(f"Gmail callback error: {e}")
+        flash(f'Error connecting Gmail', 'error')
+        return redirect(url_for('user_dashboard'))
+
+
+# ===================== EVENT REMINDER ENDPOINTS =====================
+
+@app.route('/api/events/set-reminder', methods=['POST'])
+def set_event_reminder():
+    """Set a reminder for an event"""
+    if session.get('role') != 'user':
+        return jsonify({'error': 'Access denied'}), 403
+
+    try:
+        data = request.get_json()
+        event_id = data.get('event_id')
+        reminder_minutes = int(data.get('reminder_minutes', 60))
+        
+        event = db.events.find_one({'_id': ObjectId(event_id)})
+        if not event:
+            return jsonify({'error': 'Event not found'}), 404
+        
+        user = db.users.find_one({'email': session['email']})
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        # Calculate reminder time
+        event_date = datetime.strptime(event['event_date'], '%Y-%m-%d') if isinstance(event['event_date'], str) else event['event_date']
+        reminder_time = event_date - timedelta(minutes=reminder_minutes)
+        
+        # Check if reminder already exists
+        existing = db.event_reminders.find_one({
+            'user_id': user['_id'],
+            'event_id': event['_id']
+        })
+        
+        if existing:
+            db.event_reminders.update_one(
+                {'_id': existing['_id']},
+                {'$set': {
+                    'reminder_time': reminder_time,
+                    'reminder_minutes': reminder_minutes,
+                    'sent': False
+                }}
+            )
+        else:
+            db.event_reminders.insert_one({
+                'user_id': user['_id'],
+                'event_id': event['_id'],
+                'reminder_time': reminder_time,
+                'reminder_minutes': reminder_minutes,
+                'sent': False,
+                'created_at': datetime.now()
+            })
+        
+        return jsonify({
+            'success': True,
+            'message': f"Reminder set for {reminder_minutes} minutes before the event"
+        })
+        
+    except Exception as e:
+        logger.error(f"Error setting reminder: {e}")
+        return jsonify({'error': str(e)}), 400
+
+
+@app.route('/api/events/subscribe', methods=['POST'])
+def subscribe_to_event():
+    """Subscribe to event notifications"""
+    if session.get('role') != 'user':
+        return jsonify({'error': 'Access denied'}), 403
+
+    try:
+        data = request.get_json()
+        event_id = data.get('event_id')
+        
+        event = db.events.find_one({'_id': ObjectId(event_id)})
+        if not event:
+            return jsonify({'error': 'Event not found'}), 404
+        
+        user = db.users.find_one({'email': session['email']})
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        # Check if already subscribed
+        existing = db.event_subscriptions.find_one({
+            'user_id': user['_id'],
+            'event_id': event['_id']
+        })
+        
+        if existing:
+            return jsonify({'message': 'Already subscribed'}), 200
+        
+        # Subscribe user
+        db.event_subscriptions.insert_one({
+            'user_id': user['_id'],
+            'event_id': event['_id'],
+            'subscribed_at': datetime.now()
+        })
+        
+        # Send confirmation email
+        msg = Message(
+            subject=f"✅ Subscribed to Event: {event['event_name']}",
+            sender=app.config['MAIL_USERNAME'],
+            recipients=[user['email']]
+        )
+        
+        msg.html = f"""
+        <h2>Event Subscription Confirmed</h2>
+        <p>You have successfully subscribed to:</p>
+        <h3>{event['event_name']}</h3>
+        <p><strong>Date:</strong> {event['event_date']}</p>
+        <p><strong>Venue:</strong> {event['venue']}</p>
+        <p>You will receive updates and reminders about this event.</p>
+        """
+        
+        mail.send(msg)
+        
+        return jsonify({'success': True, 'message': 'Subscribed successfully'})
+        
+    except Exception as e:
+        logger.error(f"Error subscribing to event: {e}")
+        return jsonify({'error': str(e)}), 400
+
+
+@app.route('/api/events/filter')
+def filter_events():
+    """Filter events by department, date range, etc."""
+    try:
+        department = request.args.get('department')
+        school = request.args.get('school')
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        event_type = request.args.get('event_type')
+        
+        query = {}
+        
+        if department:
+            query['department'] = department
+        
+        if school:
+            query['school'] = school
+        
+        if event_type:
+            query['event_type'] = event_type
+        
+        if start_date and end_date:
+            query['event_date'] = {'$gte': start_date, '$lte': end_date}
+        elif start_date:
+            query['event_date'] = {'$gte': start_date}
+        elif end_date:
+            query['event_date'] = {'$lte': end_date}
+        
+        events = list(db.events.find(query).sort('event_date', 1))
+        
+        events_data = []
+        for event in events:
+            events_data.append({
+                'id': str(event['_id']),
+                'event_name': event.get('event_name', ''),
+                'event_date': event.get('event_date', ''),
+                'end_date': event.get('end_date', ''),
+                'venue': event.get('venue', ''),
+                'description': event.get('description', ''),
+                'event_type': event.get('event_type', ''),
+                'school': event.get('school', ''),
+                'department': event.get('department', ''),
+                'image': event.get('image', ''),
+                'pdf': event.get('pdf', '')
+            })
+        
+        return jsonify(events_data)
+        
+    except Exception as e:
+        logger.error(f"Error filtering events: {e}")
+        return jsonify([])
+
+
+@app.route('/api/departments')
+def get_departments():
+    """Get unique departments from events"""
+    try:
+        departments = db.events.distinct('department')
+        return jsonify(sorted([d for d in departments if d]))
+    except Exception as e:
+        logger.error(f"Error getting departments: {e}")
+        return jsonify([])
+
+
+@app.route('/api/schools')
+def get_schools():
+    """Get unique schools from events"""
+    try:
+        schools = db.events.distinct('school')
+        return jsonify(sorted([s for s in schools if s]))
+    except Exception as e:
+        logger.error(f"Error getting schools: {e}")
+        return jsonify([])
+
+
+# ===================== ADMIN USER CONTROLS =====================
 
 @app.route('/admin/users')
 def view_users():
@@ -832,7 +1626,7 @@ def update_user(user_id):
     role = request.form['role']
 
     db.users.update_one({'_id': ObjectId(user_id)}, {'$set': {'email': email, 'role': role}})
-    flash('User updated successfully.', 'success')
+    flash('✅ User updated successfully.', 'success')
     return redirect(url_for('admin_dashboard'))
 
 
@@ -842,11 +1636,11 @@ def delete_user(user_id):
         return redirect(url_for('login'))
 
     db.users.delete_one({'_id': ObjectId(user_id)})
-    flash('User deleted successfully.', 'success')
+    flash('✅ User deleted successfully.', 'success')
     return redirect(url_for('admin_dashboard'))
 
 
-# ===================== File Serving =====================
+# ===================== FILE SERVING =====================
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
@@ -862,13 +1656,13 @@ def newsletter_view(newsletter_id):
     return render_template('newsletter_detail.html', news=news)
 
 
-# ===================== Events Management =====================
+# ===================== EVENTS MANAGEMENT =====================
 
 @app.route("/admin/events")
 def admin_events():
     if session.get('role') != 'admin':
         return redirect(url_for('login'))
-    
+
     events = list(mongo.db.events.find())
     for e in events:
         e["_id"] = str(e["_id"])
@@ -982,20 +1776,20 @@ def update_event(event_id):
     return redirect(url_for('admin_events'))
 
 
-# ===================== API Endpoints =====================
+# ===================== API ENDPOINTS =====================
 
 @app.route('/api/events')
 def get_events():
     try:
         current_date = datetime.now().strftime('%Y-%m-%d')
-        
+
         events = list(mongo.db.events.find({
             "$or": [
                 {"event_date": {"$gte": current_date}},
                 {"end_date": {"$gte": current_date}}
             ]
         }).sort("event_date", 1))
-        
+
         events_data = []
         for event in events:
             events_data.append({
@@ -1012,7 +1806,7 @@ def get_events():
                 'image': event.get('image', ''),
                 'pdf': event.get('pdf', '')
             })
-        
+
         return jsonify(events_data)
     except Exception as e:
         logger.error(f"Error fetching events: {e}")
@@ -1025,7 +1819,7 @@ def get_event(event_id):
         event = mongo.db.events.find_one({"_id": ObjectId(event_id)})
         if not event:
             return jsonify({'error': 'Event not found'}), 404
-            
+
         return jsonify({
             'id': str(event['_id']),
             'event_name': event.get('event_name', ''),
@@ -1059,7 +1853,7 @@ def get_today_events():
                 ]}
             ]
         }).sort("event_date", 1))
-        
+
         events_data = []
         for event in events:
             events_data.append({
@@ -1068,14 +1862,14 @@ def get_today_events():
                 'event_date': event.get('event_date', ''),
                 'venue': event.get('venue', 'TBA')
             })
-        
+
         return jsonify(events_data)
     except Exception as e:
-        logger.error(f"Error fetching today's events: {e}")    
+        logger.error(f"Error fetching today's events: {e}")
         return jsonify([])
 
 
-# ===================== Run App =====================
+# ===================== RUN APP =====================
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))

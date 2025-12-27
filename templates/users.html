@@ -1,18 +1,169 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Users List</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <h1>All Users</h1>
-    <ul>
-        {% for user in users %}
-            <li>{{ user.name }} - {{ user.email }}</li>
-        {% endfor %}
-    </ul>
+{% extends "base_user.html" %}
+{% block title %}User Dashboard{% endblock %}
 
-    <p><a href="{{ url_for('home') }}">Back to Home</a></p>
-</body>
-</html>
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    
+    <!-- Header Section -->
+    <div class="bg-white shadow-sm border-b border-slate-200">
+        <div class="max-w-6xl mx-auto px-4 py-6">
+            <h1 class="text-3xl font-bold text-slate-900">Welcome to Your Dashboard</h1>
+            <p class="text-slate-600 mt-2">{{ session.email }}</p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-6xl mx-auto px-4 py-10">
+
+        <!-- CONNECT SECTION -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold text-slate-900 mb-6">🔗 Connect Your Services</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <!-- GOOGLE DRIVE -->
+                <div class="bg-white p-8 rounded-xl shadow-md hover:shadow-lg transition-shadow border border-slate-200">
+                    <div class="text-center">
+                        <div class="text-5xl mb-3">📂</div>
+                        <h3 class="text-xl font-semibold text-slate-900 mb-2">Google Drive</h3>
+                        <p class="text-slate-600 mb-6 text-sm leading-relaxed">
+                            Access your Google Drive folders and files including PDFs, Excel spreadsheets, Word documents, and more.
+                        </p>
+                        <a href="{{ url_for('connect_drive') }}"
+                           class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-medium transition-colors">
+                            🔗 Connect Google Drive
+                        </a>
+                    </div>
+                </div>
+
+                <!-- GMAIL -->
+                <div class="bg-white p-8 rounded-xl shadow-md hover:shadow-lg transition-shadow border border-slate-200">
+                    <div class="text-center">
+                        <div class="text-5xl mb-3">📧</div>
+                        <h3 class="text-xl font-semibold text-slate-900 mb-2">Gmail</h3>
+                        <p class="text-slate-600 mb-6 text-sm leading-relaxed">
+                            View your sent and received emails along with their attachments directly from your dashboard.
+                        </p>
+                        <a href="{{ url_for('connect_gmail') }}"
+                           class="inline-block bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg font-medium transition-colors">
+                            🔗 Connect Gmail
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- TODAY EVENTS SECTION -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold text-slate-900 mb-6">📅 Today's Events</h2>
+            
+            {% if today_events %}
+                <div class="space-y-4">
+                    {% for e in today_events %}
+                        <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500 hover:shadow-lg transition-shadow">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-semibold text-slate-900">{{ e.event_name }}</h3>
+                                    <p class="text-slate-600 text-sm mt-2">
+                                        <span class="inline-block mr-4">🏢 {{ e.school }}</span>
+                                        {% if e.get('department') %}
+                                            <span class="inline-block">🎓 {{ e.department }}</span>
+                                        {% endif %}
+                                    </p>
+                                    <p class="text-slate-700 mt-3">📍 {{ e.venue }}</p>
+                                    {% if e.get('description') %}
+                                        <p class="text-slate-600 mt-3 text-sm">{{ e.description }}</p>
+                                    {% endif %}
+                                </div>
+                                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap ml-4">
+                                    {{ e.get('event_type', 'Event') }}
+                                </span>
+                            </div>
+                            {% if e.get('image') or e.get('pdf') %}
+                                <div class="mt-4 flex gap-2">
+                                    {% if e.get('image') %}
+                                        <a href="{{ e.image }}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm underline">
+                                            📷 View Image
+                                        </a>
+                                    {% endif %}
+                                    {% if e.get('pdf') %}
+                                        <a href="{{ e.pdf }}" target="_blank" class="text-red-600 hover:text-red-800 text-sm underline">
+                                            📄 View PDF
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="bg-white p-8 rounded-lg shadow-md text-center border-l-4 border-gray-300">
+                    <p class="text-slate-500 text-lg">No events scheduled for today.</p>
+                    <p class="text-slate-400 text-sm mt-2">Check back later for upcoming events!</p>
+                </div>
+            {% endif %}
+        </section>
+
+        <!-- QUICK LINKS SECTION -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold text-slate-900 mb-6">🔗 Quick Links</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <a href="{{ url_for('jainevents') }}" class="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-all text-center">
+                    <div class="text-3xl mb-2">📆</div>
+                    <h3 class="font-semibold text-slate-900">All Events</h3>
+                    <p class="text-slate-600 text-sm mt-1">View upcoming events</p>
+                </a>
+                <a href="{{ url_for('usernewsletters') }}" class="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-all text-center">
+                    <div class="text-3xl mb-2">📰</div>
+                    <h3 class="font-semibold text-slate-900">Newsletters</h3>
+                    <p class="text-slate-600 text-sm mt-1">Latest university updates</p>
+                </a>
+                <a href="{{ url_for('monthlyengagement') }}" class="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-all text-center">
+                    <div class="text-3xl mb-2">📊</div>
+                    <h3 class="font-semibold text-slate-900">Monthly Reports</h3>
+                    <p class="text-slate-600 text-sm mt-1">Engagement updates</p>
+                </a>
+            </div>
+        </section>
+
+        <!-- ACCOUNT INFO SECTION -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold text-slate-900 mb-6">👤 Account Information</h2>
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <p class="text-slate-600 text-sm">Email Address</p>
+                        <p class="text-slate-900 font-semibold text-lg">{{ session.email }}</p>
+                    </div>
+                    <div>
+                        <p class="text-slate-600 text-sm">Account Type</p>
+                        <p class="text-slate-900 font-semibold text-lg capitalize">{{ session.role }}</p>
+                    </div>
+                </div>
+                <div class="mt-6 flex gap-3">
+                    <a href="{{ url_for('logout') }}" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                        🚪 Logout
+                    </a>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+</div>
+
+<style>
+    .transition-all {
+        transition: all 0.3s ease;
+    }
+    
+    .transition-colors {
+        transition: colors 0.2s ease;
+    }
+    
+    a.transition-all:hover {
+        transform: translateY(-2px);
+    }
+</style>
+
+{% endblock %}

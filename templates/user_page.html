@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard - Jain University</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --jain-blue: #04043a;
+            --jain-gold: #FFD700;
+            --jain-light: #F5F5F5;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.12);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: #f8fafc;
+        }
+
+        .jain-bg {
+            background-color: var(--jain-blue);
+        }
+
+        .jain-gold {
+            color: var(--jain-gold);
+        }
+
+        .jain-blue {
+            color: var(--jain-blue);
+        }
+
+        .card-hover {
+            transition: all 0.3s ease;
+            border: 1px solid #e5e7eb;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--jain-blue);
+        }
+
+        .reminder-badge {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: white;
+            min-width: 200px;
+            box-shadow: var(--shadow-lg);
+            z-index: 1000;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .event-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+
+        .event-card:hover {
+            border-left-color: var(--jain-blue);
+            background-color: #f8fafc;
+        }
+
+        .event-today {
+            border-left-color: #10b981;
+            background-color: #f0fdf4;
+        }
+
+        .event-upcoming {
+            border-left-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Header -->
+    <header class="jain-bg text-white shadow-lg">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <img src="{{ url_for('static', filename='images/jainu.png') }}" 
+                         alt="Jain University" 
+                         class="h-12 w-auto"
+                         onerror="this.src='https://via.placeholder.com/48x48?text=JU'">
+                    <div>
+                        <h1 class="text-2xl font-bold">Office of Academics</h1>
+                        <p class="text-sm opacity-80">Welcome, {{ session.email.split('@')[0] }}</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="relative dropdown">
+                        <button class="flex items-center space-x-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg transition">
+                            <i class="fas fa-user"></i>
+                            <span>{{ session.email.split('@')[0] }}</span>
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+                        <div class="dropdown-content right-0 mt-2">
+                            <a href="{{ url_for('home') }}" class="block px-4 py-2 hover:bg-gray-100">
+                                <i class="fas fa-home mr-2"></i> Home
+                            </a>
+                            <a href="{{ url_for('jainevents') }}" class="block px-4 py-2 hover:bg-gray-100">
+                                <i class="fas fa-calendar-alt mr-2"></i> All Events
+                            </a>
+                            <div class="border-t"></div>
+                            <a href="{{ url_for('logout') }}" class="block px-4 py-2 text-red-600 hover:bg-red-50">
+                                <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Welcome Banner -->
+        <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl p-8 mb-8 shadow-lg">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold mb-2">Welcome to Your Dashboard</h1>
+                    <p class="text-blue-100">Manage your events, reminders, and drive folders all in one place</p>
+                </div>
+                <div class="mt-4 md:mt-0 flex space-x-4">
+                    <button onclick="location.href='{{ url_for('connect_drive') }}'" 
+                            class="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition">
+                        <i class="fab fa-google-drive mr-2"></i> Connect Drive
+                    </button>
+                    <button onclick="location.href='{{ url_for('jainevents') }}'" 
+                            class="bg-yellow-400 text-gray-900 px-6 py-3 rounded-lg font-semibold hover:bg-yellow-500 transition">
+                        <i class="fas fa-calendar-plus mr-2"></i> View All Events
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-xl p-6 shadow-md card-hover">
+                <div class="flex items-center">
+                    <div class="p-3 bg-blue-100 rounded-lg">
+                        <i class="fas fa-calendar-day text-blue-600 text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-gray-500 text-sm">Today's Events</p>
+                        <p class="text-2xl font-bold text-gray-800">{{ today_events|length }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl p-6 shadow-md card-hover">
+                <div class="flex items-center">
+                    <div class="p-3 bg-green-100 rounded-lg">
+                        <i class="fas fa-calendar-week text-green-600 text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-gray-500 text-sm">Upcoming This Week</p>
+                        <p class="text-2xl font-bold text-gray-800">{{ upcoming_events|length }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl p-6 shadow-md card-hover">
+                <div class="flex items-center">
+                    <div class="p-3 bg-purple-100 rounded-lg">
+                        <i class="fas fa-bell text-purple-600 text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-gray-500 text-sm">Active Reminders</p>
+                        <p class="text-2xl font-bold text-gray-800">{{ reminders|length }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl p-6 shadow-md card-hover">
+                <div class="flex items-center">
+                    <div class="p-3 bg-yellow-100 rounded-lg">
+                        <i class="fas fa-folder text-yellow-600 text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-gray-500 text-sm">Drive Folders</p>
+                        <p class="text-2xl font-bold text-gray-800">{{ drive_folders|length }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Two Column Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Column - Events -->
+            <div class="lg:col-span-2">
+                <!-- Filters -->
+                <div class="bg-white rounded-xl p-6 shadow-md mb-6">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4 md:mb-0">Filter Events</h2>
+                        <div class="flex space-x-4">
+                            <select id="timeFilter" class="border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="today">Today</option>
+                                <option value="upcoming" selected>This Week</option>
+                                <option value="all">All Upcoming</option>
+                            </select>
+                            <select id="deptFilter" class="border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="all">All Departments</option>
+                                {% for dept in departments %}
+                                <option value="{{ dept }}">{{ dept }}</option>
+                                {% endfor %}
+                            </select>
+                            <select id="schoolFilter" class="border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="all">All Schools</option>
+                                {% for school in schools %}
+                                <option value="{{ school }}">{{ school }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Events List -->
+                    <div id="eventsList">
+                        <!-- Events will be loaded here via JavaScript -->
+                        <div class="text-center py-8">
+                            <i class="fas fa-calendar text-4xl text-gray-300 mb-4"></i>
+                            <p class="text-gray-500">Loading events...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Google Drive Section -->
+                <div class="bg-white rounded-xl p-6 shadow-md">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-bold text-gray-800">Google Drive Folders</h2>
+                        <div class="flex space-x-2">
+                            <div class="relative">
+                                <input type="text" 
+                                       id="driveSearch" 
+                                       placeholder="Search drive..." 
+                                       class="border rounded-lg px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <i class="fas fa-search absolute right-3 top-3 text-gray-400"></i>
+                            </div>
+                            <button onclick="loadDriveFolders()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Drive Folders Dropdown -->
+                    <div class="mb-6">
+                        <select id="driveFolderSelect" 
+                                class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                onchange="loadFolderContents(this.value)">
+                            <option value="">Select a folder to view contents...</option>
+                            <!-- Folders will be loaded via JavaScript -->
+                        </select>
+                    </div>
+                    
+                    <!-- Folder Contents -->
+                    <div id="folderContents" class="border rounded-lg p-4 min-h-[200px]">
+                        <div class="text-center py-8 text-gray-500">
+                            <i class="fas fa-folder-open text-3xl mb-3"></i>
+                            <p>Select a folder to view its contents</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Reminders & Quick Actions -->
+            <div>
+                <!-- Set Reminder Card -->
+                <div class="bg-white rounded-xl p-6 shadow-md mb-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Set Event Reminder</h2>
+                    
+                    <div class="mb-4">
+                        <label class="block text-gray-700 mb-2">Select Event:</label>
+                        <select id="eventSelect" class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">Choose an event...</option>
+                            {% for event in all_events %}
+                            <option value="{{ event._id }}">
+                                {{ event.event_name }} ({{ event.event_date }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-gray-700 mb-2">Reminder Time:</label>
+                        <select id="reminderTime" class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="15_minutes">15 minutes before</option>
+                            <option value="30_minutes">30 minutes before</option>
+                            <option value="1_hour">1 hour before</option>
+                            <option value="3_hours">3 hours before</option>
+                            <option value="6_hours">6 hours before</option>
+                            <option value="12_hours">12 hours before</option>
+                            <option value="1_day">1 day before</option>
+                            <option value="2_days">2 days before</option>
+                            <option value="1_week">1 week before</option>
+                        </select>
+                    </div>
+                    
+                    <button onclick="setReminder()" 
+                            class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition">
+                        <i class="fas fa-bell mr-2"></i> Set Reminder
+                    </button>
+                    
+                    <p class="text-xs text-gray-500 mt-3">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        You'll receive an email reminder at the selected time
+                    </p>
+                </div>
+
+                <!-- Active Reminders -->
+                <div class="bg-white rounded-xl p-6 shadow-md mb-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Active Reminders</h2>
+                    
+                    <div id="remindersList">
+                        {% if reminders %}
+                            {% for reminder in reminders %}
+                            <div class="border rounded-lg p-4 mb-3 event-card">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <h4 class="font-semibold text-gray-800">{{ reminder.event_name }}</h4>
+                                        <p class="text-sm text-gray-600">
+                                            {{ reminder.event_date }} • {{ reminder.reminder_time.replace('_', ' ') }} before
+                                        </p>
+                                    </div>
+                                    <button onclick="deleteReminder('{{ reminder._id }}')" 
+                                            class="text-red-500 hover:text-red-700">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center py-4 text-gray-500">
+                                <i class="fas fa-bell-slash text-2xl mb-2"></i>
+                                <p>No active reminders</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl p-6 text-white shadow-md">
+                    <h2 class="text-xl font-bold mb-4">Quick Actions</h2>
+                    
+                    <div class="space-y-3">
+                        <button onclick="location.href='{{ url_for('usernewsletters') }}'" 
+                                class="w-full bg-white/20 hover:bg-white/30 text-left p-3 rounded-lg transition">
+                            <i class="fas fa-newspaper mr-3"></i> View Newsletters
+                        </button>
+                        
+                        <button onclick="location.href='{{ url_for('monthlyengagement') }}'" 
+                                class="w-full bg-white/20 hover:bg-white/30 text-left p-3 rounded-lg transition">
+                            <i class="fas fa-chart-line mr-3"></i> Monthly Reports
+                        </button>
+                        
+                        <button onclick="location.href='{{ url_for('ugc') }}'" 
+                                class="w-full bg-white/20 hover:bg-white/30 text-left p-3 rounded-lg transition">
+                            <i class="fas fa-bullhorn mr-3"></i> UGC Notices
+                        </button>
+                        
+                        <button onclick="location.href='{{ url_for('disconnect_google') }}'" 
+                                class="w-full bg-white/20 hover:bg-white/30 text-left p-3 rounded-lg transition">
+                            <i class="fas fa-unlink mr-3"></i> Disconnect Google
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="jain-bg text-white mt-12">
+        <div class="container mx-auto px-4 py-8">
+            <div class="text-center">
+                <p class="text-lg font-semibold">Office of Academics</p>
+                <p class="text-sm opacity-80 mt-2">Jain (Deemed-to-be University)</p>
+                <p class="text-xs opacity-60 mt-4">© 2024 All rights reserved</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Load events based on filters
+        function loadEvents() {
+            const timeFilter = document.getElementById('timeFilter').value;
+            const deptFilter = document.getElementById('deptFilter').value;
+            const schoolFilter = document.getElementById('schoolFilter').value;
+            
+            fetch(`/filter_events?time_frame=${timeFilter}&department=${deptFilter}&school=${schoolFilter}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const eventsList = document.getElementById('eventsList');
+                        if (data.events.length === 0) {
+                            eventsList.innerHTML = `
+                                <div class="text-center py-8">
+                                    <i class="fas fa-calendar-times text-4xl text-gray-300 mb-4"></i>
+                                    <p class="text-gray-500">No events found</p>
+                                </div>
+                            `;
+                        } else {
+                            let eventsHtml = '';
+                            data.events.forEach(event => {
+                                const eventDate = new Date(event.event_date);
+                                const today = new Date().toDateString();
+                                const isToday = eventDate.toDateString() === today;
+                                
+                                eventsHtml += `
+                                <div class="border rounded-lg p-4 mb-3 event-card ${isToday ? 'event-today' : 'event-upcoming'}">
+                                    <div class="flex justify-between items-start">
+                                        <div class="flex-1">
+                                            <h4 class="font-semibold text-gray-800">${event.event_name}</h4>
+                                            <div class="flex flex-wrap gap-2 mt-2">
+                                                <span class="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                                    <i class="far fa-calendar mr-1"></i> ${event.formatted_date}
+                                                </span>
+                                                <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">
+                                                    <i class="fas fa-map-marker-alt mr-1"></i> ${event.venue}
+                                                </span>
+                                                <span class="text-sm bg-purple-100 text-purple-800 px-2 py-1 rounded">
+                                                    <i class="fas fa-university mr-1"></i> ${event.department}
+                                                </span>
+                                            </div>
+                                            <p class="text-gray-600 text-sm mt-2">${event.description.substring(0, 100)}...</p>
+                                        </div>
+                                        <button onclick="setQuickReminder('${event.id}')" 
+                                                class="ml-4 text-blue-600 hover:text-blue-800"
+                                                title="Set reminder">
+                                            <i class="fas fa-bell"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                `;
+                            });
+                            eventsList.innerHTML = eventsHtml;
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading events:', error);
+                });
+        }
+
+        // Load Google Drive folders
+        function loadDriveFolders() {
+            fetch('/get_drive_folders')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const select = document.getElementById('driveFolderSelect');
+                        select.innerHTML = '<option value="">Select a folder to view contents...</option>';
+                        
+                        data.folders.forEach(folder => {
+                            const option = document.createElement('option');
+                            option.value = folder.id;
+                            option.textContent = folder.name;
+                            if (folder.is_saved) {
+                                option.textContent += ' ★';
+                            }
+                            select.appendChild(option);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading drive folders:', error);
+                    showToast('Error loading drive folders', 'error');
+                });
+        }
+
+        // Load folder contents
+        function loadFolderContents(folderId) {
+            if (!folderId) return;
+            
+            fetch(`/api/drive/folder/${folderId}`)
+                .then(response => response.json())
+                .then(files => {
+                    const container = document.getElementById('folderContents');
+                    
+                    if (files.length === 0) {
+                        container.innerHTML = `
+                            <div class="text-center py-8 text-gray-500">
+                                <i class="fas fa-folder-open text-3xl mb-3"></i>
+                                <p>Folder is empty</p>
+                            </div>
+                        `;
+                    } else {
+                        let filesHtml = '<div class="space-y-2">';
+                        files.forEach(file => {
+                            const isFolder = file.mimeType === 'application/vnd.google-apps.folder';
+                            const icon = isFolder ? 'fa-folder' : 'fa-file';
+                            const color = isFolder ? 'text-yellow-500' : 'text-blue-500';
+                            
+                            filesHtml += `
+                            <div class="flex items-center p-2 hover:bg-gray-50 rounded">
+                                <i class="fas ${icon} ${color} mr-3"></i>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium">${file.name}</p>
+                                    ${!isFolder ? `<p class="text-xs text-gray-500">${formatFileSize(file.size)}</p>` : ''}
+                                </div>
+                                <a href="${file.webViewLink}" target="_blank" class="text-blue-600 hover:text-blue-800">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </a>
+                            </div>
+                            `;
+                        });
+                        filesHtml += '</div>';
+                        container.innerHTML = filesHtml;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading folder contents:', error);
+                    showToast('Error loading folder contents', 'error');
+                });
+        }
+
+        // Search drive
+        function searchDrive() {
+            const query = document.getElementById('driveSearch').value;
+            if (query.length < 2) return;
+            
+            fetch(`/search_drive?query=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const container = document.getElementById('folderContents');
+                        
+                        if (data.files.length === 0) {
+                            container.innerHTML = `
+                                <div class="text-center py-8 text-gray-500">
+                                    <i class="fas fa-search text-3xl mb-3"></i>
+                                    <p>No results found for "${query}"</p>
+                                </div>
+                            `;
+                        } else {
+                            let filesHtml = '<div class="space-y-2">';
+                            data.files.forEach(file => {
+                                const isFolder = file.type === 'folder';
+                                const icon = isFolder ? 'fa-folder' : 'fa-file';
+                                const color = isFolder ? 'text-yellow-500' : 'text-blue-500';
+                                
+                                filesHtml += `
+                                <div class="flex items-center p-2 hover:bg-gray-50 rounded">
+                                    <i class="fas ${icon} ${color} mr-3"></i>
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium">${file.name}</p>
+                                        <p class="text-xs text-gray-500">${file.type} • ${formatFileSize(file.size)}</p>
+                                    </div>
+                                    <a href="${file.webViewLink}" target="_blank" class="text-blue-600 hover:text-blue-800">
+                                        <i class="fas fa-external-link-alt"></i>
+                                    </a>
+                                </div>
+                                `;
+                            });
+                            filesHtml += '</div>';
+                            container.innerHTML = filesHtml;
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error searching drive:', error);
+                    showToast('Error searching drive', 'error');
+                });
+        }
+
+        // Set reminder
+        function setReminder() {
+            const eventId = document.getElementById('eventSelect').value;
+            const reminderTime = document.getElementById('reminderTime').value;
+            
+            if (!eventId) {
+                showToast('Please select an event', 'error');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('event_id', eventId);
+            formData.append('reminder_time', reminderTime);
+            
+            fetch('/set_reminder', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    location.reload(); // Reload to show new reminder
+                } else {
+                    showToast(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error setting reminder:', error);
+                showToast('Error setting reminder', 'error');
+            });
+        }
+
+        // Quick reminder from events list
+        function setQuickReminder(eventId) {
+            document.getElementById('eventSelect').value = eventId;
+            document.getElementById('reminderTime').value = '1_hour';
+            setReminder();
+        }
+
+        // Delete reminder
+        function deleteReminder(reminderId) {
+            if (!confirm('Are you sure you want to delete this reminder?')) return;
+            
+            fetch(`/delete_reminder/${reminderId}`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    location.reload();
+                } else {
+                    showToast(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting reminder:', error);
+                showToast('Error deleting reminder', 'error');
+            });
+        }
+
+        // Format file size
+        function formatFileSize(bytes) {
+            if (bytes === 0 || !bytes) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'info') {
+            // Remove existing toasts
+            const existingToast = document.querySelector('.toast');
+            if (existingToast) existingToast.remove();
+            
+            // Create toast
+            const toast = document.createElement('div');
+            toast.className = `toast fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 transform transition-transform duration-300 ${
+                type === 'success' ? 'bg-green-500 text-white' :
+                type === 'error' ? 'bg-red-500 text-white' :
+                'bg-blue-500 text-white'
+            }`;
+            toast.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas ${
+                        type === 'success' ? 'fa-check-circle' :
+                        type === 'error' ? 'fa-exclamation-circle' :
+                        'fa-info-circle'
+                    } mr-3"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            // Animate in
+            setTimeout(() => {
+                toast.style.transform = 'translateX(0)';
+            }, 10);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        // Event listeners
+        document.getElementById('timeFilter').addEventListener('change', loadEvents);
+        document.getElementById('deptFilter').addEventListener('change', loadEvents);
+        document.getElementById('schoolFilter').addEventListener('change', loadEvents);
+        
+        document.getElementById('driveSearch').addEventListener('input', searchDrive);
+        document.getElementById('driveSearch').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') searchDrive();
+        });
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadEvents();
+            loadDriveFolders();
+            
+            // Auto-refresh events every 30 seconds
+            setInterval(loadEvents, 30000);
+        });
+    </script>
+</body>
+</html>

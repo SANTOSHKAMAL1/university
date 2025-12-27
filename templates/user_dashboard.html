@@ -1,4 +1,430 @@
-<h2>User Dashboard</h2>
-<p>Welcome, {{ session['email'] }}</p>
-<p>You can view limited data.</p>
-<a href="{{ url_for('logout') }}">Logout</a>
+{% extends 'base_user.html' %}
+
+{% block title %}User Dashboard - Jain University{% endblock %}
+{% block page_title %}Welcome to Your Dashboard{% endblock %}
+
+{% block content %}
+<div class="p-8">
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Today's Events</p>
+                    <p class="text-3xl font-bold text-blue-600">{{ today_events|length }}</p>
+                </div>
+                <div class="bg-blue-100 rounded-full p-3">
+                    <i class="fas fa-calendar-day text-blue-600 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">This Week</p>
+                    <p class="text-3xl font-bold text-green-600">{{ upcoming_events|length }}</p>
+                </div>
+                <div class="bg-green-100 rounded-full p-3">
+                    <i class="fas fa-calendar-week text-green-600 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">My Folders</p>
+                    <p class="text-3xl font-bold text-yellow-600">{{ user_navbar|length if user_navbar else 0 }}</p>
+                </div>
+                <div class="bg-yellow-100 rounded-full p-3">
+                    <i class="fas fa-folder text-yellow-600 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Google Services</p>
+                    <p class="text-3xl font-bold text-purple-600">2</p>
+                </div>
+                <div class="bg-purple-100 rounded-full p-3">
+                    <i class="fab fa-google text-purple-600 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Today's Events -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                <i class="fas fa-calendar-day text-red-500"></i>
+                Today's Events
+            </h2>
+            <a href="{{ url_for('jainevents') }}" class="text-blue-600 hover:text-blue-800 font-semibold">
+                View All Events <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+
+        {% if today_events %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {% for event in today_events %}
+                <div class="border-l-4 border-red-500 bg-red-50 p-4 rounded-lg hover:shadow-md transition">
+                    <h3 class="font-bold text-gray-900 mb-2">{{ event.event_name }}</h3>
+                    <div class="space-y-2 text-sm text-gray-600">
+                        <p><i class="far fa-calendar-alt text-red-500"></i> {{ event.event_date }}</p>
+                        <p><i class="fas fa-map-marker-alt text-red-500"></i> {{ event.venue }}</p>
+                        <p><i class="fas fa-university text-red-500"></i> {{ event.school or 'N/A' }}</p>
+                        <p><i class="fas fa-building text-red-500"></i> {{ event.department or 'N/A' }}</p>
+                    </div>
+                    <div class="mt-4 flex gap-2">
+                        <button onclick="setEventReminder('{{ event._id }}', '{{ event.event_name }}')" 
+                                class="flex-1 bg-red-500 text-white px-3 py-2 rounded-lg text-sm hover:bg-red-600 transition">
+                            <i class="far fa-bell"></i> Set Reminder
+                        </button>
+                        <button onclick="subscribeToEvent('{{ event._id }}')" 
+                                class="flex-1 bg-blue-500 text-white px-3 py-2 rounded-lg text-sm hover:bg-blue-600 transition">
+                            <i class="fas fa-envelope"></i> Subscribe
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-12 text-gray-500">
+                <i class="far fa-calendar text-6xl mb-4"></i>
+                <p class="text-lg">No events scheduled for today</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Upcoming This Week -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                <i class="fas fa-calendar-week text-blue-500"></i>
+                Upcoming This Week
+            </h2>
+            <div class="flex gap-2">
+                <select id="departmentFilter" onchange="filterEventsByDepartment()" 
+                        class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">All Departments</option>
+                </select>
+                <select id="schoolFilter" onchange="filterEventsByDepartment()" 
+                        class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">All Schools</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="upcomingEventsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {% if upcoming_events %}
+                {% for event in upcoming_events %}
+                <div class="border-l-4 border-blue-500 bg-blue-50 p-4 rounded-lg hover:shadow-md transition event-item" 
+                     data-department="{{ event.department }}" data-school="{{ event.school }}">
+                    <h3 class="font-bold text-gray-900 mb-2">{{ event.event_name }}</h3>
+                    <div class="space-y-2 text-sm text-gray-600">
+                        <p><i class="far fa-calendar-alt text-blue-500"></i> {{ event.event_date }}</p>
+                        <p><i class="fas fa-map-marker-alt text-blue-500"></i> {{ event.venue }}</p>
+                        <p><i class="fas fa-university text-blue-500"></i> {{ event.school or 'N/A' }}</p>
+                        <p><i class="fas fa-building text-blue-500"></i> {{ event.department or 'N/A' }}</p>
+                        <p><i class="fas fa-tag text-blue-500"></i> {{ event.event_type or 'Event' }}</p>
+                    </div>
+                    <div class="mt-4 flex gap-2">
+                        <button onclick="openReminderModal('{{ event._id }}', '{{ event.event_name }}', '{{ event.event_date }}')" 
+                                class="flex-1 bg-blue-500 text-white px-3 py-2 rounded-lg text-sm hover:bg-blue-600 transition">
+                            <i class="far fa-bell"></i> Set Reminder
+                        </button>
+                        <button onclick="subscribeToEvent('{{ event._id }}')" 
+                                class="flex-1 bg-green-500 text-white px-3 py-2 rounded-lg text-sm hover:bg-green-600 transition">
+                            <i class="fas fa-envelope"></i> Get Emails
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-span-2 text-center py-12 text-gray-500">
+                    <i class="far fa-calendar text-6xl mb-4"></i>
+                    <p class="text-lg">No upcoming events this week</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <a href="{{ url_for('drive_files') }}" class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 text-white hover:shadow-xl transition">
+            <div class="flex items-center gap-4">
+                <i class="fab fa-google-drive text-4xl"></i>
+                <div>
+                    <h3 class="font-bold text-lg">Google Drive</h3>
+                    <p class="text-sm opacity-90">Manage your folders</p>
+                </div>
+            </div>
+        </a>
+
+        <a href="{{ url_for('connect_gmail') }}" class="bg-gradient-to-r from-red-500 to-red-600 rounded-lg shadow-lg p-6 text-white hover:shadow-xl transition">
+            <div class="flex items-center gap-4">
+                <i class="fab fa-google text-4xl"></i>
+                <div>
+                    <h3 class="font-bold text-lg">Gmail</h3>
+                    <p class="text-sm opacity-90">Connect your email</p>
+                </div>
+            </div>
+        </a>
+
+        <a href="{{ url_for('jainevents') }}" class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg shadow-lg p-6 text-white hover:shadow-xl transition">
+            <div class="flex items-center gap-4">
+                <i class="fas fa-calendar-alt text-4xl"></i>
+                <div>
+                    <h3 class="font-bold text-lg">All Events</h3>
+                    <p class="text-sm opacity-90">View calendar</p>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- Reminder Modal -->
+<div id="reminderModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+        <div class="bg-blue-600 text-white px-6 py-4 rounded-t-lg flex items-center justify-between">
+            <h3 class="text-xl font-bold flex items-center gap-2">
+                <i class="far fa-bell"></i>
+                Set Event Reminder
+            </h3>
+            <button onclick="closeReminderModal()" class="text-white hover:text-gray-200">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+        </div>
+        <div class="p-6">
+            <p class="mb-4 text-gray-700">
+                <strong id="modalEventName"></strong>
+            </p>
+            <p class="mb-4 text-sm text-gray-600">
+                Event Date: <span id="modalEventDate"></span>
+            </p>
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                    Remind me before:
+                </label>
+                <select id="reminderTime" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="15">15 minutes before</option>
+                    <option value="30">30 minutes before</option>
+                    <option value="60" selected>1 hour before</option>
+                    <option value="120">2 hours before</option>
+                    <option value="1440">1 day before</option>
+                    <option value="2880">2 days before</option>
+                </select>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="confirmReminder()" 
+                        class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+                    <i class="far fa-bell"></i> Set Reminder
+                </button>
+                <button onclick="closeReminderModal()" 
+                        class="flex-1 bg-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-400 transition">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notification -->
+<div id="toast" class="fixed top-20 right-6 bg-white rounded-lg shadow-lg p-4 hidden items-center gap-3 z-50 min-w-[300px]">
+    <i id="toastIcon" class="fas fa-check-circle text-2xl"></i>
+    <span id="toastMessage" class="text-gray-800"></span>
+</div>
+
+<script>
+let currentEventId = null;
+let allEvents = {{ upcoming_events|tojson if upcoming_events else [] }};
+
+// Load departments and schools for filters
+async function loadFilters() {
+    try {
+        const [depts, schools] = await Promise.all([
+            fetch('/api/departments').then(r => r.json()),
+            fetch('/api/schools').then(r => r.json())
+        ]);
+        
+        const deptSelect = document.getElementById('departmentFilter');
+        const schoolSelect = document.getElementById('schoolFilter');
+        
+        depts.forEach(dept => {
+            const option = document.createElement('option');
+            option.value = dept;
+            option.textContent = dept;
+            deptSelect.appendChild(option);
+        });
+        
+        schools.forEach(school => {
+            const option = document.createElement('option');
+            option.value = school;
+            option.textContent = school;
+            schoolSelect.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error loading filters:', error);
+    }
+}
+
+// Filter events by department and school
+function filterEventsByDepartment() {
+    const deptFilter = document.getElementById('departmentFilter').value;
+    const schoolFilter = document.getElementById('schoolFilter').value;
+    const eventItems = document.querySelectorAll('.event-item');
+    
+    eventItems.forEach(item => {
+        const dept = item.dataset.department || '';
+        const school = item.dataset.school || '';
+        
+        const deptMatch = !deptFilter || dept === deptFilter;
+        const schoolMatch = !schoolFilter || school === schoolFilter;
+        
+        if (deptMatch && schoolMatch) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+
+// Open reminder modal
+function openReminderModal(eventId, eventName, eventDate) {
+    currentEventId = eventId;
+    document.getElementById('modalEventName').textContent = eventName;
+    document.getElementById('modalEventDate').textContent = eventDate;
+    document.getElementById('reminderModal').classList.remove('hidden');
+    document.getElementById('reminderModal').classList.add('flex');
+}
+
+// Close reminder modal
+function closeReminderModal() {
+    document.getElementById('reminderModal').classList.add('hidden');
+    document.getElementById('reminderModal').classList.remove('flex');
+    currentEventId = null;
+}
+
+// Confirm and set reminder
+async function confirmReminder() {
+    const reminderMinutes = document.getElementById('reminderTime').value;
+    
+    if (!currentEventId) {
+        showToast('Error: No event selected', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/events/set-reminder', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                event_id: currentEventId,
+                reminder_minutes: parseInt(reminderMinutes)
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showToast('✅ Reminder set! You will receive an email notification.', 'success');
+            closeReminderModal();
+        } else {
+            showToast('❌ ' + (data.error || 'Failed to set reminder'), 'error');
+        }
+    } catch (error) {
+        console.error('Error setting reminder:', error);
+        showToast('❌ Failed to set reminder', 'error');
+    }
+}
+
+// Subscribe to event
+async function subscribeToEvent(eventId) {
+    try {
+        const response = await fetch('/api/events/subscribe', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                event_id: eventId
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showToast('✅ Subscribed! You will receive event updates via email.', 'success');
+        } else {
+            showToast('ℹ️ ' + (data.message || data.error || 'Already subscribed'), 'info');
+        }
+    } catch (error) {
+        console.error('Error subscribing to event:', error);
+        showToast('❌ Failed to subscribe', 'error');
+    }
+}
+
+// Quick set reminder function
+function setEventReminder(eventId, eventName) {
+    currentEventId = eventId;
+    // Set default 1 hour reminder
+    fetch('/api/events/set-reminder', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            event_id: eventId,
+            reminder_minutes: 60
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        showToast('✅ Reminder set for 1 hour before the event!', 'success');
+    })
+    .catch(error => {
+        showToast('❌ Failed to set reminder', 'error');
+    });
+}
+
+// Show toast notification
+function showToast(message, type = 'success') {
+    const toast = document.getElementById('toast');
+    const icon = document.getElementById('toastIcon');
+    const msg = document.getElementById('toastMessage');
+    
+    // Set icon and color based on type
+    if (type === 'success') {
+        icon.className = 'fas fa-check-circle text-2xl text-green-500';
+        toast.style.borderLeft = '4px solid #10b981';
+    } else if (type === 'error') {
+        icon.className = 'fas fa-exclamation-circle text-2xl text-red-500';
+        toast.style.borderLeft = '4px solid #ef4444';
+    } else {
+        icon.className = 'fas fa-info-circle text-2xl text-blue-500';
+        toast.style.borderLeft = '4px solid #3b82f6';
+    }
+    
+    msg.textContent = message;
+    toast.classList.remove('hidden');
+    toast.classList.add('flex');
+    
+    setTimeout(() => {
+        toast.classList.add('hidden');
+        toast.classList.remove('flex');
+    }, 4000);
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', () => {
+    loadFilters();
+});
+</script>
+
+{% endblock %}
