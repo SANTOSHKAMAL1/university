@@ -34,11 +34,11 @@
         <div class="bg-white rounded-lg shadow p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-gray-500 text-sm">My Folders</p>
-                    <p class="text-3xl font-bold text-yellow-600">{{ user_navbar|length if user_navbar else 0 }}</p>
+                    <p class="text-gray-500 text-sm">Drive Files</p>
+                    <p class="text-3xl font-bold text-yellow-600">{{ drive_stats.total_files if drive_connected else 0 }}</p>
                 </div>
                 <div class="bg-yellow-100 rounded-full p-3">
-                    <i class="fas fa-folder text-yellow-600 text-2xl"></i>
+                    <i class="fab fa-google-drive text-yellow-600 text-2xl"></i>
                 </div>
             </div>
         </div>
@@ -46,14 +46,156 @@
         <div class="bg-white rounded-lg shadow p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-gray-500 text-sm">Google Services</p>
-                    <p class="text-3xl font-bold text-purple-600">2</p>
+                    <p class="text-gray-500 text-sm">My Folders</p>
+                    <p class="text-3xl font-bold text-purple-600">{{ user_navbar|length if user_navbar else 0 }}</p>
                 </div>
                 <div class="bg-purple-100 rounded-full p-3">
-                    <i class="fab fa-google text-purple-600 text-2xl"></i>
+                    <i class="fas fa-folder text-purple-600 text-2xl"></i>
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- Google Drive Section -->
+    {% if drive_connected %}
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                <i class="fab fa-google-drive text-blue-500"></i>
+                Google Drive Quick Actions
+            </h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Upload File -->
+            <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-blue-500 transition">
+                <h3 class="font-bold text-gray-900 mb-3 flex items-center gap-2">
+                    <i class="fas fa-cloud-upload-alt text-blue-500"></i>
+                    Upload File to Drive
+                </h3>
+                <form id="uploadForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Select File</label>
+                        <input type="file" id="fileInput" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Destination Folder (Optional)</label>
+                        <select id="folderSelect" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="root">My Drive (Root)</option>
+                        </select>
+                    </div>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="makePublic" class="form-checkbox h-4 w-4 text-blue-600">
+                        <span class="text-sm text-gray-700">Make public (anyone with link can view)</span>
+                    </label>
+                    <button type="submit" class="w-full bg-blue-600 text-white px-4 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+                        <i class="fas fa-upload mr-2"></i>Upload File
+                    </button>
+                </form>
+                <div id="uploadProgress" class="mt-4 hidden">
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div id="progressBar" class="bg-blue-600 h-2 rounded-full transition-all" style="width: 0%"></div>
+                    </div>
+                    <p id="progressText" class="text-sm text-gray-600 mt-2 text-center"></p>
+                </div>
+            </div>
+
+            <!-- Create Folder -->
+            <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-green-500 transition">
+                <h3 class="font-bold text-gray-900 mb-3 flex items-center gap-2">
+                    <i class="fas fa-folder-plus text-green-500"></i>
+                    Create New Folder
+                </h3>
+                <form id="createFolderForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Folder Name</label>
+                        <input type="text" id="folderName" placeholder="Enter folder name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Parent Folder (Optional)</label>
+                        <select id="parentFolderSelect" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                            <option value="root">My Drive (Root)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="w-full bg-green-600 text-white px-4 py-3 rounded-lg font-semibold hover:bg-green-700 transition">
+                        <i class="fas fa-folder-plus mr-2"></i>Create Folder
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Recent Uploads -->
+        {% if drive_stats.recent_uploads %}
+        <div class="mt-6">
+            <h3 class="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <i class="fas fa-clock text-purple-500"></i>
+                Recent Uploads (Last 7 Days)
+            </h3>
+            <div class="space-y-2">
+                {% for file in drive_stats.recent_uploads[:5] %}
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-file text-blue-500"></i>
+                        <div>
+                            <p class="font-medium text-gray-900">{{ file.name }}</p>
+                            <p class="text-xs text-gray-500">
+                                Uploaded: {{ file.createdTime[:10] }} | Folder: {{ file.folder_name }}
+                            </p>
+                        </div>
+                    </div>
+                    <a href="{{ file.webViewLink }}" target="_blank" class="text-blue-600 hover:text-blue-800">
+                        <i class="fas fa-external-link-alt"></i>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% else %}
+    <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-lg p-8 mb-8 text-white">
+        <div class="flex items-center justify-between">
+            <div>
+                <h2 class="text-2xl font-bold mb-2">Connect Your Google Drive</h2>
+                <p class="text-blue-100 mb-4">Upload files, create folders, and manage your Drive directly from here!</p>
+                <a href="{{ url_for('connect_drive') }}" class="inline-block bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition">
+                    <i class="fab fa-google-drive mr-2"></i>Connect Google Drive
+                </a>
+            </div>
+            <i class="fab fa-google-drive text-9xl opacity-20"></i>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Office of Academics Public Files Section -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                <i class="fas fa-folder-open text-orange-500"></i>
+                Office of Academics Public Files
+            </h2>
+        </div>
+
+        {% if public_files %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {% for file in public_files %}
+                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+                    <h3 class="font-bold text-gray-900 mb-2 truncate">{{ file.name }}</h3>
+                    <p class="text-sm text-gray-600 mb-3">
+                        Uploaded by: {{ file.uploader_email }} on {{ file.uploaded_at.strftime('%Y-%m-%d') }}
+                    </p>
+                    <a href="{{ file.web_link }}" target="_blank" class="block bg-orange-500 text-white px-4 py-2 rounded-lg text-center hover:bg-orange-600 transition">
+                        <i class="fas fa-eye mr-2"></i>View File
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-12 text-gray-500">
+                <i class="fas fa-folder-open text-6xl mb-4"></i>
+                <p class="text-lg">No public files available yet</p>
+            </div>
+        {% endif %}
     </div>
 
     <!-- Today's Events -->
@@ -75,12 +217,12 @@
                     <h3 class="font-bold text-gray-900 mb-2">{{ event.event_name }}</h3>
                     <div class="space-y-2 text-sm text-gray-600">
                         <p><i class="far fa-calendar-alt text-red-500"></i> {{ event.event_date }}</p>
+                        <p><i class="fas fa-clock text-red-500"></i> {{ event.event_time if event.event_time else 'All Day' }}</p>
                         <p><i class="fas fa-map-marker-alt text-red-500"></i> {{ event.venue }}</p>
                         <p><i class="fas fa-university text-red-500"></i> {{ event.school or 'N/A' }}</p>
-                        <p><i class="fas fa-building text-red-500"></i> {{ event.department or 'N/A' }}</p>
                     </div>
                     <div class="mt-4 flex gap-2">
-                        <button onclick="setEventReminder('{{ event._id }}', '{{ event.event_name }}')" 
+                        <button onclick="openAdvancedReminderModal('{{ event._id }}', '{{ event.event_name }}', '{{ event.event_date }}')" 
                                 class="flex-1 bg-red-500 text-white px-3 py-2 rounded-lg text-sm hover:bg-red-600 transition">
                             <i class="far fa-bell"></i> Set Reminder
                         </button>
@@ -127,13 +269,13 @@
                     <h3 class="font-bold text-gray-900 mb-2">{{ event.event_name }}</h3>
                     <div class="space-y-2 text-sm text-gray-600">
                         <p><i class="far fa-calendar-alt text-blue-500"></i> {{ event.event_date }}</p>
+                        <p><i class="fas fa-clock text-blue-500"></i> {{ event.event_time if event.event_time else 'All Day' }}</p>
                         <p><i class="fas fa-map-marker-alt text-blue-500"></i> {{ event.venue }}</p>
                         <p><i class="fas fa-university text-blue-500"></i> {{ event.school or 'N/A' }}</p>
                         <p><i class="fas fa-building text-blue-500"></i> {{ event.department or 'N/A' }}</p>
-                        <p><i class="fas fa-tag text-blue-500"></i> {{ event.event_type or 'Event' }}</p>
                     </div>
                     <div class="mt-4 flex gap-2">
-                        <button onclick="openReminderModal('{{ event._id }}', '{{ event.event_name }}', '{{ event.event_date }}')" 
+                        <button onclick="openAdvancedReminderModal('{{ event._id }}', '{{ event.event_name }}', '{{ event.event_date }}')" 
                                 class="flex-1 bg-blue-500 text-white px-3 py-2 rounded-lg text-sm hover:bg-blue-600 transition">
                             <i class="far fa-bell"></i> Set Reminder
                         </button>
@@ -187,15 +329,15 @@
     </div>
 </div>
 
-<!-- Reminder Modal -->
-<div id="reminderModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+<!-- Advanced Reminder Modal -->
+<div id="advancedReminderModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
     <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
         <div class="bg-blue-600 text-white px-6 py-4 rounded-t-lg flex items-center justify-between">
             <h3 class="text-xl font-bold flex items-center gap-2">
                 <i class="far fa-bell"></i>
                 Set Event Reminder
             </h3>
-            <button onclick="closeReminderModal()" class="text-white hover:text-gray-200">
+            <button onclick="closeAdvancedReminderModal()" class="text-white hover:text-gray-200">
                 <i class="fas fa-times text-2xl"></i>
             </button>
         </div>
@@ -206,25 +348,26 @@
             <p class="mb-4 text-sm text-gray-600">
                 Event Date: <span id="modalEventDate"></span>
             </p>
-            <div class="mb-6">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">
-                    Remind me before:
-                </label>
-                <select id="reminderTime" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="15">15 minutes before</option>
-                    <option value="30">30 minutes before</option>
-                    <option value="60" selected>1 hour before</option>
-                    <option value="120">2 hours before</option>
-                    <option value="1440">1 day before</option>
-                    <option value="2880">2 days before</option>
-                </select>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Reminder Date:
+                    </label>
+                    <input type="date" id="reminderDate" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Reminder Time:
+                    </label>
+                    <input type="time" id="reminderTime" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
             </div>
-            <div class="flex gap-3">
-                <button onclick="confirmReminder()" 
+            <div class="flex gap-3 mt-6">
+                <button onclick="confirmAdvancedReminder()" 
                         class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
                     <i class="far fa-bell"></i> Set Reminder
                 </button>
-                <button onclick="closeReminderModal()" 
+                <button onclick="closeAdvancedReminderModal()" 
                         class="flex-1 bg-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-400 transition">
                     Cancel
                 </button>
@@ -241,9 +384,171 @@
 
 <script>
 let currentEventId = null;
-let allEvents = {{ upcoming_events|tojson if upcoming_events else [] }};
 
-// Load departments and schools for filters
+// Drive upload functionality
+document.getElementById('uploadForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const fileInput = document.getElementById('fileInput');
+    const folderSelect = document.getElementById('folderSelect');
+    const makePublic = document.getElementById('makePublic').checked;
+    
+    if (!fileInput.files.length) {
+        showToast('Please select a file', 'error');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+    formData.append('folder_id', folderSelect.value);
+    formData.append('make_public', makePublic);
+    
+    document.getElementById('uploadProgress').classList.remove('hidden');
+    document.getElementById('progressText').textContent = 'Uploading...';
+    
+    try {
+        const response = await fetch('/drive/upload', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            document.getElementById('progressBar').style.width = '100%';
+            document.getElementById('progressText').textContent = 'Upload complete!';
+            let msg = `✅ File "${data.file_name}" uploaded successfully!`;
+            if (data.public_link) {
+                msg += ` Public link: ${data.public_link}`;
+            }
+            showToast(msg, 'success');
+            fileInput.value = '';
+            document.getElementById('makePublic').checked = false;
+            
+            setTimeout(() => {
+                document.getElementById('uploadProgress').classList.add('hidden');
+                document.getElementById('progressBar').style.width = '0%';
+                location.reload();
+            }, 2000);
+        } else {
+            showToast('❌ ' + (data.error || 'Upload failed'), 'error');
+            document.getElementById('uploadProgress').classList.add('hidden');
+        }
+    } catch (error) {
+        showToast('❌ Upload failed', 'error');
+        document.getElementById('uploadProgress').classList.add('hidden');
+    }
+});
+
+// Create folder functionality
+document.getElementById('createFolderForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const folderName = document.getElementById('folderName').value;
+    const parentId = document.getElementById('parentFolderSelect').value;
+    
+    if (!folderName) {
+        showToast('Please enter a folder name', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/drive/create-folder', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                folder_name: folderName,
+                parent_id: parentId
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showToast(`✅ Folder "${data.folder_name}" created successfully!`, 'success');
+            document.getElementById('folderName').value = '';
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showToast('❌ ' + (data.error || 'Failed to create folder'), 'error');
+        }
+    } catch (error) {
+        showToast('❌ Failed to create folder', 'error');
+    }
+});
+
+// Advanced reminder modal
+function openAdvancedReminderModal(eventId, eventName, eventDate) {
+    currentEventId = eventId;
+    document.getElementById('modalEventName').textContent = eventName;
+    document.getElementById('modalEventDate').textContent = eventDate;
+    
+    // Set default reminder date to event date
+    document.getElementById('reminderDate').value = eventDate;
+    document.getElementById('reminderTime').value = '09:00';
+    
+    document.getElementById('advancedReminderModal').classList.remove('hidden');
+    document.getElementById('advancedReminderModal').classList.add('flex');
+}
+
+function closeAdvancedReminderModal() {
+    document.getElementById('advancedReminderModal').classList.add('hidden');
+    document.getElementById('advancedReminderModal').classList.remove('flex');
+    currentEventId = null;
+}
+
+async function confirmAdvancedReminder() {
+    const reminderDate = document.getElementById('reminderDate').value;
+    const reminderTime = document.getElementById('reminderTime').value;
+    
+    if (!reminderDate || !reminderTime) {
+        showToast('Please select both date and time', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/events/set-reminder', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                event_id: currentEventId,
+                reminder_date: reminderDate,
+                reminder_time: reminderTime
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showToast(`✅ ${data.message}`, 'success');
+            closeAdvancedReminderModal();
+        } else {
+            showToast('❌ ' + (data.error || 'Failed to set reminder'), 'error');
+        }
+    } catch (error) {
+        showToast('❌ Failed to set reminder', 'error');
+    }
+}
+
+async function subscribeToEvent(eventId) {
+    try {
+        const response = await fetch('/api/events/subscribe', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({event_id: eventId})
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showToast('✅ Subscribed! You will receive event updates via email.', 'success');
+        } else {
+            showToast('ℹ️ ' + (data.message || data.error || 'Already subscribed'), 'info');
+        }
+    } catch (error) {
+        showToast('❌ Failed to subscribe', 'error');
+    }
+}
+
 async function loadFilters() {
     try {
         const [depts, schools] = await Promise.all([
@@ -272,7 +577,6 @@ async function loadFilters() {
     }
 }
 
-// Filter events by department and school
 function filterEventsByDepartment() {
     const deptFilter = document.getElementById('departmentFilter').value;
     const schoolFilter = document.getElementById('schoolFilter').value;
@@ -293,113 +597,11 @@ function filterEventsByDepartment() {
     });
 }
 
-// Open reminder modal
-function openReminderModal(eventId, eventName, eventDate) {
-    currentEventId = eventId;
-    document.getElementById('modalEventName').textContent = eventName;
-    document.getElementById('modalEventDate').textContent = eventDate;
-    document.getElementById('reminderModal').classList.remove('hidden');
-    document.getElementById('reminderModal').classList.add('flex');
-}
-
-// Close reminder modal
-function closeReminderModal() {
-    document.getElementById('reminderModal').classList.add('hidden');
-    document.getElementById('reminderModal').classList.remove('flex');
-    currentEventId = null;
-}
-
-// Confirm and set reminder
-async function confirmReminder() {
-    const reminderMinutes = document.getElementById('reminderTime').value;
-    
-    if (!currentEventId) {
-        showToast('Error: No event selected', 'error');
-        return;
-    }
-    
-    try {
-        const response = await fetch('/api/events/set-reminder', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                event_id: currentEventId,
-                reminder_minutes: parseInt(reminderMinutes)
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            showToast('✅ Reminder set! You will receive an email notification.', 'success');
-            closeReminderModal();
-        } else {
-            showToast('❌ ' + (data.error || 'Failed to set reminder'), 'error');
-        }
-    } catch (error) {
-        console.error('Error setting reminder:', error);
-        showToast('❌ Failed to set reminder', 'error');
-    }
-}
-
-// Subscribe to event
-async function subscribeToEvent(eventId) {
-    try {
-        const response = await fetch('/api/events/subscribe', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                event_id: eventId
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            showToast('✅ Subscribed! You will receive event updates via email.', 'success');
-        } else {
-            showToast('ℹ️ ' + (data.message || data.error || 'Already subscribed'), 'info');
-        }
-    } catch (error) {
-        console.error('Error subscribing to event:', error);
-        showToast('❌ Failed to subscribe', 'error');
-    }
-}
-
-// Quick set reminder function
-function setEventReminder(eventId, eventName) {
-    currentEventId = eventId;
-    // Set default 1 hour reminder
-    fetch('/api/events/set-reminder', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            event_id: eventId,
-            reminder_minutes: 60
-        })
-    })
-    .then(r => r.json())
-    .then(data => {
-        showToast('✅ Reminder set for 1 hour before the event!', 'success');
-    })
-    .catch(error => {
-        showToast('❌ Failed to set reminder', 'error');
-    });
-}
-
-// Show toast notification
 function showToast(message, type = 'success') {
     const toast = document.getElementById('toast');
     const icon = document.getElementById('toastIcon');
     const msg = document.getElementById('toastMessage');
     
-    // Set icon and color based on type
     if (type === 'success') {
         icon.className = 'fas fa-check-circle text-2xl text-green-500';
         toast.style.borderLeft = '4px solid #10b981';
@@ -421,10 +623,355 @@ function showToast(message, type = 'success') {
     }, 4000);
 }
 
-// Initialize on page load
+// Initialize on load
 document.addEventListener('DOMContentLoaded', () => {
     loadFilters();
 });
 </script>
 
+<style>
+/* Additional custom styles for user dashboard */
+.event-item {
+    transition: all 0.3s ease;
+}
+
+.event-item:hover {
+    transform: translateY(-2px);
+}
+
+#uploadProgress {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Toast animations */
+#toast {
+    animation: slideInRight 0.3s ease;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Modal animations */
+#advancedReminderModal {
+    animation: fadeIn 0.3s ease;
+}
+
+#advancedReminderModal > div {
+    animation: scaleIn 0.3s ease;
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Responsive design improvements */
+@media (max-width: 768px) {
+    .grid {
+        gap: 1rem;
+    }
+    
+    .p-8 {
+        padding: 1rem;
+    }
+    
+    h2 {
+        font-size: 1.5rem;
+    }
+    
+    .text-3xl {
+        font-size: 2rem;
+    }
+}
+
+/* File input styling */
+input[type="file"]::file-selector-button {
+    cursor: pointer;
+}
+
+/* Progress bar animation */
+#progressBar {
+    transition: width 0.3s ease;
+}
+
+/* Hover effects for cards */
+.border-gray-200:hover {
+    border-color: #3b82f6;
+}
+
+/* Loading state for buttons */
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Smooth scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Custom scrollbar for events container */
+#upcomingEventsContainer::-webkit-scrollbar {
+    width: 8px;
+}
+
+#upcomingEventsContainer::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+#upcomingEventsContainer::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+
+#upcomingEventsContainer::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Gradient text effect */
+.gradient-text {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Pulse animation for notification icon */
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
+}
+
+.animate-pulse-custom {
+    animation: pulse 2s infinite;
+}
+
+/* Card shadow on hover */
+.shadow-hover:hover {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Focus visible for accessibility */
+*:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* Backdrop blur effect */
+.backdrop-blur {
+    backdrop-filter: blur(8px);
+}
+
+/* Skeleton loader (for future use) */
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Print styles */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    .bg-gradient-to-r,
+    .bg-blue-500,
+    .bg-red-500,
+    .bg-green-500 {
+        background: white !important;
+        color: black !important;
+        border: 1px solid #000;
+    }
+}
+
+/* Dark mode support (if needed in future) */
+@media (prefers-color-scheme: dark) {
+    /* Add dark mode styles here if needed */
+}
+
+/* Tooltip styling (for future use) */
+.tooltip {
+    position: relative;
+}
+
+.tooltip::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.5rem 1rem;
+    background: #1f2937;
+    color: white;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+
+.tooltip:hover::before {
+    opacity: 1;
+}
+
+/* Badge styling */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.badge-blue {
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
+.badge-green {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+
+.badge-red {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+.badge-yellow {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+/* Loading spinner */
+.spinner {
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #3b82f6;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Empty state styling */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    text-align: center;
+    color: #6b7280;
+}
+
+.empty-state i {
+    font-size: 4rem;
+    opacity: 0.3;
+    margin-bottom: 1rem;
+}
+
+/* Success checkmark animation */
+@keyframes checkmark {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.checkmark-animation {
+    animation: checkmark 0.5s ease;
+}
+
+/* Fade in animation for cards */
+.fade-in {
+    animation: fadeInUp 0.6s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Stagger animation for list items */
+.event-item:nth-child(1) { animation-delay: 0.1s; }
+.event-item:nth-child(2) { animation-delay: 0.2s; }
+.event-item:nth-child(3) { animation-delay: 0.3s; }
+.event-item:nth-child(4) { animation-delay: 0.4s; }
+.event-item:nth-child(5) { animation-delay: 0.5s; }
+.event-item:nth-child(6) { animation-delay: 0.6s; }
+
+/* Smooth color transitions */
+* {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Remove transitions from specific elements */
+#progressBar,
+#toast,
+#advancedReminderModal {
+    transition: none;
+}
+</style>
 {% endblock %}

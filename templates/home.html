@@ -69,6 +69,7 @@
         .nav-links {
             display: flex;
             gap: 10px;
+            align-items: center;
         }
 
         .nav-links a {
@@ -83,6 +84,104 @@
         .nav-links a:hover {
             background-color: rgba(4, 4, 58, 0.1);
             color: var(--jain-gold);
+        }
+
+        /* User Profile Dropdown */
+        .user-profile-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .user-profile-btn {
+            background-color: var(--jain-blue);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .user-profile-btn:hover {
+            background-color: var(--jain-gold);
+            color: var(--jain-blue);
+        }
+
+        .user-profile-btn i {
+            font-size: 18px;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 45px;
+            background-color: white;
+            min-width: 220px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            border-radius: 8px;
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .dropdown-header {
+            padding: 15px;
+            background: linear-gradient(135deg, var(--jain-blue) 0%, #1e3c72 100%);
+            color: white;
+        }
+
+        .dropdown-header p {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .dropdown-header small {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .dropdown-menu a {
+            color: #333;
+            padding: 12px 15px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background-color 0.3s;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .dropdown-menu a:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-menu a:hover {
+            background-color: #f8f9fa;
+        }
+
+        .dropdown-menu a i {
+            width: 20px;
+            color: var(--jain-blue);
         }
 
         .login-btn {
@@ -159,143 +258,145 @@
             0% { transform: translateX(0); }
             100% { transform: translateX(-100%); }
         }
-/* ======== Capacity Building Section ======== */
-.dashboard-section {
-    padding: 2.5rem;
-    background: #f9fafb;
-    border-radius: 20px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-    transition: all 0.3s ease;
-}
 
-.dashboard-section:hover {
-    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-}
+        /* Capacity Building Section */
+        .dashboard-section {
+            padding: 2.5rem;
+            background: #f9fafb;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
 
-.dashboard-section h2 {
-    text-align: center;
-    font-size: 2rem;
-    font-weight: 700;
-    color: #343a40;
-    margin-bottom: 1rem;
-}
+        .dashboard-section:hover {
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+        }
 
-.dashboard-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: 2rem;
-    margin-top: 1.5rem;
-}
+        .dashboard-section h2 {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #343a40;
+            margin-bottom: 1rem;
+        }
 
-/* ======== Engagement Cards ======== */
-.dashboard-card.full-width {
-    width: 100%;
-}
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-top: 1.5rem;
+        }
 
-.engagement-card {
-    background: #ffffff;
-    border-radius: 16px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
-    overflow: hidden;
-    border: 1px solid #e5e7eb;
-}
+        /* Engagement Cards */
+        .dashboard-card.full-width {
+            width: 100%;
+        }
 
-.engagement-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-}
+        .engagement-card {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+        }
 
-/* ======== Card Header ======== */
-.engagement-card-header {
-    background: linear-gradient(135deg, #0056b3, #007bff);
-    color: #ffffff;
-    font-size: 1.2rem;
-    font-weight: 600;
-    padding: 1rem 1.5rem;
-    border-top-left-radius: 16px;
-    border-top-right-radius: 16px;
-    letter-spacing: 0.3px;
-}
+        .engagement-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
 
-/* ======== Card Body ======== */
-.engagement-card-body {
-    padding: 1.5rem;
-    color: #495057;
-    font-size: 0.95rem;
-    line-height: 1.6;
-}
+        /* Card Header */
+        .engagement-card-header {
+            background: linear-gradient(135deg, #0056b3, #007bff);
+            color: #ffffff;
+            font-size: 1.2rem;
+            font-weight: 600;
+            padding: 1rem 1.5rem;
+            border-top-left-radius: 16px;
+            border-top-right-radius: 16px;
+            letter-spacing: 0.3px;
+        }
 
-.engagement-card-body p {
-    margin-bottom: 1rem;
-}
+        /* Card Body */
+        .engagement-card-body {
+            padding: 1.5rem;
+            color: #495057;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
 
-/* ======== Meta Info ======== */
-.engagement-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    margin-bottom: 1rem;
-    color: #6c757d;
-    font-size: 0.9rem;
-}
+        .engagement-card-body p {
+            margin-bottom: 1rem;
+        }
 
-.engagement-meta span i {
-    color: #007bff;
-    margin-right: 6px;
-}
+        /* Meta Info */
+        .engagement-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
 
-/* ======== Tags ======== */
-.engagement-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-}
+        .engagement-meta span i {
+            color: #007bff;
+            margin-right: 6px;
+        }
 
-.engagement-tag {
-    background: #e9f3ff;
-    color: #007bff;
-    font-size: 0.8rem;
-    font-weight: 600;
-    padding: 0.4rem 0.8rem;
-    border-radius: 20px;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-    transition: background 0.2s ease, color 0.2s ease;
-}
+        /* Tags */
+        .engagement-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
 
-.engagement-tag:hover {
-    background: #007bff;
-    color: #ffffff;
-}
+        .engagement-tag {
+            background: #e9f3ff;
+            color: #007bff;
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            transition: background 0.2s ease, color 0.2s ease;
+        }
 
-/* ======== Responsive ======== */
-@media (max-width: 768px) {
-    .dashboard-section {
-        padding: 1.5rem;
-    }
-    .dashboard-section h2 {
-        font-size: 1.6rem;
-    }
-    .engagement-card-body {
-        padding: 1rem;
-    }
-}
-.engagement-card {
-    opacity: 0;
-    animation: fadeInUp 0.8s ease forwards;
-}
+        .engagement-tag:hover {
+            background: #007bff;
+            color: #ffffff;
+        }
 
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
+        /* Responsive */
+        @media (max-width: 768px) {
+            .dashboard-section {
+                padding: 1.5rem;
+            }
+            .dashboard-section h2 {
+                font-size: 1.6rem;
+            }
+            .engagement-card-body {
+                padding: 1rem;
+            }
+        }
+
+        .engagement-card {
+            opacity: 0;
+            animation: fadeInUp 0.8s ease forwards;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
         /* Main Container with Carousel */
         .main-container {
@@ -316,11 +417,11 @@
         .carousel-container {
             display: flex;
             transition: transform 0.6s cubic-bezier(0.645, 0.045, 0.355, 1);
-            width: 400%; /* 4 tabs * 100% */
+            width: 500%; /* 5 tabs * 100% */
         }
 
         .carousel-slide {
-            min-width: 25%; /* 100% / 4 tabs */
+            min-width: 20%; /* 100% / 5 tabs */
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.6s ease;
@@ -384,15 +485,15 @@
             border-radius: 10px;
             box-shadow: var(--shadow-sm);
             overflow: hidden;
-            height: 380px; /* Reduced height */
+            height: 380px;
             display: flex;
             flex-direction: column;
         }
 
         .card-header {
-            padding: 12px 20px; /* Reduced padding */
+            padding: 12px 20px;
             font-weight: 600;
-            font-size: 1rem; /* Smaller font */
+            font-size: 1rem;
             color: white;
             display: flex;
             align-items: center;
@@ -407,21 +508,10 @@
             background-color: #f97316;
         }
 
-        .newsletter-section .newsletter-header {
-            background-color: #8b5cf6;
-            padding: 12px 20px; /* Reduced padding */
-            font-weight: 600;
-            font-size: 1rem; /* Smaller font */
-            color: white;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
         .scrolling-content, .newsletter-scrolling-content {
             flex: 1;
             overflow-y: hidden;
-            padding: 10px; /* Reduced padding */
+            padding: 10px;
             position: relative;
         }
 
@@ -440,7 +530,7 @@
         }
 
         .ugc-notice, .newsletter-item {
-            padding: 12px; /* Reduced padding */
+            padding: 12px;
             border-bottom: 1px solid #f0f0f0;
             cursor: pointer;
             transition: background-color 0.3s;
@@ -455,24 +545,24 @@
         }
 
         .ugc-notice p {
-            margin-bottom: 6px; /* Reduced margin */
+            margin-bottom: 6px;
             color: #666;
-            font-size: 0.85rem; /* Smaller font */
+            font-size: 0.85rem;
         }
 
         .file-list {
             list-style: none;
-            margin-top: 8px; /* Reduced margin */
+            margin-top: 8px;
         }
 
         .file-list li {
-            margin: 4px 0; /* Reduced margin */
+            margin: 4px 0;
         }
 
         .file-list a {
             color: #1e40af;
             text-decoration: none;
-            font-size: 0.85rem; /* Smaller font */
+            font-size: 0.85rem;
         }
 
         .file-list a:hover {
@@ -481,15 +571,15 @@
 
         .newsletter-item {
             display: flex;
-            gap: 12px; /* Reduced gap */
+            gap: 12px;
             align-items: center;
         }
 
         .newsletter-image img {
-            width: 70px; /* Smaller image */
-            height: 70px; /* Smaller image */
+            width: 70px;
+            height: 70px;
             object-fit: cover;
-            border-radius: 6px; /* Smaller radius */
+            border-radius: 6px;
         }
 
         .newsletter-content {
@@ -499,12 +589,12 @@
         .newsletter-title {
             font-weight: 600;
             color: var(--jain-blue);
-            margin-bottom: 4px; /* Reduced margin */
-            font-size: 0.9rem; /* Smaller font */
+            margin-bottom: 4px;
+            font-size: 0.9rem;
         }
 
         .newsletter-date {
-            font-size: 0.8rem; /* Smaller font */
+            font-size: 0.8rem;
             color: #666;
             display: flex;
             align-items: center;
@@ -514,20 +604,20 @@
         .newsletter-tags {
             display: flex;
             gap: 5px;
-            margin-top: 4px; /* Reduced margin */
+            margin-top: 4px;
             flex-wrap: wrap;
         }
 
         .newsletter-tag {
             background-color: #e9ecef;
-            padding: 2px 6px; /* Reduced padding */
-            border-radius: 10px; /* Smaller radius */
-            font-size: 0.7rem; /* Smaller font */
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.7rem;
             color: #495057;
         }
 
         .read-more {
-            padding: 12px; /* Reduced padding */
+            padding: 12px;
             text-align: center;
             border-top: 1px solid #f0f0f0;
         }
@@ -536,7 +626,7 @@
             color: var(--jain-blue);
             text-decoration: none;
             font-weight: 600;
-            font-size: 0.85rem; /* Smaller font */
+            font-size: 0.85rem;
         }
 
         .read-more a:hover {
@@ -1251,6 +1341,23 @@
             }
         }
 
+        /* Public Documents Styling */
+        .public-documents-section {
+            margin-top: 20px;
+        }
+
+        .public-doc-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .public-doc-card:hover {
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            transform: translateY(-4px);
+        }
+
         /* Mobile Responsive */
         @media (max-width: 768px) {
             .nav-links {
@@ -1317,6 +1424,14 @@
             .footer-container {
                 grid-template-columns: 1fr;
             }
+
+            .carousel-container {
+                width: 500%;
+            }
+
+            .carousel-slide {
+                min-width: 20%;
+            }
         }
 
         /* Flatpickr Custom Styles */
@@ -1342,69 +1457,119 @@
                 </div>
             </div>
             
-            <button class="nav-toggle" aria-label="Toggle navigation">
+            <button class="nav-toggle" aria-label="Toggle navigation" onclick="toggleMobileNav()">
                 <i class="fas fa-bars"></i>
             </button>
           
-            <nav class="nav-links">
-                <a href="#">Home</a>
-                <a href="{{ url_for('monthlyengagement') }}">Engagements</a>
-                <a href="{{ url_for('usernewsletters') }}">Newsletter</a>
-                <a href="{{ url_for('jainevents') }}">Calendar Events</a>
-                <a href="{{ url_for('login') }}" class="login-btn"><i class="fas fa-sign-in-alt"></i> Login</a>
+            <nav class="nav-links" id="navLinks">
+                <a href="{{ url_for('home') }}"><i class="fas fa-home"></i> Home</a>
+                <a href="{{ url_for('monthlyengagement') }}"><i class="fas fa-chart-line"></i> Engagements</a>
+                <a href="{{ url_for('usernewsletters') }}"><i class="fas fa-newspaper"></i> Newsletter</a>
+                <a href="{{ url_for('jainevents') }}"><i class="fas fa-calendar-alt"></i> Calendar Events</a>
+                
+                {% if user_logged_in %}
+                    <!-- User Profile Dropdown -->
+                    <div class="user-profile-dropdown">
+                        <div class="user-profile-btn" onclick="toggleDropdown(event)">
+                            <i class="fas fa-user-circle"></i>
+                            <span>{{ user_email.split('@')[0] }}</span>
+                            <i class="fas fa-chevron-down" style="font-size: 12px;"></i>
+                        </div>
+                        <div class="dropdown-menu" id="userDropdown">
+                            <div class="dropdown-header">
+                                <p>{{ user_email.split('@')[0] }}</p>
+                                <small>{{ user_email }}</small>
+                            </div>
+                            {% if user_role == 'user' %}
+                            <a href="{{ url_for('user_dashboard') }}">
+                                <i class="fas fa-folder-open"></i>
+                                My Files
+                            </a>
+                            {% endif %}
+                            {% if user_role == 'admin' %}
+                            <a href="{{ url_for('admin_dashboard') }}">
+                                <i class="fas fa-tachometer-alt"></i>
+                                Admin Dashboard
+                            </a>
+                            {% endif %}
+                            <a href="{{ url_for('logout') }}">
+                                <i class="fas fa-sign-out-alt"></i>
+                                Logout
+                            </a>
+                        </div>
+                    </div>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="login-btn"><i class="fas fa-sign-in-alt"></i> Login</a>
+                {% endif %}
             </nav>
         </div>
     </header>
 
-    <!-- Today's Events Marquee -->
-    <div class="university-updates">
-        <div class="updates-container">
-            <div class="updates-label">
-                <i class="fas fa-calendar-day"></i> Today's Events
-            </div>
-            <div class="updates-marquee">
-                <p>
-                    {% set today_events = [] %}
-                    {% if events %}
-                        {% for event in events %}
-                            {% if event.event_date.date() == today %}
-                                {% set _ = today_events.append(event) %}
-                            {% endif %}
-                        {% endfor %}
-                    {% endif %}
-                    
-                    {% if today_events %}
-                        {% for event in today_events %}
-                            <a href="{{ url_for('jainevents') }}">{{ event.event_name }}</a>
-                            {% if not loop.last %} • {% endif %}
-                        {% endfor %}
-                    {% else %}
-                        <a href="{{ url_for('jainevents') }}">No events scheduled for today</a>
-                    {% endif %}
-                    •
-                    <a href="{{ url_for('jainevents') }}">View all events</a>
-                </p>
-            </div>
+   <!-- Today's Events Marquee -->
+<div class="university-updates">
+    <div class="updates-container">
+        <div class="updates-label">
+            <i class="fas fa-calendar-day"></i> Today's Events
+        </div>
+        <div class="updates-marquee">
+            <p>
+                {% set today_events = [] %}
+                {% if events %}
+                    {% for event in events %}
+                        {% set event_date = event.event_date if event.event_date.__class__.__name__ == 'date' else event.event_date.date() if event.event_date.__class__.__name__ == 'datetime' else none %}
+                        {% if event_date and event_date == today %}
+                            {% set _ = today_events.append(event) %}
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+                
+                {% if today_events %}
+                    {% for event in today_events %}
+                        <a href="{{ url_for('jainevents') }}">{{ event.event_name }}</a>
+                        {% if not loop.last %} • {% endif %}
+                    {% endfor %}
+                {% else %}
+                    <a href="{{ url_for('jainevents') }}">No events scheduled for today</a>
+                {% endif %}
+                •
+                <a href="{{ url_for('jainevents') }}">View all events</a>
+            </p>
         </div>
     </div>
+</div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div style="max-width: 1400px; margin: 20px auto; padding: 0 20px;">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}" style="padding: 15px; border-radius: 8px; margin-bottom: 10px; 
+                         background-color: {% if category == 'success' %}#d4edda{% elif category == 'error' %}#f8d7da{% else %}#d1ecf1{% endif %};
+                         color: {% if category == 'success' %}#155724{% elif category == 'error' %}#721c24{% else %}#0c5460{% endif %};">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
 
     <!-- Main Container -->
     <main class="main-container">
-        <!-- Tab Navigation with Indicator -->
+        <!-- Tab Navigation with Indicator (5 TABS) -->
         <div class="main-tabs" id="mainTabs">
             <div class="tab-indicator" id="tabIndicator"></div>
-            <button class="main-tab active" data-tab="0">Notices</button>
-            <button class="main-tab" data-tab="1">Digital Innovation</button>
-            <button class="main-tab" data-tab="2">Capacity Building</button>
-            <button class="main-tab" data-tab="3">Calendar</button>
+            <button class="main-tab active" data-tab="0">Public Notices</button>
+            <button class="main-tab" data-tab="1">Office Documents</button>
+            <button class="main-tab" data-tab="2">Digital Innovation</button>
+            <button class="main-tab" data-tab="3">Capacity Building</button>
+            <button class="main-tab" data-tab="4">Calendar</button>
         </div>
 
         <!-- Carousel Container -->
         <div class="carousel-wrapper">
             <div class="carousel-container" id="carouselContainer">
-                <!-- Slide 1: Notices (Homepage) -->
+                <!-- Slide 0: Public Notices -->
                 <div class="carousel-slide active">
-                    <!-- Notices and Newsletter Section -->
                     <div class="notices-container">
                         <!-- UGC Notices Section -->
                         <div class="notice-section ugc-notice-section">
@@ -1483,6 +1648,67 @@
                             </div>
                             <div class="read-more">
                                 <a href="{{ url_for('ugc') }}"><i class="fas fa-eye"></i> View All University Notices</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slide 1: Office Documents -->
+                <div class="carousel-slide">
+                    <div class="public-documents-section">
+                        <div style="background: white; border-radius: 10px; box-shadow: var(--shadow-sm); overflow: hidden;">
+                            <div style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); padding: 15px 20px; color: white; display: flex; align-items: center; gap: 10px;">
+                                <i class="fas fa-folder-open"></i>
+                                <h3 style="margin: 0; font-size: 1.1rem; font-weight: 600;">Office of Academics Public Documents</h3>
+                            </div>
+                            
+                            <div style="padding: 20px;">
+                                {% if public_files and public_files|length > 0 %}
+                                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">
+                                        {% for file in public_files[:6] %}
+                                        <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; transition: all 0.3s ease; cursor: pointer;" 
+                                             onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)'; this.style.transform='translateY(-2px)'" 
+                                             onmouseout="this.style.boxShadow='none'; this.style.transform='translateY(0)'">
+                                            <div style="display: flex; align-items: start; gap: 12px; margin-bottom: 12px;">
+                                                <i class="fas fa-file-alt" style="font-size: 2rem; color: #f97316;"></i>
+                                                <div style="flex: 1; min-width: 0;">
+                                                    <h4 style="margin: 0 0 6px 0; font-size: 0.95rem; font-weight: 600; color: #1f2937; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                                        {{ file.name }}
+                                                    </h4>
+                                                    <p style="margin: 0; font-size: 0.75rem; color: #6b7280;">
+                                                        <i class="fas fa-user" style="font-size: 0.7rem;"></i> {{ file.uploader_email.split('@')[0] }}
+                                                    </p>
+                                                    <p style="margin: 4px 0 0 0; font-size: 0.75rem; color: #6b7280;">
+                                                        <i class="far fa-calendar" style="font-size: 0.7rem;"></i> {{ file.uploaded_at.strftime('%Y-%m-%d') if file.uploaded_at else 'N/A' }}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <a href="{{ file.web_link }}" target="_blank" 
+                                               style="display: block; background: #f97316; color: white; text-align: center; padding: 8px; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: background 0.3s ease;"
+                                               onmouseover="this.style.background='#ea580c'" 
+                                               onmouseout="this.style.background='#f97316'">
+                                                <i class="fas fa-external-link-alt"></i> View Document
+                                            </a>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    
+                                    {% if public_files|length > 6 %}
+                                    <div style="text-align: center; margin-top: 20px;">
+                                        <a href="#" onclick="showAllPublicDocuments(); return false;" 
+                                           style="display: inline-block; color: #f97316; font-weight: 600; text-decoration: none; padding: 8px 20px; border: 2px solid #f97316; border-radius: 25px; transition: all 0.3s ease;"
+                                           onmouseover="this.style.background='#f97316'; this.style.color='white'" 
+                                           onmouseout="this.style.background='transparent'; this.style.color='#f97316'">
+                                            View All Documents ({{ public_files|length }})
+                                        </a>
+                                    </div>
+                                    {% endif %}
+                                {% else %}
+                                    <div style="text-align: center; padding: 40px 20px; color: #9ca3af;">
+                                        <i class="fas fa-folder-open" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.5;"></i>
+                                        <p style="font-size: 1rem; margin: 0;">No public documents available at this time</p>
+                                    </div>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -1862,7 +2088,7 @@
                     updateTodaysEventsMarquee();
                     
                     // Load events in calendar if calendar tab is active
-                    if (currentTab === 3) {
+                    if (currentTab === 4) {
                         loadEvents();
                     }
                 } else {
@@ -1913,7 +2139,7 @@
             ];
             
             updateTodaysEventsMarquee();
-            if (currentTab === 3) {
+            if (currentTab === 4) {
                 loadEvents();
             }
         }
@@ -1949,7 +2175,7 @@
             }
         }
 
-        // Tab Navigation with Carousel
+        // Tab Navigation with Carousel (5 TABS)
         const tabs = document.querySelectorAll('.main-tab');
         const indicator = document.getElementById('tabIndicator');
         const carouselContainer = document.getElementById('carouselContainer');
@@ -1962,8 +2188,8 @@
             
             updateIndicator(tabs[currentTab]);
             
-            // Slide carousel to current tab
-            carouselContainer.style.transform = `translateX(-${currentTab * 25}%)`;
+            // Slide carousel to current tab (5 tabs = 20% each)
+            carouselContainer.style.transform = `translateX(-${currentTab * 20}%)`;
             
             // Update slide visibility
             slides.forEach((slide, i) => {
@@ -1988,16 +2214,16 @@
             // Update indicator
             updateIndicator(tabs[index]);
             
-            // Slide carousel
-            carouselContainer.style.transform = `translateX(-${index * 25}%)`;
+            // Slide carousel (5 tabs = 20% each)
+            carouselContainer.style.transform = `translateX(-${index * 20}%)`;
             
             // Update slide visibility
             slides.forEach((slide, i) => {
                 slide.classList.toggle('active', i === index);
             });
 
-            // If calendar tab, initialize calendar
-            if (index === 3) {
+            // If calendar tab (index 4), initialize calendar
+            if (index === 4) {
                 setTimeout(initCalendar, 300);
             }
         }
@@ -2321,6 +2547,45 @@
             });
         }
 
+        // Show all public documents modal
+        function showAllPublicDocuments() {
+            const modal = document.createElement('div');
+            modal.style.cssText = 'position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px;';
+            
+            modal.innerHTML = `
+                <div style="background: white; border-radius: 15px; max-width: 1000px; width: 100%; max-height: 90vh; overflow-y: auto;">
+                    <div style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); padding: 20px; color: white; display: flex; justify-content: space-between; align-items: center; border-top-left-radius: 15px; border-top-right-radius: 15px;">
+                        <h2 style="margin: 0; font-size: 1.5rem;"><i class="fas fa-folder-open"></i> All Public Documents</h2>
+                        <button onclick="this.closest('div').parentElement.parentElement.remove()" style="background: none; border: none; color: white; font-size: 2rem; cursor: pointer; padding: 0; line-height: 1;">&times;</button>
+                    </div>
+                    <div style="padding: 30px;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+                            {% for file in public_files %}
+                            <div style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 20px; transition: all 0.3s ease;" onmouseover="this.style.boxShadow='0 8px 16px rgba(0,0,0,0.1)'; this.style.transform='translateY(-4px)'" onmouseout="this.style.boxShadow='none'; this.style.transform='translateY(0)'">
+                                <div style="display: flex; align-items: start; gap: 15px; margin-bottom: 15px;">
+                                    <i class="fas fa-file-alt" style="font-size: 2.5rem; color: #f97316;"></i>
+                                    <div style="flex: 1; min-width: 0;">
+                                        <h4 style="margin: 0 0 8px 0; font-size: 1rem; font-weight: 600; color: #1f2937;">{{ file.name }}</h4>
+                                        <p style="margin: 0; font-size: 0.8rem; color: #6b7280;"><i class="fas fa-user"></i> {{ file.uploader_email.split('@')[0] }}</p>
+                                        <p style="margin: 4px 0 0 0; font-size: 0.8rem; color: #6b7280;"><i class="far fa-calendar"></i> {{ file.uploaded_at.strftime('%Y-%m-%d') if file.uploaded_at else 'N/A' }}</p>
+                                    </div>
+                                </div>
+                                <a href="{{ file.web_link }}" target="_blank" style="display: block; background: #f97316; color: white; text-align: center; padding: 10px; border-radius: 8px; text-decoration: none; font-weight: 500; transition: background 0.3s ease;" onmouseover="this.style.background='#ea580c'" onmouseout="this.style.background='#f97316'">
+                                    <i class="fas fa-external-link-alt"></i> View Document
+                                </a>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.remove();
+            });
+        }
+
         // Set Reminder Function
         function setReminder(eventJson) {
             const event = typeof eventJson === 'string' ? JSON.parse(eventJson) : eventJson;
@@ -2472,6 +2737,19 @@
             }
         }
 
+        // Toggle mobile navigation
+        function toggleMobileNav() {
+            const navLinks = document.getElementById('navLinks');
+            navLinks.classList.toggle('show');
+        }
+
+        // Toggle user dropdown
+        function toggleDropdown(event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById('userDropdown');
+            dropdown.classList.toggle('show');
+        }
+
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             // Request notification permission on page load
@@ -2485,20 +2763,13 @@
             initTabs();
             initCharts();
             
-            // Mobile navigation toggle
-            const navToggle = document.querySelector('.nav-toggle');
-            const navLinks = document.querySelector('.nav-links');
-            
-            if (navToggle && navLinks) {
-                navToggle.addEventListener('click', function() {
-                    const expanded = this.getAttribute('aria-expanded') === 'true';
-                    this.setAttribute('aria-expanded', !expanded);
-                    navLinks.classList.toggle('show');
-                });
-            }
-
-            // Close modals when clicking outside
+            // Close dropdown when clicking outside
             window.addEventListener('click', function(event) {
+                const dropdown = document.getElementById('userDropdown');
+                if (dropdown && dropdown.classList.contains('show')) {
+                    dropdown.classList.remove('show');
+                }
+                
                 const pdfModal = document.getElementById('pdfModal');
                 const newsletterModal = document.getElementById('newsletterModal');
                 
@@ -2508,6 +2779,11 @@
                 if (newsletterModal && event.target === newsletterModal) {
                     closeNewsletterModal();
                 }
+            });
+
+            // Prevent dropdown from closing when clicking inside it
+            document.getElementById('userDropdown')?.addEventListener('click', function(event) {
+                event.stopPropagation();
             });
 
             // Show notification badge if there are upcoming events
@@ -2523,7 +2799,7 @@
                         
                         // Make badge clickable to go to calendar tab
                         badge.addEventListener('click', () => {
-                            switchTab(3); // Switch to calendar tab
+                            switchTab(4); // Switch to calendar tab
                             badge.classList.remove('show');
                         });
                         
