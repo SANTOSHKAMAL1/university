@@ -17,7 +17,13 @@ import pandas as pd
 from io import StringIO, BytesIO
 import logging
 import requests
+from werkzeug.middleware.proxy_fix import ProxyFix
 
+app.wsgi_app = ProxyFix(
+    app.wsgi_app,
+    x_proto=1,
+    x_host=1
+)
 # Google OAuth imports
 from google_auth_oauthlib.flow import Flow
 from google.oauth2.credentials import Credentials
@@ -726,29 +732,33 @@ def admin_dashboard():
 def connect_drive():
     if 'role' not in session:
         return redirect(url_for('login'))
-    
+
     try:
         session.pop('drive_creds', None)
         session.pop('drive_state', None)
-        
+
         flow = Flow.from_client_secrets_file(
             'client_secret.json',
             scopes=DRIVE_SCOPES,
-            redirect_uri="http://localhost:5000/drive/callback"
+            redirect_uri=url_for('drive_callback', _external=True)
         )
+
         auth_url, state = flow.authorization_url(
             access_type='offline',
             include_granted_scopes='false',
             prompt='consent'
         )
+
         session['drive_state'] = state
-        logger.info(f"Starting Drive OAuth")
+        logger.info("Starting Drive OAuth")
+
         return redirect(auth_url)
-    
+
     except Exception as e:
         logger.error(f"Drive connection error: {e}", exc_info=True)
-        flash(f'Error initiating Google Drive connection', 'error')
+        flash('Error initiating Google Drive connection', 'error')
         return redirect(url_for('user_dashboard'))
+
 
 @app.route('/drive/callback')
 def drive_callback():
@@ -760,8 +770,9 @@ def drive_callback():
         flow = Flow.from_client_secrets_file(
             'client_secret.json',
             scopes=DRIVE_SCOPES,
-            redirect_uri="http://localhost:5000/drive/callback"
+            redirect_uri=url_for('drive_callback', _external=True)
         )
+
         flow.fetch_token(authorization_response=request.url)
         creds = flow.credentials
 
@@ -773,15 +784,15 @@ def drive_callback():
             'client_secret': creds.client_secret,
             'scopes': DRIVE_SCOPES
         }
-        
+
         session.pop('drive_state', None)
 
-        flash('✅ Google Drive connected successfully!', 'success')
+        flash('Google Drive connected successfully!', 'success')
         return redirect(url_for('user_dashboard'))
 
     except Exception as e:
         logger.error(f"Drive callback error: {e}")
-        flash(f'Error connecting to Google Drive', 'error')
+        flash('Error connecting to Google Drive', 'error')
         return redirect(url_for('user_dashboard'))
 
 @app.route('/connect-gmail')
