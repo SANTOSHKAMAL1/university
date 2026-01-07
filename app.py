@@ -3053,9 +3053,15 @@ def not_found_error(error):
 def internal_error(error):
     logger.error(f"Internal server error: {error}")
     return render_template('500.html'), 500
+# ===================== FILE SERVING =====================
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    try:
+        return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    except Exception as e:
+        logger.error(f"Error serving file {filename}: {e}")
+        return "File not found", 404
+
 @app.errorhandler(413)
 def request_entity_too_large(error):
     flash('File too large. Maximum size is 50MB.', 'error')
