@@ -34,11 +34,22 @@ app = Flask(__name__)
 app.config.from_object(Config)
 
 # Apply ProxyFix for HTTPS handling
+from werkzeug.middleware.proxy_fix import ProxyFix
+
+# Initialize Flask app FIRST
+app = Flask(__name__)
+app.config.from_object(Config)
+
+# THEN apply ProxyFix
 app.wsgi_app = ProxyFix(
     app.wsgi_app,
     x_proto=1,
     x_host=1
 )
+
+
+app = Flask(__name__)
+
 
 # Upload folder settings
 UPLOAD_FOLDER = 'static/uploads'
@@ -2051,27 +2062,36 @@ def admin_dashboard():
     return render_template('admin_dashboard.html')
 
 # ===================== RUN APP =====================
-if __name__ == '__main__':
-    # Initialize scheduler with timezone
+# ===================== SCHEDULER =====================
+
+def start_scheduler():
     scheduler = BackgroundScheduler(timezone=IST)
 
-    # Check for reminders every minute
     @scheduler.scheduled_job('interval', minutes=1, id='reminder_check')
     def scheduled_send_event_reminders():
         with app.app_context():
-            logger.info(f"[SCHEDULER] Running reminder check at {get_indian_time().strftime('%Y-%m-%d %H:%M:%S')} IST")
+            logger.info(
+                f"[SCHEDULER] Running reminder check at "
+                f"{get_indian_time().strftime('%Y-%m-%d %H:%M:%S')} IST"
+            )
             send_event_reminders()
 
-    # Send daily emails at 7 AM IST
     @scheduler.scheduled_job('cron', hour=7, minute=0, id='daily_digest')
     def scheduled_send_daily_event_emails():
         with app.app_context():
-            logger.info(f"[SCHEDULER] Running daily digest at {get_indian_time().strftime('%Y-%m-%d %H:%M:%S')} IST")
+            logger.info(
+                f"[SCHEDULER] Running daily digest at "
+                f"{get_indian_time().strftime('%Y-%m-%d %H:%M:%S')} IST"
+            )
             send_daily_event_emails()
 
     scheduler.start()
-    logger.info("✅ Scheduler started successfully with IST timezone")
-    logger.info(f"✅ Current IST time: {get_indian_time().strftime('%Y-%m-%d %H:%M:%S')}")
+    logger.info("✅ Scheduler started (IST)")
 
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port, debug=True, use_reloader=False)
+
+# ===================== RUN APP =====================
+
+#if __name__ == '__main__':
+ #   start_scheduler()
+  #  port = int(os.environ.get("PORT", 5000))
+   # app.run(host='0.0.0.0', port=port, debug=True, use_reloader=False)
