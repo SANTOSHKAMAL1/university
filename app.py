@@ -589,6 +589,32 @@ def send_newsletter_email(title, content, image_filename, recipients):
         raise
 
 # ===================== AUTHENTICATION ROUTES =====================
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        
+        if not email.endswith('@jainuniversity.ac.in'):
+            flash('Only @jainuniversity.ac.in emails allowed', 'error')
+            return redirect(url_for('login'))
+        
+        user = db.users.find_one({'email': email})
+        if user and check_password_hash(user['password'], password):
+            session['email'] = email
+            session['role'] = user['role']
+            
+            if user['role'] == 'admin':
+                flash('✅ Admin login successful!', 'success')
+                return redirect(url_for('admin_dashboard'))
+            else:
+                flash('✅ Login successful!', 'success')
+                return redirect(url_for('home'))  # Redirect to home page after login
+        else:
+            flash('Invalid credentials', 'error')
+            return redirect(url_for('login'))
+    
+    return render_template('login.html')
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if 'step' not in session:
@@ -635,20 +661,23 @@ def register():
         elif session['step'] == 3:
             password = request.form.get('password')
             hashed_pw = generate_password_hash(password)
-            db.users.insert_one({'email': session['email'], 'password': hashed_pw, 'role': 'user'})
+            email = session['email']
+            db.users.insert_one({'email': email, 'password': hashed_pw, 'role': 'user'})
             
-            session.pop('email', None)
+            # Auto-login after registration
+            session['role'] = 'user'
+            # Keep email in session (it's already there)
+            
             session.pop('otp', None)
             session.pop('step', None)
             session.pop('otp_verified', None)
             
-            flash('✅ Registration complete! You can now log in.', 'success')
-            return redirect(url_for('login'))
+            flash('✅ Registration complete! Welcome to the portal.', 'success')
+            return redirect(url_for('home'))  # Redirect to home after registration
     
     otp_sent = session.get('step', 1) >= 2
     otp_verified = session.get('step', 1) == 3
     return render_template('register.html', otp_sent=otp_sent, otp_verified=otp_verified)
-
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
     if request.method == 'POST':
@@ -670,38 +699,19 @@ def admin():
     
     return render_template('admin_register.html')
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
-        
-        user = db.users.find_one({'email': email})
-        if not user or not check_password_hash(user['password'], password):
-            flash('Invalid credentials', 'error')
-            return redirect(url_for('login'))
-        
-        session['email'] = user['email']
-        session['role'] = user['role']
-        
-        if user['role'] == 'admin':
-            flash(f'Welcome back, Admin!', 'success')
-            return redirect(url_for('admin_dashboard'))
-        else:
-            flash(f'Welcome back, {email}!', 'success')
-            return redirect(url_for('user_dashboard'))
-    
-    return render_template('login.html')
-
-@app.route('/logout')
-def logout():
-    session.clear()
-    flash('You have been logged out.', 'info')
-    return redirect(url_for('home'))
-
 # ===================== MAIN PAGES =====================
 @app.route('/')
+def index():
+    """Landing page - shown to all visitors before login"""
+    return render_template('index.html')
+
+@app.route('/home')
 def home():
+    """Home page - shown after login with all portal features"""
+    if 'email' not in session:
+        flash('Please log in to access the portal', 'error')
+        return redirect(url_for('login'))
+    
     try:
         records = list(db.ugc_data.find().sort('uploaded_at', -1).limit(50))
         monthly_records = list(db.monthly_engagement.find().sort('uploaded_at', -1).limit(50))
@@ -717,7 +727,7 @@ def home():
         
         public_files = list(db.public_files.find().sort('uploaded_at', -1).limit(20))
         
-        user_logged_in = 'email' in session
+        user_logged_in = True
         user_email = session.get('email', '')
         user_role = session.get('role', '')
         
@@ -738,7 +748,14 @@ def home():
         flash('Error loading home page', 'error')
         return render_template('home.html', records=[], monthly_records=[], newsletter_records=[], 
                              events=[], public_files=[], today=datetime.now().date(),
-                             user_logged_in=False, user_email='', user_role='')
+                             user_logged_in=True, user_email=session.get('email', ''), 
+                             user_role=session.get('role', ''))
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('index'))  # Redirect to landing page after logout
 
 @app.route('/about')
 def about():
@@ -3061,7 +3078,7 @@ def internal_error(error):
 def request_entity_too_large(error):
     flash('File too large. Maximum size is 50MB.', 'error')
     return redirect(request.referrer or url_for('home'))
-@app.route('/admin_dashboard')
+@app.route('/admin_dashboard')                                                                                        
 def admin_dashboard():
     if session.get('role') != 'admin':
         flash('Access denied', 'error')

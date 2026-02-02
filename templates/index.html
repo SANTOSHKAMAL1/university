@@ -1,0 +1,1138 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+    <title>Jain University - Office of Academic Affairs</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-dark: #0A192F;
+            --primary-blue: #1E3A8A;
+            --accent-yellow: #FBBF24;
+            --accent-teal: #2DD4BF;
+            --light: #FFFFFF;
+            --black: #000000;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--light);
+            color: var(--black);
+            font-family: "Inter", sans-serif;
+            font-size: 16px;
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        /* Loading Animation */
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--primary-dark);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-text {
+            font-size: 4rem;
+            font-weight: 800;
+            font-family: "Playfair Display", serif;
+            color: var(--accent-yellow);
+            position: relative;
+            text-align: center;
+        }
+
+        .loading-text span {
+            display: inline-block;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: letterReveal 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        .loading-text span:nth-child(1) { animation-delay: 0.1s; }
+        .loading-text span:nth-child(2) { animation-delay: 0.15s; }
+        .loading-text span:nth-child(3) { animation-delay: 0.2s; }
+        .loading-text span:nth-child(4) { animation-delay: 0.25s; }
+        .loading-text span:nth-child(5) { animation-delay: 0.3s; }
+        .loading-text span:nth-child(6) { animation-delay: 0.35s; }
+        .loading-text span:nth-child(7) { animation-delay: 0.4s; }
+        .loading-text span:nth-child(8) { animation-delay: 0.45s; }
+        .loading-text span:nth-child(9) { animation-delay: 0.5s; }
+        .loading-text span:nth-child(10) { animation-delay: 0.55s; }
+        .loading-text span:nth-child(11) { animation-delay: 0.6s; }
+        .loading-text span:nth-child(12) { animation-delay: 0.65s; }
+        .loading-text span:nth-child(13) { animation-delay: 0.7s; }
+        .loading-text span:nth-child(14) { animation-delay: 0.75s; }
+        .loading-text span:nth-child(15) { animation-delay: 0.8s; }
+        .loading-text span:nth-child(16) { animation-delay: 0.85s; }
+        .loading-text span:nth-child(17) { animation-delay: 0.9s; }
+        .loading-text span:nth-child(18) { animation-delay: 0.95s; }
+        .loading-text span:nth-child(19) { animation-delay: 1s; }
+        .loading-text span:nth-child(20) { animation-delay: 1.05s; }
+        .loading-text span:nth-child(21) { animation-delay: 1.1s; }
+        .loading-text span:nth-child(22) { animation-delay: 1.15s; }
+        .loading-text span:nth-child(23) { animation-delay: 1.2s; }
+        .loading-text span:nth-child(24) { animation-delay: 1.25s; }
+        .loading-text span:nth-child(25) { animation-delay: 1.3s; }
+
+        @keyframes letterReveal {
+            from {
+                opacity: 0;
+                transform: translateY(30px) rotateX(90deg);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) rotateX(0);
+            }
+        }
+
+        /* Header */
+        #header {
+            background: transparent;
+            padding: 20px 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--accent-yellow), #F59E0B);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-dark);
+            font-size: 1.5rem;
+            animation: pulseLogo 2s ease-in-out infinite;
+        }
+
+        @keyframes pulseLogo {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-text h1 {
+            font-size: 1.4rem;
+            color: var(--black);
+            margin: 0;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            transition: color 0.3s ease;
+        }
+
+        .logo-subtitle {
+            font-size: 0.8rem;
+            color: var(--accent-yellow);
+            font-weight: 600;
+            letter-spacing: 1px;
+            transition: color 0.3s ease;
+        }
+
+        /* Login Button */
+        .login-btn {
+            background: var(--accent-yellow);
+            color: var(--primary-dark);
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-weight: 700;
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(251, 191, 36, 0.4);
+            background: #F59E0B;
+        }
+
+        .login-btn i {
+            font-size: 1rem;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 120px 0 80px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-video-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .hero-video-bg {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0.8;
+        }
+
+        .hero-video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                135deg,
+                rgba(10, 25, 47, 0.85) 0%,
+                rgba(30, 58, 138, 0.8) 100%
+            );
+            z-index: 2;
+        }
+
+        .hero-content {
+            max-width: 900px;
+            margin: 0 auto;
+            text-align: center;
+            position: relative;
+            z-index: 3;
+        }
+
+        .hero-title {
+            font-size: 5rem;
+            font-weight: 800;
+            font-family: "Playfair Display", serif;
+            color: 2px 2px 4px rgba(7, 11, 238, 0.3);
+            margin-bottom: 30px;
+            line-height: 1.1;
+            
+        }
+
+        .hero-subtitle {
+            font-size: 1.5rem;
+            color: white;
+            margin-bottom: 40px;
+            line-height: 1.6;
+            font-weight: 300;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            opacity: 0.95;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 40px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px 36px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            border-radius: 50px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            border: 2px solid transparent;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.6s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-dark));
+            color: white;
+            box-shadow: 0 8px 30px rgba(30, 58, 138, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 15px 40px rgba(30, 58, 138, 0.5);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: white;
+            border: 2px solid var(--accent-yellow);
+            box-shadow: 0 8px 30px rgba(251, 191, 36, 0.2);
+        }
+
+        .btn-outline:hover {
+            transform: translateY(-5px) scale(1.05);
+            background: rgba(251, 191, 36, 0.1);
+            box-shadow: 0 15px 40px rgba(251, 191, 36, 0.3);
+        }
+
+        /* Stats Section */
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 60px;
+            margin-top: 80px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent-yellow), var(--accent-teal));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+            line-height: 1;
+            text-shadow: none;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 600;
+            opacity: 0.9;
+        }
+
+        /* Features Section */
+        .section {
+            padding: 100px 0;
+            background: white;
+            position: relative;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-title {
+            font-size: 3rem;
+            color: var(--primary-dark);
+            margin-bottom: 20px;
+            font-family: "Playfair Display", serif;
+            position: relative;
+            display: inline-block;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-yellow), var(--accent-teal));
+            border-radius: 2px;
+        }
+
+        .section-subtitle {
+            font-size: 1.2rem;
+            color: var(--primary-blue);
+            max-width: 700px;
+            margin: 0 auto;
+            font-weight: 500;
+        }
+
+        /* Features Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 40px 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(10, 25, 47, 0.1);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            border: 2px solid transparent;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-15px) scale(1.02);
+            box-shadow: 0 25px 60px rgba(10, 25, 47, 0.15);
+            border-color: var(--accent-yellow);
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(30, 58, 138, 0.05) 0%, rgba(251, 191, 36, 0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+            font-size: 1.8rem;
+            color: var(--accent-yellow);
+            box-shadow: 0 8px 25px rgba(30, 58, 138, 0.2);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .feature-card:hover .feature-icon {
+            transform: rotateY(180deg) scale(1.1);
+            background: linear-gradient(135deg, var(--accent-yellow), #F59E0B);
+            color: var(--primary-dark);
+        }
+
+        .feature-card h3 {
+            color: var(--primary-dark);
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+
+        .feature-card p {
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* Process Cards */
+        .process-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .process-card {
+            background: white;
+            padding: 40px 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(10, 25, 47, 0.1);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            border-left: 4px solid var(--accent-yellow);
+            opacity: 0;
+            transform: translateY(50px);
+        }
+
+        .process-card.animated {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .process-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 50px rgba(10, 25, 47, 0.2);
+        }
+
+        .process-card h3 {
+            color: var(--primary-blue);
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .process-list {
+            list-style: none;
+        }
+
+        .process-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(30, 58, 138, 0.1);
+            position: relative;
+            padding-left: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .process-list li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--accent-yellow);
+            font-weight: bold;
+            transition: transform 0.3s ease;
+        }
+
+        .process-list li:hover {
+            transform: translateX(5px);
+            color: var(--primary-blue);
+        }
+
+        .process-list li:hover::before {
+            transform: translateX(5px);
+            color: var(--accent-teal);
+        }
+
+        .process-list li:last-child {
+            border-bottom: none;
+        }
+
+        /* Footer */
+        footer {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary-blue));
+            color: white;
+            padding: 80px 0 40px;
+            position: relative;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-column h3 {
+            color: var(--accent-yellow);
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 10px;
+            transition: transform 0.3s;
+        }
+
+        .footer-links li:hover {
+            transform: translateX(5px);
+        }
+
+        .footer-links a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: var(--accent-yellow);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 40px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .hero-title {
+                font-size: 4rem;
+            }
+            
+            .section-title {
+                font-size: 2.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .loading-text {
+                font-size: 2.5rem;
+            }
+            
+            .hero-title {
+                font-size: 2.8rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1.2rem;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+            
+            .logo-section {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .hero-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 300px;
+            }
+            
+            .hero-stats {
+                gap: 40px;
+            }
+            
+            .stat-number {
+                font-size: 2.5rem;
+            }
+            
+            .section-title {
+                font-size: 2.2rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .hero-title {
+                font-size: 2.2rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1.1rem;
+            }
+            
+            .hero-stats {
+                gap: 30px;
+                flex-direction: column;
+            }
+            
+            .process-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading">
+        <div class="loading-text">
+            <span>O</span><span>f</span><span>f</span><span>i</span><span>c</span><span>e</span>
+            <span> </span>
+            <span>o</span><span>f</span>
+            <span> </span>
+            <span>A</span><span>c</span><span>a</span><span>d</span><span>e</span><span>m</span><span>i</span><span>c</span>
+            <span> </span>
+            <span>A</span><span>f</span><span>f</span><span>a</span><span>i</span><span>r</span><span>s</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header id="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo-section">
+                    
+                    
+                </div>
+                
+                <a href="/login" class="login-btn">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <!-- Video Background -->
+        <div class="hero-video-container">
+            <!-- Option 1: Use local video file (corrected path) -->
+            <video autoplay muted loop playsinline class="hero-video-bg" id="mainVideo">
+                <!-- Correct path - assuming your video is in static/videos folder -->
+                <source src="static/videos/sam.mp4" type="video/mp4">
+                <!-- Optional fallback video -->
+                <source src="https://assets.mixkit.co/videos/preview/mixkit-university-campus-aerial-view-4997-large.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+            <div class="hero-video-overlay"></div>
+        </div>
+        
+        <div class="container">
+            <div class="hero-content">
+                <h1 class="hero-title">Office of Academic	</h1>
+                
+                <p class="hero-subtitle">
+                    Driving academic excellence through innovation, governance, and strategic oversight. 
+                </p>
+                
+                <div class="hero-buttons">
+                    <a href="#overview" class="btn btn-primary">Explore Governance Model</a>
+                    <a href="#processes" class="btn btn-outline">View All Processes</a>
+                </div>
+                
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <div class="stat-number">5+</div>
+                        <div class="stat-label">Institutional Areas</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">25+</div>
+                        <div class="stat-label">Core Processes</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">100%</div>
+                        <div class="stat-label">Compliance Ready</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Overview Section -->
+    <section id="overview" class="section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Governance Framework</h2>
+                <p class="section-subtitle">A structured platform for academic governance, process standardization, and leadership oversight</p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <h3>Single Source of Truth</h3>
+                    <p>Centralized platform for all OOA-managed academic processes with real-time updates and document integrity.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-eye"></i>
+                    </div>
+                    <h3>Stakeholder Transparency</h3>
+                    <p>View-only access for external and statutory stakeholders while maintaining data security and privacy.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <h3>Operational Efficiency</h3>
+                    <p>Automated workflows and reporting for OOA team members with streamlined processes and analytics.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="section" style="background: #f8fafc;">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Platform Features</h2>
+                <p class="section-subtitle">Comprehensive tools designed to enhance academic administration and governance</p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <h3>Event Management</h3>
+                    <p>Centralized event calendar with notifications and subscription management for all academic activities.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <h3>Document Repository</h3>
+                    <p>Secure document storage and management with version control and access permissions.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3>Analytics Dashboard</h3>
+                    <p>Real-time analytics and reporting tools for monitoring academic processes and performance.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Process Categorization -->
+    <section id="processes" class="section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Process Categories</h2>
+                <p class="section-subtitle">Five institutional areas covering all academic governance processes</p>
+            </div>
+            
+            <div class="process-grid">
+                <div class="process-card">
+                    <h3><i class="fas fa-graduation-cap"></i> Capacity Building</h3>
+                    <ul class="process-list">
+                        <li>Apprenticeship Embedded Development Program</li>
+                        <li>Anveshana – Office Hours & Testing</li>
+                        <li>Assessment & Reforms</li>
+                        <li>Continuous Assessment (CA)</li>
+                        <li>TDPCL, MM+, DYD</li>
+                        <li>AI Renu, AI Enablement</li>
+                    </ul>
+                </div>
+                
+                <div class="process-card">
+                    <h3><i class="fas fa-laptop-code"></i> Digital Innovation</h3>
+                    <ul class="process-list">
+                        <li>SWAYAM Integration</li>
+                        <li>Jain Online Platform</li>
+                        <li>LinkedIn Learning</li>
+                        <li>Open Electives (Digital coordination)</li>
+                        <li>Internship (Digital enablement)</li>
+                        <li>Research Clusters & Website</li>
+                    </ul>
+                </div>
+                
+                <div class="process-card">
+                    <h3><i class="fas fa-bullhorn"></i> Public Notices</h3>
+                    <ul class="process-list">
+                        <li>UGC Academic Circulars</li>
+                        <li>Statutory assessment notifications</li>
+                        <li>NEP Document Submissions</li>
+                        <li>Public-facing New Program Proposals</li>
+                    </ul>
+                </div>
+                
+                <div class="process-card">
+                    <h3><i class="fas fa-building"></i> Internal Coordination</h3>
+                    <ul class="process-list">
+                        <li>Board of Studies Meetings</li>
+                        <li>Kochi – Recurring Meetings</li>
+                        <li>Institutional Development Plan (IDP)</li>
+                        <li>Academic Newsletter</li>
+                        <li>Internal Program Proposals</li>
+                    </ul>
+                </div>
+                
+                <div class="process-card">
+                    <h3><i class="fas fa-calendar-alt"></i> Academic Calendar</h3>
+                    <ul class="process-list">
+                        <li>University Academic Calendar</li>
+                        <li>Semester timelines and schedules</li>
+                        <li>Assessment cycles and dates</li>
+                        <li>Academic and statutory meetings</li>
+                        <li>Capacity building schedules</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="contact">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-column">
+                    <h3>Jain University</h3>
+                    <p>Office of Academic Affairs<br>Driving academic excellence through innovation, governance, and strategic oversight.</p>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>Quick Links</h3>
+                    <ul class="footer-links">
+                        <li><a href="#overview">Governance Framework</a></li>
+                        <li><a href="#features">Platform Features</a></li>
+                        <li><a href="#processes">Process Categories</a></li>
+                        <li><a href="/login">Portal Login</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>Contact Info</h3>
+                    <ul class="footer-links">
+                        <li><i class="fas fa-map-marker-alt"></i> Jain University Campus</li>
+                        <li><i class="fas fa-phone"></i> +91 80 4343 0000</li>
+                        <li><i class="fas fa-envelope"></i> ooa@jainuniversity.ac.in</li>
+                        <li><i class="fas fa-clock"></i> Mon-Fri: 9:00 AM - 5:00 PM</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2025 Jain University - Office of Academic Affairs. All rights reserved.</p>
+                <p style="margin-top: 10px;">Microsite Governance, Process Framework & Access Model</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Fast loading animation
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                document.getElementById('loading').style.opacity = '0';
+                setTimeout(function() {
+                    document.getElementById('loading').style.display = 'none';
+                }, 500);
+            }, 1500);
+            
+            // Animate process cards on scroll
+            animateProcessCards();
+            
+            // Header scroll effect
+            setupHeaderEffect();
+            
+            // Video fallback if video fails to load
+            setupVideoFallback();
+            
+            // Preload video for better performance
+            preloadVideo();
+        });
+
+        // Smooth scrolling
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    window.scrollTo({
+                        top: target.offsetTop - 80,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+
+        // Header scroll effect
+        function setupHeaderEffect() {
+            const header = document.getElementById('header');
+            const logoTitle = document.querySelector('.logo-text h1');
+            const logoSubtitle = document.querySelector('.logo-subtitle');
+            
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 100) {
+                    header.style.background = 'rgba(255, 255, 255, 0.95)';
+                    header.style.boxShadow = '0 4px 30px rgba(0, 0, 0, 0.1)';
+                    header.style.padding = '15px 0';
+                    
+                    // Keep text black
+                    logoTitle.style.color = 'var(--black)';
+                    logoSubtitle.style.color = 'var(--primary-blue)';
+                } else {
+                    header.style.background = 'transparent';
+                    header.style.boxShadow = 'none';
+                    header.style.padding = '20px 0';
+                    
+                    logoTitle.style.color = 'var(--black)';
+                    logoSubtitle.style.color = 'var(--primary-blue)';
+                }
+            });
+        }
+
+        // Animate process cards on scroll
+        function animateProcessCards() {
+            const processCards = document.querySelectorAll('.process-card');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry, index) => {
+                    if (entry.isIntersecting) {
+                        setTimeout(() => {
+                            entry.target.classList.add('animated');
+                        }, index * 200);
+                    }
+                });
+            }, { 
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            });
+            
+            processCards.forEach(card => observer.observe(card));
+        }
+
+        // Video fallback function
+        function setupVideoFallback() {
+            const video = document.getElementById('mainVideo');
+            
+            if (video) {
+                // Check if video loads successfully
+                video.addEventListener('loadeddata', function() {
+                    console.log('Local video loaded successfully');
+                    video.style.opacity = '1';
+                });
+                
+                video.addEventListener('error', function() {
+                    console.warn('Local video failed to load, trying fallback...');
+                    
+                    // Try to load the fallback video
+                    const sources = video.getElementsByTagName('source');
+                    if (sources.length > 1) {
+                        // Switch to the second source (fallback)
+                        video.src = sources[1].src;
+                        video.load();
+                    } else {
+                        // If no fallback source, use gradient background
+                        applyGradientFallback();
+                    }
+                });
+                
+                // Check if video can play
+                video.addEventListener('canplay', function() {
+                    console.log('Video can play');
+                });
+                
+                // If video doesn't load within 5 seconds, use fallback
+                setTimeout(function() {
+                    if (video.readyState < 3) { // HAVE_FUTURE_DATA or more
+                        console.warn('Video taking too long to load, using fallback');
+                        applyGradientFallback();
+                    }
+                }, 5000);
+            }
+        }
+
+        // Apply gradient fallback background
+        function applyGradientFallback() {
+            const videoContainer = document.querySelector('.hero-video-container');
+            if (videoContainer) {
+                videoContainer.innerHTML = `
+                    <div class="gradient-fallback" style="
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        background: linear-gradient(135deg, var(--primary-dark), var(--primary-blue));
+                        z-index: 1;
+                    ">
+                        <div class="animated-pattern" style="
+                            position: absolute;
+                            top: 0;
+                            left: 0;
+                            width: 100%;
+                            height: 100%;
+                            background-image: 
+                                radial-gradient(circle at 20% 30%, rgba(251, 191, 36, 0.15) 0%, transparent 40%),
+                                radial-gradient(circle at 80% 70%, rgba(45, 212, 191, 0.15) 0%, transparent 40%),
+                                radial-gradient(circle at 40% 80%, rgba(30, 58, 138, 0.1) 0%, transparent 40%);
+                            animation: pulsePattern 10s ease-in-out infinite alternate;
+                        "></div>
+                    </div>
+                    <div class="hero-video-overlay"></div>
+                `;
+            }
+        }
+
+        // Add CSS for pattern animation
+        function addFallbackStyles() {
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes pulsePattern {
+                    0% {
+                        opacity: 0.5;
+                        transform: scale(1);
+                    }
+                    100% {
+                        opacity: 0.8;
+                        transform: scale(1.1);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // Preload video for better performance
+        function preloadVideo() {
+            const video = document.getElementById('mainVideo');
+            if (video) {
+                // Set video to preload
+                video.preload = 'auto';
+                
+                // Try to play video (modern browsers require user interaction)
+                const playPromise = video.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.log('Autoplay prevented:', error);
+                        // Video will still show but won't autoplay in some browsers
+                    });
+                }
+            }
+        }
+
+        // Add fallback styles
+        addFallbackStyles();
+    </script>
+</body>
+</html>
