@@ -1444,6 +1444,117 @@
         .flatpickr-day.today {
             border: 2px solid var(--jain-gold);
         }
+
+        /* SWAYAM Courses Table */
+        .swayam-courses-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.9em;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .swayam-courses-table thead tr {
+            background-color: #2c3e50;
+            color: #ffffff;
+            text-align: left;
+        }
+
+        .swayam-courses-table th,
+        .swayam-courses-table td {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+        }
+
+        .swayam-courses-table tbody tr {
+            border-bottom: 1px solid #dddddd;
+        }
+
+        .swayam-courses-table tbody tr:nth-of-type(even) {
+            background-color: #f3f3f3;
+        }
+
+        .swayam-courses-table tbody tr:hover {
+            background-color: #f1f5fd;
+        }
+
+        .swayam-course-link {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .swayam-course-link:hover {
+            text-decoration: underline;
+            color: #2980b9;
+        }
+
+        /* SWAYAM Stats */
+        .swayam-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .swayam-stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: var(--shadow-sm);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .swayam-stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .swayam-stat-icon {
+            font-size: 2.5rem;
+            color: #3498db;
+            margin-bottom: 10px;
+        }
+
+        .swayam-stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 10px 0;
+        }
+
+        .swayam-stat-label {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        /* Capacity Building Tabs */
+        .capacity-tabs {
+            display: flex;
+            background: white;
+            border-radius: 10px;
+            padding: 10px;
+            margin: 20px 0;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .capacity-tab {
+            padding: 10px 20px;
+            border: 2px solid #3498db;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 500;
+            color: #3498db;
+            transition: all 0.3s ease;
+            background: transparent;
+        }
+
+        .capacity-tab.active,
+        .capacity-tab:hover {
+            background: #3498db;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -1861,58 +1972,286 @@
                             Enhancing teaching excellence through professional development programs
                         </p>
                         
-                        {% if monthly_records %}
-                            <div class="dashboard-grid">
-                                {% for record in monthly_records[:3] %}
-                                <div class="dashboard-card full-width">
-                                    <div class="engagement-card">
-                                        <div class="engagement-card-header">
-                                            {{ record.heading }}
+                        <!-- Capacity Building Tabs -->
+                        <div class="capacity-tabs">
+                            <button class="capacity-tab active" onclick="showCapacityTab('swayam')">
+                                <i class="fas fa-graduation-cap"></i> SWAYAM MOOCs
+                            </button>
+                            <button class="capacity-tab" onclick="showCapacityTab('mentoring')">
+                                <i class="fas fa-users"></i> Mentoring
+                            </button>
+                            <button class="capacity-tab" onclick="showCapacityTab('workshops')">
+                                <i class="fas fa-chalkboard-teacher"></i> Workshops
+                            </button>
+                        </div>
+                        
+                        <!-- SWAYAM MOOCs Content -->
+                        <div id="swayamTab" class="capacity-content" style="display: block;">
+                            <div class="swayam-stats-grid">
+                                <div class="swayam-stat-card">
+                                    <div class="swayam-stat-icon">
+                                        <i class="fas fa-book-open"></i>
+                                    </div>
+                                    <div class="swayam-stat-number">23</div>
+                                    <div class="swayam-stat-label">Live SWAYAM Courses</div>
+                                </div>
+                                <div class="swayam-stat-card">
+                                    <div class="swayam-stat-icon">
+                                        <i class="fas fa-users"></i>
+                                    </div>
+                                    <div class="swayam-stat-number">1,38,148</div>
+                                    <div class="swayam-stat-label">Total Enrollments</div>
+                                </div>
+                                <div class="swayam-stat-card">
+                                    <div class="swayam-stat-icon">
+                                        <i class="fas fa-calendar-alt"></i>
+                                    </div>
+                                    <div class="swayam-stat-number">7</div>
+                                    <div class="swayam-stat-label">New Courses Jan 2026</div>
+                                </div>
+                                <div class="swayam-stat-card">
+                                    <div class="swayam-stat-icon">
+                                        <i class="fas fa-chart-line"></i>
+                                    </div>
+                                    <div class="swayam-stat-number">31181</div>
+                                    <div class="swayam-stat-label">Top Course Enrollments</div>
+                                </div>
+                            </div>
+                            
+                            <h3 style="margin: 30px 0 20px 0; color: #2c3e50;">SWAYAM MOOCs January 2026 Courses</h3>
+                            <div style="overflow-x: auto;">
+                                <table class="swayam-courses-table">
+                                    <thead>
+                                        <tr>
+                                            <th>S.No</th>
+                                            <th>Course Name</th>
+                                            <th>Faculty</th>
+                                            <th>Institute</th>
+                                            <th>Weeks</th>
+                                            <th>Credits</th>
+                                            <th>Enrollment Link</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>1</td>
+                                            <td>Money, Mind, and Markets: The Science of Financial Literacy</td>
+                                            <td>Dr. Sireesha Nanduri</td>
+                                            <td>CMS Business School Sheshadri Road Campus</td>
+                                            <td>6</td>
+                                            <td>3</td>
+                                            <td><a href="https://onlinecourses.swayam2.ac.in/imb26_mg144/preview" class="swayam-course-link" target="_blank">Enroll Now</a></td>
+                                        </tr>
+                                        <tr>
+                                            <td>2</td>
+                                            <td>Advanced Marketing: Marketing 5.0</td>
+                                            <td>Dr. Trupti Dandekar, Dr. Kalavathy</td>
+                                            <td>CMS Business School Sheshadri Road Campus</td>
+                                            <td>6</td>
+                                            <td>3</td>
+                                            <td><a href="https://onlinecourses.swayam2.ac.in/imb26_mg140/preview" class="swayam-course-link" target="_blank">Enroll Now</a></td>
+                                        </tr>
+                                        <tr>
+                                            <td>3</td>
+                                            <td>Social Entrepreneurship and Sustainability</td>
+                                            <td>Dr. Reshma Sulthana, Dr. Swapna, Dr. Muralidhar</td>
+                                            <td>SOC, Jayanagar Campus</td>
+                                            <td>8</td>
+                                            <td>4</td>
+                                            <td><a href="https://onlinecourses.swayam2.ac.in/imb26_mg118/preview" class="swayam-course-link" target="_blank">Enroll Now</a></td>
+                                        </tr>
+                                        <tr>
+                                            <td>4</td>
+                                            <td>Introduction to Indian Constitution</td>
+                                            <td>Dr. Priyanca Mathur, Dr. Amrita, Dr. Sneha Yadav</td>
+                                            <td>CeRRSE, Jayanagar Campus</td>
+                                            <td>8</td>
+                                            <td>3</td>
+                                            <td><a href="https://onlinecourses.swayam2.ac.in/imb26_mg151/preview" class="swayam-course-link" target="_blank">Enroll Now</a></td>
+                                        </tr>
+                                        <tr>
+                                            <td>5</td>
+                                            <td>Prompt Engineering</td>
+                                            <td>Dr. Sagar Gulati</td>
+                                            <td>School of CS & IT, Jayanagar Campus</td>
+                                            <td>8</td>
+                                            <td>3</td>
+                                            <td><a href="https://onlinecourses.swayam2.ac.in/imb26_mg131/preview" class="swayam-course-link" target="_blank">Enroll Now</a></td>
+                                        </tr>
+                                        <tr>
+                                            <td>6</td>
+                                            <td>Gender Studies</td>
+                                            <td>Dr. Bharghavi D Hemmige</td>
+                                            <td>CMS, Lalbagh Campus</td>
+                                            <td>8</td>
+                                            <td>4</td>
+                                            <td><a href="https://onlinecourses.swayam2.ac.in/imb26_mg150/preview" class="swayam-course-link" target="_blank">Enroll Now</a></td>
+                                        </tr>
+                                        <tr>
+                                            <td>7</td>
+                                            <td>Marketing Through Story: Building Brands and Leading with Compelling Narratives</td>
+                                            <td>Prof. Suparna Ghosal</td>
+                                            <td>CMS Business School Sheshadri Road Campus</td>
+                                            <td>6</td>
+                                            <td>3</td>
+                                            <td><a href="https://onlinecourses.swayam2.ac.in/imb26_mg126/preview" class="swayam-course-link" target="_blank">Enroll Now</a></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div class="engagement-card" style="margin-top: 30px;">
+                                <div class="engagement-card-header">
+                                    <i class="fas fa-chart-bar"></i> SWAYAM Growth Statistics
+                                </div>
+                                <div class="engagement-card-body">
+                                    <div class="dashboard-grid">
+                                        <div class="dashboard-card">
+                                            <h3>June 2024</h3>
+                                            <div class="stat-number">1</div>
+                                            <div class="stat-description">MOOC Launched</div>
                                         </div>
-                                        <div class="engagement-card-body">
-                                            <p>{{ record.description }}</p>
-                                            
-                                            <div class="engagement-meta">
-                                                <span><i class="fas fa-university"></i> {{ record.school }}</span>
-                                                <span><i class="fas fa-building"></i> {{ record.department }}</span>
-                                            </div>
-                                            
-                                            {% if record.tags %}
-                                            <div class="engagement-tags">
-                                                {% for tag in record.tags %}
-                                                    <span class="engagement-tag">{{ tag }}</span>
-                                                {% endfor %}
-                                            </div>
-                                            {% endif %}
+                                        <div class="dashboard-card">
+                                            <h3>January 2025</h3>
+                                            <div class="stat-number">11</div>
+                                            <div class="stat-description">New MOOCs | 29,903 Enrollments</div>
                                         </div>
+                                        <div class="dashboard-card">
+                                            <h3>July 2025</h3>
+                                            <div class="stat-number">11</div>
+                                            <div class="stat-description">Additional MOOCs | 1,08,245 Enrollments</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="engagement-details">
+                                        <h4>Key Features:</h4>
+                                        <ul>
+                                            <li><strong>Centre for Educational Transformation Through Technology (CETT):</strong> Coordinates all SWAYAM activities</li>
+                                            <li><strong>Faculty Training:</strong> Workshops on SWAYAM development, instructional design, and video production</li>
+                                            <li><strong>End-to-End Support:</strong> Pre-production and post-production assistance</li>
+                                            <li><strong>Quality Assurance:</strong> Internal review before submission to IIM Bangalore (National Coordinator)</li>
+                                        </ul>
+                                        
+                                        <h4>Future Plans (2025-2028):</h4>
+                                        <ul>
+                                            <li>Increase faculty contributors and subject domains</li>
+                                            <li>Align with emerging disciplines and industry requirements</li>
+                                            <li>Enhance learner outreach through social media and collaborations</li>
+                                            <li>Ensure course upgradation and analytics-driven improvements</li>
+                                        </ul>
                                     </div>
                                 </div>
-                                {% endfor %}
                             </div>
-                        {% else %}
-                            <div class="dashboard-card full-width">
-                                <div class="engagement-card">
-                                    <div class="engagement-card-header">
-                                        Workshop on Outcome-Based Education – An Overview
+                        </div>
+                        
+                        <!-- Mentoring Content -->
+                        <div id="mentoringTab" class="capacity-content" style="display: none;">
+                            <div class="engagement-card">
+                                <div class="engagement-card-header">
+                                    <i class="fas fa-users"></i> Student Mentoring Training Program
+                                </div>
+                                <div class="engagement-card-body">
+                                    <div class="engagement-meta">
+                                        <span><i class="fas fa-calendar-alt"></i> 28 May 2024 - 29 June 2024</span>
+                                        <span><i class="fas fa-clock"></i> 10 Days Training</span>
+                                        <span><i class="fas fa-map-marker-alt"></i> Bengaluru / Kochi Campuses</span>
                                     </div>
-                                    <div class="engagement-card-body">
-                                        <p>A full-day workshop focused on building faculty understanding of key OBE principles, including CO-PO-PSO mapping, outcome-based assessment, and curriculum design to enhance teaching practices.</p>
-                                        
-                                        <div class="engagement-meta">
-                                            <span><i class="fas fa-calendar-alt"></i> 09 May 2025</span>
-                                            <span><i class="fas fa-clock"></i> 9:30 AM - 5:00 PM</span>
-                                            <span><i class="fas fa-map-marker-alt"></i> Audi 3, Jayanagar 9th Block Campus</span>
+                                    
+                                    <div class="engagement-tags">
+                                        <span class="engagement-tag">Mentoring</span>
+                                        <span class="engagement-tag">Faculty Development</span>
+                                        <span class="engagement-tag">Student Support</span>
+                                    </div>
+                                    
+                                    <h4>Program Overview:</h4>
+                                    <p>The Student Mentoring Training Program was designed to familiarize faculty members with the process of mentoring. Originally planned as a two-day program, it was tailored to a one-day workshop without diluting the impact.</p>
+                                    
+                                    <div class="engagement-details">
+                                        <h4>Key Statistics:</h4>
+                                        <div class="dashboard-grid">
+                                            <div class="dashboard-card">
+                                                <h3>Faculty Enrolled</h3>
+                                                <div class="stat-number">872</div>
+                                            </div>
+                                            <div class="dashboard-card">
+                                                <h3>Faculty Participated</h3>
+                                                <div class="stat-number">780</div>
+                                            </div>
+                                            <div class="dashboard-card">
+                                                <h3>Sessions Conducted</h3>
+                                                <div class="stat-number">10</div>
+                                            </div>
                                         </div>
                                         
+                                        <h4>Key Takeaways:</h4>
+                                        <ul>
+                                            <li>Participants enjoyed activity-oriented learning rather than pure classroom sessions</li>
+                                            <li>Case studies and games were more impactful for participation-oriented workshops</li>
+                                            <li>Faculty members understood mentoring concepts, processes, and their impact on student development</li>
+                                            <li>Training was related to what faculty members do, making it practical and understandable</li>
+                                        </ul>
+                                        
+                                        <h4>Evaluation & Feedback:</h4>
+                                        <ul>
+                                            <li>Two evaluations conducted by VC and CAO immediately after the program</li>
+                                            <li>Progress presentation made to VC and CAO on 18 Oct 2024</li>
+                                            <li>Feedback from participants was encouraging</li>
+                                            <li>Major challenges are in implementing the process</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Workshops Content -->
+                        <div id="workshopsTab" class="capacity-content" style="display: none;">
+                            <div class="engagement-card">
+                                <div class="engagement-card-header">
+                                    <i class="fas fa-chalkboard-teacher"></i> Capacity Building Workshops 2024-25
+                                </div>
+                                <div class="engagement-card-body">
+                                    <div class="engagement-details">
+                                        <h4>Workshop Themes:</h4>
                                         <div class="engagement-tags">
-                                            <span class="engagement-tag">Workshop</span>
-                                            <span class="engagement-tag">Faculty Development</span>
+                                            <span class="engagement-tag">Mentoring</span>
+                                            <span class="engagement-tag">Td-PCL</span>
                                             <span class="engagement-tag">OBE</span>
+                                            <span class="engagement-tag">MOOC Development</span>
+                                            <span class="engagement-tag">NEP 2020</span>
                                         </div>
+                                        
+                                        <h4>Key Objectives:</h4>
+                                        <ul>
+                                            <li>Enhance faculty competencies in innovative pedagogical approaches</li>
+                                            <li>Build capacity for Outcome-Based Education (OBE)</li>
+                                            <li>Equip faculty with mentoring skills for student support</li>
+                                            <li>Promote Transdisciplinary Project-Centric Learning (Td-PCL)</li>
+                                            <li>Develop capabilities in MOOC design and development</li>
+                                            <li>Foster continuous professional development</li>
+                                        </ul>
+                                        
+                                        <h4>Impact & Coverage:</h4>
+                                        <ul>
+                                            <li><strong>Universal Coverage:</strong> Across all 28 departments and 7 Faculties</li>
+                                            <li><strong>Structured Reporting:</strong> Detailed post-workshop reports with feedback analysis</li>
+                                            <li><strong>MOOC Development:</strong> 23 MOOCs developed and live on SWAYAM platform</li>
+                                            <li><strong>Faculty Induction:</strong> Month-long FIP conducted twice every academic year</li>
+                                            <li><strong>Malaviya Mission:</strong> 66 faculty registrations in May 2025, 37 in June 2025</li>
+                                        </ul>
+                                        
+                                        <h4>Future Plans (2025-2028):</h4>
+                                        <ul>
+                                            <li>Professional Development Series with industry experts</li>
+                                            <li>Scale up MOOC development efforts</li>
+                                            <li>Expand Transdisciplinary Project-Centric Learning</li>
+                                            <li>Advanced training on curriculum mapping and assessment design</li>
+                                            <li>Institutionalize mentoring with digital tracking systems</li>
+                                            <li>Outbound training programs for interpersonal skills development</li>
+                                        </ul>
                                     </div>
                                 </div>
                             </div>
-                        {% endif %}
+                        </div>
                     </div>
                 </div>
 
@@ -2253,10 +2592,35 @@
             }
         }
 
+        // Capacity Building Tabs
+        function showCapacityTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.capacity-content').forEach(tab => {
+                tab.style.display = 'none';
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.capacity-tab').forEach(tabBtn => {
+                tabBtn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + 'Tab').style.display = 'block';
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+            
+            // Initialize charts if needed
+            if (tabName === 'swayam') {
+                setTimeout(() => initSWAYAMCharts(), 100);
+            }
+        }
+
         // Initialize charts
         function initCharts() {
             initStudentsCharts();
             initLinkedInCharts();
+            initSWAYAMCharts();
         }
 
         function initStudentsCharts() {
@@ -2282,6 +2646,22 @@
                 data: [39020, 8169, 7736, 652, 568, 81, 93, 84, 1202],
                 colors: 'rgba(10, 102, 194, 0.7)'
             });
+        }
+
+        function initSWAYAMCharts() {
+            // Create SWAYAM enrollment chart
+            const swayamCtx = document.createElement('canvas');
+            swayamCtx.id = 'swayamEnrollmentChart';
+            const chartContainer = document.querySelector('#swayamTab .chart-container');
+            if (chartContainer) {
+                chartContainer.appendChild(swayamCtx);
+                
+                createBarChart('swayamEnrollmentChart', {
+                    labels: ['Jan 2025', 'July 2025', 'Total'],
+                    data: [29903, 108245, 138148],
+                    colors: ['rgba(52, 152, 219, 0.7)', 'rgba(46, 204, 113, 0.7)', 'rgba(155, 89, 182, 0.7)']
+                });
+            }
         }
 
         function createBarChart(elementId, {labels, data, colors}) {
@@ -2312,9 +2692,7 @@
                             color: 'black',
                             font: { weight: 'bold', size: 12 },
                             formatter: function(value, context) {
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = Math.round((value / total) * 100);
-                                return `${percentage}%\n(${value.toLocaleString()})`;
+                                return value.toLocaleString();
                             }
                         }
                     },

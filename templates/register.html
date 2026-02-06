@@ -2,220 +2,416 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Register | Office of Academics at Jain (Deemed-to-be University)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- Google Fonts & Font Awesome -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <title>Register - Office of Academics</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
     <style>
-    :root {
-        --jain-blue: #04043a;
-        --jain-gold: #FFD700;
-        --jain-light: #F5F5F5;
-        --jain-dark: #222;
-    }
-
-    * {
-        box-sizing: border-box;
-        font-family: 'Inter', sans-serif;
-    }
-
-    body {
-        margin: 0;
-        padding: 0;
-        background: var(--jain-light);
-    }
-
-    /* === Header === */
-    header {
-        background-color: white;
-        color: var(--jain-blue);
-        padding: 15px 30px;
-    }
-
-    .header-container {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-    }
-
-    .logo-section {
-        display: flex;
-        align-items: center;
-    }
-
-    .logo-section img {
-        height: 60px;
-        margin-right: 15px;
-    }
-
-    .logo-text h1 {
-        font-size: 22px;
-        margin: 0;
-        line-height: 1.2;
-        color: var(--jain-blue);
-    }
-
-    .logo-text span {
-        font-size: 14px;
-        color: #666;
-    }
-
-    /* Back Button */
-    .back-link {
-        text-decoration: none;
-        font-weight: 500;
-        font-size: 16px;
-        color: #003366;
-        transition: color 0.3s ease;
-        display: inline-block;
-    }
-
-    .back-link::before {
-        content: "← ";
-        font-size: 18px;
-        margin-right: 5px;
-    }
-
-    .back-link:hover {
-        color: #0055aa;
-    }
-
-    /* === Registration Card === */
-    .register-card {
-        background-color: white;
-        padding: 40px 30px;
-        border-radius: 12px;
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-        max-width: 450px;
-        margin: 60px auto;
-        text-align: center;
-        transition: transform 0.3s ease-in-out;
-    }
-
-    .register-card:hover {
-        transform: translateY(-5px);
-    }
-
-    .register-card h2 {
-        color: var(--jain-blue);
-        margin-bottom: 25px;
-        font-size: 24px;
-    }
-
-    .register-card form input[type="text"],
-    .register-card form input[type="email"],
-    .register-card form input[type="password"] {
-        width: 100%;
-        padding: 12px 15px;
-        margin: 10px 0;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        font-size: 16px;
-    }
-
-    .register-card button {
-        width: 100%;
-        padding: 12px;
-        background-color: var(--jain-blue);
-        color: white;
-        border: none;
-        border-radius: 6px;
-        font-size: 16px;
-        font-weight: 600;
-        margin-top: 20px;
-        cursor: pointer;
-        transition: background 0.3s ease;
-    }
-
-    .register-card button:hover {
-        background-color: #002244;
-    }
-
-    .register-card .link {
-        margin-top: 20px;
-        font-size: 14px;
-    }
-
-    .register-card .link a {
-        color: var(--jain-gold);
-        text-decoration: none;
-        font-weight: 500;
-    }
-
-    .register-card .link a:hover {
-        text-decoration: underline;
-    }
-
-    .flash {
-        margin-top: 15px;
-        background: #fff3cd;
-        color: #856404;
-        padding: 10px;
-        border: 1px solid #ffeeba;
-        border-radius: 6px;
-    }
-
-    @media (max-width: 768px) {
-        .header-container {
-            flex-direction: column;
-            align-items: flex-start;
+        :root {
+            --jain-blue: #04043a;
+            --jain-gold: #FFD700;
         }
-    }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .register-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo img {
+            height: 80px;
+            margin-bottom: 15px;
+        }
+
+        .logo h1 {
+            color: var(--jain-blue);
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .logo p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .progress-steps::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #e0e0e0;
+            z-index: 0;
+        }
+
+        .step {
+            background: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid #e0e0e0;
+            font-weight: bold;
+            color: #999;
+            position: relative;
+            z-index: 1;
+        }
+
+        .step.active {
+            border-color: var(--jain-blue);
+            color: var(--jain-blue);
+            background: white;
+        }
+
+        .step.completed {
+            border-color: #27ae60;
+            background: #27ae60;
+            color: white;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--jain-blue);
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--jain-blue);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--jain-blue) 0%, #1e3c72 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(4, 4, 58, 0.3);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+
+        .flash {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .flash.success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #27ae60;
+        }
+
+        .flash.error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #e74c3c;
+        }
+
+        .flash.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+
+        .back-to-login {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-to-login a {
+            color: var(--jain-blue);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .back-to-login a:hover {
+            text-decoration: underline;
+        }
+
+        .user-type-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .user-type-option {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .user-type-option:hover {
+            border-color: var(--jain-blue);
+            background: #f8f9fa;
+        }
+
+        .user-type-option input[type="radio"] {
+            display: none;
+        }
+
+        .user-type-option input[type="radio"]:checked + .option-content {
+            color: var(--jain-blue);
+        }
+
+        .user-type-option input[type="radio"]:checked ~ .option-icon {
+            background: var(--jain-blue);
+            color: white;
+        }
+
+        .user-type-option.selected {
+            border-color: var(--jain-blue);
+            background: #f0f4ff;
+        }
+
+        .option-icon {
+            width: 60px;
+            height: 60px;
+            background: #e0e0e0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 24px;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .option-content h3 {
+            font-size: 16px;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .option-content p {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .info-box p {
+            color: #0d47a1;
+            font-size: 13px;
+            line-height: 1.5;
+            margin: 0;
+        }
     </style>
 </head>
-
 <body>
-
-<!-- Header Section -->
-<header>
-    <div class="header-container">
-        <div class="logo-section">
-            <img src="{{ url_for('static', filename='images/jain.png') }}" alt="Jain University Logo">
-            <div class="logo-text">
-                <h1>Office of Academics</h1>
-                <span>Jain Group Of Institutions</span>
-            </div>
+    <div class="register-container">
+        <div class="logo">
+            <img src="{{ url_for('static', filename='images/jainu.png') }}" 
+                 onerror="this.src='https://via.placeholder.com/80?text=JU+Logo';" 
+                 alt="Jain University">
+            <h1>Office of Academics</h1>
+            <p>Register Your Account</p>
         </div>
-        <div>
-            <a href="{{ url_for('login') }}" class="back-link">Back</a>
-        </div>
-    </div>
-</header>
 
-<!-- Registration Card -->
-<div class="register-card">
-    <h2>User Registration</h2>
-    <form method="POST">
+        <!-- Progress Steps -->
+        <div class="progress-steps">
+            <div class="step {% if not otp_sent %}active{% else %}completed{% endif %}">1</div>
+            <div class="step {% if otp_sent and not otp_verified %}active{% elif otp_verified %}completed{% endif %}">2</div>
+            <div class="step {% if otp_verified %}active{% endif %}">3</div>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash {{ category }}">
+                            <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'error' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Step 1: Email -->
         {% if not otp_sent %}
-            <input type="email" name="email" placeholder="Enter Jain University email" required>
-            <button type="submit">Verify Email</button>
-        {% elif otp_sent and not otp_verified %}
-            <input type="text" name="otp" placeholder="Enter OTP sent to your email" required>
-            <button type="submit">Verify OTP</button>
-        {% elif otp_verified %}
-            <input type="password" name="password" placeholder="Set your password" required>
-            <button type="submit">Register</button>
+        <form method="POST">
+            <div class="form-group">
+                <label><i class="fas fa-envelope"></i> University Email</label>
+                <input type="email" name="email" placeholder="your.name@jainuniversity.ac.in" 
+                       pattern=".*@jainuniversity\.ac\.in$" required>
+            </div>
+            <button type="submit" class="btn">
+                <i class="fas fa-paper-plane"></i> Send OTP
+            </button>
+        </form>
         {% endif %}
-    </form>
 
-    <div class="link">
-        <p><a href="{{ url_for('login') }}">Already registered? Login</a></p>
+        <!-- Step 2: OTP Verification -->
+        {% if otp_sent and not otp_verified %}
+        <form method="POST">
+            <div class="form-group">
+                <label><i class="fas fa-key"></i> Enter OTP</label>
+                <input type="text" name="otp" placeholder="6-digit OTP" 
+                       pattern="[0-9]{6}" maxlength="6" required>
+            </div>
+            <button type="submit" class="btn">
+                <i class="fas fa-check-circle"></i> Verify OTP
+            </button>
+        </form>
+        {% endif %}
+
+        <!-- Step 3: Password & User Type -->
+        {% if otp_verified %}
+        <form method="POST">
+            <div class="info-box">
+                <p>
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Note:</strong> You are registering as a regular user. 
+                    Special roles (Core Team, Office Barriers, Leaders) can only be assigned by administrators.
+                </p>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-lock"></i> Password</label>
+                <input type="password" name="password" placeholder="Create a strong password" 
+                       minlength="6" required>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-user-tag"></i> I am a:</label>
+                <div class="user-type-selector">
+                    <label class="user-type-option" onclick="selectUserType(this, 'faculty')">
+                        <input type="radio" name="user_type" value="faculty" checked>
+                        <div class="option-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+                        <div class="option-content">
+                            <h3>Faculty</h3>
+                            <p>Teaching Staff</p>
+                        </div>
+                    </label>
+
+                    <label class="user-type-option" onclick="selectUserType(this, 'hod')">
+                        <input type="radio" name="user_type" value="hod">
+                        <div class="option-icon"><i class="fas fa-user-tie"></i></div>
+                        <div class="option-content">
+                            <h3>HOD</h3>
+                            <p>Head of Department</p>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <button type="submit" class="btn">
+                <i class="fas fa-user-plus"></i> Complete Registration
+            </button>
+        </form>
+        {% endif %}
+
+        <div class="back-to-login">
+            <a href="{{ url_for('login') }}">
+                <i class="fas fa-arrow-left"></i> Already have an account? Login
+            </a>
+        </div>
     </div>
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <div class="flash">
-                {% for category, message in messages %}
-                    <p>{{ message }}</p>
-                {% endfor %}
-            </div>
-        {% endif %}
-    {% endwith %}
-</div>
+    <script>
+        // Initialize first option as selected
+        document.addEventListener('DOMContentLoaded', function() {
+            const firstOption = document.querySelector('.user-type-option');
+            if (firstOption) {
+                firstOption.classList.add('selected');
+            }
+        });
 
+        function selectUserType(element, type) {
+            // Remove selected class from all options
+            document.querySelectorAll('.user-type-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            
+            // Add selected class to clicked option
+            element.classList.add('selected');
+            
+            // Check the radio button
+            element.querySelector('input[type="radio"]').checked = true;
+        }
+    </script>
 </body>
 </html>

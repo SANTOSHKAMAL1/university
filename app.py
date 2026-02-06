@@ -1,4 +1,3 @@
-#TESTING
 import re
 import os
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
@@ -234,6 +233,35 @@ def get_user_navbar(email):
     except Exception as e:
         logger.error(f"Error getting user navbar: {e}")
         return []
+
+# ===================== ROLE CHECK FUNCTIONS =====================
+def is_faculty():
+    """Check if user is regular faculty (not core or leader)"""
+    return (session.get('role') == 'user' and 
+            session.get('user_type') == 'faculty' and 
+            not session.get('special_role'))
+
+def is_core_member():
+    """Check if user is core team member"""
+    return (session.get('role') == 'user' and 
+            session.get('special_role') in ['core', 'office_barrier'])
+
+def is_leader():
+    """Check if user is a leader"""
+    return (session.get('role') == 'user' and 
+            session.get('special_role') == 'leader')
+
+def is_core_or_leader():
+    """Check if user is core member or leader"""
+    return is_core_member() or is_leader()
+
+def is_office_barrier():
+    """Check if user is office barrier (core team)"""
+    return is_core_member()
+
+def has_special_access():
+    """Check if user has special access (core, leader)"""
+    return is_core_or_leader()
 
 # ===================== CONTEXT PROCESSORS =====================
 @app.context_processor
@@ -601,20 +629,49 @@ def login():
         
         user = db.users.find_one({'email': email})
         if user and check_password_hash(user['password'], password):
+            # Store all user info in session
             session['email'] = email
             session['role'] = user['role']
+            session['user_type'] = user.get('user_type', 'faculty')
+            session['special_role'] = user.get('special_role', None)
+            
+            # Update online status
+            db.users.update_one(
+                {'email': email},
+                {
+                    '$set': {
+                        'is_online': True,
+                        'last_seen': get_indian_time()
+                    }
+                }
+            )
+            
+            # Log activity
+            db.activity_logs.insert_one({
+                'user_id': user['_id'],
+                'user_email': email,
+                'action': 'login',
+                'details': 'User logged in',
+                'timestamp': get_indian_time(),
+                'ip_address': request.remote_addr
+            })
             
             if user['role'] == 'admin':
                 flash('✅ Admin login successful!', 'success')
                 return redirect(url_for('admin_dashboard'))
             else:
                 flash('✅ Login successful!', 'success')
-                return redirect(url_for('home'))  # Redirect to home page after login
+                # Redirect based on user type
+                if user.get('user_type') == 'core' or user.get('special_role') in ['core', 'office_barrier', 'leader']:
+                    return redirect(url_for('core_dashboard'))
+                else:
+                    return redirect(url_for('home'))
         else:
             flash('Invalid credentials', 'error')
             return redirect(url_for('login'))
     
     return render_template('login.html')
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if 'step' not in session:
@@ -652,7 +709,7 @@ def register():
             if entered_otp == session.get('otp'):
                 session['otp_verified'] = True
                 session['step'] = 3
-                flash('OTP verified. Now set your password.', 'success')
+                flash('OTP verified. Now set your password and select role.', 'success')
                 return redirect(url_for('register'))
             else:
                 flash('Invalid OTP. Please try again.', 'error')
@@ -660,24 +717,76 @@ def register():
         
         elif session['step'] == 3:
             password = request.form.get('password')
+            user_type = request.form.get('user_type', 'faculty')  # 'faculty' or 'core'
+            
+            # Validate user_type to be either 'faculty' or 'core'
+            if user_type not in ['faculty', 'core']:
+                user_type = 'faculty'
+            
             hashed_pw = generate_password_hash(password)
             email = session['email']
-            db.users.insert_one({'email': email, 'password': hashed_pw, 'role': 'user'})
             
-            # Auto-login after registration
+            # Set special_role to 'office_barrier' if user selected 'core'
+            special_role = 'office_barrier' if user_type == 'core' else None
+            
+            # Create user with proper role assignment
+            new_user_id = db.users.insert_one({
+                'email': email, 
+                'password': hashed_pw, 
+                'role': 'user',  # All are users by default, not admin
+                'user_type': user_type,  # 'faculty' or 'core'
+                'special_role': special_role,  # 'office_barrier' for core, None for faculty
+                'is_online': True,
+                'last_seen': get_indian_time(),
+                'profile': {
+                    'department': '',
+                    'school': '',
+                    'phone': ''
+                },
+                'created_at': get_indian_time()
+            }).inserted_id
+            
+            # If core team member, add them to the core team chat group
+            if user_type == 'core':
+                # Check if core team chat exists, if not create it
+                core_chat = db.chat_groups.find_one({'group_type': 'core_team'})
+                if not core_chat:
+                    core_chat_id = db.chat_groups.insert_one({
+                        'name': 'Office of Academic Barriers - Core Team',
+                        'group_type': 'core_team',
+                        'description': 'Automatic group for all core team members',
+                        'created_at': get_indian_time(),
+                        'members': [new_user_id],
+                        'created_by': new_user_id
+                    }).inserted_id
+                else:
+                    # Add new member to existing core chat
+                    db.chat_groups.update_one(
+                        {'_id': core_chat['_id']},
+                        {'$addToSet': {'members': new_user_id}}
+                    )
+            
+            # Auto-login
             session['role'] = 'user'
-            # Keep email in session (it's already there)
+            session['user_type'] = user_type
+            session['special_role'] = special_role
             
             session.pop('otp', None)
             session.pop('step', None)
             session.pop('otp_verified', None)
             
             flash('✅ Registration complete! Welcome to the portal.', 'success')
-            return redirect(url_for('home'))  # Redirect to home after registration
+            
+            # Redirect based on role
+            if user_type == 'core':
+                return redirect(url_for('core_dashboard'))
+            else:
+                return redirect(url_for('home'))
     
     otp_sent = session.get('step', 1) >= 2
     otp_verified = session.get('step', 1) == 3
     return render_template('register.html', otp_sent=otp_sent, otp_verified=otp_verified)
+
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
     if request.method == 'POST':
@@ -693,7 +802,14 @@ def admin():
             return redirect(url_for('admin'))
         
         hashed_pw = generate_password_hash(password)
-        db.users.insert_one({'email': email, 'password': hashed_pw, 'role': 'admin'})
+        db.users.insert_one({
+            'email': email, 
+            'password': hashed_pw, 
+            'role': 'admin',
+            'user_type': 'admin',
+            'special_role': None,
+            'created_at': get_indian_time()
+        })
         flash('✅ Admin registered successfully. Please log in.', 'success')
         return redirect(url_for('login'))
     
@@ -707,17 +823,20 @@ def index():
 
 @app.route('/home')
 def home():
-    """Home page - shown after login with all portal features"""
+    """Home page - accessible to all logged-in users"""
     if 'email' not in session:
         flash('Please log in to access the portal', 'error')
         return redirect(url_for('login'))
     
     try:
+        # Get user info
+        user = db.users.find_one({'email': session['email']})
+        
+        # Get data for home page
         records = list(db.ugc_data.find().sort('uploaded_at', -1).limit(50))
         monthly_records = list(db.monthly_engagement.find().sort('uploaded_at', -1).limit(50))
         newsletter_records = list(db.newsletters.find().sort('uploaded_at', -1).limit(50))
         
-        # Get current and upcoming events
         today = datetime.now().date()
         today_str = today.strftime('%Y-%m-%d')
         
@@ -725,11 +844,16 @@ def home():
             'event_date': {'$gte': today_str}
         }).sort('event_date', 1).limit(100))
         
+        # Get public files
         public_files = list(db.public_files.find().sort('uploaded_at', -1).limit(20))
         
-        user_logged_in = True
-        user_email = session.get('email', '')
-        user_role = session.get('role', '')
+        # Determine user capabilities
+        user_type = session.get('user_type', 'faculty')
+        special_role = session.get('special_role', None)
+        
+        # Only core/leader can upload, everyone can view
+        can_upload = special_role in ['core', 'office_barrier', 'leader']
+        is_faculty = user_type == 'faculty' and not special_role
         
         return render_template(
             'home.html',
@@ -739,23 +863,279 @@ def home():
             events=events,
             public_files=public_files,
             today=today,
-            user_logged_in=user_logged_in,
-            user_email=user_email,
-            user_role=user_role
+            user_logged_in=True,
+            user_email=session.get('email', ''),
+            user_role=session.get('role', ''),
+            user_type=user_type,
+            is_faculty=is_faculty,
+            can_upload=can_upload
         )
+            
     except Exception as e:
         logger.error(f"Error in home route: {e}", exc_info=True)
         flash('Error loading home page', 'error')
-        return render_template('home.html', records=[], monthly_records=[], newsletter_records=[], 
-                             events=[], public_files=[], today=datetime.now().date(),
-                             user_logged_in=True, user_email=session.get('email', ''), 
-                             user_role=session.get('role', ''))
+        return redirect(url_for('login'))
+
+@app.route('/core_dashboard')
+def core_dashboard():
+    """Dashboard for core team members (Office of Academic Barriers)"""
+    if not is_core_member():
+        flash('Access denied. Core team members only.', 'error')
+        return redirect(url_for('home'))
+    
+    try:
+        user = db.users.find_one({'email': session['email']})
+        
+        # Get core team members
+        core_members = list(db.users.find({
+            '$or': [
+                {'user_type': 'core'},
+                {'special_role': 'office_barrier'}
+            ]
+        }))
+        
+        # Get core team chat
+        core_chat = db.chat_groups.find_one({'group_type': 'core_team'})
+        
+        # Get all leaders
+        leaders = list(db.users.find({'special_role': 'leader'}))
+        
+        # Get user's uploaded documents
+        my_documents = list(db.office_documents.find({
+            'user_email': session['email']
+        }).sort('submitted_at', -1))
+        
+        # Get all documents if leader
+        all_documents = []
+        if is_leader():
+            all_documents = list(db.office_documents.find().sort('submitted_at', -1))
+        
+        return render_template(
+            'core_dashboard.html',
+            core_members=core_members,
+            core_chat=core_chat,
+            leaders=leaders,
+            my_documents=my_documents,
+            all_documents=all_documents,
+            is_leader=is_leader()
+        )
+        
+    except Exception as e:
+        logger.error(f"Error in core_dashboard: {e}")
+        flash('Error loading dashboard', 'error')
+        return redirect(url_for('home'))
+
+@app.route('/upload_document', methods=['POST'])
+def upload_document():
+    """Core team members upload documents for leader review"""
+    if not is_core_member():
+        return jsonify({'error': 'Access denied'}), 403
+    
+    try:
+        user = db.users.find_one({'email': session['email']})
+        
+        document_name = request.form.get('document_name')
+        description = request.form.get('description')
+        assigned_leaders = request.form.getlist('assigned_leaders')  # List of leader IDs
+        file = request.files.get('file')
+        
+        # Upload file
+        file_url = None
+        file_id = None
+        
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            name_part, ext_part = os.path.splitext(filename)
+            unique_filename = f"{name_part}_{timestamp}{ext_part}"
+            
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+            file.save(filepath)
+            file_url = '/' + filepath.replace('\\', '/')
+        
+        # If no leaders assigned, all leaders can see it
+        if not assigned_leaders or len(assigned_leaders) == 0:
+            assigned_leaders = [str(leader['_id']) for leader in db.users.find({'special_role': 'leader'})]
+        
+        # Create document record
+        doc = {
+            'user_id': user['_id'],
+            'user_email': session['email'],
+            'document_name': document_name,
+            'description': description,
+            'file_id': file_id,
+            'file_url': file_url,
+            'assigned_leaders': [ObjectId(lid) for lid in assigned_leaders],  # Convert to ObjectIds
+            'status': 'pending',
+            'submitted_at': get_indian_time(),
+            'reviewed_by': None,
+            'reviewed_at': None,
+            'comments': ''
+        }
+        
+        result = db.office_documents.insert_one(doc)
+        
+        # Log activity
+        db.activity_logs.insert_one({
+            'user_id': user['_id'],
+            'user_email': session['email'],
+            'action': 'document_upload',
+            'details': f'Submitted document: {document_name}',
+            'timestamp': get_indian_time(),
+            'ip_address': request.remote_addr
+        })
+        
+        # Send notifications to assigned leaders
+        for leader_id in assigned_leaders:
+            leader = db.users.find_one({'_id': ObjectId(leader_id)})
+            if leader:
+                try:
+                    msg = Message(
+                        subject=f"📄 New Document for Review: {document_name}",
+                        sender=app.config['MAIL_USERNAME'],
+                        recipients=[leader['email']]
+                    )
+                    msg.html = f"""
+                    <h2>New Document Submitted</h2>
+                    <p><strong>From:</strong> {session['email']}</p>
+                    <p><strong>Document:</strong> {document_name}</p>
+                    <p><strong>Description:</strong> {description}</p>
+                    <p>Please log in to review this document.</p>
+                    """
+                    mail.send(msg)
+                except Exception as e:
+                    logger.error(f"Error sending notification: {e}")
+        
+        flash('✅ Document submitted successfully', 'success')
+        return redirect(url_for('core_dashboard'))
+        
+    except Exception as e:
+        logger.error(f"Error submitting document: {e}")
+        return jsonify({'error': str(e)}), 400
+
+# ===================== LEADER DASHBOARD =====================
+@app.route('/leader_dashboard')
+def leader_dashboard():
+    """Dashboard for leaders to review documents"""
+    if not is_leader():
+        flash('Access denied. Leaders only.', 'error')
+        return redirect(url_for('home'))
+    
+    try:
+        user = db.users.find_one({'email': session['email']})
+        
+        # Get documents assigned to this leader
+        my_assigned_documents = list(db.office_documents.find({
+            'assigned_leaders': user['_id']
+        }).sort('submitted_at', -1))
+        
+        # Enrich with uploader info
+        for doc in my_assigned_documents:
+            uploader = db.users.find_one({'_id': doc['user_id']})
+            if uploader:
+                doc['uploader_name'] = uploader['email'].split('@')[0]
+                doc['uploader_email'] = uploader['email']
+        
+        # Get all core team members
+        core_members = list(db.users.find({
+            '$or': [
+                {'user_type': 'core'},
+                {'special_role': 'office_barrier'}
+            ]
+        }))
+        
+        # Get online core members
+        online_core = list(db.users.find({
+            '$or': [
+                {'user_type': 'core'},
+                {'special_role': 'office_barrier'}
+            ],
+            'is_online': True
+        }))
+        
+        return render_template(
+            'leader_dashboard.html',
+            my_assigned_documents=my_assigned_documents,
+            core_members=core_members,
+            online_core=online_core
+        )
+        
+    except Exception as e:
+        logger.error(f"Error in leader_dashboard: {e}")
+        flash('Error loading dashboard', 'error')
+        return redirect(url_for('home'))
+
+@app.route('/review_document/<document_id>', methods=['POST'])
+def review_document(document_id):
+    """Leader reviews a document"""
+    if not is_leader():
+        return jsonify({'error': 'Access denied'}), 403
+    
+    try:
+        user = db.users.find_one({'email': session['email']})
+        
+        status = request.form.get('status')  # 'approved' or 'rejected'
+        comments = request.form.get('comments', '')
+        
+        # Update document
+        db.office_documents.update_one(
+            {'_id': ObjectId(document_id)},
+            {
+                '$set': {
+                    'status': status,
+                    'reviewed_by': user['_id'],
+                    'reviewed_at': get_indian_time(),
+                    'comments': comments
+                }
+            }
+        )
+        
+        # Get document and send notification to uploader
+        doc = db.office_documents.find_one({'_id': ObjectId(document_id)})
+        uploader = db.users.find_one({'_id': doc['user_id']})
+        
+        if uploader:
+            try:
+                msg = Message(
+                    subject=f"📋 Document Reviewed: {doc['document_name']}",
+                    sender=app.config['MAIL_USERNAME'],
+                    recipients=[uploader['email']]
+                )
+                msg.html = f"""
+                <h2>Your Document Has Been Reviewed</h2>
+                <p><strong>Document:</strong> {doc['document_name']}</p>
+                <p><strong>Status:</strong> {status.upper()}</p>
+                <p><strong>Reviewed by:</strong> {user['email']}</p>
+                <p><strong>Comments:</strong> {comments}</p>
+                """
+                mail.send(msg)
+            except Exception as e:
+                logger.error(f"Error sending review notification: {e}")
+        
+        flash(f'✅ Document {status}', 'success')
+        return redirect(url_for('leader_dashboard'))
+        
+    except Exception as e:
+        logger.error(f"Error reviewing document: {e}")
+        return jsonify({'error': str(e)}), 400
 
 @app.route('/logout')
 def logout():
+    if 'email' in session:
+        # Update online status
+        db.users.update_one(
+            {'email': session['email']},
+            {
+                '$set': {
+                    'is_online': False,
+                    'last_seen': get_indian_time()
+                }
+            }
+        )
+    
     session.clear()
     flash('You have been logged out.', 'info')
-    return redirect(url_for('index'))  # Redirect to landing page after logout
+    return redirect(url_for('index'))
 
 @app.route('/about')
 def about():
@@ -1047,18 +1427,6 @@ def set_reminder():
         now = get_indian_time()
         if reminder_datetime <= now:
             return jsonify({'error': 'Reminder time must be in the future (not in the past)', 'success': False}), 400
-        
-        # Check if reminder is before event date
-        try:
-            event_date_str = event.get('event_date')
-            if event_date_str:
-                event_date = datetime.strptime(event_date_str, '%Y-%m-%d')
-                event_date = IST.localize(event_date.replace(hour=23, minute=59, second=59))
-                
-                if reminder_datetime > event_date:
-                    return jsonify({'error': 'Reminder cannot be set after the event date', 'success': False}), 400
-        except:
-            pass  # Skip event date validation if there's an error
         
         # Check if reminder already exists
         existing = db.event_reminders.find_one({
@@ -1763,10 +2131,10 @@ def drive_files():
         logger.info(f"✅ Retrieved {len(folders)} Drive folders")
 
         return render_template('drive_files.html',
-                             folders=folders,
-                             saved_folder_ids=saved_folder_ids,
-                             total_folders=len(folders),
-                             notifications=notifications)
+                            folders=folders,
+                            saved_folder_ids=saved_folder_ids,
+                            total_folders=len(folders),
+                            notifications=notifications)
 
     except Exception as e:
         logger.error(f"❌ Error fetching Drive folders: {str(e)}", exc_info=True)
@@ -1822,7 +2190,7 @@ def search_drive_files():
         return jsonify(files)
 
     except Exception as e:
-        logger.error(f"Error searching Drive: {e}", exc_info=True)
+        logger.error(f"Error searching Drive: {e}")
         return jsonify({'error': str(e)}), 400
 
 @app.route('/drive/upload', methods=['POST'])
@@ -2163,6 +2531,126 @@ def view_users():
         flash('Error loading users', 'error')
         return render_template('admin_view_users.html', users=[])
 
+@app.route('/submit_document', methods=['POST'])
+def submit_document():
+    """Office barriers submit documents for review"""
+    if not is_office_barrier():
+        return jsonify({'error': 'Access denied'}), 403
+    
+    try:
+        user = db.users.find_one({'email': session['email']})
+        
+        document_name = request.form.get('document_name')
+        description = request.form.get('description')
+        file = request.files.get('file')
+        
+        # Upload to Drive or local
+        file_url = None
+        file_id = None
+        
+        if file and allowed_file(file.filename):
+            # Upload logic here (Drive or local)
+            filename = secure_filename(file.filename)
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(filepath)
+            file_url = '/' + filepath.replace('\\', '/')
+        
+        # Create document record
+        doc = {
+            'user_id': user['_id'],
+            'user_email': session['email'],
+            'document_name': document_name,
+            'description': description,
+            'file_id': file_id,
+            'file_url': file_url,
+            'status': 'pending',
+            'submitted_at': get_indian_time(),
+            'reviewed_by': None,
+            'reviewed_at': None,
+            'comments': ''
+        }
+        
+        result = db.office_documents.insert_one(doc)
+        
+        # Log activity
+        db.activity_logs.insert_one({
+            'user_id': user['_id'],
+            'user_email': session['email'],
+            'action': 'document_upload',
+            'details': f'Submitted document: {document_name}',
+            'timestamp': get_indian_time(),
+            'ip_address': request.remote_addr
+        })
+        
+        flash('✅ Document submitted successfully', 'success')
+        return redirect(url_for('core_dashboard'))
+        
+    except Exception as e:
+        logger.error(f"Error submitting document: {e}")
+        return jsonify({'error': str(e)}), 400
+
+@app.route('/office_documents')
+def office_documents():
+    """Core and leaders can view all office barrier submissions"""
+    if not is_core_or_leader():
+        flash('Access denied', 'error')
+        return redirect(url_for('home'))
+    
+    try:
+        # Get all documents
+        documents = list(db.office_documents.find().sort('submitted_at', -1))
+        
+        # Enrich with user data
+        for doc in documents:
+            user = db.users.find_one({'_id': doc['user_id']})
+            if user:
+                doc['user_name'] = user['email'].split('@')[0]
+                doc['user_type'] = user.get('user_type', 'N/A')
+        
+        # Get online users
+        online_users = list(db.users.find({
+            'special_role': 'office_barrier',
+            'is_online': True
+        }))
+        
+        return render_template(
+            'office_documents.html', 
+            documents=documents,
+            online_users=online_users
+        )
+        
+    except Exception as e:
+        logger.error(f"Error loading office documents: {e}")
+        flash('Error loading documents', 'error')
+        return redirect(url_for('home'))
+
+@app.route('/activity_logs')
+def activity_logs():
+    """View activity logs of all users"""
+    if not is_core_or_leader():
+        flash('Access denied', 'error')
+        return redirect(url_for('home'))
+    
+    try:
+        # Get recent activity
+        logs = list(db.activity_logs.find().sort('timestamp', -1).limit(100))
+        
+        # Get online status
+        online_users = list(db.users.find({
+            'is_online': True
+        }, {'email': 1, 'user_type': 1, 'special_role': 1}))
+        
+        return render_template(
+            'activity_logs.html',
+            logs=logs,
+            online_users=online_users
+        )
+        
+    except Exception as e:
+        logger.error(f"Error loading activity logs: {e}")
+        flash('Error loading logs', 'error')
+        return redirect(url_for('home'))
+
 @app.route('/update_user/<user_id>', methods=['POST'])
 def update_user(user_id):
     if session.get('role') != 'admin':
@@ -2171,8 +2659,72 @@ def update_user(user_id):
     try:
         email = request.form['email']
         role = request.form['role']
+        user_type = request.form.get('user_type', 'faculty')
+        special_role = request.form.get('special_role', None)
+        
+        # Convert empty string to None for special_role
+        if special_role == '':
+            special_role = None
+        
+        # Validate inputs
+        if role not in ['user', 'admin']:
+            role = 'user'
+        
+        if user_type not in ['faculty', 'core']:
+            user_type = 'faculty'
+        
+        if special_role and special_role not in ['office_barrier', 'leader']:
+            special_role = None
+        
+        # Sync user_type and special_role
+        if user_type == 'core':
+            special_role = 'office_barrier'
+        elif user_type == 'faculty' and special_role == 'office_barrier':
+            # If changing from core to faculty, remove office_barrier role
+            special_role = None
 
-        db.users.update_one({'_id': ObjectId(user_id)}, {'$set': {'email': email, 'role': role}})
+        update_data = {
+            'email': email, 
+            'role': role,
+            'user_type': user_type,
+            'special_role': special_role,
+            'updated_at': get_indian_time()
+        }
+        
+        db.users.update_one(
+            {'_id': ObjectId(user_id)}, 
+            {'$set': update_data}
+        )
+        
+        # Manage core team chat membership
+        user = db.users.find_one({'_id': ObjectId(user_id)})
+        core_chat = db.chat_groups.find_one({'group_type': 'core_team'})
+        
+        if user_type == 'core' or special_role == 'office_barrier':
+            # Add to core team chat
+            if core_chat:
+                db.chat_groups.update_one(
+                    {'_id': core_chat['_id']},
+                    {'$addToSet': {'members': ObjectId(user_id)}}
+                )
+            else:
+                # Create core team chat if it doesn't exist
+                db.chat_groups.insert_one({
+                    'name': 'Office of Academic Barriers - Core Team',
+                    'group_type': 'core_team',
+                    'description': 'Automatic group for all core team members',
+                    'created_at': get_indian_time(),
+                    'members': [ObjectId(user_id)],
+                    'created_by': ObjectId(user_id)
+                })
+        else:
+            # Remove from core team chat
+            if core_chat:
+                db.chat_groups.update_one(
+                    {'_id': core_chat['_id']},
+                    {'$pull': {'members': ObjectId(user_id)}}
+                )
+        
         flash('✅ User updated successfully.', 'success')
     except Exception as e:
         logger.error(f"Error updating user: {e}")
@@ -2180,14 +2732,59 @@ def update_user(user_id):
     
     return redirect(url_for('admin_dashboard'))
 
-@app.route('/delete_user/<user_id>')
+@app.route('/delete_user/<user_id>', methods=['POST'])
 def delete_user(user_id):
     if session.get('role') != 'admin':
+        flash('Access denied', 'error')
         return redirect(url_for('login'))
 
     try:
+        # Get user before deleting
+        user = db.users.find_one({'_id': ObjectId(user_id)})
+        
+        if not user:
+            flash('User not found', 'error')
+            return redirect(url_for('admin_dashboard'))
+        
+        # Prevent deleting yourself
+        if user['email'] == session.get('email'):
+            flash('You cannot delete your own account', 'error')
+            return redirect(url_for('admin_dashboard'))
+        
+        # Delete user from all related collections
+        user_email = user['email']
+        
+        # 1. Delete from users collection
         db.users.delete_one({'_id': ObjectId(user_id)})
-        flash('✅ User deleted successfully.', 'success')
+        
+        # 2. Delete user's files
+        db.user_files.delete_many({'user_email': user_email})
+        
+        # 3. Delete user's reminders
+        db.event_reminders.delete_many({'user_id': ObjectId(user_id)})
+        
+        # 4. Delete user's subscriptions
+        db.event_subscriptions.delete_many({'user_id': ObjectId(user_id)})
+        
+        # 5. Delete user's documents (if office barrier)
+        db.office_documents.delete_many({'user_id': ObjectId(user_id)})
+        
+        # 6. Remove from chat groups
+        db.chat_groups.update_many(
+            {'members': ObjectId(user_id)},
+            {'$pull': {'members': ObjectId(user_id)}}
+        )
+        
+        # 7. Delete user preferences
+        db.user_preferences.delete_many({'email': user_email})
+        
+        # 8. Delete user navbar
+        db.user_navbars.delete_many({'user_email': user_email})
+        
+        # 9. Delete activity logs
+        db.activity_logs.delete_many({'user_id': ObjectId(user_id)})
+        
+        flash(f'✅ User {user_email} deleted successfully along with all associated data.', 'success')
     except Exception as e:
         logger.error(f"Error deleting user: {e}")
         flash('Error deleting user', 'error')
@@ -3042,7 +3639,6 @@ def get_schools():
         return jsonify([])
 
 # ===================== FILE SERVING =====================
-# ===================== FILE SERVING =====================
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     try:
@@ -3050,7 +3646,6 @@ def uploaded_file(filename):
     except Exception as e:
         logger.error(f"Error serving file {filename}: {e}")
         return "File not found", 404
-
 
 @app.route('/newsletter_view/<newsletter_id>')
 def newsletter_view(newsletter_id):
@@ -3078,13 +3673,69 @@ def internal_error(error):
 def request_entity_too_large(error):
     flash('File too large. Maximum size is 50MB.', 'error')
     return redirect(request.referrer or url_for('home'))
-@app.route('/admin_dashboard')                                                                                        
+
+@app.route('/admin_dashboard')
 def admin_dashboard():
     if session.get('role') != 'admin':
         flash('Access denied', 'error')
         return redirect(url_for('login'))
 
-    return render_template('admin_dashboard.html')
+    try:
+        # Get search and filter parameters
+        search_query = request.args.get('search', '')
+        type_filter = request.args.get('type_filter', '')
+        role_filter = request.args.get('role_filter', '')
+        
+        # Build query
+        query = {}
+        
+        if search_query:
+            query['email'] = {'$regex': search_query, '$options': 'i'}
+        
+        # Filter by user_type (faculty or core)
+        if type_filter:
+            if type_filter == 'core':
+                query['$or'] = [
+                    {'user_type': 'core'},
+                    {'special_role': 'office_barrier'}
+                ]
+            else:
+                query['user_type'] = type_filter
+            
+        # Filter by special_role (office_barrier or leader)
+        if role_filter:
+            if role_filter == 'office_barrier':
+                query['$or'] = [
+                    {'user_type': 'core'},
+                    {'special_role': 'office_barrier'}
+                ]
+            elif role_filter == 'leader':
+                query['special_role'] = 'leader'
+            else:
+                query['special_role'] = role_filter
+        
+        # Fetch users
+        users = list(db.users.find(query).sort('created_at', -1))
+        
+        # Add computed fields for display
+        for user in users:
+            # Normalize display
+            if user.get('user_type') == 'core' or user.get('special_role') == 'office_barrier':
+                user['display_type'] = 'Core Team'
+                user['display_special'] = 'Office Barrier'
+            elif user.get('special_role') == 'leader':
+                user['display_type'] = 'Leader'
+                user['display_special'] = 'Leader'
+            else:
+                user['display_type'] = user.get('user_type', 'faculty').capitalize()
+                user['display_special'] = user.get('special_role', 'None').capitalize() if user.get('special_role') else 'None'
+        
+        return render_template('admin_dashboard.html', users=users)
+        
+    except Exception as e:
+        logger.error(f"Error in admin_dashboard: {e}")
+        flash('Error loading dashboard', 'error')
+        return render_template('admin_dashboard.html', users=[])
 
 # ===================== RUN APP =====================
 if __name__ == '__main__':
