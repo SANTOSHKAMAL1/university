@@ -2543,7 +2543,7 @@
           
             <nav class="nav-links" id="navLinks">
                 <a href="{{ url_for('home') }}"><i class="fas fa-home"></i> Home</a>
-                <a href="{{ url_for('usernewsletters') }}"><i class="fas fa-newspaper"></i> Newsletter</a>
+                <a href="{{ url_for('usernewsletters') }}"><i class="fas fa-newspaper"></i> AI Newsletter</a>
                 
                 {% if user_logged_in %}
                     <!-- User Profile Dropdown -->
@@ -2759,9 +2759,7 @@
                                     {% endif %}
                                 </div>
                             </div>
-                            <div class="read-more">
-                                <a href="{{ url_for('ugc') }}"><i class="fas fa-eye"></i> View All UGC Notices</a>
-                            </div>
+                          
                         </div>
 
                         <!-- University Notices Section -->
@@ -2797,9 +2795,7 @@
                                     {% endif %}
                                 </div>
                             </div>
-                            <div class="read-more">
-                                <a href="{{ url_for('ugc') }}"><i class="fas fa-eye"></i> View All University Notices</a>
-                            </div>
+                           
                         </div>
                     </div>
                 </div>

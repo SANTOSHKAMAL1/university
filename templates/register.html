@@ -4,513 +4,294 @@
     <meta charset="UTF-8">
     <title>Register | Office of Academic Affairs – Jain University</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- Google Fonts & Font Awesome (consistent with updated login) -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(145deg, #f0f4f8 0%, #e9eef3 100%); min-height: 100vh; display: flex; flex-direction: column; }
+        :root { --navy: #0A2A44; --gold: #C49A2B; --shadow-sm: 0 8px 20px rgba(0,0,0,0.04); }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(145deg, #f0f4f8 0%, #e9eef3 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
+        .navbar { background: rgba(255,255,255,0.85); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); box-shadow: 0 6px 24px rgba(10,42,68,0.08); padding: 0.6rem 2rem; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(196,154,43,0.15); }
+        .nav-container { max-width: 1300px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+        .nav-left { display: flex; align-items: center; gap: 1rem; }
+        .logo-link { display: flex; align-items: center; text-decoration: none; transition: transform 0.2s ease; }
+        .logo-link:hover { transform: scale(1.02); }
+        .logo-img { height: 52px; width: auto; margin-right: 12px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
+        .logo-text h1 { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 700; color: var(--navy); line-height: 1.2; letter-spacing: -0.01em; }
+        .logo-text span { font-size: 0.75rem; font-weight: 500; color: #5a6e85; }
+        .back-link { background: white; padding: 0.5rem 1.4rem; border-radius: 40px; font-weight: 500; font-size: 0.95rem; color: var(--navy); text-decoration: none; display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(196,154,43,0.25); transition: all 0.25s ease; box-shadow: var(--shadow-sm); }
+        .back-link i { font-size: 0.9rem; color: var(--gold); }
+        .back-link:hover { background: var(--navy); color: white; border-color: var(--navy); transform: translateY(-2px); box-shadow: 0 12px 24px rgba(10,42,68,0.15); }
+        .back-link:hover i { color: var(--gold); }
 
-        :root {
-            --navy: #0A2A44;
-            --gold: #C49A2B;
-            --light-bg: #FFFFFF;
-            --off-white: #F9FBFD;
-            --shadow-sm: 0 8px 20px rgba(0,0,0,0.04);
-            --shadow-md: 0 15px 35px rgba(10,42,68,0.08);
-        }
+        .register-wrapper { flex: 1; display: flex; align-items: center; justify-content: center; padding: 3rem 1.5rem; }
+        .register-card { background: white; padding: 2.8rem 2.8rem 3rem; border-radius: 36px; box-shadow: 0 30px 60px rgba(10,42,68,0.12), 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 560px; transition: transform 0.3s ease; border: 1px solid rgba(255,255,255,0.6); }
+        .register-card:hover { transform: translateY(-5px); }
 
-        /* ===== REFINED NAVBAR (white, blurred, matches login) ===== */
-        .navbar {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(18px);
-            -webkit-backdrop-filter: blur(18px);
-            box-shadow: 0 6px 24px rgba(10, 42, 68, 0.08);
-            padding: 0.6rem 2rem;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            border-bottom: 1px solid rgba(196, 154, 43, 0.15);
-        }
+        h2 { font-family: 'Playfair Display', serif; font-size: 2.2rem; font-weight: 700; color: var(--navy); margin-bottom: 0.5rem; letter-spacing: -0.02em; text-align: center; }
+        .welcome-sub { color: #5f6f82; font-size: 0.95rem; margin-bottom: 2rem; border-left: 4px solid var(--gold); padding: 0.6rem 1rem; background: #fafcff; border-radius: 0 8px 8px 0; line-height: 1.5; }
 
-        .nav-container {
-            max-width: 1300px;
-            margin: 0 auto;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-        }
+        /* Step indicator */
+        .step-indicator { display: flex; align-items: center; justify-content: center; margin-bottom: 2rem; }
+        .step { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+        .step-circle { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700; border: 2px solid #e2e8f0; background: #f9fcff; color: #94a3b8; transition: all 0.3s ease; }
+        .step.active .step-circle { background: var(--navy); border-color: var(--navy); color: white; box-shadow: 0 4px 12px rgba(10,42,68,0.3); }
+        .step.done .step-circle   { background: #2e8b57; border-color: #2e8b57; color: white; }
+        .step-label { font-size: 0.72rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.4px; white-space: nowrap; }
+        .step.active .step-label { color: var(--navy); }
+        .step.done .step-label   { color: #2e8b57; }
+        .step-connector { height: 2px; width: 50px; background: #e2e8f0; margin: 0 6px; margin-bottom: 22px; flex-shrink: 0; }
+        .step-connector.done { background: #2e8b57; }
 
-        .nav-left {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
+        /* Form */
+        .input-group { margin-bottom: 1.4rem; }
+        .input-label { font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #3a4e64; margin-bottom: 0.4rem; display: block; }
+        .input-field, .select-field { width: 100%; padding: 0.95rem 1.2rem; font-size: 0.97rem; border: 1.5px solid #e2e8f0; border-radius: 18px; transition: all 0.2s ease; background: #f9fcff; font-family: 'Inter', sans-serif; color: #2d3e54; appearance: none; -webkit-appearance: none; }
+        .select-wrapper { position: relative; }
+        .select-wrapper::after { content: '\f107'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; right: 1.2rem; top: 50%; transform: translateY(-50%); color: var(--gold); pointer-events: none; }
+        .input-field:focus, .select-field:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 4px rgba(196,154,43,0.15); background: white; }
+        .info-text { font-size: 0.8rem; color: #5f6f82; margin-top: 0.4rem; display: flex; align-items: center; gap: 5px; }
+        .info-text i { color: var(--gold); }
 
-        .logo-link {
-            display: flex;
-            align-items: center;
-            text-decoration: none;
-            transition: transform 0.2s ease;
-        }
-        .logo-link:hover {
-            transform: scale(1.02);
-        }
+        .section-divider { display: flex; align-items: center; gap: 12px; margin: 1.5rem 0 1.2rem; }
+        .section-divider::before, .section-divider::after { content: ''; flex: 1; height: 1px; background: #e2e8f0; }
+        .section-divider span { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #94a3b8; white-space: nowrap; }
 
-        .logo-img {
-            height: 52px;
-            width: auto;
-            margin-right: 12px;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
-        }
+        .register-btn { width: 100%; background: var(--navy); color: white; border: none; padding: 1rem; font-size: 1.05rem; font-weight: 600; border-radius: 40px; margin: 1.5rem 0 1rem; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 10px 20px rgba(10,42,68,0.2); font-family: 'Inter', sans-serif; }
+        .register-btn:hover { background: #1a3a5c; transform: translateY(-3px); box-shadow: 0 18px 30px rgba(10,42,68,0.25); }
 
-        .logo-text h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: var(--navy);
-            line-height: 1.2;
-            letter-spacing: -0.01em;
-        }
-        .logo-text span {
-            font-size: 0.75rem;
-            font-weight: 500;
-            color: #5a6e85;
-            letter-spacing: 0.3px;
-        }
+        .password-strength { margin-top: 0.5rem; height: 4px; border-radius: 4px; background: #e2e8f0; overflow: hidden; }
+        .strength-bar { height: 100%; width: 0%; transition: width 0.3s, background 0.3s; border-radius: 4px; }
+        .strength-text { font-size: 0.75rem; margin-top: 4px; font-weight: 500; }
 
-        /* refined back button (same as login style) */
-        .back-link {
-            background: white;
-            padding: 0.5rem 1.4rem;
-            border-radius: 40px;
-            font-weight: 500;
-            font-size: 0.95rem;
-            color: var(--navy);
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            border: 1px solid rgba(196, 154, 43, 0.25);
-            transition: all 0.25s ease;
-            box-shadow: var(--shadow-sm);
-        }
+        .link { text-align: center; margin-top: 1rem; font-size: 0.95rem; color: #405b73; }
+        .link a { color: var(--navy); font-weight: 600; text-decoration: none; border-bottom: 2px solid transparent; transition: border-color 0.2s, color 0.2s; }
+        .link a:hover { color: var(--gold); border-bottom-color: var(--gold); }
 
-        .back-link i {
-            font-size: 0.9rem;
-            color: var(--gold);
-        }
+        .flash { margin-top: 1.8rem; padding: 1rem 1.2rem; border-radius: 40px; font-size: 0.9rem; font-weight: 500; border-left: 6px solid; }
+        .flash.success { background: #e2f3e4; color: #1b6f3c; border-left-color: #2e8b57; }
+        .flash.error   { background: #ffefef; color: #b53b3b; border-left-color: #d55; }
+        .flash.info    { background: #d9edf7; color: #0c5a7a; border-left-color: #3a87ad; }
+        .flash.warning { background: #fff8e1; color: #7a5c00; border-left-color: #f0a500; }
 
-        .back-link:hover {
-            background: var(--navy);
-            color: white;
-            border-color: var(--navy);
-            transform: translateY(-2px);
-            box-shadow: 0 12px 24px rgba(10,42,68,0.15);
-        }
-        .back-link:hover i {
-            color: var(--gold);
-        }
+        .otp-message { background: #d1ecf1; color: #0c5460; padding: 1rem 1.2rem; border-radius: 16px; margin-bottom: 1.5rem; text-align: center; border-left: 6px solid #3a87ad; font-size: 0.92rem; line-height: 1.5; }
 
-        /* ===== REGISTER CARD (elevated, consistent with login) ===== */
-        .register-wrapper {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 3rem 1.5rem;
-        }
+        .footer-mini { text-align: center; padding: 1.5rem; font-size: 0.8rem; color: #7b8b9f; border-top: 1px solid rgba(196,154,43,0.15); background: rgba(255,255,255,0.5); }
 
-        .register-card {
-            background: white;
-            padding: 2.8rem 2.8rem 3rem;
-            border-radius: 36px;
-            box-shadow: 0 30px 60px rgba(10, 42, 68, 0.12), 0 10px 25px rgba(0,0,0,0.05);
-            width: 100%;
-            max-width: 520px;
-            transition: transform 0.3s ease;
-            border: 1px solid rgba(255,255,255,0.6);
-            backdrop-filter: blur(4px);
-        }
-
-        .register-card:hover {
-            transform: translateY(-5px);
-        }
-
-        h2 {
-            font-family: 'Playfair Display', serif;
-            font-size: 2.2rem;
-            font-weight: 700;
-            color: var(--navy);
-            margin-bottom: 0.5rem;
-            letter-spacing: -0.02em;
-            text-align: center;
-        }
-
-        .welcome-sub {
-            color: #5f6f82;
-            font-size: 0.95rem;
-            margin-bottom: 2rem;
-            border-left: 4px solid var(--gold);
-            padding-left: 1rem;
-            background: #fafcff;
-            border-radius: 0 8px 8px 0;
-            line-height: 1.5;
-            text-align: left;
-        }
-
-        .input-group {
-            margin-bottom: 1.4rem;
-        }
-
-        .input-label {
-            font-size: 0.85rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #3a4e64;
-            margin-bottom: 0.4rem;
-            display: block;
-        }
-
-        .input-field {
-            width: 100%;
-            padding: 0.95rem 1.2rem;
-            font-size: 1rem;
-            border: 1.5px solid #e2e8f0;
-            border-radius: 18px;
-            transition: all 0.2s ease;
-            background: #f9fcff;
-        }
-
-        .input-field:focus {
-            outline: none;
-            border-color: var(--gold);
-            box-shadow: 0 0 0 4px rgba(196, 154, 43, 0.15);
-            background: white;
-        }
-
-        .info-text {
-            font-size: 0.8rem;
-            color: #5f6f82;
-            margin-top: 0.4rem;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .info-text i {
-            color: var(--gold);
-        }
-
-        /* Role selection styled */
-        .role-selection {
-            margin: 1.8rem 0 1rem;
-        }
-
-        .role-selection label:first-of-type {
-            font-weight: 600;
-            color: var(--navy);
-            margin-bottom: 0.8rem;
-            display: block;
-        }
-
-        .role-options {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-        }
-
-        .role-option {
-            flex: 1;
-        }
-
-        .role-option input[type="radio"] {
-            display: none;
-        }
-
-        .role-option label {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 1.5rem 0.8rem;
-            border: 2px solid #e2e8f0;
-            border-radius: 24px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            background: #f9fcff;
-        }
-
-        .role-option label i {
-            font-size: 2rem;
-            color: var(--navy);
-            margin-bottom: 8px;
-        }
-
-        .role-option label span {
-            font-weight: 600;
-            color: #2d3e54;
-            font-size: 0.95rem;
-        }
-
-        .role-option input[type="radio"]:checked + label {
-            border-color: var(--gold);
-            background: #fff8e7;
-            box-shadow: 0 6px 16px rgba(196,154,43,0.15);
-        }
-
-        .role-option input[type="radio"]:checked + label i {
-            color: var(--gold);
-        }
-
-        .role-option label:hover {
-            border-color: var(--navy);
-            transform: translateY(-3px);
-        }
-
-        /* Buttons */
-        .register-btn {
-            width: 100%;
-            background: var(--navy);
-            color: white;
-            border: none;
-            padding: 1rem;
-            font-size: 1.1rem;
-            font-weight: 600;
-            border-radius: 40px;
-            margin: 1.5rem 0 1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            box-shadow: 0 10px 20px rgba(10,42,68,0.2);
-        }
-
-        .register-btn:hover {
-            background: #1a3a5c;
-            transform: translateY(-3px);
-            box-shadow: 0 18px 30px rgba(10,42,68,0.25);
-        }
-
-        .register-btn i {
-            font-size: 1.1rem;
-        }
-
-        .link {
-            text-align: center;
-            margin-top: 1rem;
-            font-size: 0.95rem;
-            color: #405b73;
-        }
-
-        .link a {
-            color: var(--navy);
-            font-weight: 600;
-            text-decoration: none;
-            border-bottom: 2px solid transparent;
-            transition: border-color 0.2s, color 0.2s;
-        }
-
-        .link a:hover {
-            color: var(--gold);
-            border-bottom-color: var(--gold);
-        }
-
-        /* Flash messages */
-        .flash {
-            margin-top: 1.8rem;
-            padding: 1rem 1.2rem;
-            border-radius: 40px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            border-left: 6px solid;
-        }
-        .flash.success {
-            background: #e2f3e4;
-            color: #1b6f3c;
-            border-left-color: #2e8b57;
-        }
-        .flash.error {
-            background: #ffefef;
-            color: #b53b3b;
-            border-left-color: #d55;
-        }
-        .flash.info {
-            background: #d9edf7;
-            color: #0c5a7a;
-            border-left-color: #3a87ad;
-        }
-
-        /* OTP info box */
-        .otp-message {
-            background: #d1ecf1;
-            color: #0c5460;
-            padding: 1rem;
-            border-radius: 40px;
-            margin-bottom: 1.5rem;
-            text-align: center;
-            border-left: 6px solid #3a87ad;
-        }
-
-        .footer-mini {
-            text-align: center;
-            padding: 1.5rem;
-            font-size: 0.8rem;
-            color: #7b8b9f;
-            border-top: 1px solid rgba(196,154,43,0.15);
-            background: rgba(255,255,255,0.5);
-            backdrop-filter: blur(4px);
-        }
-
-        /* responsive */
         @media (max-width: 600px) {
-            .navbar {
-                padding: 0.6rem 1rem;
-            }
-            .logo-img {
-                height: 44px;
-            }
-            .logo-text h1 {
-                font-size: 1.1rem;
-            }
-            .logo-text span {
-                font-size: 0.7rem;
-            }
-            .back-link {
-                padding: 0.4rem 1.2rem;
-                font-size: 0.85rem;
-            }
-            .register-card {
-                padding: 2rem 1.5rem;
-                border-radius: 28px;
-            }
-            h2 {
-                font-size: 1.9rem;
-            }
-            .role-options {
-                flex-direction: column;
-                gap: 0.8rem;
-            }
+            .navbar { padding: 0.6rem 1rem; }
+            .logo-img { height: 44px; }
+            .logo-text h1 { font-size: 1.1rem; }
+            .register-card { padding: 2rem 1.5rem; border-radius: 28px; }
+            h2 { font-size: 1.9rem; }
+            .step-connector { width: 30px; }
         }
-
         @media (max-width: 420px) {
-            .nav-container {
-                flex-direction: column;
-                gap: 0.5rem;
-            }
-            .nav-left {
-                width: 100%;
-                justify-content: space-between;
-            }
-            .back-link {
-                width: 100%;
-                justify-content: center;
-            }
+            .nav-container { flex-direction: column; gap: 0.5rem; }
+            .nav-left { width: 100%; justify-content: space-between; }
+            .back-link { width: 100%; justify-content: center; }
         }
     </style>
 </head>
 <body>
 
-<!-- ===== REFINED NAVBAR (white background, same as login) ===== -->
 <nav class="navbar">
     <div class="nav-container">
         <div class="nav-left">
             <a href="#" class="logo-link">
-                <!-- using same reliable logo placeholder -->
-                <img src='static/images/L23.png' 
-                     alt="Jain University Logo" class="logo-img" onerror="this.src='https://via.placeholder.com/52x52/0A2A44/FFD700?text=JU'">
-                
+                <img src='static/images/L23.png' alt="Jain University Logo" class="logo-img"
+                     onerror="this.src='https://via.placeholder.com/52x52/0A2A44/FFD700?text=JU'">
             </a>
         </div>
-        <!-- Back button matching login style -->
         <a href="{{ url_for('login') }}" class="back-link">
             <i class="fas fa-arrow-left"></i> Back to Login
         </a>
     </div>
 </nav>
 
-<!-- ===== MAIN REGISTRATION AREA ===== -->
 <div class="register-wrapper">
     <div class="register-card">
-        <h2>Create account</h2>
-        <div class="welcome-sub">Join the Office of Academic Portal</div>
+        <h2>Create Account</h2>
+        <div class="welcome-sub">Join the Office of Academic Affairs Portal – Jain University</div>
 
-        <form method="POST">
-            <!-- EMAIL step (OTP not sent) -->
+        <!-- Step Indicator -->
+        <div class="step-indicator">
+            <div class="step {% if not otp_sent %}active{% else %}done{% endif %}">
+                <div class="step-circle">{% if otp_sent %}<i class="fas fa-check"></i>{% else %}1{% endif %}</div>
+                <div class="step-label">Email</div>
+            </div>
+            <div class="step-connector {% if otp_sent %}done{% endif %}"></div>
+            <div class="step {% if otp_sent and not otp_verified %}active{% elif otp_verified %}done{% endif %}">
+                <div class="step-circle">{% if otp_verified %}<i class="fas fa-check"></i>{% else %}2{% endif %}</div>
+                <div class="step-label">Verify</div>
+            </div>
+            <div class="step-connector {% if otp_verified %}done{% endif %}"></div>
+            <div class="step {% if otp_verified %}active{% endif %}">
+                <div class="step-circle">3</div>
+                <div class="step-label">Details</div>
+            </div>
+        </div>
+
+        <form method="POST" id="registerForm">
+
+            <!-- STEP 1: EMAIL -->
             {% if not otp_sent %}
-                <div class="input-group">
-                    <label class="input-label">Email address</label>
-                    <input type="email" name="email" class="input-field" placeholder="you@jainuniversity.ac.in" required>
-                    <div class="info-text">
-                        <i class="fas fa-info-circle"></i> Only @jainuniversity.ac.in emails allowed
-                    </div>
+            <div class="input-group">
+                <label class="input-label">
+                    <i class="fas fa-envelope" style="color:var(--gold);margin-right:6px;"></i>Email Address
+                </label>
+                <input type="email" name="email" class="input-field"
+                       placeholder="yourname@jainuniversity.ac.in" required autofocus>
+                <div class="info-text">
+                    <i class="fas fa-shield-alt"></i>
+                    Only <strong>@jainuniversity.ac.in</strong> addresses are accepted
                 </div>
-                <button type="submit" class="register-btn">
-                    <i class="fas fa-paper-plane"></i> Send OTP
-                </button>
+            </div>
+            <button type="submit" class="register-btn">
+                <i class="fas fa-paper-plane"></i> Send OTP to Email
+            </button>
 
-            <!-- OTP VERIFICATION step -->
+            <!-- STEP 2: OTP -->
             {% elif otp_sent and not otp_verified %}
-                <div class="otp-message">
-                    <i class="fas fa-envelope-open-text"></i> An OTP has been sent to your email. Please check your inbox.
+            <div class="otp-message">
+                <i class="fas fa-envelope-open-text" style="font-size:1.3rem;margin-bottom:6px;display:block;"></i>
+                A 6-digit OTP has been sent to your registered email.<br>
+                <strong>Please check your inbox (and spam folder).</strong>
+            </div>
+            <div class="input-group">
+                <label class="input-label">
+                    <i class="fas fa-key" style="color:var(--gold);margin-right:6px;"></i>One-Time Password
+                </label>
+                <input type="text" name="otp" class="input-field"
+                       placeholder="Enter 6-digit OTP"
+                       maxlength="6" pattern="[0-9]{6}" inputmode="numeric" required autofocus
+                       style="font-size:1.4rem;letter-spacing:0.4em;text-align:center;">
+                <div class="info-text">
+                    <i class="fas fa-clock"></i> OTP is valid for 10 minutes
                 </div>
-                <div class="input-group">
-                    <label class="input-label">One-Time Password</label>
-                    <input type="text" name="otp" class="input-field" placeholder="Enter 6-digit OTP" maxlength="6" required>
-                </div>
-                <button type="submit" class="register-btn">
-                    <i class="fas fa-check-circle"></i> Verify OTP
-                </button>
+            </div>
+            <button type="submit" class="register-btn">
+                <i class="fas fa-check-circle"></i> Verify OTP
+            </button>
 
-            <!-- FINAL STEP: password + role selection (otp_verified) -->
+            <!-- STEP 3: PASSWORD + DEPARTMENT + LOCATION -->
             {% elif otp_verified %}
-                <div class="input-group">
-                    <label class="input-label">Password</label>
-                    <input type="password" name="password" class="input-field" placeholder="Create a strong password" required minlength="6">
+
+            <div class="input-group">
+                <label class="input-label">
+                    <i class="fas fa-lock" style="color:var(--gold);margin-right:6px;"></i>Create Password
+                </label>
+                <input type="password" name="password" class="input-field"
+                       id="passwordField" placeholder="Minimum 6 characters"
+                       required minlength="6" oninput="checkStrength(this.value)">
+                <div class="password-strength">
+                    <div class="strength-bar" id="strengthBar"></div>
                 </div>
+                <div class="strength-text" id="strengthText" style="color:#94a3b8;">Enter a password</div>
+            </div>
 
-                
+            <div class="section-divider"><span>Academic Details</span></div>
 
-                <button type="submit" class="register-btn">
-                    <i class="fas fa-user-check"></i> Complete Registration
-                </button>
+            <!-- DEPARTMENT -->
+            <div class="input-group">
+                <label class="input-label">
+                    <i class="fas fa-university" style="color:var(--gold);margin-right:6px;"></i>Department
+                </label>
+                <div class="select-wrapper">
+                    <select name="department" class="select-field" required>
+                        <option value="" disabled selected>— Select your Department —</option>
+                        <optgroup label="Office Of Academics">
+                            <option value="OFFICE OF ACADEMICS">Office Of Academics</option>
+                            
+                        </optgroup>
+                        <optgroup label="Engineering and Technology">
+                            <option value="Department of Computer Science and Engineering">Department of Computer Science and Engineering</option>
+                            <option value="Department of Information Science and Engineering">Department of Information Science and Engineering</option>
+                            <option value="Department of Aerospace Engineering">Department of Aerospace Engineering</option>
+                            <option value="Department of Civil Engineering">Department of Civil Engineering</option>
+                            <option value="Department of Mechanical Engineering">Department of Mechanical Engineering</option>
+                            <option value="Department of Electrical and Electronics Engineering">Department of Electrical and Electronics Engineering</option>
+                            <option value="Department of Electronics and Communication Engineering">Department of Electronics and Communication Engineering</option>
+                            <option value="Department of Food Technology">Department of Food Technology</option>
+                        </optgroup>
+                        <optgroup label="Humanities, Arts and Social Sciences">
+                            <option value="Department of Humanities and Social Sciences">Department of Humanities and Social Sciences</option>
+                            <option value="Department of Economics">Department of Economics</option>
+                            <option value="Department of Performing Arts and Cultural Studies">Department of Performing Arts and Cultural Studies</option>
+                            <option value="Department of Languages">Department of Languages</option>
+                            <option value="Department of Journalism and Mass Communication">Department of Journalism and Mass Communication</option>
+                            <option value="Department of Law">Department of Law</option>
+                        </optgroup>
+                        <optgroup label="Sciences and Life Sciences">
+                            <option value="Department of Chemistry and Biochemistry">Department of Chemistry and Biochemistry</option>
+                            <option value="Department of Biotechnology and Genetics">Department of Biotechnology and Genetics</option>
+                            <option value="Department of Microbiology and Botany">Department of Microbiology and Botany</option>
+                            <option value="Department of Data Analytics and Mathematical Science">Department of Data Analytics and Mathematical Science</option>
+                            <option value="Department of Forensic Science">Department of Forensic Science</option>
+                            <option value="Department of Physics and Electronics">Department of Physics and Electronics</option>
+                            <option value="Department of Psychology and Allied Sciences">Department of Psychology and Allied Sciences</option>
+                            <option value="Department of Allied Healthcare and Sciences">Department of Allied Healthcare and Sciences</option>
+                        </optgroup>
+                        <optgroup label="Commerce, Management and Design">
+                            <option value="Department of Computer Science and IT">Department of Computer Science and IT</option>
+                            <option value="Department of Animation and Virtual Reality">Department of Animation and Virtual Reality</option>
+                            <option value="Department of Commerce">Department of Commerce</option>
+                            <option value="Department of Management Studies">Department of Management Studies</option>
+                            <option value="Department of Design">Department of Design</option>
+                            <option value="Department of Art and Design">Department of Art and Design</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <div class="info-text">
+                    <i class="fas fa-info-circle"></i> Select the department you primarily work in
+                </div>
+            </div>
+
+            <!-- LOCATION -->
+            <div class="input-group">
+                <label class="input-label">
+                    <i class="fas fa-map-marker-alt" style="color:var(--gold);margin-right:6px;"></i>Campus / Location
+                </label>
+                <div class="select-wrapper">
+                    <select name="location" class="select-field" required>
+                        <option value="" disabled selected>— Select your Campus / Location —</option>
+                        <option value="Jain Head Office">Jain Head Office</option>
+                        <option value="Office of Academic – Jayanagar 9th Block">Office of Academic – Jayanagar 9th Block</option>
+                        <option value="JP Nagar Campus">JP Nagar Campus</option>
+                        <option value="Whitefield Campus">Whitefield Campus</option>
+                        <option value="Yelahanka Campus">Yelahanka Campus</option>
+                        <option value="JC Road Campus">JC Road Campus</option>
+                        <option value="Lalbagh Campus">Lalbagh Campus</option>
+                        <option value="Racecourse Road Campus">Racecourse Road Campus</option>
+                        <option value="Sheshadripuram Campus">Sheshadripuram Campus</option>
+                    </select>
+                </div>
+                <div class="info-text">
+                    <i class="fas fa-map-pin"></i> Select your primary working campus
+                </div>
+            </div>
+
+            <button type="submit" class="register-btn">
+                <i class="fas fa-user-check"></i> Complete Registration
+            </button>
+
             {% endif %}
         </form>
 
-        <!-- Link to login page -->
         <div class="link">
             <p><a href="{{ url_for('login') }}">
                 <i class="fas fa-sign-in-alt"></i> Already have an account? Sign in
             </a></p>
         </div>
 
-        <!-- Flash messages (styled) -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
                     <div class="flash {{ category }}">
-                        {% if category == 'success' %}
-                            <i class="fas fa-check-circle"></i>
-                        {% elif category == 'error' %}
-                            <i class="fas fa-exclamation-triangle"></i>
-                        {% else %}
-                            <i class="fas fa-info-circle"></i>
-                        {% endif %}
+                        {% if category == 'success' %}<i class="fas fa-check-circle"></i>
+                        {% elif category == 'error' %}<i class="fas fa-exclamation-triangle"></i>
+                        {% elif category == 'warning' %}<i class="fas fa-exclamation-circle"></i>
+                        {% else %}<i class="fas fa-info-circle"></i>{% endif %}
                         {{ message }}
                     </div>
                 {% endfor %}
@@ -519,10 +300,45 @@
     </div>
 </div>
 
-<!-- subtle footer (optional, matches login) -->
 <div class="footer-mini">
-    <p>© 2026 Jain University – Office of Academic Affairs. Secure registration.</p>
+    <p>© 2026 Jain University – Office of Academic Affairs. Secure and encrypted registration.</p>
 </div>
+
+<script>
+    function checkStrength(val) {
+        const bar  = document.getElementById('strengthBar');
+        const text = document.getElementById('strengthText');
+        if (!bar) return;
+        let s = 0;
+        if (val.length >= 6)           s++;
+        if (val.length >= 10)          s++;
+        if (/[A-Z]/.test(val))         s++;
+        if (/[0-9]/.test(val))         s++;
+        if (/[^A-Za-z0-9]/.test(val))  s++;
+        const levels = [
+            { pct:'0%',   color:'#e2e8f0', label:'Enter a password', col:'#94a3b8' },
+            { pct:'25%',  color:'#ef4444', label:'Weak',              col:'#ef4444' },
+            { pct:'50%',  color:'#f97316', label:'Fair',              col:'#f97316' },
+            { pct:'75%',  color:'#eab308', label:'Good',              col:'#ca8a04' },
+            { pct:'90%',  color:'#22c55e', label:'Strong',            col:'#16a34a' },
+            { pct:'100%', color:'#10b981', label:'Very Strong',       col:'#059669' },
+        ];
+        const lvl = levels[Math.min(s, 5)];
+        bar.style.width      = lvl.pct;
+        bar.style.background = lvl.color;
+        text.textContent     = lvl.label;
+        text.style.color     = lvl.col;
+    }
+
+    {% if otp_verified %}
+    document.getElementById('registerForm').addEventListener('submit', function(e) {
+        const dept = document.querySelector('select[name="department"]').value;
+        const loc  = document.querySelector('select[name="location"]').value;
+        if (!dept) { e.preventDefault(); alert('Please select your department.'); return; }
+        if (!loc)  { e.preventDefault(); alert('Please select your campus / location.'); return; }
+    });
+    {% endif %}
+</script>
 
 </body>
 </html>

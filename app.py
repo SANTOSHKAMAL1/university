@@ -1027,39 +1027,49 @@ def register():
                 return redirect(url_for('register'))
         
         elif session['step'] == 3:
-            password = request.form.get('password')
-            user_type = request.form.get('user_type', 'faculty')
-            
+            password    = request.form.get('password')
+            user_type   = request.form.get('user_type', 'faculty')
+            department  = request.form.get('department', '').strip()
+            location    = request.form.get('location', '').strip()
+
+            # Validate required fields
+            if not department:
+                flash('Please select your department.', 'error')
+                return redirect(url_for('register'))
+            if not location:
+                flash('Please select your campus / location.', 'error')
+                return redirect(url_for('register'))
+
             if user_type not in ['faculty', 'core']:
                 user_type = 'faculty'
             
-            hashed_pw = generate_password_hash(password)
-            email = session['email']
-            
+            hashed_pw    = generate_password_hash(password)
+            email        = session['email']
             special_role = 'office_barrier' if user_type == 'core' else None
             
             new_user_id = db.users.insert_one({
-                'email': email, 
-                'password': hashed_pw, 
-                'role': 'user',
-                'user_type': user_type,
+                'email':        email,
+                'password':     hashed_pw,
+                'role':         'user',
+                'user_type':    user_type,
                 'special_role': special_role,
-                'approved': False,
-                'is_online': True,
-                'last_seen': get_indian_time(),
+                'approved':     False,
+                'is_online':    True,
+                'last_seen':    get_indian_time(),
                 'profile': {
-                    'department': '',
-                    'school': '',
-                    'phone': ''
+                    'department': department,
+                    'location':   location,
+                    'school':     '',
+                    'phone':      ''
                 },
                 'created_at': get_indian_time()
             }).inserted_id
             
-            session['role'] = 'user'
-            session['user_type'] = user_type
+            session['role']         = 'user'
+            session['user_type']    = user_type
             session['special_role'] = special_role
-            session['approved'] = False
-            session['user_id'] = str(new_user_id)
+            session['approved']     = False
+            session['user_id']      = str(new_user_id)
             
             session.pop('otp', None)
             session.pop('step', None)
@@ -1068,9 +1078,10 @@ def register():
             flash('✅ Registration complete! Waiting for admin approval to access all features.', 'info')
             return redirect(url_for('home'))
     
-    otp_sent = session.get('step', 1) >= 2
+    otp_sent     = session.get('step', 1) >= 2
     otp_verified = session.get('step', 1) == 3
     return render_template('register.html', otp_sent=otp_sent, otp_verified=otp_verified)
+
 
 @app.route('/refresh_session')
 def refresh_session():
