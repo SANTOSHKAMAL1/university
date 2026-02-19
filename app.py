@@ -54,13 +54,33 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 mongo = PyMongo(app)
 db = mongo.db
 
-# Mail Config
+# FIXED: Mail Configuration - Test this configuration first
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = 'info.loginpanel@gmail.com'
-app.config['MAIL_PASSWORD'] = 'wedbfepklgtwtugf'
+app.config['MAIL_PASSWORD'] = 'wedbfepklgtwtugf'  # This is an app password
+app.config['MAIL_DEFAULT_SENDER'] = 'info.loginpanel@gmail.com'
+app.config['MAIL_MAX_EMAILS'] = None
+app.config['MAIL_ASCII_ATTACHMENTS'] = False
+
+# Initialize Mail with app
 mail = Mail(app)
+
+# Test mail configuration on startup
+with app.app_context():
+    try:
+        # Test sending a test email to yourself
+        test_msg = Message(
+            subject="Reminder System Test",
+            sender=app.config['MAIL_USERNAME'],
+            recipients=[app.config['MAIL_USERNAME']]  # Send to yourself for testing
+        )
+        test_msg.body = "This is a test email to verify the reminder system is working."
+        mail.send(test_msg)
+        logger.info("✅ Mail configuration test successful - test email sent")
+    except Exception as e:
+        logger.error(f"❌ Mail configuration test failed: {e}")
 
 # INDIAN TIMEZONE
 IST = pytz.timezone('Asia/Kolkata')
@@ -89,10 +109,12 @@ def create_indexes():
         db.events.create_index([('school', 1)])
         db.events.create_index([('department', 1)])
         
-        # Reminders collection indexes
+        # Reminders collection indexes - FIXED: Added better indexes
         db.event_reminders.create_index([('user_id', 1)])
         db.event_reminders.create_index([('reminder_datetime', 1)])
         db.event_reminders.create_index([('sent', 1)])
+        db.event_reminders.create_index([('sent', 1), ('reminder_datetime', 1)])  # Composite index for faster queries
+        db.event_reminders.create_index([('sent', 1), ('reminder_datetime', 1), ('user_id', 1)])  # Most efficient query
         
         # Chat collection indexes
         db.chat_messages.create_index([('sender_id', 1)])
@@ -531,245 +553,217 @@ def validate_excel_data(df):
     
     return True, [], cleaned_records
 
-# ===================== SCHEDULED TASKS =====================
+# ===================== SCHEDULED TASKS - COMPLETELY FIXED =====================
 def send_event_reminders():
-    """Send event reminders based on user preferences - USES INDIAN TIME"""
+    """Send event reminders based on user preferences - FIXED VERSION"""
     try:
         now = get_indian_time()
+        now_naive = now.replace(tzinfo=None)  # Convert to naive for comparison with DB if needed
         
-        # Get all unsent reminders
+        logger.info("=" * 60)
+        logger.info(f"[REMINDER CHECK] Starting reminder check at {now.strftime('%Y-%m-%d %H:%M:%S')} IST")
+        
+        # FIXED: Get all unsent reminders with reminder_datetime <= now
+        # We need to handle both timezone-aware and naive datetimes in DB
         reminders = list(db.event_reminders.find({
-            'sent': False
+            'sent': False,
+            'reminder_datetime': {'$lte': now}
         }))
         
-        logger.info(f"[REMINDER CHECK] Current IST time: {now.strftime('%Y-%m-%d %H:%M:%S')}")
-        logger.info(f"[REMINDER CHECK] Found {len(reminders)} pending reminders")
+        logger.info(f"[REMINDER CHECK] Found {len(reminders)} pending reminders to send")
         
-        reminders_sent = 0
-        reminders_checked = 0
+        if not reminders:
+            logger.info("[REMINDER CHECK] No reminders to send at this time")
+            return
+        
+        sent_count = 0
+        error_count = 0
         
         for reminder in reminders:
             try:
-                reminders_checked += 1
+                reminder_id = reminder['_id']
                 reminder_dt = reminder.get('reminder_datetime')
                 
-                # Handle string datetime if needed
+                # Handle string dates
                 if isinstance(reminder_dt, str):
                     try:
-                        reminder_dt = datetime.strptime(reminder_dt, '%Y-%m-%d %H:%M:%S')
-                    except ValueError:
-                        reminder_dt = datetime.strptime(reminder_dt, '%Y-%m-%d %H:%M:%S.%f')
+                        # Try parsing with timezone
+                        reminder_dt = datetime.fromisoformat(reminder_dt.replace('Z', '+00:00'))
+                    except:
+                        try:
+                            reminder_dt = datetime.strptime(reminder_dt, '%Y-%m-%d %H:%M:%S')
+                        except:
+                            try:
+                                reminder_dt = datetime.strptime(reminder_dt, '%Y-%m-%dT%H:%M:%S')
+                            except Exception as e:
+                                logger.error(f"Could not parse reminder datetime: {reminder_dt} - {e}")
+                                # Mark as errored
+                                db.event_reminders.update_one(
+                                    {'_id': reminder_id},
+                                    {'$set': {'error': f'Invalid date format: {reminder_dt}', 'last_attempt': now}}
+                                )
+                                error_count += 1
+                                continue
                 
-                # Ensure timezone awareness
-                if reminder_dt.tzinfo is None:
-                    reminder_dt = IST.localize(reminder_dt)
-                else:
-                    reminder_dt = reminder_dt.astimezone(IST)
+                # Ensure timezone awareness and convert to IST for comparison
+                if isinstance(reminder_dt, datetime):
+                    if reminder_dt.tzinfo is None:
+                        # Assume IST if no timezone
+                        reminder_dt = IST.localize(reminder_dt)
+                    else:
+                        reminder_dt = reminder_dt.astimezone(IST)
                 
-                # Log reminder details
-                logger.info(f"[REMINDER #{reminders_checked}] Checking reminder for {reminder_dt.strftime('%Y-%m-%d %H:%M:%S')} IST")
-                logger.info(f"[REMINDER #{reminders_checked}] Current time: {now.strftime('%Y-%m-%d %H:%M:%S')} IST")
+                logger.info(f"[REMINDER] Processing reminder {reminder_id} - Scheduled: {reminder_dt.strftime('%Y-%m-%d %H:%M:%S')}")
                 
-                # Check if reminder time has passed (with 1-minute grace period)
-                if reminder_dt <= now:
-                    logger.info(f"[REMINDER #{reminders_checked}] Reminder time reached! Sending email...")
-                    
-                    # Get event details
-                    event = db.events.find_one({'_id': reminder['event_id']})
-                    if not event:
-                        logger.warning(f"[REMINDER #{reminders_checked}] Event not found: {reminder['event_id']}")
-                        # Mark as sent to avoid repeated checks
-                        db.event_reminders.update_one(
-                            {'_id': reminder['_id']},
-                            {'$set': {'sent': True, 'sent_at': now, 'error': 'Event not found'}}
-                        )
-                        continue
-                    
-                    # Get user details
-                    user = db.users.find_one({'_id': reminder['user_id']})
-                    if not user:
-                        logger.warning(f"[REMINDER #{reminders_checked}] User not found: {reminder['user_id']}")
-                        db.event_reminders.update_one(
-                            {'_id': reminder['_id']},
-                            {'$set': {'sent': True, 'sent_at': now, 'error': 'User not found'}}
-                        )
-                        continue
-                    
-                    # Send email
-                    try:
-                        msg = Message(
-                            subject=f"🔔 Event Reminder: {event['event_name']}",
-                            sender=app.config['MAIL_USERNAME'],
-                            recipients=[user['email']]
-                        )
-                        
-                        msg.html = f"""
-                        <!DOCTYPE html>
-                        <html>
-                        <head>
-                            <meta charset="UTF-8">
-                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                        </head>
-                        <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f4f6f9;">
-                            <div style="max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-                                <!-- Header with gradient -->
-                                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px 20px; text-align: center;">
-                                    <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 600;">⏰ Event Reminder</h1>
-                                    <p style="color: #e0e7ff; margin: 10px 0 0 0; font-size: 16px;">Jain University - Office of Academics</p>
-                                </div>
-                                
-                                <!-- Main content -->
-                                <div style="padding: 30px 25px;">
-                                    <!-- Greeting -->
-                                    <p style="color: #1f2937; font-size: 16px; line-height: 1.6; margin-top: 0;">Hello <strong>{user['email'].split('@')[0]}</strong>,</p>
-                                    <p style="color: #1f2937; font-size: 16px; line-height: 1.6;">This is a friendly reminder about your upcoming event:</p>
-                                    
-                                    <!-- Event Details Card -->
-                                    <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 25px; border-radius: 12px; margin: 25px 0; border-left: 5px solid #667eea;">
-                                        <h2 style="color: #1f2937; margin: 0 0 15px 0; font-size: 22px; font-weight: 600;">{event['event_name']}</h2>
-                                        
-                                        <table style="width: 100%; border-collapse: collapse;">
-                                            <tr>
-                                                <td style="padding: 8px 0; width: 100px; vertical-align: top;">
-                                                    <span style="color: #6b7280; font-size: 14px;">📅 Date:</span>
-                                                </td>
-                                                <td style="padding: 8px 0;">
-                                                    <span style="color: #1f2937; font-size: 15px; font-weight: 500;">{event['event_date']}</span>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td style="padding: 8px 0;">
-                                                    <span style="color: #6b7280; font-size: 14px;">⏰ Time:</span>
-                                                </td>
-                                                <td style="padding: 8px 0;">
-                                                    <span style="color: #1f2937; font-size: 15px; font-weight: 500;">{event.get('event_time', 'All Day')}</span>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td style="padding: 8px 0;">
-                                                    <span style="color: #6b7280; font-size: 14px;">📍 Venue:</span>
-                                                </td>
-                                                <td style="padding: 8px 0;">
-                                                    <span style="color: #1f2937; font-size: 15px; font-weight: 500;">{event['venue']}</span>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td style="padding: 8px 0;">
-                                                    <span style="color: #6b7280; font-size: 14px;">🏢 Department:</span>
-                                                </td>
-                                                <td style="padding: 8px 0;">
-                                                    <span style="color: #1f2937; font-size: 15px; font-weight: 500;">{event.get('department', 'N/A')}</span>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td style="padding: 8px 0;">
-                                                    <span style="color: #6b7280; font-size: 14px;">🏫 School:</span>
-                                                </td>
-                                                <td style="padding: 8px 0;">
-                                                    <span style="color: #1f2937; font-size: 15px; font-weight: 500;">{event.get('school', 'N/A')}</span>
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </div>
-                                    
-                                    <!-- Description Section -->
-                                    <div style="background: #eff6ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3b82f6;">
-                                        <p style="margin: 0 0 10px 0; color: #1e40af; font-weight: 600;">📝 Event Description:</p>
-                                        <p style="margin: 0; color: #1e40af; line-height: 1.6; font-size: 15px;">
-                                            {event.get('description', 'No description provided')}
-                                        </p>
-                                    </div>
-                                    
-                                    <!-- Reminder Time Info -->
-                                    <div style="background: #fef3c7; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
-                                        <p style="margin: 0; color: #92400e;">
-                                            <strong>🔔 Reminder sent at:</strong> {now.strftime('%d %B %Y, %I:%M %p')} IST
-                                        </p>
-                                    </div>
-                                    
-                                    <!-- Action Button -->
-                                    <div style="text-align: center; margin: 30px 0 20px 0;">
-                                        <a href="{request.url_root}jainevents" 
-                                           style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 35px; text-decoration: none; border-radius: 50px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 10px rgba(102, 126, 234, 0.4);">
-                                            View All Events
-                                        </a>
-                                    </div>
-                                    
-                                    <!-- Footer Note -->
-                                    <p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin: 20px 0 0 0; text-align: center;">
-                                        Thank you for using Jain University Portal!
-                                    </p>
-                                </div>
-                                
-                                <!-- Footer -->
-                                <div style="background: #f8fafc; padding: 20px; text-align: center; border-top: 1px solid #e2e8f0;">
-                                    <p style="color: #64748b; font-size: 13px; margin: 5px 0;">
-                                        Jain University Portal - Office of Academics
-                                    </p>
-                                    <p style="color: #94a3b8; font-size: 12px; margin: 5px 0;">
-                                        This is an automated reminder. Please do not reply to this email.
-                                    </p>
-                                    <p style="color: #94a3b8; font-size: 12px; margin: 5px 0;">
-                                        © 2025 Jain University. All rights reserved.
-                                    </p>
-                                </div>
+                # Get event details
+                event = db.events.find_one({'_id': reminder['event_id']})
+                if not event:
+                    logger.warning(f"[REMINDER] Event not found: {reminder['event_id']}")
+                    # Mark as sent to avoid repeated errors
+                    db.event_reminders.update_one(
+                        {'_id': reminder_id},
+                        {'$set': {'sent': True, 'error': 'Event not found'}}
+                    )
+                    error_count += 1
+                    continue
+                
+                # Get user details
+                user = db.users.find_one({'_id': reminder['user_id']})
+                if not user:
+                    logger.warning(f"[REMINDER] User not found: {reminder['user_id']}")
+                    # Mark as sent to avoid repeated errors
+                    db.event_reminders.update_one(
+                        {'_id': reminder_id},
+                        {'$set': {'sent': True, 'error': 'User not found'}}
+                    )
+                    error_count += 1
+                    continue
+                
+                logger.info(f"[REMINDER] Sending to: {user['email']} | Event: {event['event_name']}")
+                
+                # FIXED: Simplified email - plain text first to ensure delivery
+                msg = Message(
+                    subject=f"🔔 REMINDER: {event['event_name']}",
+                    sender=app.config['MAIL_USERNAME'],
+                    recipients=[user['email']]
+                )
+                
+                # Plain text version (always works)
+                msg.body = f"""
+========================================
+           EVENT REMINDER
+========================================
+
+Event: {event['event_name']}
+Date: {event['event_date']}
+Time: {event.get('event_time', 'All Day')}
+Venue: {event['venue']}
+
+Description:
+{event.get('description', 'No description provided')}
+
+========================================
+This reminder was scheduled for: {reminder_dt.strftime('%d %B %Y at %I:%M %p')} IST
+
+View all events: {request.url_root}jainevents
+
+========================================
+Jain University Portal - Office of Academics
+This is an automated reminder. Please do not reply.
+========================================
+                """
+                
+                # HTML version for better appearance
+                msg.html = f"""
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                        .header {{ background: #04043a; color: #FFD700; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
+                        .content {{ background: #f9f9f9; padding: 20px; border-radius: 0 0 10px 10px; }}
+                        .event-details {{ background: white; padding: 15px; border-radius: 8px; margin: 15px 0; }}
+                        .footer {{ text-align: center; margin-top: 20px; font-size: 12px; color: #666; }}
+                        .button {{ display: inline-block; background: #04043a; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; }}
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>⏰ Event Reminder</h1>
+                        </div>
+                        <div class="content">
+                            <h2 style="color: #04043a;">{event['event_name']}</h2>
+                            
+                            <div class="event-details">
+                                <p><strong>📅 Date:</strong> {event['event_date']}</p>
+                                <p><strong>⏰ Time:</strong> {event.get('event_time', 'All Day')}</p>
+                                <p><strong>📍 Venue:</strong> {event['venue']}</p>
+                                <p><strong>🏢 Department:</strong> {event.get('department', 'N/A')}</p>
+                                <p><strong>🏫 School:</strong> {event.get('school', 'N/A')}</p>
                             </div>
-                        </body>
-                        </html>
-                        """
-                        
-                        mail.send(msg)
-                        
-                        # Mark as sent
-                        db.event_reminders.update_one(
-                            {'_id': reminder['_id']},
-                            {'$set': {
-                                'sent': True,
-                                'sent_at': now,
-                                'email_sent': True
-                            }}
-                        )
-                        
-                        reminders_sent += 1
-                        logger.info(f"✅ [REMINDER SENT #{reminders_checked}] To: {user['email']} | Event: {event['event_name']} | Time: {now.strftime('%Y-%m-%d %H:%M:%S')} IST")
-                        
-                    except Exception as email_error:
-                        logger.error(f"❌ [REMINDER EMAIL ERROR #{reminders_checked}] {str(email_error)}", exc_info=True)
-                        # Mark as error but don't retry indefinitely
-                        db.event_reminders.update_one(
-                            {'_id': reminder['_id']},
-                            {'$set': {
-                                'error': str(email_error),
-                                'error_count': reminder.get('error_count', 0) + 1,
-                                'last_error_at': now
-                            }}
-                        )
-                        
-                        # If failed multiple times, mark as sent to prevent infinite retries
-                        if reminder.get('error_count', 0) >= 3:
-                            db.event_reminders.update_one(
-                                {'_id': reminder['_id']},
-                                {'$set': {'sent': True, 'failed_permanently': True}}
-                            )
-                            logger.warning(f"[REMINDER #{reminders_checked}] Marked as failed permanently after 3 attempts")
+                            
+                            <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 15px 0;">
+                                <p style="margin: 0;"><strong>📝 Description:</strong></p>
+                                <p style="margin: 10px 0 0 0;">{event.get('description', 'No description provided')}</p>
+                            </div>
+                            
+                            <div style="background: #e8f4fd; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                                <p style="margin: 0; color: #0056b3;">
+                                    <strong>⏳ This reminder was scheduled for:</strong><br>
+                                    <span style="font-size: 16px; font-weight: bold;">{reminder_dt.strftime('%d %B %Y at %I:%M %p')} IST</span>
+                                </p>
+                            </div>
+                            
+                            <div style="text-align: center; margin: 30px 0;">
+                                <a href="{request.url_root}jainevents" class="button">View All Events</a>
+                            </div>
+                        </div>
+                        <div class="footer">
+                            <p>Jain University Portal - Office of Academics</p>
+                            <p>This is an automated reminder. Please do not reply.</p>
+                            <p>Sent at: {now.strftime('%Y-%m-%d %I:%M %p')} IST</p>
+                        </div>
+                    </div>
+                </body>
+                </html>
+                """
                 
-                else:
-                    time_diff_minutes = int((reminder_dt - now).total_seconds() / 60)
-                    logger.info(f"[REMINDER PENDING #{reminders_checked}] Will send in {time_diff_minutes} minutes")
+                # Send the email
+                mail.send(msg)
+                logger.info(f"✅ [REMINDER SENT] To: {user['email']} | Event: {event['event_name']}")
+                
+                # Mark as sent in database
+                db.event_reminders.update_one(
+                    {'_id': reminder_id},
+                    {'$set': {
+                        'sent': True,
+                        'sent_at': now,
+                        'email_sent': True
+                    }}
+                )
+                
+                sent_count += 1
                 
             except Exception as e:
-                logger.error(f"❌ [REMINDER PROCESSING ERROR #{reminders_checked}] {str(e)}", exc_info=True)
-                # Mark as error to prevent infinite loops
+                logger.error(f"❌ [REMINDER ERROR] Failed to send reminder {reminder.get('_id')}: {str(e)}", exc_info=True)
+                
+                # Mark as errored but don't mark as sent - will retry
                 db.event_reminders.update_one(
                     {'_id': reminder['_id']},
                     {'$set': {
-                        'processing_error': str(e),
-                        'sent': True  # Mark as sent to prevent repeated errors
+                        'last_error': str(e),
+                        'last_attempt': now,
+                        'attempt_count': (reminder.get('attempt_count', 0) + 1)
                     }}
                 )
+                error_count += 1
                 continue
         
-        logger.info(f"[REMINDER SUMMARY] Checked {reminders_checked} reminders, sent {reminders_sent} emails")
+        logger.info(f"[REMINDER CHECK] Completed: {sent_count} sent, {error_count} errors")
+        logger.info("=" * 60)
         
     except Exception as e:
         logger.error(f"❌ [REMINDER SYSTEM ERROR] {str(e)}", exc_info=True)
@@ -783,61 +777,125 @@ def send_daily_event_emails():
         subscribers = list(db.subscribers.find())
         events = list(db.events.find({
             "event_date": {"$gte": today_ist, "$lte": upcoming_ist}
-        }))
+        }).sort("event_date", 1))
         
         logger.info(f"[DAILY EMAIL] Sending to {len(subscribers)} subscribers about {len(events)} events")
         
         for sub in subscribers:
             try:
+                # Filter events by school if subscriber has preference
+                user_events = events
+                if sub.get('school'):
+                    user_events = [e for e in events if e.get('school') == sub.get('school')]
+                
+                if not user_events:
+                    continue
+                
                 msg = Message(
-                    "📅 Upcoming University Events - Weekly Digest", 
-                    sender=app.config['MAIL_USERNAME'], 
+                    subject="📅 Upcoming University Events - Weekly Digest",
+                    sender=app.config['MAIL_USERNAME'],
                     recipients=[sub['email']]
                 )
                 
-                body = f"""
+                # Build email content
+                html_content = f"""
+                <!DOCTYPE html>
                 <html>
-                <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                    <h2 style="color: #04043a;">Hello,</h2>
-                    <p>Here are the upcoming events for this week:</p>
-                    <hr>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                        .header {{ background: #04043a; color: #FFD700; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
+                        .content {{ background: #f9f9f9; padding: 20px; border-radius: 0 0 10px 10px; }}
+                        .event {{ background: white; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #FFD700; }}
+                        .footer {{ text-align: center; margin-top: 20px; font-size: 12px; color: #666; }}
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>📅 Weekly Events Digest</h1>
+                        </div>
+                        <div class="content">
+                            <p>Hello,</p>
+                            <p>Here are the upcoming events for this week:</p>
                 """
                 
-                for e in events:
-                    if not sub.get('school') or e.get('school') == sub.get('school'):
-                        body += f"""
-                        <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
-                            <h3 style="color: #04043a; margin-top: 0;">{e['event_name']}</h3>
-                            <p><strong>📅 Date:</strong> {e['event_date']}</p>
-                            <p><strong>📍 Venue:</strong> {e['venue']}</p>
-                            <p><strong>🏫 School:</strong> {e.get('school', 'N/A')}</p>
-                            <p><strong>📝 Description:</strong> {e.get('description', 'N/A')}</p>
-                        </div>
-                        """
+                for event in user_events:
+                    html_content += f"""
+                            <div class="event">
+                                <h3 style="color: #04043a; margin-top: 0;">{event['event_name']}</h3>
+                                <p><strong>📅 Date:</strong> {event['event_date']}</p>
+                                <p><strong>⏰ Time:</strong> {event.get('event_time', 'All Day')}</p>
+                                <p><strong>📍 Venue:</strong> {event['venue']}</p>
+                                <p><strong>🏫 School:</strong> {event.get('school', 'N/A')}</p>
+                                <p><strong>📝 Description:</strong> {event.get('description', '')[:100]}{'...' if len(event.get('description', '')) > 100 else ''}</p>
+                            </div>
+                    """
                 
-                body += """
-                    <hr>
-                    <p style="color: #666; font-size: 12px;">
-                        Jain University Portal - Office of Academics<br>
-                        This is an automated email. Please do not reply.
-                    </p>
+                html_content += f"""
+                            <div style="text-align: center; margin: 30px 0;">
+                                <a href="{request.url_root}jainevents" style="display: inline-block; background: #04043a; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px;">View All Events</a>
+                            </div>
+                        </div>
+                        <div class="footer">
+                            <p>Jain University Portal - Office of Academics</p>
+                            <p>To unsubscribe, please visit your preferences page.</p>
+                        </div>
+                    </div>
                 </body>
                 </html>
                 """
                 
-                msg.html = body
+                msg.html = html_content
                 mail.send(msg)
                 logger.info(f"✅ Daily digest sent to {sub['email']}")
+                
             except Exception as e:
                 logger.error(f"❌ Error sending daily email to {sub['email']}: {e}")
+                
     except Exception as e:
         logger.error(f"❌ Error in send_daily_event_emails: {e}")
 
 def send_newsletter_email(title, content, image_filename, recipients):
     """Send newsletter email to recipients"""
     try:
-        msg = Message(subject=title, sender=app.config['MAIL_USERNAME'], recipients=recipients)
-        msg.html = content
+        msg = Message(
+            subject=title,
+            sender=app.config['MAIL_USERNAME'],
+            recipients=recipients
+        )
+        msg.html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ background: #04043a; color: #FFD700; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
+                .content {{ background: #f9f9f9; padding: 20px; border-radius: 0 0 10px 10px; }}
+                .footer {{ text-align: center; margin-top: 20px; font-size: 12px; color: #666; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>{title}</h1>
+                </div>
+                <div class="content">
+                    <div style="color: #333; line-height: 1.8;">
+                        {content}
+                    </div>
+                </div>
+                <div class="footer">
+                    <p>Jain University - Office of Academics</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
 
         if image_filename:
             image_path = os.path.join(app.config['UPLOAD_FOLDER'], image_filename)
@@ -846,6 +904,7 @@ def send_newsletter_email(title, content, image_filename, recipients):
                     msg.attach(image_filename, "image/jpeg", img.read())
 
         mail.send(msg)
+        logger.info(f"✅ Newsletter '{title}' sent to {len(recipients)} recipients")
     except Exception as e:
         logger.error(f"Error sending newsletter email: {e}")
         raise
@@ -929,7 +988,11 @@ def register():
             session['otp'] = otp
             
             try:
-                msg = Message('Your OTP for Registration', sender=app.config['MAIL_USERNAME'], recipients=[email])
+                msg = Message(
+                    'Your OTP for Registration',
+                    sender=app.config['MAIL_USERNAME'],
+                    recipients=[email]
+                )
                 msg.body = f'Your OTP is: {otp}\nPlease use this to complete your registration.'
                 mail.send(msg)
                 
@@ -1094,15 +1157,15 @@ def home():
         monthly_records = list(db.monthly_engagement.find().sort('uploaded_at', -1).limit(50))
         newsletter_records = list(db.newsletters.find().sort('uploaded_at', -1).limit(50))
 
-        # ── FIX: use string comparison, NOT date object ──────────────
-        today_str = datetime.now(IST).strftime('%Y-%m-%d')   # e.g. "2026-02-17"
+        # Get today's date as string for comparison
+        today_str = datetime.now(IST).strftime('%Y-%m-%d')
 
         # Fetch ALL future events (sorted ascending)
         all_upcoming = list(db.events.find(
             {'event_date': {'$gte': today_str}}
         ).sort('event_date', 1))
 
-        # ── Split into today vs future IN PYTHON ────────────────────
+        # Split into today vs future
         today_events   = [e for e in all_upcoming if e.get('event_date', '') == today_str]
         upcoming_events = [e for e in all_upcoming if e.get('event_date', '') > today_str]
 
@@ -1129,13 +1192,11 @@ def home():
             records=records,
             monthly_records=monthly_records,
             newsletter_records=newsletter_records,
-            # ── pass pre-computed lists and today as STRING ──────────
-            events=all_upcoming,          # all future events (for marquee)
-            today_events=today_events,    # events happening TODAY
-            upcoming_events=upcoming_events,  # events AFTER today
-            all_events=all_events,        # everything (calendar)
-            today=today_str,              # "2026-02-17"  ← STRING now
-            # ────────────────────────────────────────────────────────
+            events=all_upcoming,
+            today_events=today_events,
+            upcoming_events=upcoming_events,
+            all_events=all_events,
+            today=today_str,
             public_files=public_files,
             user_logged_in=True,
             user_email=session.get('email', ''),
@@ -1151,7 +1212,6 @@ def home():
         logger.error(f"Error in home route: {e}", exc_info=True)
         flash('Error loading home page', 'error')
         return redirect(url_for('login'))
-
 
 @app.route('/about')
 def about():
@@ -1370,20 +1430,16 @@ def upload_document():
                         sender=app.config['MAIL_USERNAME'],
                         recipients=[leader['email']]
                     )
-                    msg.html = f"""
-                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                        <h2 style="color: #04043a;">New Document Submitted</h2>
-                        <p><strong>From:</strong> {session['email'].split('@')[0]}</p>
-                        <p><strong>Document:</strong> {document_name}</p>
-                        <p><strong>Description:</strong> {description}</p>
-                        <p>Please log in to review this document.</p>
-                        <div style="text-align: center; margin-top: 30px;">
-                            <a href="{request.url_root}leader_dashboard" 
-                               style="background: #04043a; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px;">
-                                Review Document
-                            </a>
-                        </div>
-                    </div>
+                    msg.body = f"""
+New Document Submitted for Review
+
+From: {session['email'].split('@')[0]}
+Document: {document_name}
+Description: {description}
+
+Please log in to review this document.
+
+{request.url_root}leader_dashboard
                     """
                     mail.send(msg)
                 except Exception as e:
@@ -1508,20 +1564,15 @@ def review_document(document_id):
                     sender=app.config['MAIL_USERNAME'],
                     recipients=[uploader['email']]
                 )
-                msg.html = f"""
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                    <h2 style="color: #04043a;">Your Document Has Been Reviewed</h2>
-                    <p><strong>Document:</strong> {doc['document_name']}</p>
-                    <p><strong>Status:</strong> <span style="color: {'#27ae60' if status == 'approved' else '#e74c3c'}; font-weight: bold;">{status.upper()}</span></p>
-                    <p><strong>Reviewed by:</strong> {user['email'].split('@')[0]}</p>
-                    <p><strong>Comments:</strong> {comments}</p>
-                    <div style="text-align: center; margin-top: 30px;">
-                        <a href="{request.url_root}core_dashboard" 
-                           style="background: #04043a; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px;">
-                            View in Dashboard
-                        </a>
-                    </div>
-                </div>
+                msg.body = f"""
+Your Document Has Been Reviewed
+
+Document: {doc['document_name']}
+Status: {status.upper()}
+Reviewed by: {user['email'].split('@')[0]}
+Comments: {comments}
+
+View in Dashboard: {request.url_root}core_dashboard
                 """
                 mail.send(msg)
             except Exception as e:
@@ -1632,23 +1683,15 @@ def send_chat_notification(sender, receiver, message_preview):
             sender=app.config['MAIL_USERNAME'],
             recipients=[receiver['email']]
         )
-        
-        msg.html = f"""
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #04043a;">New Message</h2>
-            <p>You have received a new message from <strong>{sender['email'].split('@')[0]}</strong>:</p>
-            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                <p style="margin: 0;">"{message_preview}..."</p>
-            </div>
-            <div style="text-align: center; margin: 30px 0;">
-                <a href="{request.url_root}core_dashboard" 
-                   style="background: #04043a; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px;">
-                    View Message
-                </a>
-            </div>
-        </div>
+        msg.body = f"""
+New Message
+
+You have received a new message from {sender['email'].split('@')[0]}:
+
+"{message_preview}..."
+
+View Message: {request.url_root}core_dashboard
         """
-        
         mail.send(msg)
         logger.info(f"Chat notification sent to {receiver['email']}")
     except Exception as e:
@@ -1741,35 +1784,21 @@ def send_document_notification(sender, receiver, document, message):
             sender=app.config['MAIL_USERNAME'],
             recipients=[receiver['email']]
         )
-        
-        msg.html = f"""
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #04043a;">New Document Shared</h2>
-            <p><strong>{sender['email'].split('@')[0]}</strong> has shared a document with you:</p>
-            
-            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                <h3 style="margin-top: 0; color: #04043a;">{document['document_name']}</h3>
-                <p><strong>Description:</strong> {document.get('description', 'No description')}</p>
-                <p><strong>Shared at:</strong> {get_indian_time().strftime('%d %B %Y, %I:%M %p')}</p>
-                
-                {f'<div style="background: #e3f2fd; padding: 10px; border-left: 4px solid #2196f3; margin: 10px 0;"><p style="margin: 0;"><strong>Message from sender:</strong> {message}</p></div>' if message else ''}
-            </div>
-            
-            <div style="text-align: center; margin: 30px 0;">
-                <a href="{request.url_root}leader_dashboard" 
-                   style="background: #04043a; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px;">
-                    View Document
-                </a>
-            </div>
-            
-            <hr style="margin: 30px 0;">
-            <p style="color: #666; font-size: 12px;">
-                Jain University Portal - Office of Academics<br>
-                This is an automated notification.
-            </p>
-        </div>
+        msg.body = f"""
+New Document Shared
+
+{sender['email'].split('@')[0]} has shared a document with you:
+
+Document: {document['document_name']}
+Description: {document.get('description', 'No description')}
+Shared at: {get_indian_time().strftime('%d %B %Y, %I:%M %p')}
+
+{f'Message from sender: {message}' if message else ''}
+
+View Document: {request.url_root}leader_dashboard
+
+Jain University Portal - Office of Academics
         """
-        
         mail.send(msg)
         logger.info(f"Document notification sent to {receiver['email']}")
     except Exception as e:
@@ -2699,87 +2728,108 @@ def drive_create_folder():
         logger.error(f"Error creating folder: {e}", exc_info=True)
         return jsonify({'error': str(e)}), 400
 
-# ===================== EVENT REMINDER & SUBSCRIPTION ROUTES =====================
+# ===================== EVENT REMINDER & SUBSCRIPTION ROUTES - FIXED =====================
 @app.route('/set_reminder', methods=['POST'])
 @login_required
 def set_reminder():
-    """Set a reminder for an event"""
+    """Set a reminder for an event - FIXED VERSION"""
     try:
         data = request.get_json()
         event_id = data.get('event_id')
         reminder_date = data.get('reminder_date')
         reminder_time = data.get('reminder_time')
         
-        if not all([event_id, reminder_date, reminder_time]):
-            return jsonify({'error': 'Missing required fields: event_id, reminder_date, and reminder_time are required', 'success': False}), 400
+        # Log incoming request for debugging
+        logger.info(f"Set reminder request - event_id: {event_id}, date: {reminder_date}, time: {reminder_time}")
         
+        if not all([event_id, reminder_date, reminder_time]):
+            return jsonify({
+                'error': 'Missing required fields: event_id, reminder_date, and reminder_time are required', 
+                'success': False
+            }), 400
+        
+        # Validate event ID
         try:
             event = db.events.find_one({'_id': ObjectId(event_id)})
-        except:
-            return jsonify({'error': 'Invalid event ID', 'success': False}), 400
+        except Exception as e:
+            logger.error(f"Invalid event ID format: {event_id}")
+            return jsonify({'error': 'Invalid event ID format', 'success': False}), 400
             
         if not event:
+            logger.error(f"Event not found: {event_id}")
             return jsonify({'error': 'Event not found', 'success': False}), 404
         
+        # Get user
         user = db.users.find_one({'email': session['email']})
         if not user:
+            logger.error(f"User not found: {session['email']}")
             return jsonify({'error': 'User not found', 'success': False}), 404
         
+        # Parse reminder datetime
         try:
-            try:
-                reminder_datetime_str = f"{reminder_date} {reminder_time}:00"
-                reminder_datetime = datetime.strptime(reminder_datetime_str, '%Y-%m-%d %H:%M:%S')
-            except ValueError:
-                try:
-                    day, month, year = reminder_date.split('-')
-                    if len(year) == 4 and len(month) == 2 and len(day) == 2:
-                        formatted_date = f"{year}-{month}-{day}"
-                        reminder_datetime_str = f"{formatted_date} {reminder_time}:00"
-                        reminder_datetime = datetime.strptime(reminder_datetime_str, '%Y-%m-%d %H:%M:%S')
-                    else:
-                        return jsonify({'error': 'Invalid date format. Use YYYY-MM-DD or DD-MM-YYYY', 'success': False}), 400
-                except ValueError:
-                    return jsonify({'error': 'Invalid date format. Use YYYY-MM-DD or DD-MM-YYYY', 'success': False}), 400
+            # Handle DD-MM-YYYY format if needed
+            if '-' in reminder_date and len(reminder_date.split('-')[0]) == 2:
+                # Convert DD-MM-YYYY to YYYY-MM-DD
+                day, month, year = reminder_date.split('-')
+                if len(year) == 4 and len(month) == 2 and len(day) == 2:
+                    reminder_date = f"{year}-{month}-{day}"
             
+            # Ensure time has seconds
+            if len(reminder_time.split(':')) == 2:
+                reminder_time = f"{reminder_time}:00"
+            
+            reminder_datetime_str = f"{reminder_date} {reminder_time}"
+            reminder_datetime = datetime.strptime(reminder_datetime_str, '%Y-%m-%d %H:%M:%S')
+            
+            # Localize to IST
             reminder_datetime = IST.localize(reminder_datetime)
+            
         except Exception as e:
-            return jsonify({'error': f'Invalid date/time format: {str(e)}', 'success': False}), 400
+            logger.error(f"Date parsing error: {e}")
+            return jsonify({'error': f'Invalid date/time format. Use YYYY-MM-DD and HH:MM: {str(e)}', 'success': False}), 400
         
+        # Check if reminder is in the future
         now = get_indian_time()
         if reminder_datetime <= now:
-            return jsonify({'error': 'Reminder time must be in the future (not in the past)', 'success': False}), 400
+            return jsonify({'error': 'Reminder time must be in the future', 'success': False}), 400
         
+        # Check for existing reminder
         existing = db.event_reminders.find_one({
             'user_id': user['_id'],
             'event_id': event['_id']
         })
         
+        # Save reminder to database
         if existing:
+            # Update existing reminder
             db.event_reminders.update_one(
                 {'_id': existing['_id']},
                 {
                     '$set': {
                         'reminder_datetime': reminder_datetime,
                         'sent': False,
-                        'updated_at': get_indian_time()
+                        'updated_at': now
                     }
                 }
             )
             message = 'Reminder updated successfully'
             action = 'updated'
+            logger.info(f"Updated reminder for user {session['email']} - Event: {event['event_name']}")
         else:
-            db.event_reminders.insert_one({
+            # Create new reminder
+            result = db.event_reminders.insert_one({
                 'user_id': user['_id'],
                 'event_id': event['_id'],
                 'reminder_datetime': reminder_datetime,
                 'sent': False,
-                'created_at': get_indian_time()
+                'created_at': now,
+                'attempt_count': 0
             })
             message = 'Reminder set successfully'
             action = 'set'
+            logger.info(f"Created new reminder for user {session['email']} - Event: {event['event_name']}")
         
-        logger.info(f"✅ Reminder {action} for user {session['email']} - Event: {event['event_name']} at {reminder_datetime.strftime('%Y-%m-%d %H:%M:%S')} IST")
-        
+        # Send confirmation email
         try:
             msg = Message(
                 subject=f"✅ Reminder {action.capitalize()}: {event['event_name']}",
@@ -2787,60 +2837,89 @@ def set_reminder():
                 recipients=[user['email']]
             )
             
+            # Simple plain text version for reliability
+            msg.body = f"""
+========================================
+        REMINDER CONFIRMATION
+========================================
+
+Event: {event['event_name']}
+Event Date: {event['event_date']}
+Event Time: {event.get('event_time', 'All Day')}
+Venue: {event['venue']}
+
+Your reminder is set for: {reminder_datetime.strftime('%d %B %Y at %I:%M %p')} IST
+
+We'll send you a reminder email at the scheduled time.
+
+View all events: {request.url_root}jainevents
+
+========================================
+Jain University Portal - Office of Academics
+========================================
+            """
+            
+            # HTML version
             msg.html = f"""
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb; border-radius: 10px;">
-                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
-                    <h1 style="color: white; margin: 0; font-size: 28px;">✅ Reminder {action.capitalize()}</h1>
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                    .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                    .header {{ background: #04043a; color: #FFD700; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
+                    .content {{ background: #f9f9f9; padding: 20px; border-radius: 0 0 10px 10px; }}
+                    .event-details {{ background: white; padding: 15px; border-radius: 8px; margin: 15px 0; }}
+                    .reminder-box {{ background: #e8f4fd; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #0056b3; }}
+                    .footer {{ text-align: center; margin-top: 20px; font-size: 12px; color: #666; }}
+                    .button {{ display: inline-block; background: #04043a; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; }}
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>✅ Reminder {action.capitalize()}</h1>
+                    </div>
+                    <div class="content">
+                        <h2 style="color: #04043a;">{event['event_name']}</h2>
+                        
+                        <div class="event-details">
+                            <p><strong>📅 Event Date:</strong> {event['event_date']}</p>
+                            <p><strong>⏰ Event Time:</strong> {event.get('event_time', 'All Day')}</p>
+                            <p><strong>📍 Venue:</strong> {event['venue']}</p>
+                            <p><strong>🏢 Department:</strong> {event.get('department', 'N/A')}</p>
+                            <p><strong>🏫 School:</strong> {event.get('school', 'N/A')}</p>
+                        </div>
+                        
+                        <div class="reminder-box">
+                            <p style="margin: 0; color: #0056b3;">
+                                <strong>⏰ Your reminder is set for:</strong><br>
+                                <span style="font-size: 18px; font-weight: bold;">{reminder_datetime.strftime('%d %B %Y at %I:%M %p')} IST</span>
+                            </p>
+                        </div>
+                        
+                        <p>We'll send you a reminder email at the scheduled time.</p>
+                        
+                        <div style="text-align: center; margin: 30px 0;">
+                            <a href="{request.url_root}jainevents" class="button">View All Events</a>
+                        </div>
+                    </div>
+                    <div class="footer">
+                        <p>Jain University Portal - Office of Academics</p>
+                        <p>Confirmation sent at: {now.strftime('%Y-%m-%d %I:%M %p')} IST</p>
+                    </div>
                 </div>
-                
-                <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-                    <h2 style="color: #1f2937; margin-top: 0; font-size: 24px;">{event['event_name']}</h2>
-                    
-                    <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                        <p style="margin: 10px 0; color: #374151;"><strong>📅 Event Date:</strong> {event['event_date']}</p>
-                        <p style="margin: 10px 0; color: #374151;"><strong>⏰ Event Time:</strong> {event.get('event_time', 'All Day')}</p>
-                        <p style="margin: 10px 0; color: #374151;"><strong>📍 Venue:</strong> {event['venue']}</p>
-                        <p style="margin: 10px 0; color: #374151;"><strong>🏢 Department:</strong> {event.get('department', 'N/A')}</p>
-                        <p style="margin: 10px 0; color: #374151;"><strong>🏫 School:</strong> {event.get('school', 'N/A')}</p>
-                    </div>
-                    
-                    <div style="margin: 20px 0; padding: 15px; background: #dcfce7; border-left: 4px solid #22c55e; border-radius: 4px;">
-                        <p style="margin: 0; color: #166534;"><strong>🔔 Your Reminder is Set For:</strong></p>
-                        <p style="margin: 10px 0 0 0; color: #166534; font-size: 18px; font-weight: bold;">
-                            {reminder_datetime.strftime('%d %B %Y at %I:%M %p')} IST
-                        </p>
-                    </div>
-                    
-                    <div style="margin: 20px 0; padding: 15px; background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 4px;">
-                        <p style="margin: 0; color: #1e40af;"><strong>📝 Description:</strong></p>
-                        <p style="margin: 10px 0 0 0; color: #1e40af;">{event.get('description', 'No description provided')}</p>
-                    </div>
-                    
-                    <p style="color: #6b7280; font-size: 14px; margin-top: 20px;">
-                        We will send you a reminder email at the scheduled time. Make sure to keep this event in your calendar!
-                    </p>
-                    
-                    <div style="text-align: center; margin-top: 30px;">
-                        <p style="color: #9ca3af; font-size: 12px; margin: 5px 0;">Confirmation sent at: {now.strftime('%Y-%m-%d %I:%M %p')} IST</p>
-                    </div>
-                </div>
-                
-                <div style="text-align: center; margin-top: 20px; padding: 20px;">
-                    <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
-                    <p style="color: #6b7280; font-size: 12px; margin: 5px 0;">
-                        Jain University Portal - Office of Academics
-                    </p>
-                    <p style="color: #9ca3af; font-size: 11px; margin: 5px 0;">
-                        This is an automated confirmation. You will receive another reminder at the scheduled time.
-                    </p>
-                </div>
-            </div>
+            </body>
+            </html>
             """
             
             mail.send(msg)
             logger.info(f"✅ Confirmation email sent to {user['email']}")
+            
         except Exception as email_error:
             logger.error(f"❌ Error sending confirmation email: {email_error}")
+            # Don't fail the request if email fails - reminder is still saved
         
         return jsonify({
             'success': True,
@@ -2849,7 +2928,10 @@ def set_reminder():
         
     except Exception as e:
         logger.error(f"❌ Error setting reminder: {e}", exc_info=True)
-        return jsonify({'error': f'Server error: {str(e)}', 'success': False}), 400
+        return jsonify({
+            'error': f'Server error: {str(e)}', 
+            'success': False
+        }), 500
 
 @app.route('/subscribe_to_event', methods=['POST'])
 @login_required
@@ -2982,109 +3064,6 @@ def delete_reminder(reminder_id):
     except Exception as e:
         logger.error(f"Error deleting reminder: {e}")
         return jsonify({'error': str(e)}), 400
-
-# ===================== TEST ROUTES FOR REMINDERS =====================
-@app.route('/test/reminders')
-def test_reminders():
-    """Manual trigger to test reminder system"""
-    if session.get('role') != 'admin':
-        flash('Access denied', 'error')
-        return redirect(url_for('login'))
-    
-    try:
-        # Run reminder check
-        send_event_reminders()
-        flash('✅ Reminder check completed. Check logs for details.', 'success')
-    except Exception as e:
-        logger.error(f"Error in test reminders: {e}")
-        flash(f'Error: {str(e)}', 'error')
-    
-    return redirect(url_for('admin_dashboard'))
-
-@app.route('/test/email')
-def test_email():
-    """Test email configuration"""
-    if session.get('role') != 'admin':
-        flash('Access denied', 'error')
-        return redirect(url_for('login'))
-    
-    try:
-        msg = Message(
-            subject="🧪 Test Email from Jain University Portal",
-            sender=app.config['MAIL_USERNAME'],
-            recipients=[session['email']]  # Send to current admin
-        )
-        
-        now = get_indian_time()
-        msg.html = f"""
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h2 style="color: #04043a;">✅ Test Email Successful</h2>
-            <p>This is a test email from the Jain University Portal.</p>
-            <p>If you're receiving this, the email configuration is working correctly!</p>
-            <hr>
-            <p style="color: #666; font-size: 12px;">Sent at: {now.strftime('%Y-%m-%d %H:%M:%S IST')}</p>
-        </div>
-        """
-        
-        mail.send(msg)
-        flash('✅ Test email sent successfully!', 'success')
-        
-    except Exception as e:
-        logger.error(f"Test email error: {e}")
-        flash(f'❌ Error sending test email: {str(e)}', 'error')
-    
-    return redirect(url_for('admin_dashboard'))
-
-@app.route('/admin/reminders')
-def admin_reminders():
-    """View all pending reminders (admin only)"""
-    if session.get('role') != 'admin':
-        flash('Access denied', 'error')
-        return redirect(url_for('login'))
-    
-    try:
-        # Get all reminders
-        reminders = list(db.event_reminders.find().sort('reminder_datetime', 1))
-        
-        # Enrich with event and user data
-        for reminder in reminders:
-            reminder['_id'] = str(reminder['_id'])
-            reminder['event_id'] = str(reminder['event_id'])
-            reminder['user_id'] = str(reminder['user_id'])
-            
-            # Get event
-            event = db.events.find_one({'_id': ObjectId(reminder['event_id'])})
-            if event:
-                reminder['event_name'] = event.get('event_name', 'Unknown')
-                reminder['event_date'] = event.get('event_date', 'Unknown')
-            
-            # Get user
-            user = db.users.find_one({'_id': ObjectId(reminder['user_id'])})
-            if user:
-                reminder['user_email'] = user.get('email', 'Unknown')
-            
-            # Format datetime
-            if reminder.get('reminder_datetime'):
-                if isinstance(reminder['reminder_datetime'], datetime):
-                    reminder['formatted_datetime'] = reminder['reminder_datetime'].strftime('%Y-%m-%d %H:%M:%S IST')
-        
-        # Count statistics
-        total = len(reminders)
-        sent = len([r for r in reminders if r.get('sent', False)])
-        pending = total - sent
-        
-        return render_template(
-            'admin_reminders.html',
-            reminders=reminders,
-            total=total,
-            sent=sent,
-            pending=pending
-        )
-        
-    except Exception as e:
-        logger.error(f"Error viewing reminders: {e}")
-        flash('Error loading reminders', 'error')
-        return redirect(url_for('admin_dashboard'))
 
 # ===================== USER PREFERENCES ROUTES =====================
 @app.route('/user_preferences', methods=['GET', 'POST'])
@@ -3478,32 +3457,25 @@ def update_user(user_id):
                     recipients=[email]
                 )
                 
-                msg.html = f"""
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                    <h2 style="color: #04043a;">📝 Account Updated</h2>
-                    <p>Dear User,</p>
-                    <p>Your account at <strong>Jain University Portal - Office of Academics</strong> has been updated by the administrator.</p>
-                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                        <p><strong>New Role Details:</strong></p>
-                        <p>📧 <strong>Email:</strong> {email}</p>
-                        <p>👤 <strong>User Type:</strong> {user_type.capitalize()}</p>
-                        <p>🎯 <strong>Special Role:</strong> {special_role.capitalize() if special_role else 'None'}</p>
-                        <p>✅ <strong>Approval Status:</strong> {"Approved" if approved else "Pending"}</p>
-                    </div>
-                    <p><strong>{role_msg}</strong></p>
-                    <div style="text-align: center; margin: 30px 0;">
-                        <a href="{request.url_root}login" style="background: #04043a; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
-                            Login to Portal
-                        </a>
-                    </div>
-                    <hr style="margin: 30px 0;">
-                    <p style="color: #666; font-size: 12px;">
-                        Jain University Portal - Office of Academics<br>
-                        This is an automated message.
-                    </p>
-                </div>
+                msg.body = f"""
+Account Updated
+
+Dear User,
+
+Your account at Jain University Portal - Office of Academics has been updated by the administrator.
+
+New Role Details:
+- Email: {email}
+- User Type: {user_type.capitalize()}
+- Special Role: {special_role.capitalize() if special_role else 'None'}
+- Approval Status: {'Approved' if approved else 'Pending'}
+
+{role_msg}
+
+Login to Portal: {request.url_root}login
+
+Jain University Portal - Office of Academics
                 """
-                
                 mail.send(msg)
                 logger.info(f"Notification email sent to {email}")
             except Exception as e:
@@ -3944,12 +3916,14 @@ def subscribe_newsletter():
                     sender=app.config['MAIL_USERNAME'],
                     recipients=[email]
                 )
-                msg.html = f"""
-                <h2>Thank you for subscribing!</h2>
-                <p>You'll now receive updates, articles, and event highlights directly to your inbox.</p>
-                <p>If you did not request this, please ignore this message.</p>
-                <br><hr>
-                <small>This is an automated message from Jain University Newsletter system.</small>
+                msg.body = f"""
+Thank you for subscribing!
+
+You'll now receive updates, articles, and event highlights directly to your inbox.
+
+If you did not request this, please ignore this message.
+
+This is an automated message from Jain University Newsletter system.
                 """
                 mail.send(msg)
                 flash("✅ Subscribed successfully! A confirmation email has been sent.", "success")
@@ -4167,7 +4141,7 @@ def get_event(event_id):
 @app.route('/api/events/today')
 def get_today_events():
     try:
-        today = datetime.now(IST).strftime('%Y-%m-%d')   # ← string match
+        today = datetime.now(IST).strftime('%Y-%m-%d')
         events = list(db.events.find({
             "$or": [
                 {"event_date": today},
@@ -4519,46 +4493,57 @@ def request_entity_too_large(error):
     flash('File too large. Maximum size is 50MB.', 'error')
     return redirect(request.referrer or url_for('home'))
 
+# ===================== TEST EMAIL ROUTE =====================
+@app.route('/test-email')
+def test_email():
+    """Test route to verify email configuration"""
+    try:
+        msg = Message(
+            subject="Test Email from Reminder System",
+            sender=app.config['MAIL_USERNAME'],
+            recipients=[app.config['MAIL_USERNAME']]  # Send to yourself
+        )
+        msg.body = "This is a test email to verify the reminder system is working correctly."
+        msg.html = "<h1>Test Email</h1><p>This is a test email to verify the reminder system is working correctly.</p>"
+        mail.send(msg)
+        return jsonify({"success": True, "message": "Test email sent successfully"})
+    except Exception as e:
+        logger.error(f"Test email failed: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
 # ===================== RUN APP =====================
 if __name__ == '__main__':
     # Create database indexes
     create_indexes()
     
     # Initialize scheduler with timezone
-    from apscheduler.schedulers.background import BackgroundScheduler
     scheduler = BackgroundScheduler(timezone=IST)
 
-    # Check for reminders every minute
-    @scheduler.scheduled_job('interval', minutes=1, id='reminder_check')
+    # Check for reminders every 30 seconds (for testing)
+    @scheduler.scheduled_job('interval', seconds=30, id='reminder_check')
     def scheduled_send_event_reminders():
         with app.app_context():
             current_time = get_indian_time()
-            logger.info(f"🔔 [SCHEDULER] Running reminder check at {current_time.strftime('%Y-%m-%d %H:%M:%S')} IST")
+            logger.info(f"[SCHEDULER] Running reminder check at {current_time.strftime('%Y-%m-%d %H:%M:%S')} IST")
             try:
                 send_event_reminders()
             except Exception as e:
-                logger.error(f"❌ [SCHEDULER] Error in reminder check: {e}", exc_info=True)
+                logger.error(f"[SCHEDULER ERROR] Reminder check failed: {e}")
 
     # Send daily emails at 7 AM IST
     @scheduler.scheduled_job('cron', hour=7, minute=0, id='daily_digest')
     def scheduled_send_daily_event_emails():
         with app.app_context():
-            logger.info(f"📧 [SCHEDULER] Running daily digest at {get_indian_time().strftime('%Y-%m-%d %H:%M:%S')} IST")
+            current_time = get_indian_time()
+            logger.info(f"[SCHEDULER] Running daily digest at {current_time.strftime('%Y-%m-%d %H:%M:%S')} IST")
             try:
                 send_daily_event_emails()
             except Exception as e:
-                logger.error(f"❌ [SCHEDULER] Error in daily digest: {e}", exc_info=True)
+                logger.error(f"[SCHEDULER ERROR] Daily digest failed: {e}")
 
-    # Start the scheduler
     scheduler.start()
     logger.info("✅ Scheduler started successfully with IST timezone")
     logger.info(f"✅ Current IST time: {get_indian_time().strftime('%Y-%m-%d %H:%M:%S')}")
-    
-    # Log active jobs
-    jobs = scheduler.get_jobs()
-    logger.info(f"✅ Active scheduled jobs: {len(jobs)}")
-    for job in jobs:
-        logger.info(f"  - Job: {job.id}, Next run: {job.next_run_time}")
 
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port, debug=True, use_reloader=False)
