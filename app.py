@@ -1155,74 +1155,82 @@ def index():
     """Landing page - shown to all visitors before login"""
     return render_template('index.html')
 
-@app.route('/home')
+@app.route("/home")
 @login_required
 def home():
-    """Home page - accessible to all logged-in users"""
     try:
-        # Get user info
-        user = db.users.find_one({'email': session['email']})
+        user = db.users.find_one({"email": session["email"]})
+        records = list(db.ugc_data.find().sort("uploaded_at", -1).limit(50))
+        monthly_records = list(db.monthly_engagement.find().sort("uploaded_at", -1).limit(50))
+        newsletter_records = list(db.newsletters.find().sort("uploaded_at", -1).limit(50))
 
-        # Get data for home page
-        records = list(db.ugc_data.find().sort('uploaded_at', -1).limit(50))
-        monthly_records = list(db.monthly_engagement.find().sort('uploaded_at', -1).limit(50))
-        newsletter_records = list(db.newsletters.find().sort('uploaded_at', -1).limit(50))
+        # KEY FIX 1: Reliable IST date using UTC conversion
+        today_str = get_today_ist_string()
+        logger.info(f"[HOME] Today IST: {today_str}")
 
-        # Get today's date as string for comparison
-        today_str = datetime.now(IST).strftime('%Y-%m-%d')
+        # KEY FIX 2: Fetch ALL events then filter in Python (not MongoDB query)
+        all_events_raw = list(db.events.find({}).sort("event_date", 1))
+        logger.info(f"[HOME] Total events in DB: {len(all_events_raw)}")
 
-        # Fetch ALL future events (sorted ascending)
-        all_upcoming = list(db.events.find(
-            {'event_date': {'$gte': today_str}}
-        ).sort('event_date', 1))
+        for ev in all_events_raw:
+            ev["_id"] = str(ev["_id"])
 
-        # Split into today vs future
-        today_events   = [e for e in all_upcoming if e.get('event_date', '') == today_str]
-        upcoming_events = [e for e in all_upcoming if e.get('event_date', '') > today_str]
+        today_events = []
+        upcoming_events = []
+        all_upcoming = []
 
-        # All events for calendar highlight (past + future)
-        all_events = list(db.events.find({}).sort('event_date', 1))
+        for ev in all_events_raw:
+            event_date = normalize_date(ev.get("event_date", ""))
+            end_date = normalize_date(ev.get("end_date", "")) if ev.get("end_date") else ""
+            ev["event_date"] = event_date
 
-        # Convert ObjectId to string so Jinja can render them
-        for ev in today_events + upcoming_events + all_events:
-            ev['_id'] = str(ev['_id'])
+            if not event_date:
+                continue
 
-        # Public files
-        public_files = list(db.public_files.find().sort('uploaded_at', -1).limit(20))
+            # Multi-day event spanning today
+            if end_date and event_date <= today_str <= end_date:
+                today_events.append(ev)
+                all_upcoming.append(ev)
+            elif event_date == today_str:
+                today_events.append(ev)
+                all_upcoming.append(ev)
+            elif event_date > today_str:
+                upcoming_events.append(ev)
+                all_upcoming.append(ev)
 
-        # Determine user capabilities
-        user_type   = session.get('user_type', 'faculty')
-        special_role = session.get('special_role', None)
-        approved    = session.get('approved', False)
+        logger.info(f"[HOME] Today: {len(today_events)}, Upcoming: {len(upcoming_events)}")
 
-        can_upload = approved and special_role in ['core', 'office_barrier', 'leader']
-        is_fac = user_type == 'faculty' and not special_role
+        public_files = list(db.public_files.find().sort("uploaded_at", -1).limit(20))
+        user_type = session.get("user_type", "faculty")
+        special_role = session.get("special_role", None)
+        approved = session.get("approved", False)
+        can_upload = approved and special_role in ["core", "office_barrier", "leader"]
+        is_fac = user_type == "faculty" and not special_role
 
         return render_template(
-            'home.html',
+            "home.html",
             records=records,
             monthly_records=monthly_records,
             newsletter_records=newsletter_records,
             events=all_upcoming,
             today_events=today_events,
             upcoming_events=upcoming_events,
-            all_events=all_events,
+            all_events=all_events_raw,
             today=today_str,
             public_files=public_files,
             user_logged_in=True,
-            user_email=session.get('email', ''),
-            user_role=session.get('role', ''),
+            user_email=session.get("email", ""),
+            user_role=session.get("role", ""),
             user_type=user_type,
             is_faculty=is_fac,
             can_upload=can_upload,
             approved=approved,
             special_role=special_role,
         )
-
     except Exception as e:
         logger.error(f"Error in home route: {e}", exc_info=True)
-        flash('Error loading home page', 'error')
-        return redirect(url_for('login'))
+        flash("Error loading home page", "error")
+        return redirect(url_for("login"))
 
 @app.route('/about')
 def about():
@@ -1537,7 +1545,26 @@ def leader_dashboard():
         logger.error(f"Error in leader_dashboard: {e}", exc_info=True)
         flash('Error loading dashboard', 'error')
         return redirect(url_for('home'))
+def get_today_ist_string():
+    """Get today date as YYYY-MM-DD string in IST, always correct."""
+    utc_now = datetime.utcnow().replace(tzinfo=pytz.utc)
+    ist_now = utc_now.astimezone(IST)
+    return ist_now.strftime("%Y-%m-%d")
 
+
+def normalize_date(date_str):
+    """Normalize any date string to YYYY-MM-DD format."""
+    if not date_str:
+        return ""
+    date_str = str(date_str).strip()
+    if len(date_str) == 10 and date_str[4] == "-":
+        return date_str
+    for fmt in ["%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y", "%m/%d/%Y", "%Y/%m/%d"]:
+        try:
+            return datetime.strptime(date_str, fmt).strftime("%Y-%m-%d")
+        except ValueError:
+            continue
+    return date_str
 @app.route('/review_document/<document_id>', methods=['POST'])
 @approval_required
 def review_document(document_id):
@@ -4149,34 +4176,56 @@ def get_event(event_id):
         logger.error(f"Error fetching event: {e}")
         return jsonify({'error': 'Event not found'}), 404
 
-@app.route('/api/events/today')
+@app.route("/api/events/today")
 def get_today_events():
     try:
-        today = datetime.now(IST).strftime('%Y-%m-%d')
-        events = list(db.events.find({
-            "$or": [
-                {"event_date": today},
-                {"$and": [
-                    {"event_date": {"$lte": today}},
-                    {"end_date":   {"$gte": today}}
-                ]}
-            ]
-        }).sort("event_date", 1))
-
+        today = get_today_ist_string()
+        all_events = list(db.events.find({}))
         events_data = []
-        for event in events:
-            events_data.append({
-                'id': str(event['_id']),
-                'event_name':  event.get('event_name', ''),
-                'event_date':  event.get('event_date', ''),
-                'event_time':  event.get('event_time', 'All Day'),
-                'venue':       event.get('venue', 'TBA')
-            })
+        for event in all_events:
+            event_date = normalize_date(event.get("event_date", ""))
+            end_date = normalize_date(event.get("end_date", "")) if event.get("end_date") else ""
+            if event_date == today or (end_date and event_date <= today <= end_date):
+                events_data.append({
+                    "id": str(event["_id"]),
+                    "event_name": event.get("event_name", ""),
+                    "event_date": event_date,
+                    "event_time": event.get("event_time", "All Day"),
+                    "venue": event.get("venue", "TBA"),
+                })
         return jsonify(events_data)
     except Exception as e:
-        logger.error(f"Error fetching today's events: {e}")
+        logger.error(f"Error fetching today events: {e}")
         return jsonify([])
-
+@app.route("/debug/events")
+def debug_events():
+    try:
+        today_str = get_today_ist_string()
+        utc_now = datetime.utcnow()
+        ist_now = datetime.utcnow().replace(tzinfo=pytz.utc).astimezone(IST)
+        events = list(db.events.find({}).limit(15))
+        samples = []
+        for ev in events:
+            raw = ev.get("event_date", "NO_DATE")
+            norm = normalize_date(str(raw))
+            samples.append({
+                "name": ev.get("event_name", ""),
+                "raw_date": str(raw),
+                "normalized": norm,
+                "is_today": norm == today_str,
+                "is_future": norm > today_str if norm else False,
+            })
+        return jsonify({
+            "server_utc_time": utc_now.strftime("%Y-%m-%d %H:%M:%S"),
+            "server_ist_time": ist_now.strftime("%Y-%m-%d %H:%M:%S"),
+            "today_ist": today_str,
+            "total_events": db.events.count_documents({}),
+            "events_today": sum(1 for s in samples if s["is_today"]),
+            "events_future": sum(1 for s in samples if s["is_future"]),
+            "event_samples": samples,
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 @app.route('/api/events/filter')
 def filter_events():
     """Filter events by department, date range, etc."""
