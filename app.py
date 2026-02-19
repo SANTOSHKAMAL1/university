@@ -41,7 +41,12 @@ app.wsgi_app = ProxyFix(
     x_proto=1,
     x_host=1
 )
+from datetime import timedelta
 
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)
+app.config['SESSION_COOKIE_SECURE'] = False   # Set True only if HTTPS
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 # Upload folder settings
 UPLOAD_FOLDER = 'static/uploads'
 ALLOWED_EXTENSIONS = {'pdf', 'docx', 'txt', 'png', 'jpg', 'jpeg', 'gif', 'xlsx', 'csv', 'xls'}
@@ -923,6 +928,9 @@ def login():
         
         user = db.users.find_one({'email': email})
         if user and check_password_hash(user['password'], password):
+            # ✅ FIX: Clear ALL old session data before setting new session
+            session.clear()
+            
             # Store all user info in session
             session['email'] = email
             session['role'] = user['role']
@@ -930,6 +938,7 @@ def login():
             session['special_role'] = user.get('special_role', None)
             session['approved'] = user.get('approved', False)
             session['user_id'] = str(user['_id'])
+            session.permanent = True  # Make session permanent to avoid expiry issues
             
             # Update online status
             db.users.update_one(
@@ -956,18 +965,19 @@ def login():
                 flash('✅ Admin login successful!', 'success')
                 return redirect(url_for('admin_dashboard'))
             else:
-                # Check if user is approved
+                # ✅ FIX: ALL non-admin users go to home, regardless of special_role
                 if not user.get('approved', False):
                     flash('⏳ Your account is pending admin approval. Limited access granted.', 'warning')
                 else:
                     flash('✅ Login successful! Full access granted.', 'success')
                 
-                return redirect(url_for('home'))
+                return redirect(url_for('home'))  # Always go to home for non-admin
         else:
             flash('Invalid credentials', 'error')
             return redirect(url_for('login'))
     
     return render_template('login.html')
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -4517,34 +4527,35 @@ if __name__ == '__main__':
     # Create database indexes
     create_indexes()
     
-    # Initialize scheduler with timezone
-    scheduler = BackgroundScheduler(timezone=IST)
+    # ✅ Only use APScheduler in LOCAL development, NOT on Hostinger
+    import platform
+    is_local = os.environ.get('FLASK_ENV', 'production') == 'development'
+    
+    if is_local:
+        from apscheduler.schedulers.background import BackgroundScheduler
+        
+        scheduler = BackgroundScheduler(timezone=IST)
 
-    # Check for reminders every 30 seconds (for testing)
-    @scheduler.scheduled_job('interval', seconds=30, id='reminder_check')
-    def scheduled_send_event_reminders():
-        with app.app_context():
-            current_time = get_indian_time()
-            logger.info(f"[SCHEDULER] Running reminder check at {current_time.strftime('%Y-%m-%d %H:%M:%S')} IST")
-            try:
-                send_event_reminders()
-            except Exception as e:
-                logger.error(f"[SCHEDULER ERROR] Reminder check failed: {e}")
+        @scheduler.scheduled_job('interval', seconds=30, id='reminder_check')
+        def scheduled_send_event_reminders():
+            with app.app_context():
+                try:
+                    send_event_reminders()
+                except Exception as e:
+                    logger.error(f"[SCHEDULER ERROR] {e}")
 
-    # Send daily emails at 7 AM IST
-    @scheduler.scheduled_job('cron', hour=7, minute=0, id='daily_digest')
-    def scheduled_send_daily_event_emails():
-        with app.app_context():
-            current_time = get_indian_time()
-            logger.info(f"[SCHEDULER] Running daily digest at {current_time.strftime('%Y-%m-%d %H:%M:%S')} IST")
-            try:
-                send_daily_event_emails()
-            except Exception as e:
-                logger.error(f"[SCHEDULER ERROR] Daily digest failed: {e}")
+        @scheduler.scheduled_job('cron', hour=7, minute=0, id='daily_digest')
+        def scheduled_send_daily_event_emails():
+            with app.app_context():
+                try:
+                    send_daily_event_emails()
+                except Exception as e:
+                    logger.error(f"[SCHEDULER ERROR] {e}")
 
-    scheduler.start()
-    logger.info("✅ Scheduler started successfully with IST timezone")
-    logger.info(f"✅ Current IST time: {get_indian_time().strftime('%Y-%m-%d %H:%M:%S')}")
-
+        scheduler.start()
+        logger.info("✅ Scheduler started (LOCAL DEV MODE)")
+    else:
+        logger.info("⚠️ Running on production - use /cron/send-reminders endpoint instead of APScheduler")
+    
     port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port, debug=True, use_reloader=False)
+    app.run(host='0.0.0.0', port=port, debug=is_local, use_reloader=False)
