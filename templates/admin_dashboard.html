@@ -101,61 +101,6 @@
             margin-bottom: 30px;
         }
 
-        /* Search Section */
-        .search-section {
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            margin-bottom: 25px;
-        }
-
-        .search-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr auto;
-            gap: 15px;
-            align-items: end;
-        }
-
-        .search-group label {
-            font-weight: 600;
-            color: var(--jain-blue);
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .search-input {
-            padding: 10px 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 6px;
-            font-size: 14px;
-            width: 100%;
-        }
-
-        .search-input:focus {
-            outline: none;
-            border-color: var(--jain-blue);
-        }
-
-        .search-btn {
-            padding: 10px 20px;
-            background: var(--jain-blue);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .search-btn:hover {
-            background: #002244;
-        }
-
         /* Stats Cards */
         .stats-grid {
             display: grid;
@@ -185,11 +130,8 @@
         }
 
         .stat-icon.total { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
-        .stat-icon.core { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; }
-        .stat-icon.office { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; }
-        .stat-icon.leader { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; }
-        .stat-icon.faculty { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; }
-        .stat-icon.hod { background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); color: white; }
+        .stat-icon.pending { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; }
+        .stat-icon.approved { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; }
 
         .stat-details h3 {
             margin: 0;
@@ -203,12 +145,86 @@
             font-size: 0.85rem;
         }
 
+        /* Filters */
+        .filters-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .filter-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            align-items: end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--jain-blue);
+        }
+
+        .filter-group input,
+        .filter-group select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--jain-blue);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #020225;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
         /* Table */
         .table-container {
             background: white;
             border-radius: 10px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             overflow: hidden;
+            margin-top: 20px;
         }
 
         .table-header {
@@ -218,6 +234,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .table-header h3 {
@@ -273,54 +291,61 @@
             text-transform: uppercase;
         }
 
-        .badge.admin { background: #e74c3c; color: white; }
-        .badge.user { background: #3498db; color: white; }
-        .badge.core { background: #f093fb; color: white; }
-        .badge.office { background: #4facfe; color: white; }
-        .badge.leader { background: #43e97b; color: white; }
-        .badge.faculty { background: #9b59b6; color: white; }
-        .badge.hod { background: #e67e22; color: white; }
+        .badge.approved { background: #27ae60; color: white; }
+        .badge.pending { background: #e74c3c; color: white; }
+        .badge.core { background: #9b59b6; color: white; }
+        .badge.faculty { background: #3498db; color: white; }
+        .badge.leader { background: #f39c12; color: white; }
 
-        select {
-            padding: 8px 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 6px;
-            font-size: 14px;
-            cursor: pointer;
-            background: white;
+        /* Toggle Switch for Approval */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
         }
 
-        select:focus {
-            outline: none;
-            border-color: var(--jain-blue);
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #27ae60;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
         }
 
         .action-btns {
             display: flex;
             gap: 8px;
-        }
-
-        .btn {
-            padding: 8px 14px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 500;
-            font-size: 0.85rem;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            text-decoration: none;
-        }
-
-        .btn-primary {
-            background: var(--jain-blue);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #002244;
         }
 
         .btn-danger {
@@ -330,6 +355,15 @@
 
         .btn-danger:hover {
             background: #c0392b;
+        }
+
+        .btn-edit {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background: #2980b9;
         }
 
         .flash-message {
@@ -347,33 +381,135 @@
             border-left: 4px solid #27ae60;
         }
 
+        .flash-message.warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left: 4px solid #ffc107;
+        }
+
         .flash-message.error {
             background: #f8d7da;
             color: #721c24;
             border-left: 4px solid #e74c3c;
         }
 
-        @media (max-width: 1024px) {
-            .search-grid {
-                grid-template-columns: 1fr;
-            }
+        /* Edit Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
         }
 
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: var(--jain-blue);
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .modal-form .form-group {
+            margin-bottom: 20px;
+        }
+
+        .modal-form label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: var(--jain-blue);
+        }
+
+        .modal-form input,
+        .modal-form select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        /* Responsive */
         @media (max-width: 768px) {
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
+            .header-container {
+                flex-direction: column;
+                gap: 15px;
             }
-
+            
+            nav.nav-links {
+                justify-content: center;
+            }
+            
             table {
-                font-size: 13px;
+                display: block;
+                overflow-x: auto;
             }
-
-            th, td {
-                padding: 10px 12px;
+            
+            .filter-form {
+                grid-template-columns: 1fr;
+            }
+            
+            .table-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 10px;
+            }
+            
+            .quick-actions {
+                justify-content: center;
             }
             
             .action-btns {
                 flex-direction: column;
+                gap: 5px;
+            }
+            
+            .action-btns .btn {
+                width: 100%;
+                justify-content: center;
             }
         }
     </style>
@@ -385,10 +521,11 @@
         <div class="logo-section">
             <img src="{{ url_for('static', filename='images/jain.png') }}" alt="Jain University Logo">
             <div class="logo-text">
-                <h1>Office of Academics (Admin)</h1>
+                <h1>Office of Academics - Admin Dashboard</h1>
             </div>
         </div>
         <nav class="nav-links">
+            <a href="{{ url_for('admin_dashboard') }}"><i class="fas fa-users-cog"></i> Users</a>
             <a href="{{ url_for('edit_ugc') }}"><i class="fas fa-file-alt"></i> UGC</a>
             <a href="{{ url_for('admin_events') }}"><i class="fas fa-calendar"></i> Events</a>
             <a href="{{ url_for('newsletter') }}"><i class="fas fa-newspaper"></i> Newsletter</a>
@@ -401,109 +538,111 @@
 </header>
 
 <div class="main-content">
-    <h2><i class="fas fa-users-cog"></i> User Role Management</h2>
-    <p class="subtitle">Search users and assign them to Core Team, Office Barriers, or Leaders</p>
+    <h2><i class="fas fa-users-cog"></i> User Approval & Role Management</h2>
+    <p class="subtitle">Approve users and assign them to Core Team, Office Barriers, or Leaders</p>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
                 <div class="flash-message {{ category }}">
-                    <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-circle' }}"></i>
+                    <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-triangle' if category == 'warning' else 'exclamation-circle' }}"></i>
                     {{ message }}
                 </div>
             {% endfor %}
         {% endif %}
     {% endwith %}
 
+    <!-- Quick Action Buttons -->
+    <div class="quick-actions">
+        <a href="/debug/users" class="btn btn-secondary" target="_blank">
+            <i class="fas fa-bug"></i> Debug Users
+        </a>
+        <a href="/debug/db" class="btn btn-secondary" target="_blank">
+            <i class="fas fa-database"></i> Check DB
+        </a>
+        <a href="/debug/create_test_user" class="btn btn-secondary" target="_blank">
+            <i class="fas fa-user-plus"></i> Create Test User
+        </a>
+        <a href="/setup/admin" class="btn btn-primary" target="_blank">
+            <i class="fas fa-user-shield"></i> Setup Admin
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-section">
+        <form method="GET" action="{{ url_for('admin_dashboard') }}" class="filter-form">
+            <div class="filter-group">
+                <label for="search"><i class="fas fa-search"></i> Search Email</label>
+                <input type="text" id="search" name="search" value="{{ request.args.get('search', '') }}" 
+                       placeholder="Search by email...">
+            </div>
+            
+            <div class="filter-group">
+                <label for="type_filter"><i class="fas fa-user-tag"></i> User Type</label>
+                <select id="type_filter" name="type_filter">
+                    <option value="">All Types</option>
+                    <option value="faculty" {% if request.args.get('type_filter') == 'faculty' %}selected{% endif %}>Faculty</option>
+                    <option value="core" {% if request.args.get('type_filter') == 'core' %}selected{% endif %}>Core Team</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="role_filter"><i class="fas fa-user-shield"></i> Special Role</label>
+                <select id="role_filter" name="role_filter">
+                    <option value="">All Roles</option>
+                    <option value="office_barrier" {% if request.args.get('role_filter') == 'office_barrier' %}selected{% endif %}>Office Barrier</option>
+                    <option value="leader" {% if request.args.get('role_filter') == 'leader' %}selected{% endif %}>Leader</option>
+                    <option value="none" {% if request.args.get('role_filter') == 'none' %}selected{% endif %}>None</option>
+                </select>
+            </div>
+            
+            <div class="filter-buttons">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-filter"></i> Apply Filters
+                </button>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">
+                    <i class="fas fa-redo"></i> Clear Filters
+                </a>
+            </div>
+        </form>
+    </div>
+
     <!-- Stats -->
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-icon total"><i class="fas fa-users"></i></div>
             <div class="stat-details">
-                <h3>{{ users|length }}</h3>
+                <h3>{{ total_users }}</h3>
                 <p>Total Users</p>
             </div>
         </div>
         <div class="stat-card">
-            <div class="stat-icon core"><i class="fas fa-star"></i></div>
+            <div class="stat-icon pending"><i class="fas fa-clock"></i></div>
             <div class="stat-details">
-                <h3>{{ users|selectattr('user_type', 'equalto', 'core')|list|length }}</h3>
-                <p>Core Team Members</p>
+                <h3>{{ pending_users }}</h3>
+                <p>Pending Approval</p>
             </div>
         </div>
         <div class="stat-card">
-            <div class="stat-icon office"><i class="fas fa-briefcase"></i></div>
+            <div class="stat-icon approved"><i class="fas fa-check-circle"></i></div>
             <div class="stat-details">
-                <h3>{{ users|selectattr('special_role', 'equalto', 'office_barrier')|list|length }}</h3>
-                <p>Office Barriers</p>
+                <h3>{{ approved_users }}</h3>
+                <p>Approved Users</p>
             </div>
         </div>
-        <div class="stat-card">
-            <div class="stat-icon leader"><i class="fas fa-crown"></i></div>
-            <div class="stat-details">
-                <h3>{{ users|selectattr('special_role', 'equalto', 'leader')|list|length }}</h3>
-                <p>Leaders</p>
-            </div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon faculty"><i class="fas fa-chalkboard-teacher"></i></div>
-            <div class="stat-details">
-                <h3>{{ users|selectattr('user_type', 'equalto', 'faculty')|selectattr('special_role', 'none')|list|length }}</h3>
-                <p>Regular Faculty</p>
-            </div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon hod"><i class="fas fa-user-tie"></i></div>
-            <div class="stat-details">
-                <h3>{{ users|selectattr('user_type', 'equalto', 'hod')|list|length }}</h3>
-                <p>HODs</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Search -->
-    <div class="search-section">
-        <form method="GET" id="searchForm">
-            <div class="search-grid">
-                <div class="search-group">
-                    <label><i class="fas fa-search"></i> Search by Email</label>
-                    <input type="text" name="search" id="searchInput" class="search-input" 
-                           placeholder="Enter email..." value="{{ request.args.get('search', '') }}">
-                </div>
-                <div class="search-group">
-                    <label><i class="fas fa-filter"></i> Filter by Type</label>
-                    <select name="type_filter" class="search-input">
-                        <option value="">All</option>
-                        <option value="faculty" {{ 'selected' if request.args.get('type_filter') == 'faculty' }}>Faculty</option>
-                        <option value="core" {{ 'selected' if request.args.get('type_filter') == 'core' }}>Core Team</option>
-                        <option value="hod" {{ 'selected' if request.args.get('type_filter') == 'hod' }}>HOD</option>
-                    </select>
-                </div>
-                <div class="search-group">
-                    <label><i class="fas fa-user-tag"></i> Special Role</label>
-                    <select name="role_filter" class="search-input">
-                        <option value="">All</option>
-                        <option value="office_barrier" {{ 'selected' if request.args.get('role_filter') == 'office_barrier' }}>Office Barrier</option>
-                        <option value="leader" {{ 'selected' if request.args.get('role_filter') == 'leader' }}>Leader</option>
-                        <option value="none" {{ 'selected' if request.args.get('role_filter') == 'none' }}>No Special Role</option>
-                    </select>
-                </div>
-                <div class="search-group">
-                    <button type="submit" class="search-btn">
-                        <i class="fas fa-search"></i> Search
-                    </button>
-                </div>
-            </div>
-        </form>
     </div>
 
     <!-- Table -->
     <div class="table-container">
         <div class="table-header">
-            <h3><i class="fas fa-table"></i> User Accounts</h3>
-            <span style="background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px;">
-                Showing {{ users|length }} users
-            </span>
+            <h3><i class="fas fa-table"></i> User Accounts ({{ users|length }})</h3>
+            <div>
+                {% if users %}
+                <span style="background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px;">
+                    <i class="fas fa-info-circle"></i> Click on user name to edit details
+                </span>
+                {% endif %}
+            </div>
         </div>
         
         {% if users %}
@@ -512,60 +651,75 @@
                 <tr>
                     <th>User</th>
                     <th>Email</th>
+                    <th>Status</th>
                     <th>Type</th>
                     <th>Special Role</th>
-                    <th>Admin Role</th>
-                    <th style="min-width: 150px;">Actions</th>
+                    <th>Approve</th>
+                    <th style="min-width: 120px;">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for user in users %}
-                <tr>
+                <tr style="{% if not user.approved %}background-color: #fff3cd;{% endif %}">
                     <td>
-                        <div class="user-email">
+                        <div class="user-email" onclick="openEditModal('{{ user._id }}', '{{ user.email }}', '{{ user.user_type }}', '{{ user.special_role if user.special_role else "" }}', '{{ "true" if user.approved else "false" }}')" style="cursor: pointer;">
                             <div class="user-avatar">{{ user.email[0]|upper }}</div>
-                            <strong>{{ user.email.split('@')[0] }}</strong>
+                            <div>
+                                <strong>{{ user.email.split('@')[0]|title }}</strong><br>
+                                <small style="color: #666; font-size: 0.8rem;">
+                                    Joined: {{ user.created_at.strftime('%d/%m/%Y') if user.created_at else 'N/A' }}
+                                </small>
+                            </div>
                         </div>
                     </td>
                     <td>{{ user.email }}</td>
                     <td>
-                        <span class="badge {{ user.user_type }}">
-                            {% if user.user_type == 'core' %}
-                                CORE
-                            {% elif user.user_type == 'hod' %}
-                                HOD
+                        <span class="badge {% if user.approved %}approved{% else %}pending{% endif %}">
+                            {% if user.approved %}
+                                <i class="fas fa-check-circle"></i> APPROVED
                             {% else %}
-                                FACULTY
+                                <i class="fas fa-clock"></i> PENDING
                             {% endif %}
                         </span>
                     </td>
                     <td>
-                        <form method="POST" action="{{ url_for('update_user', user_id=user._id) }}" style="display: inline;">
+                        <span class="badge {% if user.user_type == 'core' %}core{% else %}faculty{% endif %}">
+                            {{ user.user_type|upper if user.user_type else 'FACULTY' }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if user.special_role == 'leader' %}
+                            <span class="badge leader"><i class="fas fa-crown"></i> LEADER</span>
+                        {% elif user.special_role == 'office_barrier' %}
+                            <span class="badge core"><i class="fas fa-shield-alt"></i> OFFICE BARRIER</span>
+                        {% else %}
+                            <span style="color: #666;">None</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form method="POST" action="{{ url_for('update_user', user_id=user._id) }}" id="approvalForm{{ loop.index }}" class="toggle-form">
                             <input type="hidden" name="email" value="{{ user.email }}">
                             <input type="hidden" name="role" value="{{ user.role }}">
                             <input type="hidden" name="user_type" value="{{ user.user_type }}">
-                            <select name="special_role" onchange="if(confirm('Assign special role to {{ user.email }}?')) this.form.submit();">
-                                <option value="" {% if not user.special_role %}selected{% endif %}>None</option>
-                                <option value="office_barrier" {% if user.special_role == 'office_barrier' %}selected{% endif %}>Office Barrier</option>
-                                <option value="leader" {% if user.special_role == 'leader' %}selected{% endif %}>Leader</option>
-                            </select>
-                        </form>
-                    </td>
-                    <td>
-                        <form method="POST" action="{{ url_for('update_user', user_id=user._id) }}" style="display: inline;">
-                            <input type="hidden" name="email" value="{{ user.email }}">
-                            <input type="hidden" name="user_type" value="{{ user.user_type }}">
                             <input type="hidden" name="special_role" value="{{ user.special_role if user.special_role else '' }}">
-                            <select name="role" onchange="if(confirm('Change admin role for {{ user.email }}?')) this.form.submit();">
-                                <option value="user" {% if user.role == 'user' %}selected{% endif %}>User</option>
-                                <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
-                            </select>
+                            <label class="toggle-switch">
+                                <input type="checkbox" 
+                                       name="approved" 
+                                       value="true" 
+                                       {% if user.approved %}checked{% endif %}
+                                       class="approval-toggle"
+                                       data-user-email="{{ user.email }}">
+                                <span class="slider"></span>
+                            </label>
                         </form>
                     </td>
                     <td>
                         <div class="action-btns">
+                            <button class="btn btn-edit" onclick="openEditModal('{{ user._id }}', '{{ user.email }}', '{{ user.user_type }}', '{{ user.special_role if user.special_role else "" }}', '{{ "true" if user.approved else "false" }}')">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
                             <form method="POST" action="{{ url_for('delete_user', user_id=user._id) }}" style="display: inline;" 
-                                  onsubmit="return confirm('Are you sure you want to delete {{ user.email }}? This action cannot be undone!');">
+                                  onsubmit="return confirm('Delete {{ user.email }}? This cannot be undone!');">
                                 <button type="submit" class="btn btn-danger">
                                     <i class="fas fa-trash"></i> Delete
                                 </button>
@@ -580,22 +734,190 @@
         <div style="text-align: center; padding: 60px 20px; color: #999;">
             <i class="fas fa-users-slash" style="font-size: 4rem; opacity: 0.3;"></i>
             <h3>No users found</h3>
-            <p>Try adjusting your search filters</p>
+            <p>Try changing your search filters or check if users are registered.</p>
+            <div style="margin-top: 20px;">
+                <a href="/debug/create_test_user" class="btn btn-primary" target="_blank">
+                    <i class="fas fa-user-plus"></i> Create Test User
+                </a>
+                <a href="/setup/admin" class="btn btn-secondary" target="_blank" style="margin-left: 10px;">
+                    <i class="fas fa-user-shield"></i> Setup Admin
+                </a>
+            </div>
         </div>
         {% endif %}
     </div>
 </div>
 
+<!-- Edit User Modal -->
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-edit"></i> Edit User</h3>
+            <button class="close-modal" onclick="closeEditModal()">&times;</button>
+        </div>
+        <form id="editUserForm" method="POST">
+            <input type="hidden" name="role" value="user">
+            
+            <div class="modal-form">
+                <div class="form-group">
+                    <label for="editEmail">Email Address</label>
+                    <input type="email" id="editEmail" name="email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editUserType">User Type</label>
+                    <select id="editUserType" name="user_type" onchange="updateRoleOptions()">
+                        <option value="faculty">Faculty</option>
+                        <option value="core">Core Team</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editSpecialRole">Special Role</label>
+                    <select id="editSpecialRole" name="special_role">
+                        <option value="">None</option>
+                        <option value="office_barrier">Office Barrier</option>
+                        <option value="leader">Leader</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="editApproved" name="approved" value="true">
+                        Approved Account
+                    </label>
+                    <small style="color: #666; display: block; margin-top: 5px;">
+                        When checked, user can access all features. When unchecked, user has limited access.
+                    </small>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeEditModal()">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
-    // Real-time client-side filtering (optional enhancement)
-    document.getElementById('searchInput').addEventListener('input', function() {
-        const search = this.value.toLowerCase();
-        const rows = document.querySelectorAll('tbody tr');
+    let currentUserId = '';
+    
+    function openEditModal(userId, email, userType, specialRole, approved) {
+        currentUserId = userId;
         
-        rows.forEach(row => {
-            const email = row.cells[1].textContent.toLowerCase();
-            row.style.display = email.includes(search) ? '' : 'none';
+        document.getElementById('editEmail').value = email;
+        document.getElementById('editUserType').value = userType;
+        document.getElementById('editSpecialRole').value = specialRole;
+        document.getElementById('editApproved').checked = (approved === 'true');
+        
+        // Update form action
+        const editForm = document.getElementById('editUserForm');
+        editForm.action = `/update_user/${userId}`;
+        editForm.method = 'POST';
+        
+        // Update role options based on user type
+        updateRoleOptions();
+        
+        // Show modal
+        document.getElementById('editModal').style.display = 'flex';
+    }
+    
+    function closeEditModal() {
+        document.getElementById('editModal').style.display = 'none';
+        currentUserId = '';
+    }
+    
+    function updateRoleOptions() {
+        const userType = document.getElementById('editUserType').value;
+        const roleSelect = document.getElementById('editSpecialRole');
+        
+        if (userType === 'core') {
+            // For core team, show office_barrier as default if not already set
+            if (!roleSelect.value || roleSelect.value === '') {
+                roleSelect.value = 'office_barrier';
+            }
+        } else {
+            // For faculty, clear special role if it's office_barrier
+            if (roleSelect.value === 'office_barrier') {
+                roleSelect.value = '';
+            }
+        }
+    }
+    
+    // Handle approval toggle forms
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleForms = document.querySelectorAll('.toggle-form');
+        toggleForms.forEach(form => {
+            const toggle = form.querySelector('.approval-toggle');
+            if (toggle) {
+                toggle.addEventListener('change', function() {
+                    const userEmail = this.getAttribute('data-user-email');
+                    if (confirm(this.checked ? 
+                        `Grant approval to ${userEmail}?` : 
+                        `Revoke approval from ${userEmail}?`)) {
+                        form.submit();
+                    } else {
+                        this.checked = !this.checked;
+                    }
+                });
+            }
         });
+        
+        // Handle special role changes
+        const specialRoleSelect = document.getElementById('editSpecialRole');
+        if (specialRoleSelect) {
+            specialRoleSelect.addEventListener('change', function() {
+                const userTypeSelect = document.getElementById('editUserType');
+                if (this.value === 'office_barrier') {
+                    userTypeSelect.value = 'core';
+                } else if (this.value === 'leader') {
+                    userTypeSelect.value = 'faculty';
+                }
+            });
+        }
+        
+        // Handle user type changes in modal
+        const userTypeSelect = document.getElementById('editUserType');
+        if (userTypeSelect) {
+            userTypeSelect.addEventListener('change', function() {
+                const specialRoleSelect = document.getElementById('editSpecialRole');
+                if (this.value === 'core' && (!specialRoleSelect.value || specialRoleSelect.value === '')) {
+                    specialRoleSelect.value = 'office_barrier';
+                } else if (this.value === 'faculty' && specialRoleSelect.value === 'office_barrier') {
+                    specialRoleSelect.value = '';
+                }
+            });
+        }
+    });
+    
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('editModal');
+        if (event.target === modal) {
+            closeEditModal();
+        }
+    }
+    
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeEditModal();
+        }
+    });
+
+    // Handle form submission
+    document.getElementById('editUserForm')?.addEventListener('submit', function(e) {
+        const email = document.getElementById('editEmail').value;
+        if (!confirm(`Save changes for ${email}?`)) {
+            e.preventDefault();
+            return false;
+        }
+        return true;
     });
 </script>
 

@@ -1,618 +1,1055 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>UnitNews Network</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    :root {
-      --jain-blue: #003366;
-      --jain-gold: #FFD700;
-      --jain-light: #f5f5f5;
-      --jain-dark: #222;
-      --jain-red: #f35444;
-      --jain-teal: #008080;
-      --jain-purple: #6a5acd;
-      --jain-yellow: #ffc107;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Newsletter - Jain University</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --jain-blue: #04043a;
+            --jain-gold: #FFD700;
+            --jain-light: #F5F5F5;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.12);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.15);
+            --transition: all 0.3s ease;
+        }
 
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-      
-      --transition: all 0.3s ease;
-    }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--jain-light);
+            color: #333;
+            line-height: 1.6;
+        }
 
-    /* Reset & base */
-    * {
-      box-sizing: border-box;
-    }
+        /* Header Styles */
+        header {
+            background-color: white;
+            padding: 15px 30px;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
 
-    body {
-      margin: 0;
-      font-family: 'Poppins', sans-serif;
-      background-color: var(--jain-light);
-      color: var(--jain-dark);
-      line-height: 1.6;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
 
-    a {
-      color: inherit;
-      text-decoration: none;
-      transition: var(--transition);
-    }
+        .logo-section {
+            display: flex;
+            align-items: center;
+            transition: transform 0.3s ease;
+        }
 
-    a:hover,
-    a:focus {
-      color: var(--jain-gold);
-      outline: none;
-    }
+        .logo-section:hover {
+            transform: scale(1.05);
+        }
 
-    /* HEADER */
-    header {
-      background: white;
-      padding: 15px 30px;
-      box-shadow: 0 2px 15px rgba(0, 51, 102, 0.15);
-      position: sticky;
-      top: 0;
-      z-index: 10000;
-      border-radius: 0 0 30px 30px;
-      transition: box-shadow 0.3s ease;
-      display: flex;
-      justify-content: center;
-    }
+        .logo-section img {
+            height: 60px;
+            margin-right: 15px;
+        }
 
-    header.scrolled {
-      box-shadow: 0 5px 25px rgba(0, 51, 102, 0.25);
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: saturate(180%) blur(15px);
-    }
+        .logo-text h3 {
+            font-size: 22px;
+            color: var(--jain-blue);
+            font-weight: 700;
+            background: linear-gradient(45deg, var(--jain-blue), #4a6fa5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
 
-    .header-container {
-      max-width: 1200px;
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-    }
+        .nav-links {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
 
-    /* Logo */
-    .logo-section {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      cursor: pointer;
-      user-select: none;
-    }
+        .nav-links a {
+            color: var(--jain-blue);
+            text-decoration: none;
+            padding: 10px 15px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
 
-    .logo-section img {
-      height: 60px;
-      width: auto;
-      border-radius: 15px;
-      transition: transform 0.3s ease;
-      box-shadow: 0 5px 15px rgba(0, 51, 102, 0.25);
-    }
+        .nav-links a::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--jain-gold), #ffaa00);
+            transition: width 0.3s ease;
+        }
 
-    .logo-section:hover img {
-      transform: scale(1.05);
-    }
+        .nav-links a:hover::before {
+            width: 100%;
+        }
 
-    .logo-text h1 {
-      margin: 0;
-      font-weight: 700;
-      font-size: 1.4rem;
-      color: var(--jain-blue);
-      user-select: none;
-      letter-spacing: 0.05em;
-    }
+        .nav-links a:hover {
+            background-color: rgba(4, 4, 58, 0.05);
+            color: var(--jain-gold);
+            transform: translateY(-2px);
+        }
 
-    .logo-text span {
-      font-weight: 300;
-      font-size: 0.9rem;
-      color: #666;
-      user-select: none;
-      letter-spacing: 0.025em;
-    }
+        .nav-links a.active {
+            color: var(--jain-gold);
+            font-weight: 600;
+        }
 
-    /* NAVIGATION */
-    nav {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
+        .nav-links a.active::before {
+            width: 100%;
+        }
 
-    nav a {
-      display: inline-block;
-      position: relative;
-      padding: 10px 20px;
-      font-weight: 600;
-      font-size: 1rem;
-      border-radius: 30px;
-      color: var(--jain-blue);
-      border: 2px solid transparent;
-      cursor: pointer;
-      transition: var(--transition);
-      background: transparent;
-      user-select: none;
-    }
+        .login-btn {
+            background: linear-gradient(135deg, var(--jain-blue) 0%, #1e3c72 100%);
+            color: white !important;
+            border-radius: 30px;
+            padding: 8px 25px !important;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
 
-    nav a:hover,
-    nav a:focus {
-      background: var(--jain-gold);
-      color: var(--jain-blue);
-      box-shadow: 0 0 15px var(--jain-gold);
-      border-color: var(--jain-gold);
-      outline: none;
-      z-index: 10;
-    }
+        .login-btn:hover {
+            background: var(--jain-gold) !important;
+            color: var(--jain-blue) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 215, 0, 0.3);
+        }
 
-    nav a.active {
-      background: var(--jain-gold);
-      color: var(--jain-blue);
-      box-shadow: 0 0 20px var(--jain-gold);
-      border-color: var(--jain-gold);
-      pointer-events: none;
-    }
+        .login-btn:hover::before {
+            display: none;
+        }
 
-    /* Login Button */
-    .login-btn {
-      padding: 10px 25px;
-      background-color: var(--jain-blue);
-      color: white;
-      border-radius: 30px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      border: 2px solid var(--jain-blue);
-      box-shadow: 0 6px 15px rgba(0, 51, 102, 0.35);
-      transition: var(--transition);
-      user-select: none;
-    }
+        .login-btn i {
+            margin-right: 8px;
+            color: var(--jain-gold);
+        }
 
-    .login-btn:hover,
-    .login-btn:focus {
-      background-color: var(--jain-gold);
-      color: var(--jain-blue);
-      border-color: var(--jain-gold);
-      box-shadow: 0 8px 20px rgba(255, 215, 0, 0.6);
-      outline: none;
-    }
+        .login-btn:hover i {
+            color: var(--jain-blue);
+        }
 
-    /* Mobile Menu Toggle */
-    .nav-toggle {
-      display: none;
-      font-size: 1.6rem;
-      background: transparent;
-      border: none;
-      color: var(--jain-blue);
-      cursor: pointer;
-      transition: var(--transition);
-    }
+        .user-info-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 20px;
+            background: linear-gradient(135deg, var(--jain-blue) 0%, #1e3c72 100%);
+            color: white;
+            border-radius: 30px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            box-shadow: var(--shadow-md);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            transition: var(--transition);
+            cursor: default;
+        }
 
-    .nav-toggle:hover,
-    .nav-toggle:focus {
-      color: var(--jain-gold);
-      outline: none;
-    }
+        .user-info-badge i {
+            color: var(--jain-gold);
+            font-size: 1.1rem;
+        }
 
-    /* Responsive Navigation */
-    @media (max-width: 900px) {
-      header {
-        padding: 10px 20px;
-        border-radius: 0 0 20px 20px;
-      }
+        .nav-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--jain-blue);
+            cursor: pointer;
+        }
 
-      .header-container {
-        flex-wrap: wrap;
-        justify-content: space-between;
-      }
+        /* Hero Section */
+        .hero-section {
+            background: linear-gradient(135deg, var(--jain-blue) 0%, #1e3c72 100%);
+            color: white;
+            padding: 80px 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
 
-      nav {
-        flex-basis: 100%;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 12px;
-        max-height: 0;
-        overflow: hidden;
-        transition: max-height 0.3s ease;
-      }
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(255,215,0,0.2) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
 
-      nav.show {
-        max-height: 500px; /* enough to show all links */
-      }
+        .hero-section::after {
+            content: '';
+            position: absolute;
+            bottom: -50%;
+            left: -50%;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255,215,0,0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: float 8s ease-in-out infinite reverse;
+        }
 
-      .nav-toggle {
-        display: block;
-      }
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(20px, 20px); }
+        }
 
-      nav a {
-        flex: 1 1 45%;
-        padding: 12px 15px;
-        text-align: center;
-        border-radius: 15px;
-        font-size: 1rem;
-      }
-    }
-    
-    .active-view {
-      background-color: #2563eb;
-      color: white;
-    }
-    .trending-item:hover {
-      background-color: #f3f4f6;
-    }
-    .prose img {
-      max-width: 100%;
-      height: auto;
-      border-radius: 8px;
-      margin: 1rem 0;
-    }
-    .prose iframe {
-      max-width: 100%;
-    }
-    .navbar {
-      backdrop-filter: blur(10px);
-      background-color: rgba(255, 255, 255, 0.9);
-    }
-    .tag-filter {
-      scrollbar-width: thin;
-      scrollbar-color: #3b82f6 #f1f1f1;
-    }
-    .tag-filter::-webkit-scrollbar {
-      height: 6px;
-    }
-    .tag-filter::-webkit-scrollbar-track {
-      background: #f1f1f1;
-    }
-    .tag-filter::-webkit-scrollbar-thumb {
-      background-color: #3b82f6;
-      border-radius: 6px;
-    }
-  </style>
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero-content h1 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            animation: slideInDown 1s ease;
+        }
+
+        .hero-content p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 30px;
+            animation: fadeIn 1s ease 0.3s both;
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Search and Filter Section */
+        .search-section {
+            max-width: 1200px;
+            margin: -30px auto 40px;
+            padding: 0 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .search-container {
+            background: white;
+            border-radius: 50px;
+            padding: 5px;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-container input {
+            flex: 1;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 50px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+        }
+
+        .search-container input:focus {
+            outline: none;
+        }
+
+        .search-container button {
+            padding: 15px 40px;
+            background: linear-gradient(135deg, var(--jain-blue) 0%, #1e3c72 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-container button:hover {
+            background: var(--jain-gold);
+            color: var(--jain-blue);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* Main Container */
+        .main-container {
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        /* Newsletter Grid */
+        .newsletter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 30px;
+            margin: 50px 0;
+        }
+
+        .newsletter-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            transition: var(--transition);
+            position: relative;
+            top: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .newsletter-card:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .card-image {
+            width: 100%;
+            height: 200px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .newsletter-card:hover .card-image img {
+            transform: scale(1.1);
+        }
+
+        .card-image .date-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(4, 4, 58, 0.9);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,215,0,0.3);
+            z-index: 1;
+        }
+
+        .card-image .date-badge i {
+            color: var(--jain-gold);
+            margin-right: 5px;
+        }
+
+        .card-content {
+            padding: 25px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .card-tag {
+            background: rgba(4, 4, 58, 0.1);
+            color: var(--jain-blue);
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            line-height: 1.4;
+            color: var(--jain-blue);
+            font-weight: 600;
+        }
+
+        .card-description {
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.6;
+            flex: 1;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+            padding-top: 20px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .read-more-btn {
+            background: linear-gradient(135deg, var(--jain-blue) 0%, #1e3c72 100%);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 30px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+        }
+
+        .read-more-btn:hover {
+            background: var(--jain-gold);
+            color: var(--jain-blue);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .share-icon {
+            color: #999;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .share-icon:hover {
+            color: var(--jain-gold);
+            transform: scale(1.1);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .empty-state i {
+            font-size: 5rem;
+            color: var(--jain-gold);
+            margin-bottom: 20px;
+        }
+
+        .empty-state h3 {
+            color: var(--jain-blue);
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        /* Subscribe Section */
+        .subscribe-section {
+            background: white;
+            border-radius: 20px;
+            padding: 60px;
+            box-shadow: var(--shadow-lg);
+            margin: 60px 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .subscribe-section::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(255,215,0,0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.2); opacity: 0.5; }
+        }
+
+        .subscribe-section h2 {
+            color: var(--jain-blue);
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .subscribe-section p {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .subscribe-form {
+            display: flex;
+            max-width: 500px;
+            margin: 0 auto;
+            gap: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .subscribe-form input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 30px;
+            font-family: 'Poppins', sans-serif;
+            transition: var(--transition);
+            font-size: 1rem;
+        }
+
+        .subscribe-form input:focus {
+            outline: none;
+            border-color: var(--jain-gold);
+            box-shadow: 0 0 0 3px rgba(255,215,0,0.2);
+        }
+
+        .subscribe-form button {
+            padding: 15px 35px;
+            background: linear-gradient(135deg, var(--jain-blue) 0%, #1e3c72 100%);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1rem;
+        }
+
+        .subscribe-form button:hover {
+            background: var(--jain-gold);
+            color: var(--jain-blue);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* Footer */
+        footer {
+            background: linear-gradient(135deg, var(--jain-blue) 0%, #1e3c72 100%);
+            color: white;
+            padding: 60px 20px 20px;
+            margin-top: 50px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 50px;
+            margin-bottom: 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .footer-column h3 {
+            font-size: 1.3rem;
+            margin-bottom: 25px;
+            color: var(--jain-gold);
+            position: relative;
+            display: inline-block;
+        }
+
+        .footer-column h3::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 50%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--jain-gold), transparent);
+        }
+
+        .footer-column p {
+            line-height: 1.8;
+            margin-bottom: 20px;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .footer-column ul {
+            list-style: none;
+        }
+
+        .footer-column ul li {
+            margin-bottom: 12px;
+            transition: transform 0.3s ease;
+        }
+
+        .footer-column ul li:hover {
+            transform: translateX(10px);
+        }
+
+        .footer-column ul li a {
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .footer-column ul li a:hover {
+            color: var(--jain-gold);
+        }
+
+        .footer-column ul li i {
+            margin-right: 12px;
+            color: var(--jain-gold);
+            font-size: 0.9rem;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .social-links a {
+            width: 45px;
+            height: 45px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            font-size: 1.2rem;
+        }
+
+        .social-links a:hover {
+            color: var(--jain-blue);
+            transform: translateY(-5px) rotate(360deg);
+            background: var(--jain-gold);
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.6);
+            position: relative;
+            z-index: 1;
+            font-size: 0.95rem;
+        }
+
+        /* Flash Messages */
+        .flash-messages {
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+
+        .alert-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+
+        .alert-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border-left: 4px solid #ffc107;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+                flex-direction: column;
+                position: absolute;
+                top: 80px;
+                left: 0;
+                right: 0;
+                background-color: white;
+                padding: 20px;
+                box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+                border-radius: 0 0 20px 20px;
+            }
+
+            .nav-links.show {
+                display: flex;
+            }
+
+            .nav-links a {
+                width: 100%;
+                text-align: center;
+                padding: 12px;
+            }
+
+            .nav-toggle {
+                display: block;
+            }
+
+            .hero-content h1 {
+                font-size: 2.2rem;
+            }
+
+            .search-container {
+                flex-direction: column;
+                border-radius: 20px;
+            }
+
+            .search-container button {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .newsletter-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .subscribe-form {
+                flex-direction: column;
+            }
+
+            .subscribe-form button {
+                width: 100%;
+            }
+
+            .footer-container {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+        }
+    </style>
 </head>
-
-<body class="bg-gray-50 font-sans antialiased">
-  <header id="mainHeader">
-    <div class="header-container">
-      <div class="logo-section" role="banner" tabindex="0">
-        <img
-          src="{{ url_for('static', filename='images/jain.png') }}"
-          alt="Jain University Logo"
-          onerror="this.src='https://via.placeholder.com/60?text=JU+Logo';"
-          aria-hidden="true"
-        />
-        <div class="logo-text">
-          <h1>Office of Academics</h1>
-          <span>Excellence in Education</span>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-container">
+            <div class="logo-section">
+                <img src="{{ url_for('static', filename='images/L23.png') }}" alt="Jain University Logo" onerror="this.src='https://via.placeholder.com/60x60/04043a/FFD700?text=JU'">
+                
+            </div>
+            
+            <button class="nav-toggle" aria-label="Toggle navigation" onclick="toggleMobileNav()">
+                <i class="fas fa-bars"></i>
+            </button>
+          
+            <nav class="nav-links" id="navLinks">
+                <a href="{{ url_for('home') }}">Home</a>
+                
+                
+                
+            </nav>
         </div>
-      </div>
+    </header>
 
-      <!-- Navigation Bar -->
-      <nav id="primary-navigation" role="navigation" aria-label="Primary navigation">
-        
-        <a href="{{ url_for('home') }}" tabindex="0">Home</a>
-        <a href="{{ url_for('ugc') }}" tabindex="0">UGC Requirement</a>
-        <a href="{{ url_for('monthlyengagement') }}" tabindex="0">Monthly Engagement</a>
-      
-        <a href="{{ url_for('login') }}" class="login-btn" tabindex="0" aria-label="Login">
-          <i class="fas fa-sign-in-alt" aria-hidden="true"></i> Login
-        </a>
-      </nav>
-    </div>
-  </header>
-
-  <!-- Tags Filter -->
-  <div class="bg-white shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
-      <div class="tag-filter flex space-x-4 overflow-x-auto py-2">
-        <a href="#" class="inline-flex items-center px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-sm font-medium">All</a>
-        <a href="#" class="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-800 text-sm font-medium">Education</a>
-        <a href="#" class="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-800 text-sm font-medium">Sports</a>
-        <a href="#" class="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-800 text-sm font-medium">Cultural</a>
-        <a href="#" class="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-800 text-sm font-medium">Forum</a>
-        <a href="#" class="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-800 text-sm font-medium">Meeting</a>
-        <a href="#" class="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-800 text-sm font-medium">University Events</a>
-        <a href="#" class="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-800 text-sm font-medium">Fest</a>
-        <a href="#" class="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-800 text-sm font-medium">Festival</a>
-      </div>
-    </div>
-  </div>
-
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        <div class="mb-6 space-y-2">
-          {% for category, message in messages %}
-            <div class="p-4 rounded-lg text-white 
-                        {% if category == 'success' %} bg-green-500 
-                        {% elif category == 'error' %} bg-red-500 
-                        {% elif category == 'warning' %} bg-yellow-500 
-                        {% else %} bg-blue-500 {% endif %}">
-              {{ message }}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="close" onclick="this.parentElement.style.display='none'" style="float: right; background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+                    </div>
+                {% endfor %}
             </div>
-          {% endfor %}
-        </div>
-      {% endif %}
+        {% endif %}
     {% endwith %}
 
-    <div class="flex flex-col lg:flex-row gap-8">
-      <!-- Main Content -->
-      <div class="lg:w-2/3">
-        <!-- Featured Story -->
+   
+
+   
+
+    <!-- Main Container -->
+    <div class="main-container">
         {% if records %}
-          {% set featured = records[0] %}
-          <div class="bg-white rounded-xl shadow-md overflow-hidden mb-8">
-            {% if featured.image %}
-              <img src="{{ url_for('static', filename='uploads/' ~ featured.image) }}" 
-                   class="w-full h-64 md:h-96 object-cover" alt="{{ featured.title }}">
-            {% endif %}
-            <div class="p-6">
-              <div class="flex items-center mb-2">
-                <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
-                  {{ featured.tags[0] if featured.tags else 'News' }}
-                </span>
-                <span class="text-gray-500 text-sm ml-2">{{ featured.uploaded_at.strftime('%B %d, %Y') }}</span>
-              </div>
-              <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-3">{{ featured.title }}</h2>
-              <p class="text-gray-600 mb-4">{{ featured.description|striptags|truncate(200) }}</p>
-              <a href="#news-{{ featured.id }}" class="text-blue-600 hover:text-blue-800 font-medium">Read full story →</a>
+            <!-- Newsletter Grid -->
+            <div class="newsletter-grid" id="newsletterGrid">
+                {% for article in records %}
+                <div class="newsletter-card" data-title="{{ article.title|lower }}" data-description="{{ article.description|striptags|lower }}" data-tags="{{ article.tags|join(' ')|lower }}">
+                    {% if article.image %}
+                    <div class="card-image">
+                        <img src="{{ url_for('static', filename='uploads/' + article.image) }}" alt="{{ article.title }}" onerror="this.src='https://via.placeholder.com/350x200/04043a/FFD700?text=News'">
+                        <div class="date-badge">
+                            <i class="far fa-calendar-alt"></i> {{ article.formatted_date }}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="card-image">
+                        <img src="https://via.placeholder.com/350x200/04043a/FFD700?text=Newsletter" alt="Newsletter">
+                        <div class="date-badge">
+                            <i class="far fa-calendar-alt"></i> {{ article.formatted_date }}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="card-content">
+                        {% if article.tags %}
+                        <div class="card-tags">
+                            {% for tag in article.tags[:3] %}
+                                <span class="card-tag">{{ tag }}</span>
+                            {% endfor %}
+                            {% if article.tags|length > 3 %}
+                                <span class="card-tag">+{{ article.tags|length - 3 }}</span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        
+                        <h3 class="card-title">{{ article.title }}</h3>
+                        
+                        <div class="card-description">
+                            {{ article.description|striptags|truncate(150) }}
+                        </div>
+                        
+                        <div class="card-footer">
+                            <a href="{{ url_for('newsletter_view', newsletter_id=article._id) }}" class="read-more-btn">
+                                Read More <i class="fas fa-arrow-right"></i>
+                            </a>
+                            <div class="share-icon" onclick="shareNewsletter('{{ article.title }}', '{{ url_for('newsletter_view', newsletter_id=article._id, _external=True) }}')">
+                                <i class="fas fa-share-alt"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
             </div>
-          </div>
+        {% else %}
+            <!-- Empty State -->
+            <div class="empty-state">
+                <i class="fas fa-newspaper"></i>
+                <h3>No Newsletters Yet</h3>
+                <p>Check back later for the latest university news and updates.</p>
+                {% if user_logged_in and session.get('role') == 'admin' %}
+                    <a href="{{ url_for('newsletter') }}" class="read-more-btn">
+                        <i class="fas fa-plus"></i> Create First Newsletter
+                    </a>
+                {% endif %}
+            </div>
         {% endif %}
 
-        <!-- View Toggle -->
-        <div class="flex justify-between items-center mb-6">
-          <h2 class="text-xl font-bold text-gray-900">Latest News</h2>
-          <div class="flex bg-gray-100 rounded-lg p-1">
-            <button id="grid-view" class="px-3 py-1 rounded-md active-view">
-              <i class="fas fa-th-large"></i>
-            </button>
-            <button id="list-view" class="px-3 py-1 rounded-md">
-              <i class="fas fa-list"></i>
-            </button>
-          </div>
+        <!-- Subscribe Section -->
+        <div class="subscribe-section">
+            <h2><i class="fas fa-paper-plane"></i> Subscribe to Our Newsletter</h2>
+            <p>Get the latest university news delivered directly to your inbox</p>
+            <form class="subscribe-form" action="{{ url_for('subscribe_newsletter') }}" method="POST">
+                <input type="email" name="email" placeholder="Enter your email address" required>
+                <button type="submit">
+                    <i class="fas fa-paper-plane"></i> Subscribe
+                </button>
+            </form>
         </div>
+    </div>
 
-        <!-- News Grid -->
-        <div id="news-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {% for article in records %}
-            <div id="news-{{ article.id }}" class="news-card bg-white rounded-lg shadow-md overflow-hidden transition duration-300">
-              {% if article.image %}
-                <img src="{{ url_for('static', filename='uploads/' ~ article.image) }}" 
-                     class="w-full h-48 object-cover" alt="{{ article.title }}">
-              {% endif %}
-              <div class="p-4">
-                <div class="flex items-center mb-2">
-                  <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
-                    {{ article.tags[0] if article.tags else 'Update' }}
-                  </span>
-                  <span class="text-gray-500 text-xs ml-2">{{ article.uploaded_at.strftime('%b %d') }}</span>
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-column">
+                <h3>Office of Academics</h3>
+                <p>Empowering innovation through education, research, and holistic development. Committed to academic excellence and student success.</p>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#"><i class="fab fa-youtube"></i></a>
                 </div>
-                <h3 class="font-bold text-lg text-gray-900 mb-2">{{ article.title }}</h3>
-                <div class="prose max-w-none text-gray-600 text-sm mb-3">
-                  {% autoescape false %}{{ article.description }}{% endautoescape %}
-                </div>
-                <a href="#news-{{ article.id }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Read more →</a>
-              </div>
             </div>
-          {% else %}
-            <p class="text-center text-gray-600 col-span-2 py-10">No newsletters found.</p>
-          {% endfor %}
+            <div class="footer-column">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><i class="fas fa-chevron-right"></i><a href="{{ url_for('home') }}">Home</a></li>
+                    <li><i class="fas fa-chevron-right"></i><a href="{{ url_for('about') }}">About Us</a></li>
+                    <li><i class="fas fa-chevron-right"></i><a href="{{ url_for('ugc') }}">UGC Requirement</a></li>
+                    <li><i class="fas fa-chevron-right"></i><a href="{{ url_for('monthlyengagement') }}">Monthly Engagement</a></li>
+                    <li><i class="fas fa-chevron-right"></i><a href="{{ url_for('jainevents') }}">Events</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h3>Contact Info</h3>
+                <ul>
+                    <li><i class="fas fa-map-marker-alt"></i><a href="https://maps.google.com/?q=Bangalore+560069" target="_blank">Bangalore - 560069</a></li>
+                    <li><i class="fas fa-phone-alt"></i><a href="tel:+918023456789">+91 80 2345 6789</a></li>
+                    <li><i class="fas fa-envelope"></i><a href="mailto:info@jainuniversity.ac.in">info@jainuniversity.ac.in</a></li>
+                    <li><i class="fas fa-clock"></i> Mon-Fri: 9:00 AM - 5:00 PM</li>
+                </ul>
+            </div>
         </div>
+        <div class="copyright">
+            &copy; 2025 Office of Academics, Jain (Deemed-to-be University). All Rights Reserved.
+        </div>
+    </footer>
 
-        <!-- Pagination -->
-        <div class="mt-8 flex justify-center">
-          <nav class="inline-flex rounded-md shadow">
-            <a href="#" class="px-3 py-2 rounded-l-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50">
-              Previous
-            </a>
-            <a href="#" class="px-3 py-2 border-t border-b border-gray-300 bg-white text-gray-500 hover:bg-gray-50">
-              1
-            </a>
-            <a href="#" class="px-3 py-2 border border-gray-300 bg-blue-50 text-blue-600">
-              2
-            </a>
-            <a href="#" class="px-3 py-2 border-t border-b border-gray-300 bg-white text-gray-500 hover:bg-gray-50">
-              3
-            </a>
-            <a href="#" class="px-3 py-2 rounded-r-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50">
-              Next
-            </a>
-          </nav>
-        </div>
-      </div>
-
-      <!-- Sidebar -->
-      <div class="lg:w-1/3">
-        <!-- Subscribe Card -->
-        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h3 class="font-bold text-lg text-gray-900 mb-3">Stay Updated</h3>
-          <p class="text-gray-600 text-sm mb-4">Get the latest university news delivered to your inbox</p>
-          <form action="{{ url_for('subscribe_newsletter') }}" method="POST" class="space-y-3">
-            <input type="email" name="email" required placeholder="Your email address"
-                   class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <button type="submit"
-                    class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium">
-              Subscribe Now
-            </button>
-          </form>
-        </div>
-
-        <!-- Trending Now -->
-        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h3 class="font-bold text-lg text-gray-900 mb-4 flex items-center">
-            <i class="fas fa-fire text-red-500 mr-2"></i> Trending Now
-          </h3>
-          <div class="space-y-4">
-            {% if records and records|length > 0 %}
-              {% for article in records[:5] %}  <!-- Show first 5 articles -->
-                <a href="#news-{{ article.id }}" class="block trending-item p-2 rounded-lg transition hover:bg-gray-50">
-                  <div class="flex items-start">
-                    <div class="flex-shrink-0 w-16 h-16 bg-gray-200 rounded-md overflow-hidden">
-                      {% if article.image %}
-                        <img src="{{ url_for('static', filename='uploads/' ~ article.image) }}" 
-                             class="w-full h-full object-cover" alt="{{ article.title }}">
-                      {% else %}
-                        <div class="w-full h-full bg-gray-300 flex items-center justify-center">
-                          <i class="fas fa-newspaper text-gray-500"></i>
-                        </div>
-                      {% endif %}
-                    </div>
-                    <div class="ml-3">
-                      <h4 class="text-sm font-medium text-gray-900">{{ article.title }}</h4>
-                      <p class="text-xs text-gray-500 mt-1">
-                        {{ article.uploaded_at.strftime('%b %d, %Y') }}
-                        {% if article.tags and article.tags|length > 0 %}
-                          • <span class="text-blue-600">{{ article.tags[0] }}</span>
-                        {% endif %}
-                      </p>
-                    </div>
-                  </div>
-                </a>
-              {% endfor %}
-            {% else %}
-              <div class="text-center py-4 text-gray-500 text-sm">
-                No trending articles at the moment
-              </div>
-            {% endif %}
-          </div>
-        </div>
-
-        <!-- Upcoming Events -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-          <h3 class="font-bold text-lg text-gray-900 mb-4 flex items-center">
-            <i class="far fa-calendar-alt text-blue-500 mr-2"></i> Upcoming Events
-          </h3>
-          <div class="space-y-4">
-            {% for event in upcoming_events %}
-              <div class="border-l-4 border-blue-500 pl-4 py-1">
-                <h4 class="text-sm font-medium text-gray-900">{{ event.title }}</h4>
-                <p class="text-xs text-gray-500">{{ event.date.strftime('%B %d, %Y') }} • {{ event.time }}</p>
-                <p class="text-xs text-gray-600 mt-1">{{ event.location }}</p>
-              </div>
-            {% endfor %}
-          </div>
-          <a href="#" class="mt-4 inline-block text-sm text-blue-600 hover:text-blue-800 font-medium">
-            View all events →
-          </a>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <footer class="bg-gray-800 text-white py-12">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-        <div>
-          <h4 class="text-lg font-semibold mb-4">UnitNews Network</h4>
-          <p class="text-gray-400 text-sm">Bringing you the latest updates from our campus community.</p>
-        </div>
-        <div>
-          <h4 class="text-lg font-semibold mb-4">Quick Links</h4>
-          <ul class="space-y-2">
-            <li><a href="#" class="text-gray-400 hover:text-white text-sm">Home</a></li>
-            <li><a href="#" class="text-gray-400 hover:text-white text-sm">Archives</a></li>
-            <li><a href="#" class="text-gray-400 hover:text-white text-sm">Submit News</a></li>
-            <li><a href="#" class="text-gray-400 hover:text-white text-sm">Contact</a></li>
-          </ul>
-        </div>
-        <div>
-          <h4 class="text-lg font-semibold mb-4">Categories</h4>
-          <ul class="space-y-2">
-            <li><a href="#" class="text-gray-400 hover:text-white text-sm">Education</a></li>
-            <li><a href="#" class="text-gray-400 hover:text-white text-sm">Sports</a></li>
-            <li><a href="#" class="text-gray-400 hover:text-white text-sm">Cultural</a></li>
-            <li><a href="#" class="text-gray-400 hover:text-white text-sm">University Events</a></li>
-          </ul>
-        </div>
-        <div>
-          <h4 class="text-lg font-semibold mb-4">Connect</h4>
-          <div class="flex space-x-4">
-            <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-facebook-f"></i></a>
-            <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-twitter"></i></a>
-            <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-instagram"></i></a>
-            <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-linkedin-in"></i></a>
-          </div>
-          <p class="text-gray-400 text-sm mt-4">news@university.edu</p>
-        </div>
-      </div>
-      <div class="border-t border-gray-700 mt-8 pt-8 text-sm text-gray-400 text-center">
-        © 2025 UnitNews Network. All rights reserved.
-      </div>
-    </div>
-  </footer>
-
-  <script>
-    // Toggle between grid and list views
-    document.getElementById('grid-view').addEventListener('click', function() {
-      document.getElementById('news-container').classList.remove('grid-cols-1');
-      document.getElementById('news-container').classList.add('grid-cols-1', 'md:grid-cols-2');
-      document.getElementById('grid-view').classList.add('active-view');
-      document.getElementById('list-view').classList.remove('active-view');
-      
-      // Update news cards for grid view
-      const newsCards = document.querySelectorAll('.news-card');
-      newsCards.forEach(card => {
-        card.classList.remove('flex', 'flex-row');
-        const img = card.querySelector('img');
-        if (img) {
-          img.classList.remove('w-32', 'h-32');
-          img.classList.add('w-full', 'h-48');
+    <script>
+        function toggleMobileNav() {
+            const navLinks = document.getElementById('navLinks');
+            navLinks.classList.toggle('show');
         }
-      });
-    });
-    
-    document.getElementById('list-view').addEventListener('click', function() {
-      document.getElementById('news-container').classList.remove('grid-cols-1', 'md:grid-cols-2');
-      document.getElementById('news-container').classList.add('grid-cols-1');
-      document.getElementById('list-view').classList.add('active-view');
-      document.getElementById('grid-view').classList.remove('active-view');
-      
-      // Update news cards for list view
-      const newsCards = document.querySelectorAll('.news-card');
-      newsCards.forEach(card => {
-        card.classList.add('flex', 'flex-row');
-        const img = card.querySelector('img');
-        if (img) {
-          img.classList.add('w-32', 'h-32');
-          img.classList.remove('w-full', 'h-48');
-        }
-      });
-    });
 
-    // Smooth scrolling for anchor links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-      anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        document.querySelector(this.getAttribute('href')).scrollIntoView({
-          behavior: 'smooth'
+        // Header scroll effect
+        window.addEventListener('scroll', function() {
+            const header = document.querySelector('header');
+            if (window.scrollY > 50) {
+                header.style.boxShadow = '0 5px 25px rgba(0, 51, 102, 0.25)';
+                header.style.background = 'rgba(255, 255, 255, 0.98)';
+                header.style.backdropFilter = 'blur(10px)';
+            } else {
+                header.style.boxShadow = 'var(--shadow-sm)';
+                header.style.background = 'white';
+                header.style.backdropFilter = 'none';
+            }
         });
-      });
-    });
 
-    // Header scroll effect
-    window.addEventListener('scroll', function() {
-      const header = document.getElementById('mainHeader');
-      if (window.scrollY > 50) {
-        header.classList.add('scrolled');
-      } else {
-        header.classList.remove('scrolled');
-      }
-    });
+        // Auto-hide flash messages after 5 seconds
+        setTimeout(() => {
+            document.querySelectorAll('.alert').forEach(alert => {
+                alert.style.transition = 'opacity 0.5s ease';
+                alert.style.opacity = '0';
+                setTimeout(() => alert.style.display = 'none', 500);
+            });
+        }, 5000);
 
-    // Mobile menu toggle
-    const navToggle = document.querySelector('.nav-toggle');
-    const primaryNav = document.getElementById('primary-navigation');
-    
-    if (navToggle && primaryNav) {
-      navToggle.addEventListener('click', function() {
-        primaryNav.classList.toggle('show');
-      });
-    }
-  </script>
+        // Close alerts when clicking the close button
+        document.querySelectorAll('.alert .close').forEach(button => {
+            button.addEventListener('click', function() {
+                this.parentElement.style.display = 'none';
+            });
+        });
+
+        // Mobile menu close on click outside
+        document.addEventListener('click', function(event) {
+            const navLinks = document.getElementById('navLinks');
+            const navToggle = document.querySelector('.nav-toggle');
+            
+            if (!navLinks.contains(event.target) && !navToggle.contains(event.target) && navLinks.classList.contains('show')) {
+                navLinks.classList.remove('show');
+            }
+        });
+
+        // Search functionality
+        function filterNewsletters() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const cards = document.querySelectorAll('.newsletter-card');
+            
+            cards.forEach(card => {
+                const title = card.dataset.title;
+                const description = card.dataset.description;
+                const tags = card.dataset.tags;
+                
+                if (title.includes(searchTerm) || description.includes(searchTerm) || tags.includes(searchTerm)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        // Share functionality
+        function shareNewsletter(title, url) {
+            if (navigator.share) {
+                navigator.share({
+                    title: title,
+                    url: url
+                }).catch(console.error);
+            } else {
+                // Fallback - copy to clipboard
+                navigator.clipboard.writeText(url).then(() => {
+                    alert('Link copied to clipboard!');
+                }).catch(() => {
+                    prompt('Copy this link:', url);
+                });
+            }
+        }
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+    </script>
 </body>
 </html>

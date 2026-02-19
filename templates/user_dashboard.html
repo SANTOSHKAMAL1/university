@@ -1,1629 +1,1179 @@
-{% extends 'base_user.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if news %}{{ news.title }} - {% endif %}Jain University Newsletter</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --jain-blue: #04043a;
+            --jain-gold: #FFD700;
+            --jain-light: #F5F5F5;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.12);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.15);
+            --shadow-hover: 0 20px 40px rgba(0,0,0,0.2);
+            --transition: all 0.3s ease;
+        }
 
-{% block title %}Dashboard - Jain University{% endblock %}
-{% block page_title %}Welcome to Your Dashboard{% endblock %}
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-{% block content %}
-<div class="min-h-screen bg-gray-50">
-    <!-- Top Navigation Tabs -->
-    <div class="bg-white shadow-md sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <!-- Tabs -->
-                <div class="flex space-x-8 overflow-x-auto">
-                    <button onclick="switchTab('dashboard')" 
-                            class="tab-btn active border-b-2 border-blue-600 py-4 px-1 text-sm font-medium text-blue-600 hover:text-blue-800 transition whitespace-nowrap">
-                        <i class="fas fa-home mr-2"></i>Dashboard
-                    </button>
-                    <button onclick="switchTab('events')" 
-                            class="tab-btn border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 transition whitespace-nowrap">
-                        <i class="fas fa-calendar-alt mr-2"></i>Events
-                    </button>
-                    <button onclick="switchTab('localFiles')" 
-                            class="tab-btn border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 transition whitespace-nowrap">
-                        <i class="fas fa-folder mr-2"></i>Local Files
-                        <span class="ml-1 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">{{ local_files|length }}</span>
-                    </button>
-                    <button onclick="switchTab('driveFiles')" 
-                            class="tab-btn border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 transition whitespace-nowrap">
-                        <i class="fab fa-google-drive mr-2"></i>Drive Files
-                        <span class="ml-1 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">{{ drive_files|length }}</span>
-                    </button>
-                    <button onclick="switchTab('publicFiles')" 
-                            class="tab-btn border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 transition whitespace-nowrap">
-                        <i class="fas fa-globe mr-2"></i>Public Files
-                        <span class="ml-1 text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">{{ public_files|length }}</span>
-                    </button>
-                    <button onclick="switchTab('reminders')" 
-                            class="tab-btn border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 transition whitespace-nowrap">
-                        <i class="fas fa-bell mr-2"></i>My Reminders
-                        {% if user_reminders and user_reminders|length > 0 %}
-                        <span class="ml-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
-                            {{ user_reminders|length }}
-                        </span>
-                        {% endif %}
-                    </button>
-                </div>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--jain-light);
+            color: #333;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
 
-                <!-- Notifications Bell -->
-                <div class="relative ml-4">
-                    <button onclick="toggleNotifications()" 
-                            class="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition">
-                        <i class="fas fa-bell text-xl"></i>
-                        {% if notifications is defined and notifications|length > 0 %}
-                        <span class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">
-                            {{ notifications|length }}
-                        </span>
-                        {% endif %}
-                    </button>
+        /* Header Styles */
+        header {
+            background-color: white;
+            padding: 15px 30px;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            animation: slideDown 0.8s ease;
+        }
 
-                    <!-- Notifications Dropdown -->
-                    <div id="notificationsDropdown" 
-                         class="hidden absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-96 overflow-y-auto">
-                        <div class="p-4 border-b border-gray-200">
-                            <h3 class="text-lg font-semibold text-gray-900">Notifications</h3>
-                        </div>
-                        
-                        {% if notifications is defined and notifications %}
-                            <div class="divide-y divide-gray-200">
-                                {% for notif in notifications %}
-                                <div class="p-4 hover:bg-gray-50 transition cursor-pointer">
-                                    <div class="flex items-start space-x-3">
-                                        <div class="flex-shrink-0">
-                                            {% if notif.type == 'reminder' %}
-                                            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                                                <i class="fas fa-{{ notif.icon }} text-blue-600"></i>
-                                            </div>
-                                            {% elif notif.type == 'subscription' %}
-                                            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                                                <i class="fas fa-{{ notif.icon }} text-green-600"></i>
-                                            </div>
-                                            {% elif notif.type == 'office' %}
-                                            <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                                                <i class="fas fa-{{ notif.icon }} text-orange-600"></i>
-                                            </div>
-                                            {% else %}
-                                            <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                                                <i class="fas fa-{{ notif.icon }} text-purple-600"></i>
-                                            </div>
-                                            {% endif %}
-                                        </div>
-                                        <div class="flex-1 min-w-0">
-                                            <p class="text-sm font-medium text-gray-900">{{ notif.title }}</p>
-                                            <p class="text-xs text-gray-500 mt-1">{{ notif.message }}</p>
-                                            <p class="text-xs text-gray-400 mt-1">
-                                                <i class="far fa-clock"></i> 
-                                                {% if notif.time %}
-                                                    {{ notif.time.strftime('%d %b at %I:%M %p') }}
-                                                {% else %}
-                                                    Recently
-                                                {% endif %}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        {% else %}
-                            <div class="p-8 text-center text-gray-500">
-                                <i class="fas fa-bell-slash text-4xl mb-3 opacity-50"></i>
-                                <p>No notifications yet</p>
-                            </div>
-                        {% endif %}
-                    </div>
+        @keyframes slideDown {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            transition: transform 0.3s ease;
+        }
+
+        .logo-section:hover {
+            transform: scale(1.05);
+        }
+
+        .logo-section img {
+            height: 60px;
+            margin-right: 15px;
+            animation: rotateIn 1s ease;
+        }
+
+        @keyframes rotateIn {
+            from { transform: rotate(-10deg) scale(0.8); opacity: 0; }
+            to { transform: rotate(0) scale(1); opacity: 1; }
+        }
+
+        .logo-text h3 {
+            font-size: 22px;
+            color: var(--jain-blue);
+            font-weight: 700;
+            background: linear-gradient(45deg, var(--jain-blue), #4a6fa5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: fadeInRight 1s ease;
+        }
+
+        @keyframes fadeInRight {
+            from { transform: translateX(30px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--jain-blue);
+            text-decoration: none;
+            padding: 10px 15px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-links a::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--jain-gold), #ffaa00);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::before {
+            width: 100%;
+        }
+
+        .nav-links a:hover {
+            background-color: rgba(4, 4, 58, 0.05);
+            color: var(--jain-gold);
+            transform: translateY(-2px);
+        }
+
+        .nav-links a.active {
+            color: var(--jain-gold);
+            font-weight: 600;
+        }
+
+        .nav-links a.active::before {
+            width: 100%;
+        }
+
+        /* Login Button */
+        .login-btn {
+            background: linear-gradient(135deg, var(--jain-blue) 0%, #1e3c72 100%);
+            color: white !important;
+            border-radius: 30px;
+            padding: 8px 25px !important;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .login-btn:hover {
+            background: var(--jain-gold) !important;
+            color: var(--jain-blue) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 215, 0, 0.3);
+        }
+
+        .login-btn:hover::before {
+            display: none;
+        }
+
+        .login-btn i {
+            margin-right: 8px;
+            color: var(--jain-gold);
+        }
+
+        .login-btn:hover i {
+            color: var(--jain-blue);
+        }
+
+        /* User Info Badge */
+        .user-info-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 20px;
+            background: linear-gradient(135deg, var(--jain-blue) 0%, #1e3c72 100%);
+            color: white;
+            border-radius: 30px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            box-shadow: var(--shadow-md);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            transition: var(--transition);
+            cursor: default;
+            animation: pulseGlow 2s infinite;
+        }
+
+        .user-info-badge i {
+            color: var(--jain-gold);
+            font-size: 1.1rem;
+        }
+
+        .user-info-badge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 215, 0, 0.3);
+            border-color: var(--jain-gold);
+        }
+
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 215, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); }
+        }
+
+        .nav-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--jain-blue);
+            cursor: pointer;
+        }
+
+        /* Main Container */
+        .main-container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        /* Back Button */
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--jain-blue);
+            text-decoration: none;
+            font-weight: 500;
+            margin-bottom: 30px;
+            transition: var(--transition);
+            padding: 10px 20px;
+            background: white;
+            border-radius: 30px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .back-button:hover {
+            transform: translateX(-5px);
+            color: var(--jain-gold);
+            box-shadow: var(--shadow-md);
+        }
+
+        .back-button i {
+            transition: transform 0.3s ease;
+        }
+
+        .back-button:hover i {
+            transform: translateX(-3px);
+        }
+
+        /* Article Card */
+        .article-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+            margin: 30px 0;
+        }
+
+        .article-header {
+            background: linear-gradient(135deg, var(--jain-blue) 0%, #1e3c72 100%);
+            color: white;
+            padding: 50px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .article-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(255,215,0,0.2) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(20px, 20px); }
+        }
+
+        .article-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 25px;
+            line-height: 1.3;
+            position: relative;
+            z-index: 1;
+            animation: slideInDown 1s ease;
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .article-meta {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            color: rgba(255,255,255,0.9);
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+            animation: fadeIn 1s ease 0.3s both;
+        }
+
+        .article-meta span {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .article-meta i {
+            color: var(--jain-gold);
+        }
+
+        .article-tags {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 25px;
+            flex-wrap: wrap;
+            position: relative;
+            z-index: 1;
+            animation: fadeIn 1s ease 0.5s both;
+        }
+
+        .article-tag {
+            background: rgba(255,255,255,0.15);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,215,0,0.3);
+            transition: var(--transition);
+        }
+
+        .article-tag:hover {
+            background: var(--jain-gold);
+            color: var(--jain-blue);
+            transform: translateY(-2px);
+            border-color: transparent;
+        }
+
+        .article-body {
+            padding: 50px;
+        }
+
+        .featured-image {
+            width: 100%;
+            max-height: 500px;
+            object-fit: cover;
+            border-radius: 15px;
+            margin-bottom: 40px;
+            box-shadow: var(--shadow-lg);
+            transition: transform 0.5s ease;
+        }
+
+        .featured-image:hover {
+            transform: scale(1.02);
+        }
+
+        .article-content {
+            color: #333;
+            font-size: 1.1rem;
+            line-height: 1.9;
+        }
+
+        .article-content p {
+            margin-bottom: 25px;
+        }
+
+        .article-content h2 {
+            color: var(--jain-blue);
+            margin: 50px 0 25px;
+            font-size: 2rem;
+            position: relative;
+            padding-bottom: 15px;
+        }
+
+        .article-content h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--jain-gold), #ffaa00);
+            border-radius: 3px;
+        }
+
+        .article-content h3 {
+            color: var(--jain-blue);
+            margin: 35px 0 20px;
+            font-size: 1.5rem;
+        }
+
+        .article-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+            margin: 30px 0;
+            box-shadow: var(--shadow-md);
+        }
+
+        .article-content iframe {
+            max-width: 100%;
+            border-radius: 12px;
+            margin: 30px 0;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .article-content ul, .article-content ol {
+            margin: 20px 0 20px 30px;
+        }
+
+        .article-content li {
+            margin-bottom: 10px;
+        }
+
+        .article-content blockquote {
+            background: #f8f9fa;
+            border-left: 4px solid var(--jain-gold);
+            padding: 25px 35px;
+            margin: 30px 0;
+            font-style: italic;
+            border-radius: 0 15px 15px 0;
+            position: relative;
+            font-size: 1.1rem;
+            color: #555;
+        }
+
+        .article-content blockquote::before {
+            content: '"';
+            position: absolute;
+            top: -10px;
+            left: 15px;
+            font-size: 4rem;
+            color: var(--jain-gold);
+            opacity: 0.3;
+            font-family: serif;
+        }
+
+        /* Share Section */
+        .share-section {
+            margin-top: 60px;
+            padding-top: 40px;
+            border-top: 2px solid #f0f0f0;
+            text-align: center;
+        }
+
+        .share-title {
+            font-size: 1.3rem;
+            color: var(--jain-blue);
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+
+        .share-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .share-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-decoration: none;
+            transition: var(--transition);
+            font-size: 1.2rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .share-btn:hover {
+            transform: translateY(-5px) scale(1.1);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .share-btn.facebook {
+            background: #3b5998;
+        }
+        .share-btn.facebook:hover {
+            background: #2d4373;
+        }
+
+        .share-btn.twitter {
+            background: #1da1f2;
+        }
+        .share-btn.twitter:hover {
+            background: #0c85d0;
+        }
+
+        .share-btn.linkedin {
+            background: #0077b5;
+        }
+        .share-btn.linkedin:hover {
+            background: #005582;
+        }
+
+        .share-btn.whatsapp {
+            background: #25d366;
+        }
+        .share-btn.whatsapp:hover {
+            background: #1da851;
+        }
+
+        .share-btn.email {
+            background: #ea4335;
+        }
+        .share-btn.email:hover {
+            background: #d62516;
+        }
+
+        /* Subscribe Section */
+        .subscribe-section {
+            background: white;
+            border-radius: 20px;
+            padding: 50px;
+            box-shadow: var(--shadow-lg);
+            margin: 50px 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .subscribe-section::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(255,215,0,0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.2); opacity: 0.5; }
+        }
+
+        .subscribe-section h2 {
+            color: var(--jain-blue);
+            font-size: 2rem;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .subscribe-section p {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .subscribe-form {
+            display: flex;
+            max-width: 500px;
+            margin: 0 auto;
+            gap: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .subscribe-form input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 30px;
+            font-family: 'Poppins', sans-serif;
+            transition: var(--transition);
+            font-size: 1rem;
+        }
+
+        .subscribe-form input:focus {
+            outline: none;
+            border-color: var(--jain-gold);
+            box-shadow: 0 0 0 3px rgba(255,215,0,0.2);
+        }
+
+        .subscribe-form button {
+            padding: 15px 35px;
+            background: linear-gradient(135deg, var(--jain-blue) 0%, #1e3c72 100%);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1rem;
+        }
+
+        .subscribe-form button:hover {
+            background: var(--jain-gold);
+            color: var(--jain-blue);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* Footer */
+        footer {
+            background: linear-gradient(135deg, var(--jain-blue) 0%, #1e3c72 100%);
+            color: white;
+            padding: 60px 20px 20px;
+            margin-top: 50px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        footer::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            left: -50px;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(255,215,0,0.1) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 50px;
+            margin-bottom: 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .footer-column h3 {
+            font-size: 1.3rem;
+            margin-bottom: 25px;
+            color: var(--jain-gold);
+            position: relative;
+            display: inline-block;
+        }
+
+        .footer-column h3::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 50%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--jain-gold), transparent);
+        }
+
+        .footer-column p {
+            line-height: 1.8;
+            margin-bottom: 20px;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .footer-column ul {
+            list-style: none;
+        }
+
+        .footer-column ul li {
+            margin-bottom: 12px;
+            transition: transform 0.3s ease;
+        }
+
+        .footer-column ul li:hover {
+            transform: translateX(10px);
+        }
+
+        .footer-column ul li a {
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .footer-column ul li a:hover {
+            color: var(--jain-gold);
+        }
+
+        .footer-column ul li i {
+            margin-right: 12px;
+            color: var(--jain-gold);
+            font-size: 0.9rem;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .social-links a {
+            width: 45px;
+            height: 45px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            font-size: 1.2rem;
+        }
+
+        .social-links a::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: var(--jain-gold);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s ease, height 0.6s ease;
+            z-index: 0;
+        }
+
+        .social-links a:hover::before {
+            width: 100px;
+            height: 100px;
+        }
+
+        .social-links a i {
+            position: relative;
+            z-index: 1;
+        }
+
+        .social-links a:hover {
+            color: var(--jain-blue);
+            transform: translateY(-5px) rotate(360deg);
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.6);
+            position: relative;
+            z-index: 1;
+            font-size: 0.95rem;
+        }
+
+        /* Flash Messages */
+        .flash-messages {
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+
+        .alert-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+
+        .alert-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border-left: 4px solid #ffc107;
+        }
+
+        /* Error Container */
+        .error-container {
+            text-align: center;
+            padding: 100px 20px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .error-container i {
+            font-size: 5rem;
+            color: #dc3545;
+            margin-bottom: 20px;
+        }
+
+        .error-container h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .error-container p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        /* Read More Button */
+        .read-more-btn {
+            background: linear-gradient(135deg, var(--jain-blue) 0%, #1e3c72 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 30px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .read-more-btn:hover {
+            background: var(--jain-gold);
+            color: var(--jain-blue);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+                flex-direction: column;
+                position: absolute;
+                top: 80px;
+                left: 0;
+                right: 0;
+                background-color: white;
+                padding: 20px;
+                box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+                animation: slideDown 0.3s ease;
+                border-radius: 0 0 20px 20px;
+            }
+
+            .nav-links.show {
+                display: flex;
+            }
+
+            .nav-links a {
+                width: 100%;
+                text-align: center;
+                padding: 12px;
+            }
+
+            .nav-toggle {
+                display: block;
+            }
+
+            .article-header h1 {
+                font-size: 1.8rem;
+            }
+
+            .article-header {
+                padding: 30px 20px;
+            }
+
+            .article-body {
+                padding: 30px 20px;
+            }
+
+            .article-meta {
+                flex-direction: column;
+                gap: 12px;
+                align-items: center;
+            }
+
+            .subscribe-form {
+                flex-direction: column;
+                padding: 0 20px;
+            }
+
+            .subscribe-form button {
+                width: 100%;
+            }
+
+            .footer-container {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+
+            .social-links {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-container">
+            <div class="logo-section">
+                <img src="{{ url_for('static', filename='images/L23.png') }}" alt="Jain University Logo" onerror="this.src='https://via.placeholder.com/60x60/04043a/FFD700?text=JU'">
+                <div class="logo-text">
+                    <h3>Office of Academics</h3>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- Dashboard Tab Content -->
-        <div id="dashboardTab" class="tab-content">
-            <!-- Quick Stats -->
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-                <div class="bg-white rounded-lg shadow p-4 hover:shadow-lg transition">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-gray-500 text-xs">Today's Events</p>
-                            <p class="text-2xl font-bold text-blue-600">{{ today_events|length }}</p>
-                        </div>
-                        <div class="bg-blue-100 rounded-full p-2">
-                            <i class="fas fa-calendar-day text-blue-600 text-xl"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-lg shadow p-4 hover:shadow-lg transition">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-gray-500 text-xs">This Week</p>
-                            <p class="text-2xl font-bold text-green-600">{{ upcoming_events|length }}</p>
-                        </div>
-                        <div class="bg-green-100 rounded-full p-2">
-                            <i class="fas fa-calendar-week text-green-600 text-xl"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-lg shadow p-4 hover:shadow-lg transition">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-gray-500 text-xs">Local Files</p>
-                            <p class="text-2xl font-bold text-purple-600">{{ local_files|length }}</p>
-                        </div>
-                        <div class="bg-purple-100 rounded-full p-2">
-                            <i class="fas fa-file text-purple-600 text-xl"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-lg shadow p-4 hover:shadow-lg transition">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-gray-500 text-xs">Drive Files</p>
-                            <p class="text-2xl font-bold text-green-600">{{ drive_files|length }}</p>
-                        </div>
-                        <div class="bg-green-100 rounded-full p-2">
-                            <i class="fab fa-google-drive text-green-600 text-xl"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-lg shadow p-4 hover:shadow-lg transition">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-gray-500 text-xs">Public Files</p>
-                            <p class="text-2xl font-bold text-orange-600">{{ public_files|length }}</p>
-                        </div>
-                        <div class="bg-orange-100 rounded-full p-2">
-                            <i class="fas fa-globe text-orange-600 text-xl"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-lg shadow p-4 hover:shadow-lg transition">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-gray-500 text-xs">Reminders</p>
-                            <p class="text-2xl font-bold text-red-600">{{ user_reminders|length if user_reminders is defined else 0 }}</p>
-                        </div>
-                        <div class="bg-red-100 rounded-full p-2">
-                            <i class="fas fa-bell text-red-600 text-xl"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Google Drive Section -->
-            {% if drive_connected %}
-            <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                        <i class="fab fa-google-drive text-blue-500"></i>
-                        Google Drive Quick Actions
-                    </h2>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Upload File -->
-                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-blue-500 transition">
-                        <h3 class="font-bold text-gray-900 mb-3 flex items-center gap-2">
-                            <i class="fas fa-cloud-upload-alt text-blue-500"></i>
-                            Upload File to Drive
-                        </h3>
-                        <form id="driveUploadForm" class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Select File</label>
-                                <input type="file" id="driveFileInput" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" required>
-                            </div>
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox" id="makePublic" class="form-checkbox h-4 w-4 text-blue-600">
-                                <span class="text-sm text-gray-700">Make public (anyone with link can view)</span>
-                            </label>
-                            <button type="submit" class="w-full bg-blue-600 text-white px-4 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
-                                <i class="fas fa-upload mr-2"></i>Upload to Drive
-                            </button>
-                        </form>
-                        <div id="driveUploadProgress" class="mt-4 hidden">
-                            <div class="w-full bg-gray-200 rounded-full h-2.5">
-                                <div id="driveProgressBar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
-                            </div>
-                            <div class="flex justify-between text-xs text-gray-600 mt-2">
-                                <span id="driveProgressText">Uploading...</span>
-                                <span id="driveProgressPercent">0%</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Quick Stats -->
-                    <div class="border-2 border-gray-200 rounded-lg p-6 bg-gradient-to-br from-blue-50 to-indigo-50">
-                        <h3 class="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                            <i class="fas fa-chart-line text-indigo-500"></i>
-                            Storage Overview
-                        </h3>
-                        <div class="space-y-3">
-                            <div class="flex justify-between items-center">
-                                <span class="text-sm text-gray-600">Local Files:</span>
-                                <span class="font-bold text-purple-600">{{ local_files|length }}</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-sm text-gray-600">Drive Files:</span>
-                                <span class="font-bold text-green-600">{{ drive_files|length }}</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-sm text-gray-600">Public Files:</span>
-                                <span class="font-bold text-orange-600">{{ public_files|length }}</span>
-                            </div>
-                            <div class="flex justify-between items-center pt-3 border-t border-gray-300">
-                                <span class="text-sm font-bold text-gray-700">Total Files:</span>
-                                <span class="font-bold text-blue-600 text-xl">{{ (local_files|length) + (drive_files|length) }}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% else %}
-            <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-lg p-8 mb-8 text-white">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h2 class="text-2xl font-bold mb-2">Connect Your Google Drive</h2>
-                        <p class="text-blue-100 mb-4">Upload files, create folders, and manage your Drive directly from here!</p>
-                        <a href="{{ url_for('connect_drive') }}" class="inline-block bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition">
-                            <i class="fab fa-google-drive mr-2"></i>Connect Google Drive
-                        </a>
-                    </div>
-                    <i class="fab fa-google-drive text-9xl opacity-20"></i>
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- Quick Actions -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                <button onclick="switchTab('localFiles')" class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg shadow-lg p-6 text-white hover:shadow-xl transition transform hover:-translate-y-1">
-                    <div class="flex flex-col items-center gap-3">
-                        <i class="fas fa-folder text-4xl"></i>
-                        <div class="text-center">
-                            <h3 class="font-bold text-lg">Local Files</h3>
-                            <p class="text-sm opacity-90">{{ local_files|length }} files</p>
-                        </div>
-                    </div>
-                </button>
-
-                <button onclick="switchTab('driveFiles')" class="bg-gradient-to-r from-green-500 to-green-600 rounded-lg shadow-lg p-6 text-white hover:shadow-xl transition transform hover:-translate-y-1">
-                    <div class="flex flex-col items-center gap-3">
-                        <i class="fab fa-google-drive text-4xl"></i>
-                        <div class="text-center">
-                            <h3 class="font-bold text-lg">Drive Files</h3>
-                            <p class="text-sm opacity-90">{{ drive_files|length }} files</p>
-                        </div>
-                    </div>
-                </button>
-
-                <button onclick="switchTab('publicFiles')" class="bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg shadow-lg p-6 text-white hover:shadow-xl transition transform hover:-translate-y-1">
-                    <div class="flex flex-col items-center gap-3">
-                        <i class="fas fa-globe text-4xl"></i>
-                        <div class="text-center">
-                            <h3 class="font-bold text-lg">Public Files</h3>
-                            <p class="text-sm opacity-90">{{ public_files|length }} files</p>
-                        </div>
-                    </div>
-                </button>
-
-                <button onclick="switchTab('events')" class="bg-gradient-to-r from-red-500 to-red-600 rounded-lg shadow-lg p-6 text-white hover:shadow-xl transition transform hover:-translate-y-1">
-                    <div class="flex flex-col items-center gap-3">
-                        <i class="fas fa-calendar-alt text-4xl"></i>
-                        <div class="text-center">
-                            <h3 class="font-bold text-lg">Events</h3>
-                            <p class="text-sm opacity-90">View calendar</p>
-                        </div>
-                    </div>
-                </button>
-            </div>
-        </div>
-
-        <!-- Events Tab Content -->
-        <div id="eventsTab" class="tab-content hidden">
-            <!-- Today's Events -->
-            <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-                <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                    <i class="fas fa-calendar-day text-red-500"></i>
-                    Today's Events
-                </h2>
-
-                {% if today_events %}
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {% for event in today_events %}
-                    <div class="border-l-4 border-red-500 bg-red-50 p-4 rounded-lg hover:shadow-md transition">
-                        <h3 class="font-bold text-gray-900 mb-2">{{ event.event_name }}</h3>
-                        <div class="space-y-2 text-sm text-gray-600">
-                            <p><i class="far fa-calendar-alt text-red-500"></i> {{ event.event_date }}</p>
-                            <p><i class="fas fa-clock text-red-500"></i> {{ event.event_time if event.event_time else 'All Day' }}</p>
-                            <p><i class="fas fa-map-marker-alt text-red-500"></i> {{ event.venue }}</p>
-                        </div>
-                        <div class="mt-4 flex gap-2">
-                            <button onclick="openReminderModal('{{ event._id }}', '{{ event.event_name }}', '{{ event.event_date }}')" 
-                                    class="flex-1 bg-red-500 text-white px-3 py-2 rounded-lg text-sm hover:bg-red-600 transition">
-                                <i class="far fa-bell"></i> Remind
-                            </button>
-                            <button onclick="subscribeToEvent('{{ event._id }}')" 
-                                    class="flex-1 bg-blue-500 text-white px-3 py-2 rounded-lg text-sm hover:bg-blue-600 transition">
-                                <i class="fas fa-envelope"></i> Subscribe
-                            </button>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-                {% else %}
-                <div class="text-center py-12 text-gray-500">
-                    <i class="far fa-calendar text-6xl mb-4 opacity-20"></i>
-                    <p class="text-lg">No events scheduled for today</p>
-                </div>
-                {% endif %}
-            </div>
-
-            <!-- Upcoming Events -->
-            <div class="bg-white rounded-lg shadow-lg p-6">
-                <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                    <i class="fas fa-calendar-week text-blue-500"></i>
-                    Upcoming This Week
-                </h2>
-
-                {% if upcoming_events %}
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {% for event in upcoming_events %}
-                    <div class="border-l-4 border-blue-500 bg-blue-50 p-4 rounded-lg hover:shadow-md transition">
-                        <h3 class="font-bold text-gray-900 mb-2">{{ event.event_name }}</h3>
-                        <div class="space-y-2 text-sm text-gray-600">
-                            <p><i class="far fa-calendar-alt text-blue-500"></i> {{ event.event_date }}</p>
-                            <p><i class="fas fa-clock text-blue-500"></i> {{ event.event_time if event.event_time else 'All Day' }}</p>
-                            <p><i class="fas fa-map-marker-alt text-blue-500"></i> {{ event.venue }}</p>
-                            <p><i class="fas fa-university text-blue-500"></i> {{ event.school or 'N/A' }}</p>
-                        </div>
-                        <div class="mt-4 flex gap-2">
-                            <button onclick="openReminderModal('{{ event._id }}', '{{ event.event_name }}', '{{ event.event_date }}')" 
-                                    class="flex-1 bg-blue-500 text-white px-3 py-2 rounded-lg text-sm hover:bg-blue-600 transition">
-                                <i class="far fa-bell"></i> Remind
-                            </button>
-                            <button onclick="subscribeToEvent('{{ event._id }}')" 
-                                    class="flex-1 bg-green-500 text-white px-3 py-2 rounded-lg text-sm hover:bg-green-600 transition">
-                                <i class="fas fa-envelope"></i> Subscribe
-                            </button>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-                {% else %}
-                <div class="text-center py-12 text-gray-500">
-                    <i class="far fa-calendar text-6xl mb-4 opacity-20"></i>
-                    <p class="text-lg">No upcoming events this week</p>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-
-        <!-- Local Files Tab Content -->
-        <div id="localFilesTab" class="tab-content hidden">
-            <!-- Upload Section -->
-            <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-                <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                    <i class="fas fa-cloud-upload-alt text-purple-500"></i>
-                    Upload Local File
-                </h2>
+            
+            <button class="nav-toggle" aria-label="Toggle navigation" onclick="toggleMobileNav()">
+                <i class="fas fa-bars"></i>
+            </button>
+          
+            <nav class="nav-links" id="navLinks">
+                <a href="{{ url_for('home') }}">Home</a>
+                <a href="{{ url_for('newsletter_page') }}" class="active">Newsletter</a>
+                <a href="{{ url_for('jainevents') }}">Events</a>
+                <a href="{{ url_for('about') }}">About</a>
                 
-                <form id="uploadFileForm" class="space-y-4" enctype="multipart/form-data">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">File Name</label>
-                        <input type="text" name="file_name" id="fileName" placeholder="Enter file name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" required>
+                {% if user_logged_in %}
+                    <div class="user-info-badge">
+                        <i class="fas fa-user-circle"></i>
+                        <span>{{ user_email.split('@')[0] }}</span>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Description (Optional)</label>
-                        <textarea name="description" id="fileDescription" placeholder="Enter description" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" rows="2"></textarea>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Select File</label>
-                        <input type="file" name="file" id="fileUploadInput" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100" required>
-                        <p class="mt-1 text-xs text-gray-500">Allowed: PDF, DOCX, TXT, PNG, JPG, JPEG, GIF, XLSX, CSV, XLS (Max: 50MB)</p>
-                    </div>
-                    <button type="submit" class="w-full bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 transition">
-                        <i class="fas fa-upload mr-2"></i>Upload File
-                    </button>
-                </form>
-                
-                <!-- Progress Bar -->
-                <div id="uploadProgress" class="mt-4 hidden">
-                    <div class="w-full bg-gray-200 rounded-full h-2.5">
-                        <div id="progressBar" class="bg-purple-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
-                    </div>
-                    <div class="flex justify-between text-xs text-gray-600 mt-2">
-                        <span id="progressText">Uploading...</span>
-                        <span id="progressPercent">0%</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Local Files List -->
-            <div class="bg-white rounded-lg shadow-lg p-6">
-                <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                    <i class="fas fa-folder-open text-purple-500"></i>
-                    My Local Files ({{ local_files|length }})
-                </h2>
-
-                {% if local_files %}
-                <div class="space-y-4">
-                    {% for file in local_files %}
-                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition file-item" data-file-id="{{ file._id }}">
-                        <div class="flex items-center gap-4 flex-1">
-                            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                                <i class="fas fa-file text-purple-600 text-xl"></i>
-                            </div>
-                            <div class="flex-1">
-                                <p class="font-medium text-gray-900">{{ file.file_name }}</p>
-                                <p class="text-xs text-gray-500">
-                                    {% if file.description %}{{ file.description }} • {% endif %}
-                                    LOCAL STORAGE • 
-                                    Uploaded: {{ file.uploaded_at.strftime('%d %b %Y') }}
-                                </p>
-                            </div>
-                        </div>
-                        <div class="flex gap-2">
-                            <button onclick="editFile('{{ file._id }}', '{{ file.file_name|replace("'", "\\'") }}', '{{ file.description|replace("'", "\\'") if file.description else "" }}')" 
-                                    class="px-3 py-2 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <a href="{{ url_for('download_file', file_id=file._id) }}" 
-                               class="px-3 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition">
-                                <i class="fas fa-download"></i>
-                            </a>
-                            <button onclick="deleteFile('{{ file._id }}')" 
-                                    class="px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
                 {% else %}
-                <div class="text-center py-12 text-gray-500">
-                    <i class="fas fa-folder-open text-6xl mb-4 opacity-20"></i>
-                    <p class="text-lg">No local files uploaded yet</p>
-                    <p class="text-sm mt-2">Upload your first file using the form above</p>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-
-        <!-- Drive Files Tab Content -->
-        <div id="driveFilesTab" class="tab-content hidden">
-            <div class="bg-white rounded-lg shadow-lg p-6">
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                        <i class="fab fa-google-drive text-green-500"></i>
-                        My Google Drive Files ({{ drive_files|length }})
-                    </h2>
-                    {% if drive_connected %}
-                    <a href="{{ url_for('drive_files') }}" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition flex items-center gap-2">
-                        <i class="fab fa-google-drive"></i> Manage in Drive
+                    <a href="{{ url_for('login') }}" class="login-btn">
+                        <i class="fas fa-sign-in-alt"></i> Login
                     </a>
-                    {% endif %}
-                </div>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
 
-                {% if drive_files %}
-                <div class="space-y-4">
-                    {% for file in drive_files %}
-                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition file-item" data-file-id="{{ file._id }}">
-                        <div class="flex items-center gap-4 flex-1">
-                            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                                <i class="fab fa-google-drive text-green-600 text-xl"></i>
-                            </div>
-                            <div class="flex-1">
-                                <p class="font-medium text-gray-900">{{ file.file_name }}</p>
-                                <p class="text-xs text-gray-500">
-                                    {% if file.description %}{{ file.description }} • {% endif %}
-                                    GOOGLE DRIVE • 
-                                    {% if file.is_public %}<span class="bg-orange-100 text-orange-800 px-2 py-1 rounded">Public</span> • {% endif %}
-                                    Uploaded: {{ file.uploaded_at.strftime('%d %b %Y') }}
-                                </p>
-                            </div>
-                        </div>
-                        <div class="flex gap-2">
-                            <a href="{{ file.drive_link }}" target="_blank"
-                               class="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition">
-                                <i class="fas fa-external-link-alt"></i>
-                            </a>
-                            {% if file.is_public %}
-                            <button onclick="makeFilePri('{{ file.drive_file_id }}')" 
-                                    class="px-3 py-2 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition" title="Make Private">
-                                <i class="fas fa-lock"></i>
-                            </button>
-                            {% endif %}
-                            <button onclick="deleteFile('{{ file._id }}')" 
-                                    class="px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="close" onclick="this.parentElement.style.display='none'" style="float: right; background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
                     </div>
-                    {% endfor %}
-                </div>
-                {% elif drive_connected %}
-                <div class="text-center py-12 text-gray-500">
-                    <i class="fab fa-google-drive text-6xl mb-4 opacity-20"></i>
-                    <p class="text-lg">No Drive files yet</p>
-                    <p class="text-sm mt-2">Upload files to Google Drive from the Dashboard tab</p>
-                </div>
-                {% else %}
-                <div class="text-center py-12">
-                    <i class="fab fa-google-drive text-6xl mb-4 text-gray-300"></i>
-                    <p class="text-lg text-gray-600 mb-4">Connect Google Drive to view your files</p>
-                    <a href="{{ url_for('connect_drive') }}" class="inline-block bg-green-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-600 transition">
-                        <i class="fab fa-google-drive mr-2"></i>Connect Google Drive
-                    </a>
-                </div>
-                {% endif %}
+                {% endfor %}
             </div>
-        </div>
+        {% endif %}
+    {% endwith %}
 
-        <!-- Public Files Tab Content -->
-        <div id="publicFilesTab" class="tab-content hidden">
-            <div class="bg-white rounded-lg shadow-lg p-6">
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                        <i class="fas fa-globe text-orange-500"></i>
-                        Public Files (Shared by Office & Users)
-                    </h2>
-                    <button onclick="refreshPublicFiles()" class="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition flex items-center gap-2">
-                        <i class="fas fa-sync-alt"></i> Refresh
-                    </button>
-                </div>
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Back Button -->
+        <a href="{{ url_for('newsletter_page') }}" class="back-button">
+            <i class="fas fa-arrow-left"></i> Back to Newsletter
+        </a>
 
-                <div id="publicFilesContainer">
-                    {% if public_files %}
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {% for file in public_files %}
-                        <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition public-file-item" data-file-id="{{ file.file_id if file.file_id else file._id }}">
-                            <div class="flex items-start justify-between mb-3">
-                                <div class="flex items-center gap-3 flex-1">
-                                    <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <i class="fas fa-file text-orange-500"></i>
-                                    </div>
-                                    <div class="min-w-0 flex-1">
-                                        <h3 class="font-bold text-gray-900 mb-1 truncate">{{ file.name }}</h3>
-                                        <p class="text-xs text-gray-500">
-                                            {% if file.is_owner %}
-                                            <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Your Upload</span>
-                                            {% endif %}
-                                        </p>
-                                    </div>
-                                </div>
-                                {% if file.is_owner %}
-                                <div class="relative">
-                                    <button onclick="toggleFileMenu('{{ file.file_id if file.file_id else file._id }}')" class="p-2 hover:bg-gray-100 rounded-lg">
-                                        <i class="fas fa-ellipsis-v text-gray-500"></i>
-                                    </button>
-                                    <div id="fileMenu-{{ file.file_id if file.file_id else file._id }}" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
-                                        <button onclick="makeFilePrivate('{{ file.file_id if file.file_id else file._id }}')" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 border-b border-gray-200">
-                                            <i class="fas fa-lock mr-2"></i> Make Private
-                                        </button>
-                                        <button onclick="deletePublicFile('{{ file.file_id if file.file_id else file._id }}')" class="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50">
-                                            <i class="fas fa-trash mr-2"></i> Delete
-                                        </button>
-                                    </div>
-                                </div>
-                                {% endif %}
-                            </div>
-                            
-                            <p class="text-sm text-gray-600 mb-3">
-                                Uploaded by: {{ file.uploader_email }}<br>
-                                {% if file.uploaded_at %}
-                                Date: {% if file.uploaded_at is string %}{{ file.uploaded_at[:10] }}{% else %}{{ file.uploaded_at.strftime('%d %b %Y') }}{% endif %}
-                                {% endif %}
-                            </p>
-                            <div class="flex gap-2">
-                                <a href="{{ file.web_link }}" target="_blank" class="flex-1 bg-orange-500 text-white px-4 py-2 rounded-lg text-center hover:bg-orange-600 transition flex items-center justify-center gap-2">
-                                    <i class="fas fa-eye"></i> View
-                                </a>
-                                <button onclick="copyLink('{{ file.web_link }}')" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition">
-                                    <i class="fas fa-copy"></i>
-                                </button>
-                            </div>
-                        </div>
+        {% if news %}
+            <!-- Article Card -->
+            <div class="article-card">
+                <div class="article-header">
+                    <h1>{{ news.title }}</h1>
+                    
+                    <div class="article-meta">
+                        <span>
+                            <i class="far fa-calendar-alt"></i>
+                            {{ news.formatted_date if news.formatted_date else news.uploaded_at }}
+                        </span>
+                    </div>
+                    
+                    {% if news.tags %}
+                    <div class="article-tags">
+                        {% for tag in news.tags %}
+                            <span class="article-tag">{{ tag }}</span>
                         {% endfor %}
                     </div>
-                    {% else %}
-                    <div class="text-center py-12 text-gray-500">
-                        <i class="fas fa-globe text-6xl mb-4 opacity-20"></i>
-                        <p class="text-lg">No public files available yet</p>
-                        <p class="text-sm mt-2">Upload files to Drive and make them public to share with everyone</p>
-                    </div>
                     {% endif %}
                 </div>
-            </div>
-        </div>
-
-        <!-- Reminders Tab Content -->
-        <div id="remindersTab" class="tab-content hidden">
-            <div class="bg-white rounded-lg shadow-lg p-6">
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                        <i class="fas fa-bell text-red-500"></i>
-                        My Event Reminders
-                    </h2>
-                    <div class="flex items-center gap-2">
-                        <span class="text-sm text-gray-500 reminder-counter">{{ user_reminders|length }} active reminders</span>
-                    </div>
-                </div>
-
-                {% if user_reminders and user_reminders|length > 0 %}
-                <div class="space-y-4">
-                    {% for reminder in user_reminders %}
-                    <div class="border-l-4 border-red-500 bg-red-50 p-4 rounded-lg hover:shadow-md transition reminder-item" data-reminder-id="{{ reminder._id }}">
-                        <div class="flex items-start justify-between">
-                            <div class="flex-1">
-                                <div class="flex items-center gap-3 mb-2">
-                                    <i class="fas fa-calendar-alt text-red-500"></i>
-                                    <h3 class="font-bold text-gray-900">{{ reminder.event.event_name }}</h3>
-                                </div>
-                                
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 ml-8">
-                                    <div>
-                                        <p class="text-sm text-gray-600">
-                                            <span class="font-medium">Event Date:</span> {{ reminder.event.event_date }}
-                                        </p>
-                                        <p class="text-sm text-gray-600">
-                                            <span class="font-medium">Event Time:</span> {{ reminder.event.get('event_time', 'All Day') }}
-                                        </p>
-                                        <p class="text-sm text-gray-600">
-                                            <span class="font-medium">Venue:</span> {{ reminder.event.venue }}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p class="text-sm text-gray-600">
-                                            <span class="font-medium">Reminder Time:</span> 
-                                            <span class="font-bold text-red-600">
-                                                {{ reminder.reminder_datetime.strftime('%d %b %Y at %I:%M %p') }} IST
-                                            </span>
-                                        </p>
-                                        <p class="text-sm text-gray-600">
-                                            <span class="font-medium">Department:</span> {{ reminder.event.get('department', 'N/A') }}
-                                        </p>
-                                        <p class="text-sm text-gray-600">
-                                            <span class="font-medium">Created:</span> 
-                                            {{ reminder.created_at.strftime('%d %b %Y') }}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="flex flex-col gap-2 ml-4">
-                                <button onclick="deleteReminder('{{ reminder._id }}')" 
-                                        class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition flex items-center gap-2">
-                                    <i class="fas fa-trash"></i> Delete
-                                </button>
-                                <a href="{{ url_for('jainevents') }}" 
-                                   class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition flex items-center gap-2 text-center">
-                                    <i class="fas fa-external-link-alt"></i> View Event
-                                </a>
-                            </div>
-                        </div>
-                        
-                        {% if reminder.event.get('description') %}
-                        <div class="mt-3 ml-8 p-3 bg-white rounded-lg border border-gray-200">
-                            <p class="text-sm text-gray-700">{{ reminder.event.description[:150] }}...</p>
-                        </div>
-                        {% endif %}
-                    </div>
-                    {% endfor %}
-                </div>
-                {% else %}
-                <div class="text-center py-12 text-gray-500">
-                    <i class="fas fa-bell-slash text-6xl mb-4 opacity-20"></i>
-                    <p class="text-lg">No reminders set yet</p>
-                    <p class="text-sm mt-2">Set reminders for events from the Events tab</p>
-                    <button onclick="switchTab('events')" class="mt-4 bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition">
-                        <i class="fas fa-calendar-alt mr-2"></i>Go to Events
-                    </button>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Reminder Modal -->
-<div id="reminderModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-    <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-        <div class="bg-blue-600 text-white px-6 py-4 rounded-t-lg flex items-center justify-between">
-            <h3 class="text-xl font-bold"><i class="far fa-bell mr-2"></i>Set Reminder</h3>
-            <button onclick="closeReminderModal()" class="text-white hover:text-gray-200">
-                <i class="fas fa-times text-2xl"></i>
-            </button>
-        </div>
-        <div class="p-6">
-            <p class="mb-4 font-semibold" id="modalEventName"></p>
-            <p class="mb-4 text-sm text-gray-600">Event Date: <span id="modalEventDate"></span></p>
-            
-            <!-- Info message about reminder timing -->
-            <div class="mb-4 p-3 bg-blue-50 border-l-4 border-blue-500 rounded">
-                <p class="text-sm text-blue-800">
-                    <i class="fas fa-info-circle mr-2"></i>
-                    <strong>Note:</strong> Set reminders for any future date and time. You'll receive a confirmation email immediately and another at the scheduled time (IST).
-                </p>
-            </div>
-            
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Reminder Date:</label>
-                    <input type="date" id="reminderDate" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
-                    <p class="text-xs text-gray-500 mt-1">Select any date from today onwards</p>
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Reminder Time (IST):</label>
-                    <input type="time" id="reminderTime" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
-                    <p class="text-xs text-gray-500 mt-1">Select a time in the future (Indian Standard Time)</p>
-                </div>
-            </div>
-            <div class="flex gap-3 mt-6">
-                <button onclick="confirmReminder()" class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
-                    <i class="far fa-bell mr-2"></i>Set Reminder
-                </button>
-                <button onclick="closeReminderModal()" class="flex-1 bg-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-400 transition">
-                    Cancel
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Edit File Modal -->
-<div id="editFileModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-    <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-        <div class="bg-yellow-600 text-white px-6 py-4 rounded-t-lg flex items-center justify-between">
-            <h3 class="text-xl font-bold"><i class="fas fa-edit mr-2"></i>Edit File</h3>
-            <button onclick="closeEditModal()" class="text-white hover:text-gray-200">
-                <i class="fas fa-times text-2xl"></i>
-            </button>
-        </div>
-        <div class="p-6">
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">File Name:</label>
-                    <input type="text" id="editFileName" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Description:</label>
-                    <textarea id="editFileDescription" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500" rows="3"></textarea>
-                </div>
-            </div>
-            <div class="flex gap-3 mt-6">
-                <button onclick="saveFileEdit()" class="flex-1 bg-yellow-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-yellow-700 transition">
-                    <i class="fas fa-save mr-2"></i>Save Changes
-                </button>
-                <button onclick="closeEditModal()" class="flex-1 bg-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-400 transition">
-                    Cancel
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Toast Notification -->
-<div id="toast" class="fixed top-20 right-6 bg-white rounded-lg shadow-lg p-4 hidden items-center gap-3 z-50 min-w-[300px] transition-all duration-300 transform translate-x-full border-l-4">
-    <i id="toastIcon" class="fas fa-check-circle text-2xl"></i>
-    <span id="toastMessage" class="text-gray-800 flex-1"></span>
-    <button onclick="closeToast()" class="text-gray-400 hover:text-gray-600">
-        <i class="fas fa-times"></i>
-    </button>
-</div>
-
-<script >// Dashboard.js - Complete functionality with privacy toggle
-let currentEventId = null;
-let currentFileId = null;
-let currentToastTimeout = null;
-
-// ==================== TAB SWITCHING ====================
-function switchTab(tabName) {
-    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
-    
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('active', 'border-blue-600', 'text-blue-600');
-        btn.classList.add('border-transparent', 'text-gray-500');
-    });
-    
-    const targetTab = document.getElementById(tabName + 'Tab');
-    if (targetTab) {
-        targetTab.classList.remove('hidden');
-    }
-    
-    const tabButtons = document.querySelectorAll('.tab-btn');
-    tabButtons.forEach(btn => {
-        const btnText = btn.textContent.toLowerCase();
-        if (btnText.includes(tabName.toLowerCase().replace('files', ' files').replace('public', 'public').replace('drive', 'drive').replace('local', 'local'))) {
-            btn.classList.add('active', 'border-blue-600', 'text-blue-600');
-            btn.classList.remove('border-transparent', 'text-gray-500');
-        }
-    });
-    
-    const url = new URL(window.location);
-    url.searchParams.set('tab', tabName);
-    window.history.pushState({}, '', url);
-}
-
-// ==================== NOTIFICATIONS ====================
-function toggleNotifications() {
-    const dropdown = document.getElementById('notificationsDropdown');
-    if (dropdown) {
-        dropdown.classList.toggle('hidden');
-    }
-}
-
-document.addEventListener('click', function(event) {
-    const dropdown = document.getElementById('notificationsDropdown');
-    const notifButton = event.target.closest('[onclick="toggleNotifications()"]');
-    
-    if (!notifButton && dropdown && !dropdown.contains(event.target)) {
-        dropdown.classList.add('hidden');
-    }
-});
-
-// ==================== REMINDER MODAL ====================
-function openReminderModal(eventId, eventName, eventDate) {
-    currentEventId = eventId;
-    document.getElementById('modalEventName').textContent = eventName;
-    document.getElementById('modalEventDate').textContent = eventDate;
-    
-    const today = new Date();
-    const formatDate = (date) => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    };
-    
-    const reminderDateInput = document.getElementById('reminderDate');
-    if (reminderDateInput) {
-        reminderDateInput.min = formatDate(today);
-        reminderDateInput.value = formatDate(today);
-    }
-    
-    const reminderTimeInput = document.getElementById('reminderTime');
-    if (reminderTimeInput) {
-        const now = new Date();
-        now.setMinutes(now.getMinutes() + 5);
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        reminderTimeInput.value = `${hours}:${minutes}`;
-    }
-    
-    const modal = document.getElementById('reminderModal');
-    if (modal) {
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-    }
-    
-    document.body.style.overflow = 'hidden';
-}
-
-function closeReminderModal() {
-    const modal = document.getElementById('reminderModal');
-    if (modal) {
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-    }
-    
-    const reminderDateInput = document.getElementById('reminderDate');
-    const reminderTimeInput = document.getElementById('reminderTime');
-    
-    if (reminderDateInput) reminderDateInput.value = '';
-    if (reminderTimeInput) reminderTimeInput.value = '';
-    
-    currentEventId = null;
-    document.body.style.overflow = 'auto';
-}
-
-async function confirmReminder() {
-    const dateInput = document.getElementById('reminderDate')?.value;
-    const time = document.getElementById('reminderTime')?.value;
-    
-    if (!dateInput || !time) {
-        showToast('Please select both date and time', 'error');
-        return;
-    }
-    
-    const selectedDateTime = new Date(`${dateInput}T${time}`);
-    if (isNaN(selectedDateTime.getTime())) {
-        showToast('Invalid date or time', 'error');
-        return;
-    }
-    
-    const now = new Date();
-    if (selectedDateTime <= now) {
-        showToast('Reminder time must be in the future. Please select a time ahead of now.', 'error');
-        return;
-    }
-    
-    const submitBtn = document.querySelector('#reminderModal button[onclick="confirmReminder()"]');
-    if (!submitBtn) {
-        showToast('Error: Submit button not found', 'error');
-        return;
-    }
-    
-    const originalText = submitBtn.innerHTML;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Setting...';
-    submitBtn.disabled = true;
-    
-    try {
-        const response = await fetch('/set_reminder', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                event_id: currentEventId,
-                reminder_date: dateInput,
-                reminder_time: time
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showToast(data.message || 'Reminder set successfully! Check your email for confirmation.', 'success');
-            closeReminderModal();
-            
-            setTimeout(() => {
-                location.reload();
-            }, 1500);
-        } else {
-            showToast(data.error || 'Failed to set reminder', 'error');
-        }
-    } catch (error) {
-        console.error('Reminder error:', error);
-        showToast('Error setting reminder. Please try again.', 'error');
-    } finally {
-        submitBtn.innerHTML = originalText;
-        submitBtn.disabled = false;
-    }
-}
-
-// ==================== DELETE REMINDER ====================
-async function deleteReminder(reminderId) {
-    if (!confirm('Are you sure you want to delete this reminder?')) {
-        return;
-    }
-    
-    const deleteBtn = document.querySelector(`[onclick="deleteReminder('${reminderId}')"]`);
-    if (deleteBtn) {
-        const originalText = deleteBtn.innerHTML;
-        deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-        deleteBtn.disabled = true;
-    }
-    
-    try {
-        const response = await fetch(`/delete_reminder/${reminderId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showToast('Reminder deleted successfully!', 'success');
-            
-            const reminderElement = document.querySelector(`[data-reminder-id="${reminderId}"]`);
-            if (reminderElement) {
-                reminderElement.style.opacity = '0';
-                reminderElement.style.transform = 'translateX(-20px)';
-                reminderElement.style.transition = 'all 0.3s ease';
                 
-                setTimeout(() => {
-                    reminderElement.remove();
-                    updateReminderCounter();
-                }, 300);
-            }
-        } else {
-            showToast(data.error || 'Failed to delete reminder', 'error');
-        }
-    } catch (error) {
-        showToast('Error deleting reminder', 'error');
-        console.error(error);
-    } finally {
-        if (deleteBtn) {
-            deleteBtn.innerHTML = '<i class="fas fa-trash"></i> Delete';
-            deleteBtn.disabled = false;
-        }
-    }
-}
-
-function updateReminderCounter() {
-    const reminderCount = document.querySelectorAll('.reminder-item').length;
-    const counter = document.querySelector('.reminder-counter');
-    if (counter) {
-        counter.textContent = `${reminderCount} active reminder${reminderCount !== 1 ? 's' : ''}`;
-    }
-}
-
-// ==================== FILE UPLOAD (LOCAL) ====================
-const uploadForm = document.getElementById('uploadFileForm');
-if (uploadForm) {
-    uploadForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const fileInput = document.getElementById('fileUploadInput');
-        const fileName = document.getElementById('fileName').value;
-        const description = document.getElementById('fileDescription').value;
-        
-        if (!fileInput.files.length) {
-            showToast('Please select a file', 'error');
-            return;
-        }
-        
-        if (!fileName.trim()) {
-            showToast('Please enter a file name', 'error');
-            return;
-        }
-        
-        const submitBtn = e.target.querySelector('button[type="submit"]');
-        const originalText = submitBtn.innerHTML;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Uploading...';
-        submitBtn.disabled = true;
-        
-        const progressDiv = document.getElementById('uploadProgress');
-        const progressBar = document.getElementById('progressBar');
-        const progressText = document.getElementById('progressText');
-        const progressPercent = document.getElementById('progressPercent');
-        
-        if (progressDiv) {
-            progressDiv.classList.remove('hidden');
-            progressBar.style.width = '10%';
-            progressPercent.textContent = '10%';
-            progressText.textContent = 'Uploading...';
-        }
-        
-        try {
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
-            formData.append('file_name', fileName.trim());
-            formData.append('description', description.trim());
-            
-            if (progressBar) {
-                progressBar.style.width = '30%';
-                progressPercent.textContent = '30%';
-            }
-            
-            const response = await fetch('/upload_file', {
-                method: 'POST',
-                body: formData
-            });
-            
-            if (progressBar) {
-                progressBar.style.width = '80%';
-                progressPercent.textContent = '80%';
-            }
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                if (progressBar) {
-                    progressBar.style.width = '100%';
-                    progressPercent.textContent = '100%';
-                    progressText.textContent = 'Upload complete!';
-                }
-                
-                showToast('File uploaded successfully!', 'success');
-                e.target.reset();
-                
-                setTimeout(() => {
-                    location.reload();
-                }, 1500);
-            } else {
-                showToast(data.error || 'Upload failed', 'error');
-                if (progressDiv) progressDiv.classList.add('hidden');
-            }
-        } catch (error) {
-            showToast('Error uploading file', 'error');
-            console.error(error);
-            if (progressDiv) progressDiv.classList.add('hidden');
-        } finally {
-            submitBtn.innerHTML = originalText;
-            submitBtn.disabled = false;
-        }
-    });
-}
-
-// ==================== DRIVE UPLOAD ====================
-const driveUploadForm = document.getElementById('driveUploadForm');
-if (driveUploadForm) {
-    driveUploadForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const fileInput = document.getElementById('driveFileInput');
-        const makePublic = document.getElementById('makePublic').checked;
-        
-        if (!fileInput.files.length) {
-            showToast('Please select a file', 'error');
-            return;
-        }
-        
-        const submitBtn = e.target.querySelector('button[type="submit"]');
-        const originalText = submitBtn.innerHTML;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Uploading...';
-        submitBtn.disabled = true;
-        
-        const progressDiv = document.getElementById('driveUploadProgress');
-        const progressBar = document.getElementById('driveProgressBar');
-        const progressText = document.getElementById('driveProgressText');
-        const progressPercent = document.getElementById('driveProgressPercent');
-        
-        if (progressDiv) {
-            progressDiv.classList.remove('hidden');
-            progressBar.style.width = '0%';
-            progressPercent.textContent = '0%';
-            progressText.textContent = 'Starting upload...';
-        }
-        
-        try {
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
-            formData.append('folder_id', 'root');
-            formData.append('make_public', makePublic);
-            
-            const response = await fetch('/drive/upload', {
-                method: 'POST',
-                body: formData
-            });
-            
-            const data = await response.json();
-            
-            if (data.file_id) {
-                if (progressBar) {
-                    progressBar.style.width = '100%';
-                    progressPercent.textContent = '100%';
-                    progressText.textContent = 'Upload complete!';
-                }
-                
-                showToast('File uploaded to Google Drive successfully!', 'success');
-                e.target.reset();
-                document.getElementById('makePublic').checked = false;
-                
-                setTimeout(() => {
-                    location.reload();
-                }, 2000);
-            } else {
-                showToast(data.error || 'Drive upload failed', 'error');
-            }
-        } catch (error) {
-            showToast('Error uploading to Drive', 'error');
-            console.error(error);
-        } finally {
-            submitBtn.innerHTML = originalText;
-            submitBtn.disabled = false;
-        }
-    });
-}
-
-// ==================== FILE PRIVACY TOGGLE ====================
-async function toggleFilePrivacy(fileId, currentlyPublic) {
-    const action = currentlyPublic ? 'private' : 'public';
-    
-    if (!confirm(`Are you sure you want to make this file ${action}?`)) {
-        return;
-    }
-    
-    const endpoint = currentlyPublic ? '/api/make_file_private' : '/api/make_file_public';
-    
-    try {
-        const response = await fetch(`${endpoint}/${fileId}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showToast(`File made ${action} successfully!`, 'success');
-            setTimeout(() => {
-                location.reload();
-            }, 1000);
-        } else {
-            showToast(data.error || `Failed to make file ${action}`, 'error');
-        }
-    } catch (error) {
-        showToast(`Error making file ${action}`, 'error');
-        console.error(error);
-    }
-}
-
-// ==================== PUBLIC FILE MANAGEMENT ====================
-function toggleFileMenu(fileId) {
-    const menu = document.getElementById(`fileMenu-${fileId}`);
-    if (menu) {
-        menu.classList.toggle('hidden');
-    }
-}
-
-async function makeFilePrivate(fileId) {
-    await toggleFilePrivacy(fileId, true);
-}
-
-async function makeFilePublic(fileId) {
-    await toggleFilePrivacy(fileId, false);
-}
-
-async function makeFilePri(fileId) {
-    await makeFilePrivate(fileId);
-}
-
-async function deletePublicFile(fileId) {
-    if (!confirm('Are you sure you want to delete this public file? This action cannot be undone.')) {
-        return;
-    }
-    
-    try {
-        const response = await fetch(`/api/delete_public_file/${fileId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showToast('Public file deleted successfully!', 'success');
-            
-            const fileElement = document.querySelector(`.public-file-item[data-file-id="${fileId}"]`);
-            if (fileElement) {
-                fileElement.style.opacity = '0';
-                fileElement.style.transform = 'translateX(-20px)';
-                fileElement.style.transition = 'all 0.3s ease';
-                
-                setTimeout(() => {
-                    fileElement.remove();
+                <div class="article-body">
+                    {% if news.image %}
+                        <img src="{{ url_for('static', filename='uploads/' + news.image) }}" 
+                             class="featured-image" 
+                             alt="{{ news.title }}"
+                             onerror="this.src='https://via.placeholder.com/800x400/04043a/FFD700?text=News'">
+                    {% endif %}
                     
-                    const publicFiles = document.querySelectorAll('.public-file-item');
-                    if (publicFiles.length === 0) {
-                        document.getElementById('publicFilesContainer').innerHTML = `
-                            <div class="text-center py-12 text-gray-500">
-                                <i class="fas fa-globe text-6xl mb-4 opacity-20"></i>
-                                <p class="text-lg">No public files available yet</p>
-                                <p class="text-sm mt-2">Upload files to Drive and make them public to share with everyone</p>
-                            </div>
-                        `;
-                    }
-                }, 300);
+                    <div class="article-content">
+                        {{ news.description|safe }}
+                    </div>
+
+                    <!-- Share Section -->
+                    <div class="share-section">
+                        <h3 class="share-title">Share this article</h3>
+                        <div class="share-buttons">
+                            <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.url }}" target="_blank" class="share-btn facebook" title="Share on Facebook">
+                                <i class="fab fa-facebook-f"></i>
+                            </a>
+                            <a href="https://twitter.com/intent/tweet?url={{ request.url }}&text={{ news.title }}" target="_blank" class="share-btn twitter" title="Share on Twitter">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                            <a href="https://www.linkedin.com/shareArticle?mini=true&url={{ request.url }}&title={{ news.title }}" target="_blank" class="share-btn linkedin" title="Share on LinkedIn">
+                                <i class="fab fa-linkedin-in"></i>
+                            </a>
+                            <a href="https://api.whatsapp.com/send?text={{ news.title }}%20{{ request.url }}" target="_blank" class="share-btn whatsapp" title="Share on WhatsApp">
+                                <i class="fab fa-whatsapp"></i>
+                            </a>
+                            <a href="mailto:?subject={{ news.title }}&body=Check out this article: {{ request.url }}" class="share-btn email" title="Share via Email">
+                                <i class="fas fa-envelope"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <!-- Error message if no newsletter found -->
+            <div class="error-container">
+                <i class="fas fa-exclamation-circle"></i>
+                <h2>Newsletter Not Found</h2>
+                <p>The newsletter you're looking for doesn't exist or has been removed.</p>
+                <a href="{{ url_for('newsletter_page') }}" class="read-more-btn" style="display: inline-block; padding: 12px 30px;">
+                    <i class="fas fa-arrow-left"></i> Back to Newsletter
+                </a>
+            </div>
+        {% endif %}
+
+        <!-- Subscribe Section -->
+        <div class="subscribe-section">
+            <h2><i class="fas fa-paper-plane"></i> Subscribe to Our Newsletter</h2>
+            <p>Get the latest university news delivered directly to your inbox</p>
+            <form class="subscribe-form" action="{{ url_for('subscribe_newsletter') }}" method="POST">
+                <input type="email" name="email" placeholder="Enter your email address" required>
+                <button type="submit">
+                    <i class="fas fa-paper-plane"></i> Subscribe
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-column">
+                <h3>Office of Academics</h3>
+                <p>Empowering innovation through education, research, and holistic development. Committed to academic excellence and student success.</p>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+            <div class="footer-column">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><i class="fas fa-chevron-right"></i><a href="{{ url_for('home') }}">Home</a></li>
+                    <li><i class="fas fa-chevron-right"></i><a href="{{ url_for('about') }}">About Us</a></li>
+                    <li><i class="fas fa-chevron-right"></i><a href="{{ url_for('ugc') }}">UGC Requirement</a></li>
+                    <li><i class="fas fa-chevron-right"></i><a href="{{ url_for('monthlyengagement') }}">Monthly Engagement</a></li>
+                    <li><i class="fas fa-chevron-right"></i><a href="{{ url_for('jainevents') }}">Events</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h3>Contact Info</h3>
+                <ul>
+                    <li><i class="fas fa-map-marker-alt"></i><a href="https://maps.google.com/?q=Bangalore+560069" target="_blank">Bangalore - 560069</a></li>
+                    <li><i class="fas fa-phone-alt"></i><a href="tel:+918023456789">+91 80 2345 6789</a></li>
+                    <li><i class="fas fa-envelope"></i><a href="mailto:info@jainuniversity.ac.in">info@jainuniversity.ac.in</a></li>
+                    <li><i class="fas fa-clock"></i> Mon-Fri: 9:00 AM - 5:00 PM</li>
+                </ul>
+            </div>
+        </div>
+        <div class="copyright">
+            &copy; 2025 Office of Academics, Jain (Deemed-to-be University). All Rights Reserved.
+        </div>
+    </footer>
+
+    <script>
+        function toggleMobileNav() {
+            const navLinks = document.getElementById('navLinks');
+            navLinks.classList.toggle('show');
+        }
+
+        // Header scroll effect
+        window.addEventListener('scroll', function() {
+            const header = document.querySelector('header');
+            if (window.scrollY > 50) {
+                header.style.boxShadow = '0 5px 25px rgba(0, 51, 102, 0.25)';
+                header.style.background = 'rgba(255, 255, 255, 0.98)';
+                header.style.backdropFilter = 'blur(10px)';
+            } else {
+                header.style.boxShadow = 'var(--shadow-sm)';
+                header.style.background = 'white';
+                header.style.backdropFilter = 'none';
             }
-        } else {
-            showToast(data.error || 'Failed to delete file', 'error');
-        }
-    } catch (error) {
-        showToast('Error deleting file', 'error');
-        console.error(error);
-    }
-}
-
-// ==================== EDIT FILE ====================
-function editFile(fileId, fileName, description) {
-    currentFileId = fileId;
-    const editFileNameInput = document.getElementById('editFileName');
-    const editFileDescriptionInput = document.getElementById('editFileDescription');
-    
-    if (editFileNameInput) editFileNameInput.value = fileName || '';
-    if (editFileDescriptionInput) editFileDescriptionInput.value = description || '';
-    
-    const modal = document.getElementById('editFileModal');
-    if (modal) {
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-    }
-    
-    document.body.style.overflow = 'hidden';
-}
-
-function closeEditModal() {
-    const modal = document.getElementById('editFileModal');
-    if (modal) {
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-    }
-    
-    const editFileNameInput = document.getElementById('editFileName');
-    const editFileDescriptionInput = document.getElementById('editFileDescription');
-    
-    if (editFileNameInput) editFileNameInput.value = '';
-    if (editFileDescriptionInput) editFileDescriptionInput.value = '';
-    
-    currentFileId = null;
-    document.body.style.overflow = 'auto';
-}
-
-async function saveFileEdit() {
-    const fileName = document.getElementById('editFileName')?.value;
-    const description = document.getElementById('editFileDescription')?.value;
-    
-    if (!fileName || !fileName.trim()) {
-        showToast('File name is required', 'error');
-        return;
-    }
-    
-    const submitBtn = document.querySelector('#editFileModal button[onclick="saveFileEdit()"]');
-    if (!submitBtn) {
-        showToast('Error: Save button not found', 'error');
-        return;
-    }
-    
-    const originalText = submitBtn.innerHTML;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
-    submitBtn.disabled = true;
-    
-    try {
-        const response = await fetch(`/edit_file/${currentFileId}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                file_name: fileName.trim(),
-                description: description ? description.trim() : ''
-            })
         });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showToast('File updated successfully!', 'success');
-            closeEditModal();
-            
-            setTimeout(() => {
-                location.reload();
-            }, 1000);
-        } else {
-            showToast(data.error || 'Failed to update file', 'error');
-        }
-    } catch (error) {
-        showToast('Error updating file', 'error');
-        console.error(error);
-    } finally {
-        submitBtn.innerHTML = originalText;
-        submitBtn.disabled = false;
-    }
-}
 
-// ==================== DELETE FILE ====================
-async function deleteFile(fileId) {
-    if (!confirm('Are you sure you want to delete this file? This action cannot be undone.')) {
-        return;
-    }
-    
-    const deleteBtn = document.querySelector(`[onclick="deleteFile('${fileId}')"]`);
-    if (deleteBtn) {
-        const originalHtml = deleteBtn.innerHTML;
-        deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-        deleteBtn.disabled = true;
-    }
-    
-    try {
-        const response = await fetch(`/delete_file/${fileId}`, {
-            method: 'DELETE'
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showToast('File deleted successfully!', 'success');
-            
-            const fileElement = document.querySelector(`[data-file-id="${fileId}"]`);
-            if (fileElement) {
-                fileElement.style.opacity = '0';
-                fileElement.style.transform = 'translateX(-20px)';
-                fileElement.style.transition = 'all 0.3s ease';
-                
-                setTimeout(() => {
-                    fileElement.remove();
-                }, 300);
-            }
-        } else {
-            showToast(data.error || 'Failed to delete file', 'error');
-        }
-    } catch (error) {
-        showToast('Error deleting file', 'error');
-        console.error(error);
-    } finally {
-        if (deleteBtn) {
-            deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
-            deleteBtn.disabled = false;
-        }
-    }
-}
-
-// ==================== SUBSCRIBE TO EVENT ====================
-async function subscribeToEvent(eventId) {
-    const subscribeBtn = document.querySelector(`[onclick="subscribeToEvent('${eventId}')"]`);
-    if (!subscribeBtn) return;
-    
-    const originalText = subscribeBtn.innerHTML;
-    subscribeBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>';
-    subscribeBtn.disabled = true;
-    
-    try {
-        const response = await fetch('/subscribe_to_event', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                event_id: eventId
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showToast('Successfully subscribed to event! You will receive email updates.', 'success');
-            subscribeBtn.innerHTML = '<i class="fas fa-check mr-1"></i> Subscribed';
-            subscribeBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
-            subscribeBtn.classList.add('bg-green-500', 'hover:bg-green-600');
-            subscribeBtn.disabled = true;
-            subscribeBtn.onclick = null;
-        } else {
-            showToast(data.error || 'Failed to subscribe', 'error');
-            subscribeBtn.innerHTML = originalText;
-            subscribeBtn.disabled = false;
-        }
-    } catch (error) {
-        showToast('Error subscribing to event', 'error');
-        console.error(error);
-        subscribeBtn.innerHTML = originalText;
-        subscribeBtn.disabled = false;
-    }
-}
-
-// ==================== UTILITY FUNCTIONS ====================
-function copyLink(link) {
-    navigator.clipboard.writeText(link).then(() => {
-        showToast('Link copied to clipboard!', 'success');
-    }).catch(() => {
-        showToast('Failed to copy link', 'error');
-    });
-}
-
-async function refreshPublicFiles() {
-    const refreshBtn = document.querySelector('[onclick="refreshPublicFiles()"]');
-    const originalText = refreshBtn.innerHTML;
-    refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing';
-    refreshBtn.disabled = true;
-    
-    try {
-        location.reload();
-    } catch (error) {
-        showToast('Error refreshing files', 'error');
-        console.error(error);
-    } finally {
-        refreshBtn.innerHTML = originalText;
-        refreshBtn.disabled = false;
-    }
-}
-
-// ==================== TOAST NOTIFICATION ====================
-function showToast(message, type = 'success') {
-    const toast = document.getElementById('toast');
-    const icon = document.getElementById('toastIcon');
-    const msg = document.getElementById('toastMessage');
-    
-    if (!toast || !icon || !msg) {
-        console.error('Toast elements not found');
-        return;
-    }
-    
-    if (currentToastTimeout) {
-        clearTimeout(currentToastTimeout);
-        currentToastTimeout = null;
-    }
-    
-    toast.classList.add('translate-x-full');
-    
-    setTimeout(() => {
-        msg.textContent = message;
-        
-        toast.classList.remove('border-green-500', 'border-red-500', 'border-yellow-500', 'border-blue-500');
-        
-        switch(type) {
-            case 'success':
-                icon.className = 'fas fa-check-circle text-2xl text-green-500';
-                toast.classList.add('border-l-4', 'border-green-500');
-                break;
-            case 'error':
-                icon.className = 'fas fa-exclamation-circle text-2xl text-red-500';
-                toast.classList.add('border-l-4', 'border-red-500');
-                break;
-            case 'warning':
-                icon.className = 'fas fa-exclamation-triangle text-2xl text-yellow-500';
-                toast.classList.add('border-l-4', 'border-yellow-500');
-                break;
-            default:
-                icon.className = 'fas fa-info-circle text-2xl text-blue-500';
-                toast.classList.add('border-l-4', 'border-blue-500');
-        }
-        
+        // Auto-hide flash messages after 5 seconds
         setTimeout(() => {
-            toast.classList.remove('hidden', 'translate-x-full');
-            toast.classList.add('flex', 'translate-x-0');
-        }, 10);
-        
-        currentToastTimeout = setTimeout(() => {
-            closeToast();
+            document.querySelectorAll('.alert').forEach(alert => {
+                alert.style.transition = 'opacity 0.5s ease';
+                alert.style.opacity = '0';
+                setTimeout(() => alert.style.display = 'none', 500);
+            });
         }, 5000);
-    }, 100);
-}
 
-function closeToast() {
-    const toast = document.getElementById('toast');
-    if (!toast) return;
-    
-    toast.classList.remove('translate-x-0');
-    toast.classList.add('translate-x-full');
-    
-    setTimeout(() => {
-        toast.classList.add('hidden');
-        toast.classList.remove('flex');
-    }, 300);
-    
-    if (currentToastTimeout) {
-        clearTimeout(currentToastTimeout);
-        currentToastTimeout = null;
-    }
-}
-
-// ==================== INITIALIZATION ====================
-document.addEventListener('DOMContentLoaded', function() {
-    const today = new Date();
-    const formatDate = (date) => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    };
-    
-    const reminderDateInput = document.getElementById('reminderDate');
-    if (reminderDateInput) {
-        reminderDateInput.min = formatDate(today);
-        reminderDateInput.value = formatDate(today);
-    }
-    
-    const urlParams = new URLSearchParams(window.location.search);
-    const tab = urlParams.get('tab');
-    if (tab) {
-        switchTab(tab);
-    }
-    
-    document.addEventListener('keydown', function(event) {
-        if (event.key === 'Escape') {
-            closeReminderModal();
-            closeEditModal();
-            closeToast();
-            
-            document.querySelectorAll('[id^="fileMenu-"]').forEach(menu => {
-                menu.classList.add('hidden');
+        // Close alerts when clicking the close button
+        document.querySelectorAll('.alert .close').forEach(button => {
+            button.addEventListener('click', function() {
+                this.parentElement.style.display = 'none';
             });
+        });
+
+        // Mobile menu close on click outside
+        document.addEventListener('click', function(event) {
+            const navLinks = document.getElementById('navLinks');
+            const navToggle = document.querySelector('.nav-toggle');
             
-            const notifDropdown = document.getElementById('notificationsDropdown');
-            if (notifDropdown) {
-                notifDropdown.classList.add('hidden');
+            if (!navLinks.contains(event.target) && !navToggle.contains(event.target) && navLinks.classList.contains('show')) {
+                navLinks.classList.remove('show');
             }
-        }
-    });
-    
-    document.addEventListener('click', function(event) {
-        if (!event.target.closest('[onclick^="toggleFileMenu"]')) {
-            document.querySelectorAll('[id^="fileMenu-"]').forEach(menu => {
-                menu.classList.add('hidden');
-            });
-        }
-    });
-    
-    console.log('✅ Dashboard initialized successfully');
-});</script>
+        });
 
-{% endblock %}
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+
+        // Add loading animation for images
+        document.querySelectorAll('.featured-image, .newsletter-image').forEach(img => {
+            img.addEventListener('load', function() {
+                this.style.animation = 'fadeIn 0.5s ease';
+            });
+        });
+    </script>
+</body>
+</html>

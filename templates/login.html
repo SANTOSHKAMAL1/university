@@ -2,285 +2,434 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Login |Office of Academics at Jain (Deemed-to-be University)</title>
+    <title>Login | Office of Academic Affairs – Jain University</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- Google Fonts & Font Awesome -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-   
 
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-        <style>
-:root {
-    --jain-blue: #04043a;
-    --jain-gold: #FFD700;
-    --jain-light: #F5F5F5;
-    --jain-dark: #222;
-}
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(145deg, #f0f4f8 0%, #e9eef3 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
 
-* {
-    box-sizing: border-box;
-    font-family: 'Inter', sans-serif;
-}
+        :root {
+            --navy: #0A2A44;
+            --gold: #C49A2B;
+            --light-bg: #FFFFFF;
+            --off-white: #F9FBFD;
+            --shadow-sm: 0 8px 20px rgba(0,0,0,0.04);
+            --shadow-md: 0 15px 35px rgba(10,42,68,0.08);
+        }
 
-body {
-    margin: 0;
-    padding: 0;
-    background: var(--jain-light);
-}
+        /* ===== BEAUTIFUL NAVBAR (refined) ===== */
+        .navbar {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            box-shadow: 0 6px 24px rgba(10, 42, 68, 0.08);
+            padding: 0.6rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid rgba(196, 154, 43, 0.15);
+        }
 
-header {
-    background-color: white;
-    color: var(--jain-blue);
-    padding: 15px 30px;
-}
+        .nav-container {
+            max-width: 1300px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
 
-.header-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-}
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
 
-.logo-section {
-    display: flex;
-    align-items: center;
-}
+        .logo-link {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            transition: transform 0.2s ease;
+        }
+        .logo-link:hover {
+            transform: scale(1.02);
+        }
 
-.logo-section img {
-    height: 60px;
-    margin-right: 15px;
-}
+        .logo-img {
+            height: 52px;
+            width: auto;
+            margin-right: 12px;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        }
 
-.logo-text h1 {
-    font-size: 22px;
-    margin: 0;
-    line-height: 1.2;
-    color: var(--jain-blue);
-}
+        .logo-text h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--navy);
+            line-height: 1.2;
+            letter-spacing: -0.01em;
+        }
+        .logo-text span {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #5a6e85;
+            letter-spacing: 0.3px;
+        }
 
-.logo-text span {
-    font-size: 14px;
-    color: #666;
-}
+        /* Back link styled as refined button */
+        .back-link {
+            background: white;
+            padding: 0.5rem 1.4rem;
+            border-radius: 40px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            color: var(--navy);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid rgba(196, 154, 43, 0.25);
+            transition: all 0.25s ease;
+            box-shadow: var(--shadow-sm);
+        }
 
-nav {
-    display: flex;
-    gap: 10px;
-}
+        .back-link i {
+            font-size: 0.9rem;
+            color: var(--gold);
+        }
 
-nav a {
-    color: var(--jain-blue);
-    text-decoration: none;
-    padding: 10px 15px;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    border-radius: 4px;
-}
+        .back-link:hover {
+            background: var(--navy);
+            color: white;
+            border-color: var(--navy);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(10,42,68,0.15);
+        }
+        .back-link:hover i {
+            color: var(--gold);
+        }
 
-nav a:hover {
-    background-color: rgba(4, 4, 58, 0.1);
-    color: var(--jain-gold);
-}
+        /* ===== LOGIN CARD (elevated) ===== */
+        .login-wrapper {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 1.5rem;
+        }
 
-.menu-toggle {
-    display: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: var(--jain-blue);
-}
+        .login-card {
+            background: white;
+            padding: 2.8rem 2.8rem 3rem;
+            border-radius: 36px;
+            box-shadow: 0 30px 60px rgba(10, 42, 68, 0.12), 0 10px 25px rgba(0,0,0,0.05);
+            width: 100%;
+            max-width: 460px;
+            transition: transform 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.6);
+            backdrop-filter: blur(4px);
+        }
 
-.login-container {
-    background: white;
-    padding: 40px;
-    border-radius: 12px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-    width: 100%;
-    max-width: 400px;
-    margin: 60px auto;
-}
+        .login-card:hover {
+            transform: translateY(-5px);
+        }
 
-h2 {
-    text-align: center;
-    color: var(--jain-blue);
-    margin-bottom: 20px;
-}
+        h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--navy);
+            margin-bottom: 0.4rem;
+            letter-spacing: -0.02em;
+        }
 
-form input[type="email"],
-form input[type="password"] {
-    width: 100%;
-    padding: 12px 15px;
-    margin: 10px 0;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-}
+        .welcome-sub {
+            color: #5f6f82;
+            font-size: 0.95rem;
+            margin-bottom: 2rem;
+            border-left: 4px solid var(--gold);
+            padding-left: 1rem;
+            background: #fafcff;
+            border-radius: 0 8px 8px 0;
+            line-height: 1.5;
+        }
 
-.password-wrapper {
-    position: relative;
-}
+        .input-group {
+            margin-bottom: 1.6rem;
+        }
 
-.password-wrapper input[type="password"],
-.password-wrapper input[type="text"] {
-    width: 100%;
-    padding: 12px 40px 12px 15px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    font-size: 16px;
-}
+        .input-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #3a4e64;
+            margin-bottom: 0.4rem;
+            display: block;
+        }
 
-.toggle-password {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    cursor: pointer;
-    font-size: 18px;
-    color: #555;
-}
+        .input-field {
+            width: 100%;
+            padding: 0.95rem 1.2rem;
+            font-size: 1rem;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 18px;
+            transition: all 0.2s ease;
+            background: #f9fcff;
+        }
 
-button {
-    width: 100%;
-    padding: 12px;
-    background-color: var(--jain-blue);
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-size: 16px;
-    font-weight: 600;
-    margin-top: 15px;
-    cursor: pointer;
-}
+        .input-field:focus {
+            outline: none;
+            border-color: var(--gold);
+            box-shadow: 0 0 0 4px rgba(196, 154, 43, 0.15);
+            background: white;
+        }
 
-button:hover {
-    background-color: #002244;
-}
+        .password-wrapper {
+            position: relative;
+        }
 
-.register-link {
-    text-align: center;
-    margin-top: 15px;
-}
+        .password-wrapper .input-field {
+            padding-right: 3rem;
+        }
 
-.register-link a {
-    color: #0059b3;
-    text-decoration: none;
-}
+        .toggle-password {
+            position: absolute;
+            right: 1.2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            font-size: 1.3rem;
+            color: #7b8b9f;
+            transition: color 0.2s;
+            line-height: 1;
+        }
+        .toggle-password:hover {
+            color: var(--navy);
+        }
 
-.error-message {
-    color: red;
-    margin-top: 10px;
-    font-size: 14px;
-}
+        .login-btn {
+            width: 100%;
+            background: var(--navy);
+            color: white;
+            border: none;
+            padding: 1rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 40px;
+            margin: 1.8rem 0 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 10px 20px rgba(10,42,68,0.2);
+        }
 
-/* 🔽 Responsive Nav */
-@media (max-width: 768px) {
-    .header-container {
-        flex-direction: column;
-        align-items: flex-start;
-    }
+        .login-btn:hover {
+            background: #1a3a5c;
+            transform: translateY(-3px);
+            box-shadow: 0 18px 30px rgba(10,42,68,0.25);
+        }
 
-    .menu-toggle {
-        display: block;
-    }
+        .login-btn i {
+            font-size: 1.1rem;
+            transition: transform 0.2s;
+        }
+        .login-btn:hover i {
+            transform: translateX(5px);
+        }
 
-    nav {
-        display: none;
-        flex-direction: column;
-        width: 100%;
-        background-color: white;
-        padding: 10px 0;
-    }
+        .register-link {
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.95rem;
+            color: #405b73;
+        }
 
-    nav a {
-        display: block;
-        padding: 10px 20px;
-        border-top: 1px solid #eee;
-        text-align: left;
-    }
+        .register-link a {
+            color: var(--navy);
+            font-weight: 600;
+            text-decoration: none;
+            border-bottom: 2px solid transparent;
+            transition: border-color 0.2s, color 0.2s;
+        }
 
-    nav.show {
-        display: flex;
-    }
-    .nav-links {
-  padding: 15px 20px;
-}
+        .register-link a:hover {
+            color: var(--gold);
+            border-bottom-color: var(--gold);
+        }
 
-.back-link {
-  text-decoration: none;
-  font-weight: 500;
-  font-size: 16px;
-  color: #003366; /* Dark blue */
-  transition: color 0.3s ease;
-}
+        .error-message {
+            background: #ffefef;
+            color: #b53b3b;
+            padding: 0.8rem 1.2rem;
+            border-radius: 40px;
+            font-size: 0.9rem;
+            margin-top: 1.5rem;
+            border-left: 6px solid #d55;
+            font-weight: 500;
+        }
 
-.back-link::before {
-  content: "← ";
-  font-size: 18px;
-  margin-right: 5px;
-}
+        /* footer optional */
+        .footer-mini {
+            text-align: center;
+            padding: 1.5rem;
+            font-size: 0.8rem;
+            color: #7b8b9f;
+            border-top: 1px solid rgba(196,154,43,0.15);
+            background: rgba(255,255,255,0.5);
+            backdrop-filter: blur(4px);
+        }
 
-.back-link:hover {
-  color: #0055aa;
-}
+        /* Responsive */
+        @media (max-width: 600px) {
+            .navbar {
+                padding: 0.6rem 1rem;
+            }
+            .logo-img {
+                height: 44px;
+            }
+            .logo-text h1 {
+                font-size: 1.1rem;
+            }
+            .logo-text span {
+                font-size: 0.7rem;
+            }
+            .back-link {
+                padding: 0.4rem 1.2rem;
+                font-size: 0.85rem;
+            }
+            .login-card {
+                padding: 2rem 1.5rem;
+                border-radius: 28px;
+            }
+            h2 {
+                font-size: 1.9rem;
+            }
+        }
 
-}
-</style>
-
+        @media (max-width: 420px) {
+            .nav-container {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .nav-left {
+                width: 100%;
+                justify-content: space-between;
+            }
+            .back-link {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
 </head>
 <body>
 
-<!-- Header with Nav -->
-<header>
-    <div class="header-container">
-        <div class="logo-section">
-            <img src="{{ url_for('static', filename='images/jain.png') }}" alt="Jain University Logo">
-            <div class="logo-text">
-                <h1>Office of Academics </h1>
-                <span>Jain Group Of Institutions</span>
+<!-- ===== REFINED NAVBAR ===== -->
+<nav class="navbar">
+    <div class="nav-container">
+        <div class="nav-left">
+            <a href="#" class="logo-link">
+                <!-- using a placeholder reliable logo (Jain University) -->
+                 <img src='static/images/L23.png'
+                     alt="Jain University Logo" class="logo-img" onerror="this.src='https://via.placeholder.com/52x52/0A2A44/FFD700?text=JU'">
+               
+            </a>
+        </div>
+        <!-- refined back button with arrow -->
+        <a href="{{ url_for('index') }}" class="back-link">
+            <i class="fas fa-arrow-left"></i> Back to Home
+        </a>
+    </div>
+</nav>
+
+<!-- ===== MAIN LOGIN AREA ===== -->
+<div class="login-wrapper">
+    <div class="login-card">
+        <h2>Welcome back</h2>
+        <div class="welcome-sub">Sign in to access the Office of Academic Portal</div>
+
+        <form method="POST">
+            <div class="input-group">
+                <label class="input-label">Email address</label>
+                <input type="email" name="email" class="input-field" placeholder="you@example.com" required>
             </div>
-        </div>
-       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-<a href="{{ url_for('home') }}" class="back-link">
-  <i class="fas fa-arrow-left"></i> Back
-</a>
+            <div class="input-group">
+                <label class="input-label">Password</label>
+                <div class="password-wrapper">
+                    <input type="password" name="password" id="password" class="input-field" placeholder="••••••••" required>
+                    <span class="toggle-password" onclick="togglePassword()">👁️</span>
+                </div>
+            </div>
 
+            <button type="submit" class="login-btn">
+                <span>Log in</span>
+                <i class="fas fa-arrow-right"></i>
+            </button>
+        </form>
 
-    </div>
-</header>
-
-<!-- Login Form -->
-<div class="login-container">
-    <h2>Login</h2>
-    <form method="POST">
-        <input type="email" name="email" placeholder="Email" required>
-        
-        <div class="password-wrapper">
-            <input type="password" name="password" placeholder="Password" id="password" required>
-            <span class="toggle-password" onclick="togglePassword()">👁️</span>
+        <div class="register-link">
+            <p>New to the platform? <a href="{{ url_for('register') }}">Create an account</a></p>
         </div>
 
-        <button type="submit">Login</button>
-    </form>
-
-    <div class="register-link">
-        <p><a href="{{ url_for('register') }}">Don't have an account? Register</a></p>
+        <!-- flash messages styled as error / info -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="error-message" role="alert">
+                        <i class="fas fa-info-circle" style="margin-right: 8px;"></i> {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
     </div>
+</div>
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <p class="error-message">{{ message }}</p>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
+<!-- subtle footer -->
+<div class="footer-mini">
+    <p>© 2026 Jain University – Office of Academic Affairs. Secure login.</p>
 </div>
 
 <script>
     function togglePassword() {
         const pwd = document.getElementById("password");
-        pwd.type = pwd.type === "password" ? "text" : "password";
+        if (pwd.type === "password") {
+            pwd.type = "text";
+        } else {
+            pwd.type = "password";
+        }
     }
+
+    // optional: make password toggle icon change (bonus)
+    document.querySelector('.toggle-password')?.addEventListener('click', function(e) {
+        const icon = this;
+        if (icon.textContent === '👁️') {
+            icon.textContent = '👁️‍🗨️';
+        } else {
+            icon.textContent = '👁️';
+        }
+    });
 </script>
 
 </body>
