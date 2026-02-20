@@ -927,8 +927,9 @@ def login():
             return redirect(url_for('login'))
         
         user = db.users.find_one({'email': email})
+        
         if user and check_password_hash(user['password'], password):
-            # ✅ FIX: Clear ALL old session data before setting new session
+            # Clear old session data
             session.clear()
             
             # Store all user info in session
@@ -938,7 +939,7 @@ def login():
             session['special_role'] = user.get('special_role', None)
             session['approved'] = user.get('approved', False)
             session['user_id'] = str(user['_id'])
-            session.permanent = True  # Make session permanent to avoid expiry issues
+            session.permanent = True
             
             # Update online status
             db.users.update_one(
@@ -961,17 +962,25 @@ def login():
                 'ip_address': request.remote_addr
             })
             
+            # Set appropriate flash message based on role and approval status
             if user['role'] == 'admin':
                 flash('✅ Admin login successful!', 'success')
                 return redirect(url_for('admin_dashboard'))
             else:
-                # ✅ FIX: ALL non-admin users go to home, regardless of special_role
+                # ALL NON-ADMIN USERS GO TO HOME PAGE (leaders, core, faculty all go to home)
                 if not user.get('approved', False):
                     flash('⏳ Your account is pending admin approval. Limited access granted.', 'warning')
                 else:
-                    flash('✅ Login successful! Full access granted.', 'success')
+                    # Check user type for personalized message
+                    if user.get('special_role') == 'leader':
+                        flash('✅ Leader login successful! Welcome to your dashboard.', 'success')
+                    elif user.get('user_type') == 'core' or user.get('special_role') == 'office_barrier':
+                        flash('✅ Core Team login successful! Welcome to your dashboard.', 'success')
+                    else:
+                        flash('✅ Login successful! Full access granted.', 'success')
                 
-                return redirect(url_for('home'))  # Always go to home for non-admin
+                # ALL USERS (leaders, core, faculty) GO TO HOME PAGE
+                return redirect(url_for('home'))
         else:
             flash('Invalid credentials', 'error')
             return redirect(url_for('login'))
@@ -1020,19 +1029,17 @@ def register():
             if entered_otp == session.get('otp'):
                 session['otp_verified'] = True
                 session['step'] = 3
-                flash('OTP verified. Now set your password and select role.', 'success')
+                flash('OTP verified. Now set your password and complete registration.', 'success')
                 return redirect(url_for('register'))
             else:
                 flash('Invalid OTP. Please try again.', 'error')
                 return redirect(url_for('register'))
         
         elif session['step'] == 3:
-            password    = request.form.get('password')
-            user_type   = request.form.get('user_type', 'faculty')
-            department  = request.form.get('department', '').strip()
-            location    = request.form.get('location', '').strip()
+            password = request.form.get('password')
+            department = request.form.get('department', '').strip()
+            location = request.form.get('location', '').strip()
 
-            # Validate required fields
             if not department:
                 flash('Please select your department.', 'error')
                 return redirect(url_for('register'))
@@ -1040,48 +1047,112 @@ def register():
                 flash('Please select your campus / location.', 'error')
                 return redirect(url_for('register'))
 
-            if user_type not in ['faculty', 'core']:
-                user_type = 'faculty'
+            # Check if email is pre-assigned as leader or core
+            email = session['email']
             
-            hashed_pw    = generate_password_hash(password)
-            email        = session['email']
-            special_role = 'office_barrier' if user_type == 'core' else None
+            # Check if email is in pre-assigned lists
+            assigned_leader = db.pre_assigned_leaders.find_one({'email': email})
+            assigned_core = db.pre_assigned_core.find_one({'email': email})
             
-            new_user_id = db.users.insert_one({
-                'email':        email,
-                'password':     hashed_pw,
-                'role':         'user',
-                'user_type':    user_type,
-                'special_role': special_role,
-                'approved':     False,
-                'is_online':    True,
-                'last_seen':    get_indian_time(),
-                'profile': {
-                    'department': department,
-                    'location':   location,
-                    'school':     '',
-                    'phone':      ''
-                },
-                'created_at': get_indian_time()
-            }).inserted_id
-            
-            session['role']         = 'user'
-            session['user_type']    = user_type
-            session['special_role'] = special_role
-            session['approved']     = False
-            session['user_id']      = str(new_user_id)
-            
-            session.pop('otp', None)
-            session.pop('step', None)
-            session.pop('otp_verified', None)
-            
-            flash('✅ Registration complete! Waiting for admin approval to access all features.', 'info')
-            return redirect(url_for('home'))
+            if assigned_leader:
+                # This is a pre-assigned leader
+                hashed_pw = generate_password_hash(password)
+                new_user_id = db.users.insert_one({
+                    'email': email,
+                    'password': hashed_pw,
+                    'role': 'user',
+                    'user_type': 'faculty',
+                    'special_role': 'leader',
+                    'approved': True,  # Auto-approve leaders
+                    'is_online': True,
+                    'last_seen': get_indian_time(),
+                    'profile': {
+                        'department': department,
+                        'location': location,
+                        'school': assigned_leader.get('school', ''),
+                        'phone': ''
+                    },
+                    'created_at': get_indian_time()
+                }).inserted_id
+                
+                # Remove from pre-assigned list
+                db.pre_assigned_leaders.delete_one({'email': email})
+                
+                session['role'] = 'user'
+                session['user_type'] = 'faculty'
+                session['special_role'] = 'leader'
+                session['approved'] = True
+                session['user_id'] = str(new_user_id)
+                
+                flash('✅ Registration complete! You are now a Leader. Please log in.', 'success')
+                return redirect(url_for('login'))  # Redirect to login, not dashboard
+                
+            elif assigned_core:
+                # This is a pre-assigned core member
+                hashed_pw = generate_password_hash(password)
+                new_user_id = db.users.insert_one({
+                    'email': email,
+                    'password': hashed_pw,
+                    'role': 'user',
+                    'user_type': 'core',
+                    'special_role': 'office_barrier',
+                    'approved': True,  # Auto-approve core members
+                    'is_online': True,
+                    'last_seen': get_indian_time(),
+                    'profile': {
+                        'department': department,
+                        'location': location,
+                        'school': assigned_core.get('department', ''),
+                        'phone': ''
+                    },
+                    'created_at': get_indian_time()
+                }).inserted_id
+                
+                # Remove from pre-assigned list
+                db.pre_assigned_core.delete_one({'email': email})
+                
+                session['role'] = 'user'
+                session['user_type'] = 'core'
+                session['special_role'] = 'office_barrier'
+                session['approved'] = True
+                session['user_id'] = str(new_user_id)
+                
+                flash('✅ Registration complete! You are now a Core Team member. Please log in.', 'success')
+                return redirect(url_for('login'))  # Redirect to login, not dashboard
+                
+            else:
+                # Regular faculty user
+                hashed_pw = generate_password_hash(password)
+                new_user_id = db.users.insert_one({
+                    'email': email,
+                    'password': hashed_pw,
+                    'role': 'user',
+                    'user_type': 'faculty',
+                    'special_role': None,
+                    'approved': False,
+                    'is_online': True,
+                    'last_seen': get_indian_time(),
+                    'profile': {
+                        'department': department,
+                        'location': location,
+                        'school': '',
+                        'phone': ''
+                    },
+                    'created_at': get_indian_time()
+                }).inserted_id
+                
+                session['role'] = 'user'
+                session['user_type'] = 'faculty'
+                session['special_role'] = None
+                session['approved'] = False
+                session['user_id'] = str(new_user_id)
+                
+                flash('✅ Registration complete! Waiting for admin approval. Please log in.', 'info')
+                return redirect(url_for('login'))  # Redirect to login
     
-    otp_sent     = session.get('step', 1) >= 2
+    otp_sent = session.get('step', 1) >= 2
     otp_verified = session.get('step', 1) == 3
     return render_template('register.html', otp_sent=otp_sent, otp_verified=otp_verified)
-
 
 @app.route('/refresh_session')
 def refresh_session():
@@ -1171,26 +1242,22 @@ def index():
 def home():
     try:
         user = db.users.find_one({"email": session["email"]})
-        records = list(db.ugc_data.find().sort("uploaded_at", -1).limit(50))
-        monthly_records = list(db.monthly_engagement.find().sort("uploaded_at", -1).limit(50))
-        newsletter_records = list(db.newsletters.find().sort("uploaded_at", -1).limit(50))
-
-        # KEY FIX 1: Reliable IST date using UTC conversion
+        
+        # Get today's date in IST
         today_str = get_today_ist_string()
         logger.info(f"[HOME] Today IST: {today_str}")
 
-        # KEY FIX 2: Fetch ALL events then filter in Python (not MongoDB query)
+        # Fetch all events
         all_events_raw = list(db.events.find({}).sort("event_date", 1))
         logger.info(f"[HOME] Total events in DB: {len(all_events_raw)}")
 
-        for ev in all_events_raw:
-            ev["_id"] = str(ev["_id"])
-
+        # Process events
         today_events = []
         upcoming_events = []
         all_upcoming = []
 
         for ev in all_events_raw:
+            ev["_id"] = str(ev["_id"])
             event_date = normalize_date(ev.get("event_date", ""))
             end_date = normalize_date(ev.get("end_date", "")) if ev.get("end_date") else ""
             ev["event_date"] = event_date
@@ -1209,20 +1276,23 @@ def home():
                 upcoming_events.append(ev)
                 all_upcoming.append(ev)
 
-        logger.info(f"[HOME] Today: {len(today_events)}, Upcoming: {len(upcoming_events)}")
-
+        # Get public files
         public_files = list(db.public_files.find().sort("uploaded_at", -1).limit(20))
+        
+        # Get user type and permissions
         user_type = session.get("user_type", "faculty")
         special_role = session.get("special_role", None)
         approved = session.get("approved", False)
+        
+        # Determine upload permissions
         can_upload = approved and special_role in ["core", "office_barrier", "leader"]
         is_fac = user_type == "faculty" and not special_role
 
         return render_template(
             "home.html",
-            records=records,
-            monthly_records=monthly_records,
-            newsletter_records=newsletter_records,
+            records=list(db.ugc_data.find().sort("uploaded_at", -1).limit(50)),
+            monthly_records=list(db.monthly_engagement.find().sort("uploaded_at", -1).limit(50)),
+            newsletter_records=list(db.newsletters.find().sort("uploaded_at", -1).limit(50)),
             events=all_upcoming,
             today_events=today_events,
             upcoming_events=upcoming_events,
@@ -1402,6 +1472,7 @@ def upload_document():
         document_name = request.form.get('document_name')
         description = request.form.get('description')
         assigned_leaders = request.form.getlist('assigned_leaders')
+        notify_leaders = request.form.get('notify_leaders') == 'on'
         file = request.files.get('file')
         
         # Upload file
@@ -1435,7 +1506,8 @@ def upload_document():
             'submitted_at': get_indian_time(),
             'reviewed_by': None,
             'reviewed_at': None,
-            'comments': ''
+            'comments': '',
+            'notified': False
         }
         
         result = db.office_documents.insert_one(doc)
@@ -1450,30 +1522,30 @@ def upload_document():
             'ip_address': request.remote_addr
         })
         
-        # Send notifications to assigned leaders
-        for leader_id in assigned_leaders:
-            leader = db.users.find_one({'_id': ObjectId(leader_id)})
-            if leader:
-                try:
-                    msg = Message(
-                        subject=f"📄 New Document for Review: {document_name}",
-                        sender=app.config['MAIL_USERNAME'],
-                        recipients=[leader['email']]
-                    )
-                    msg.body = f"""
-New Document Submitted for Review
-
-From: {session['email'].split('@')[0]}
-Document: {document_name}
-Description: {description}
-
-Please log in to review this document.
-
-{request.url_root}leader_dashboard
-                    """
-                    mail.send(msg)
-                except Exception as e:
-                    logger.error(f"Error sending notification: {e}")
+        # Send notifications to assigned leaders if requested
+        if notify_leaders and assigned_leaders:
+            for leader_id in assigned_leaders:
+                leader = db.users.find_one({'_id': ObjectId(leader_id)})
+                if leader and leader.get('email'):
+                    try:
+                        send_document_notification(
+                            user, 
+                            leader, 
+                            {
+                                'document_name': document_name,
+                                'description': description,
+                                '_id': result.inserted_id
+                            },
+                            description
+                        )
+                    except Exception as e:
+                        logger.error(f"Error sending notification to {leader.get('email')}: {e}")
+            
+            # Mark as notified
+            db.office_documents.update_one(
+                {'_id': result.inserted_id},
+                {'$set': {'notified': True}}
+            )
         
         flash('✅ Document submitted successfully', 'success')
         return redirect(url_for('core_dashboard'))
@@ -1482,6 +1554,84 @@ Please log in to review this document.
         logger.error(f"Error submitting document: {e}")
         flash(f'Error submitting document: {str(e)[:100]}', 'error')
         return redirect(url_for('core_dashboard'))
+
+def send_document_notification(sender, receiver, document, message):
+    """Send email notification for uploaded document"""
+    try:
+        msg = Message(
+            subject=f"📄 New Document for Review: {document['document_name']}",
+            sender=app.config['MAIL_USERNAME'],
+            recipients=[receiver['email']]
+        )
+        msg.body = f"""
+========================================
+        NEW DOCUMENT FOR REVIEW
+========================================
+
+From: {sender['email']} ({sender['email'].split('@')[0]})
+Document: {document['document_name']}
+Description: {document.get('description', 'No description provided')}
+
+Message from sender:
+{message}
+
+Please log in to review this document:
+{request.url_root}leader_dashboard
+
+========================================
+Jain University - Office of Academics
+========================================
+        """
+        msg.html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ background: #04043a; color: #FFD700; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
+                .content {{ background: #f9f9f9; padding: 20px; border-radius: 0 0 10px 10px; }}
+                .document-details {{ background: white; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #FFD700; }}
+                .message-box {{ background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 15px 0; }}
+                .button {{ display: inline-block; background: #04043a; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; }}
+                .footer {{ text-align: center; margin-top: 20px; font-size: 12px; color: #666; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>📄 New Document for Review</h1>
+                </div>
+                <div class="content">
+                    <p><strong>From:</strong> {sender['email']}</p>
+                    
+                    <div class="document-details">
+                        <h3>{document['document_name']}</h3>
+                        <p><strong>Description:</strong> {document.get('description', 'No description provided')}</p>
+                    </div>
+                    
+                    <div class="message-box">
+                        <p><strong>Message from sender:</strong></p>
+                        <p>{message}</p>
+                    </div>
+                    
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="{request.url_root}leader_dashboard" class="button">Review Document</a>
+                    </div>
+                </div>
+                <div class="footer">
+                    <p>Jain University - Office of Academics</p>
+                    <p>Sent at: {get_indian_time().strftime('%d %B %Y, %I:%M %p')} IST</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        mail.send(msg)
+        logger.info(f"Document notification sent to {receiver['email']}")
+    except Exception as e:
+        logger.error(f"Error sending document notification: {e}")
 
 # ===================== LEADER DASHBOARD =====================
 @app.route('/leader_dashboard')
@@ -1579,7 +1729,7 @@ def normalize_date(date_str):
 @app.route('/review_document/<document_id>', methods=['POST'])
 @approval_required
 def review_document(document_id):
-    """Leader reviews a document"""
+    """Leader reviews a document and sends reply to core member"""
     if not is_leader():
         return jsonify({'error': 'Access denied'}), 403
     
@@ -1588,6 +1738,7 @@ def review_document(document_id):
         
         status = request.form.get('status')
         comments = request.form.get('comments', '')
+        send_reply = request.form.get('send_reply') == 'on'
         
         # Update document
         db.office_documents.update_one(
@@ -1606,26 +1757,11 @@ def review_document(document_id):
         doc = db.office_documents.find_one({'_id': ObjectId(document_id)})
         uploader = db.users.find_one({'_id': doc['user_id']})
         
-        if uploader:
+        if uploader and send_reply:
             try:
-                msg = Message(
-                    subject=f"📋 Document Reviewed: {doc['document_name']}",
-                    sender=app.config['MAIL_USERNAME'],
-                    recipients=[uploader['email']]
-                )
-                msg.body = f"""
-Your Document Has Been Reviewed
-
-Document: {doc['document_name']}
-Status: {status.upper()}
-Reviewed by: {user['email'].split('@')[0]}
-Comments: {comments}
-
-View in Dashboard: {request.url_root}core_dashboard
-                """
-                mail.send(msg)
+                send_review_reply(user, uploader, doc, comments, status)
             except Exception as e:
-                logger.error(f"Error sending review notification: {e}")
+                logger.error(f"Error sending review reply: {e}")
         
         flash(f'✅ Document {status}', 'success')
         return redirect(url_for('leader_dashboard'))
@@ -1635,6 +1771,114 @@ View in Dashboard: {request.url_root}core_dashboard
         flash(f'Error reviewing document: {str(e)[:100]}', 'error')
         return redirect(url_for('leader_dashboard'))
 
+def send_review_reply(reviewer, recipient, document, comments, status):
+    """Send reply email to core member after review"""
+    try:
+        status_emoji = '✅' if status == 'approved' else '❌'
+        status_color = '#27ae60' if status == 'approved' else '#e74c3c'
+        
+        msg = Message(
+            subject=f"{status_emoji} Document Review Complete: {document['document_name']}",
+            sender=app.config['MAIL_USERNAME'],
+            recipients=[recipient['email']]
+        )
+        msg.body = f"""
+========================================
+        DOCUMENT REVIEW COMPLETE
+========================================
+
+Document: {document['document_name']}
+Status: {status.upper()}
+Reviewed by: {reviewer['email']}
+
+Reviewer's Comments:
+{comments}
+
+View in Dashboard: {request.url_root}core_dashboard
+
+========================================
+Jain University - Office of Academics
+========================================
+        """
+        msg.html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ background: #04043a; color: #FFD700; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
+                .content {{ background: #f9f9f9; padding: 20px; border-radius: 0 0 10px 10px; }}
+                .status-badge {{ display: inline-block; padding: 5px 15px; border-radius: 20px; font-weight: bold; margin: 10px 0; }}
+                .comments-box {{ background: white; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid {status_color}; }}
+                .button {{ display: inline-block; background: #04043a; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; }}
+                .footer {{ text-align: center; margin-top: 20px; font-size: 12px; color: #666; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>{status_emoji} Document Review Complete</h1>
+                </div>
+                <div class="content">
+                    <h2>{document['document_name']}</h2>
+                    
+                    <div class="status-badge" style="background: {status_color}; color: white;">
+                        {status.upper()}
+                    </div>
+                    
+                    <p><strong>Reviewed by:</strong> {reviewer['email']}</p>
+                    
+                    <div class="comments-box">
+                        <h3 style="margin-top: 0;">Reviewer's Comments:</h3>
+                        <p>{comments}</p>
+                    </div>
+                    
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="{request.url_root}core_dashboard" class="button">View in Dashboard</a>
+                    </div>
+                </div>
+                <div class="footer">
+                    <p>Jain University - Office of Academics</p>
+                    <p>Sent at: {get_indian_time().strftime('%d %B %Y, %I:%M %p')} IST</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        mail.send(msg)
+        logger.info(f"Review reply sent to {recipient['email']}")
+    except Exception as e:
+        logger.error(f"Error sending review reply: {e}")
+@app.route('/init_core_chat')
+def init_core_chat():
+    """Initialize core team chat group (run once)"""
+    if session.get('role') != 'admin':
+        return jsonify({'error': 'Access denied'}), 403
+    
+    try:
+        # Check if chat group already exists
+        existing = db.chat_groups.find_one({'group_type': 'core_team'})
+        if existing:
+            return jsonify({'message': 'Core team chat already exists'})
+        
+        # Create chat group
+        db.chat_groups.insert_one({
+            'name': 'Core Team Chat',
+            'group_type': 'core_team',
+            'description': 'Automatic chat group for all core team members',
+            'created_at': get_indian_time(),
+            'created_by': None,
+            'members': []
+        })
+        
+        logger.info("✅ Core team chat group created")
+        return jsonify({'success': True, 'message': 'Core team chat created'})
+        
+    except Exception as e:
+        logger.error(f"Error creating core chat: {e}")
+        return jsonify({'error': str(e)}), 500       
 # ===================== CHAT ROUTES =====================
 @app.route('/api/chat/messages')
 @login_required
@@ -3306,20 +3550,7 @@ def admin_dashboard():
     try:
         logger.info(f"Admin {session.get('email')} accessing dashboard")
         
-        try:
-            total_count = db.users.count_documents({})
-            logger.info(f"Total users in database: {total_count}")
-        except Exception as db_error:
-            logger.error(f"Database error: {db_error}")
-            flash('Database connection error. Please check MongoDB.', 'error')
-            return render_template(
-                'admin_dashboard.html', 
-                users=[],
-                total_users=0,
-                pending_users=0,
-                approved_users=0
-            )
-        
+        # Get search and filter parameters
         search_query = request.args.get('search', '')
         type_filter = request.args.get('type_filter', '')
         role_filter = request.args.get('role_filter', '')
@@ -3328,7 +3559,6 @@ def admin_dashboard():
         
         if search_query:
             query['email'] = {'$regex': search_query, '$options': 'i'}
-            logger.info(f"Searching for: {search_query}")
         
         if type_filter:
             if type_filter == 'core':
@@ -3336,10 +3566,8 @@ def admin_dashboard():
                     {'user_type': 'core'},
                     {'special_role': 'office_barrier'}
                 ]
-                logger.info("Filtering for core team members")
             else:
                 query['user_type'] = type_filter
-                logger.info(f"Filtering user_type: {type_filter}")
             
         if role_filter:
             if role_filter == 'office_barrier':
@@ -3347,30 +3575,26 @@ def admin_dashboard():
                     {'user_type': 'core'},
                     {'special_role': 'office_barrier'}
                 ]
-                logger.info("Filtering for office barriers")
             elif role_filter == 'leader':
                 query['special_role'] = 'leader'
-                logger.info("Filtering for leaders")
             elif role_filter == 'none':
                 query['special_role'] = {'$in': [None, '']}
-                logger.info("Filtering for users with no special role")
             else:
                 query['special_role'] = role_filter
-                logger.info(f"Filtering special_role: {role_filter}")
         
-        logger.info(f"Database query: {query}")
-        
+        # Get all users
         users = list(db.users.find(query).sort('created_at', -1))
         
-        logger.info(f"Found {len(users)} users matching query")
+        # Get pre-assigned lists
+        pre_assigned_leaders = list(db.pre_assigned_leaders.find())
+        pre_assigned_core = list(db.pre_assigned_core.find())
         
+        # Calculate stats
         total_users = len(users)
         pending_users = len([u for u in users if not u.get('approved', False)])
         approved_users = len([u for u in users if u.get('approved', False)])
         
-        for user in users[:5]:
-            logger.info(f"User: {user.get('email')} - Approved: {user.get('approved', False)} - Type: {user.get('user_type')} - Role: {user.get('special_role')}")
-        
+        # Process users for display
         for user in users:
             user.setdefault('approved', False)
             user.setdefault('user_type', 'faculty')
@@ -3378,7 +3602,7 @@ def admin_dashboard():
             
             if user.get('user_type') == 'core' or user.get('special_role') == 'office_barrier':
                 user['display_type'] = 'Core Team'
-                user['display_special'] = 'Office Barrier'
+                user['display_special'] = 'Core Member'
             elif user.get('special_role') == 'leader':
                 user['display_type'] = 'Leader'
                 user['display_special'] = 'Leader'
@@ -3389,6 +3613,8 @@ def admin_dashboard():
         return render_template(
             'admin_dashboard.html', 
             users=users,
+            pre_assigned_leaders=pre_assigned_leaders,
+            pre_assigned_core=pre_assigned_core,
             total_users=total_users,
             pending_users=pending_users,
             approved_users=approved_users
@@ -3400,10 +3626,168 @@ def admin_dashboard():
         return render_template(
             'admin_dashboard.html', 
             users=[],
+            pre_assigned_leaders=[],
+            pre_assigned_core=[],
             total_users=0,
             pending_users=0,
             approved_users=0
         )
+        # ===================== PRE-ASSIGNED ROUTES =====================
+@app.route('/pre_assign_leader', methods=['POST'])
+def pre_assign_leader():
+    """Pre-assign an email as leader (before registration)"""
+    if session.get('role') != 'admin':
+        return jsonify({'error': 'Access denied'}), 403
+    
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        school = data.get('school', '')
+        
+        if not email:
+            return jsonify({'error': 'Email is required'}), 400
+        
+        if not email.endswith('@jainuniversity.ac.in'):
+            return jsonify({'error': 'Email must be @jainuniversity.ac.in'}), 400
+        
+        # Check if user already exists
+        existing_user = db.users.find_one({'email': email})
+        if existing_user:
+            return jsonify({'error': 'User already registered'}), 400
+        
+        # Check if already pre-assigned
+        existing = db.pre_assigned_leaders.find_one({'email': email})
+        if existing:
+            return jsonify({'message': 'Already pre-assigned as leader'}), 200
+        
+        # Add to pre-assigned leaders
+        db.pre_assigned_leaders.insert_one({
+            'email': email,
+            'school': school,
+            'assigned_by': session['email'],
+            'assigned_at': get_indian_time()
+        })
+        
+        # Send invitation email
+        try:
+            msg = Message(
+                subject="🎓 You've been assigned as a Leader at Jain University",
+                sender=app.config['MAIL_USERNAME'],
+                recipients=[email]
+            )
+            msg.body = f"""
+Dear User,
+
+You have been assigned as a LEADER at Jain University - Office of Academics.
+
+Please complete your registration using the link below:
+{request.url_root}register
+
+Use your email: {email}
+You will be automatically granted leader access upon registration.
+
+Best regards,
+Office of Academics
+Jain University
+            """
+            mail.send(msg)
+            logger.info(f"Leader invitation sent to {email}")
+        except Exception as e:
+            logger.error(f"Error sending invitation: {e}")
+        
+        return jsonify({'success': True, 'message': 'Leader assigned successfully'})
+        
+    except Exception as e:
+        logger.error(f"Error pre-assigning leader: {e}")
+        return jsonify({'error': str(e)}), 400
+
+@app.route('/pre_assign_core', methods=['POST'])
+def pre_assign_core():
+    """Pre-assign an email as core member (before registration)"""
+    if session.get('role') != 'admin':
+        return jsonify({'error': 'Access denied'}), 403
+    
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        department = data.get('department', '')
+        
+        if not email:
+            return jsonify({'error': 'Email is required'}), 400
+        
+        if not email.endswith('@jainuniversity.ac.in'):
+            return jsonify({'error': 'Email must be @jainuniversity.ac.in'}), 400
+        
+        # Check if user already exists
+        existing_user = db.users.find_one({'email': email})
+        if existing_user:
+            return jsonify({'error': 'User already registered'}), 400
+        
+        # Check if already pre-assigned
+        existing = db.pre_assigned_core.find_one({'email': email})
+        if existing:
+            return jsonify({'message': 'Already pre-assigned as core member'}), 200
+        
+        # Add to pre-assigned core
+        db.pre_assigned_core.insert_one({
+            'email': email,
+            'department': department,
+            'assigned_by': session['email'],
+            'assigned_at': get_indian_time()
+        })
+        
+        # Send invitation email
+        try:
+            msg = Message(
+                subject="🔷 You've been assigned as a Core Team Member at Jain University",
+                sender=app.config['MAIL_USERNAME'],
+                recipients=[email]
+            )
+            msg.body = f"""
+Dear User,
+
+You have been assigned as a CORE TEAM MEMBER at Jain University - Office of Academics.
+
+Please complete your registration using the link below:
+{request.url_root}register
+
+Use your email: {email}
+You will be automatically granted core team access upon registration.
+
+Best regards,
+Office of Academics
+Jain University
+            """
+            mail.send(msg)
+            logger.info(f"Core invitation sent to {email}")
+        except Exception as e:
+            logger.error(f"Error sending invitation: {e}")
+        
+        return jsonify({'success': True, 'message': 'Core member assigned successfully'})
+        
+    except Exception as e:
+        logger.error(f"Error pre-assigning core: {e}")
+        return jsonify({'error': str(e)}), 400
+
+@app.route('/remove_pre_assigned/<type>/<email>', methods=['DELETE'])
+def remove_pre_assigned(type, email):
+    """Remove a pre-assigned email"""
+    if session.get('role') != 'admin':
+        return jsonify({'error': 'Access denied'}), 403
+    
+    try:
+        if type == 'leader':
+            db.pre_assigned_leaders.delete_one({'email': email})
+        elif type == 'core':
+            db.pre_assigned_core.delete_one({'email': email})
+        else:
+            return jsonify({'error': 'Invalid type'}), 400
+        
+        return jsonify({'success': True, 'message': 'Removed successfully'})
+        
+    except Exception as e:
+        logger.error(f"Error removing pre-assigned: {e}")
+        return jsonify({'error': str(e)}), 400
 
 @app.route('/update_user/<user_id>', methods=['POST'])
 def update_user(user_id):

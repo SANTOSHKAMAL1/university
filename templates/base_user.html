@@ -3,11 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Office of Academic Affairs - Jain University{% endblock %}</title>
+    <title>{% block title %}Jain University - Office of Academics{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --jain-blue: #04043a;
+            --jain-gold: #FFD700;
+            --jain-gold-light: #fff7cc;
+            --jain-gold-dark: #e6c200;
+            --jain-blue-light: #1e3c72;
+            --jain-blue-lighter: #4a6fa5;
+        }
         
         * {
             margin: 0;
@@ -17,49 +26,54 @@
         
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
+            background: linear-gradient(135deg, #f5f7fa 0%, #eef2f6 100%);
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
         
-        /* Apple-style Sidebar */
+        /* Apple-style Sidebar with Jain Colors */
         .sidebar {
             position: fixed;
             left: 0;
             top: 0;
             height: 100vh;
             width: 16rem;
-            background: rgba(255, 255, 255, 0.8);
+            background: var(--jain-blue);
+            background: linear-gradient(160deg, var(--jain-blue) 0%, #0a0a4a 100%);
             backdrop-filter: blur(40px) saturate(180%);
             -webkit-backdrop-filter: blur(40px) saturate(180%);
-            border-right: 1px solid rgba(0, 0, 0, 0.06);
+            border-right: 1px solid rgba(255, 215, 0, 0.15);
             overflow-y: auto;
             z-index: 40;
             padding-bottom: 140px;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            color: white;
         }
         
-        /* Custom Scrollbar */
+        /* Custom Scrollbar for Sidebar */
         .sidebar::-webkit-scrollbar {
             width: 8px;
         }
         
         .sidebar::-webkit-scrollbar-track {
-            background: transparent;
+            background: rgba(255, 255, 255, 0.05);
         }
         
         .sidebar::-webkit-scrollbar-thumb {
-            background: rgba(0, 0, 0, 0.15);
+            background: var(--jain-gold);
             border-radius: 10px;
+            opacity: 0.5;
         }
         
         .sidebar::-webkit-scrollbar-thumb:hover {
-            background: rgba(0, 0, 0, 0.25);
+            background: var(--jain-gold-dark);
         }
         
         /* Logo Animation */
         .logo-container {
             animation: fadeInDown 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            border-bottom: 1px solid rgba(255, 215, 0, 0.15);
+            padding-bottom: 16px;
         }
         
         @keyframes fadeInDown {
@@ -74,30 +88,42 @@
         }
         
         .logo-icon {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+            background: var(--jain-gold);
+            box-shadow: 0 8px 16px rgba(255, 215, 0, 0.25);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: var(--jain-blue);
         }
         
         .logo-icon:hover {
             transform: scale(1.05) rotate(5deg);
-            box-shadow: 0 12px 24px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 12px 24px rgba(255, 215, 0, 0.4);
         }
         
-        /* Navigation Items */
+        .logo-text h1 {
+            color: white;
+            font-weight: 700;
+        }
+        
+        .logo-text p {
+            color: var(--jain-gold);
+            opacity: 0.9;
+        }
+        
+        /* Navigation Items - Jain Style */
         .nav-item {
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 10px 14px;
-            border-radius: 10px;
-            color: #1d1d1f;
+            padding: 12px 16px;
+            border-radius: 12px;
+            color: rgba(255, 255, 255, 0.8);
             text-decoration: none;
             font-size: 14px;
             font-weight: 500;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
+            margin: 2px 8px;
         }
         
         .nav-item::before {
@@ -106,15 +132,17 @@
             left: 0;
             top: 0;
             height: 100%;
-            width: 3px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 4px;
+            background: var(--jain-gold);
             transform: scaleY(0);
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 0 4px 4px 0;
         }
         
         .nav-item:hover {
-            background: rgba(102, 126, 234, 0.08);
+            background: rgba(255, 215, 0, 0.1);
             transform: translateX(4px);
+            color: white;
         }
         
         .nav-item:hover::before {
@@ -122,8 +150,8 @@
         }
         
         .nav-item.active {
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
-            color: #667eea;
+            background: rgba(255, 215, 0, 0.15);
+            color: var(--jain-gold);
             font-weight: 600;
         }
         
@@ -131,19 +159,27 @@
             transform: scaleY(1);
         }
         
+        .nav-item.active i {
+            color: var(--jain-gold);
+        }
+        
         .nav-item i {
             font-size: 16px;
             width: 20px;
             text-align: center;
+            color: var(--jain-gold);
         }
         
-        /* User Info Card */
+        /* User Info Card with Gold Accents */
         .user-info-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 12px;
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 16px;
             padding: 16px;
             color: white;
             animation: slideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.2s backwards;
+            backdrop-filter: blur(10px);
+            margin: 16px 12px;
         }
         
         @keyframes slideIn {
@@ -157,8 +193,23 @@
             }
         }
         
+        .user-avatar {
+            background: var(--jain-gold);
+            color: var(--jain-blue);
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+        }
+        
         .online-indicator {
             animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+            color: #4ade80;
         }
         
         @keyframes pulse {
@@ -170,56 +221,47 @@
             }
         }
         
-        /* Folder Items */
-        .folder-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 10px 14px;
-            background: rgba(255, 193, 7, 0.1);
-            border: 1px solid rgba(255, 193, 7, 0.2);
-            border-radius: 10px;
-            margin-bottom: 8px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer;
+        .role-badge {
+            background: var(--jain-gold);
+            color: var(--jain-blue);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
         }
         
-        .folder-item:hover {
-            background: rgba(255, 193, 7, 0.15);
-            transform: translateX(4px);
-            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.2);
+        /* Section Headers */
+        .section-header {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--jain-gold);
+            opacity: 0.7;
+            padding: 16px 16px 8px;
         }
         
-        .folder-item-name {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex: 1;
-            text-decoration: none;
-            color: #1d1d1f;
-            font-size: 13px;
-            font-weight: 500;
+        /* Badge */
+        .badge {
+            background: var(--jain-gold);
+            color: var(--jain-blue);
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 20px;
         }
         
-        .remove-btn {
-            background: none;
-            border: none;
-            color: #ff3b30;
-            cursor: pointer;
-            font-size: 14px;
-            padding: 6px 8px;
-            border-radius: 6px;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            opacity: 0;
-        }
-        
-        .folder-item:hover .remove-btn {
-            opacity: 1;
-        }
-        
-        .remove-btn:hover {
-            background: rgba(255, 59, 48, 0.1);
-            transform: scale(1.1);
+        /* Bottom Navigation */
+        .sidebar-bottom {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 16rem;
+            background: var(--jain-blue);
+            background: linear-gradient(0deg, var(--jain-blue) 0%, #0a0a4a 100%);
+            border-top: 1px solid rgba(255, 215, 0, 0.2);
+            z-index: 50;
+            padding: 16px 12px;
         }
         
         /* Settings Dropdown */
@@ -232,10 +274,11 @@
             bottom: 100%;
             left: 0;
             right: 0;
-            background: rgba(255, 255, 255, 0.95);
+            background: var(--jain-blue);
+            border: 1px solid rgba(255, 215, 0, 0.2);
             backdrop-filter: blur(40px);
-            border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            border-radius: 16px;
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.3);
             margin-bottom: 8px;
             padding: 8px;
             opacity: 0;
@@ -254,29 +297,23 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 10px 12px;
-            border-radius: 8px;
-            color: #1d1d1f;
+            padding: 12px 12px;
+            border-radius: 10px;
+            color: rgba(255, 255, 255, 0.9);
             text-decoration: none;
             font-size: 14px;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
         .settings-item:hover {
-            background: rgba(0, 0, 0, 0.05);
+            background: rgba(255, 215, 0, 0.1);
+            color: var(--jain-gold);
+            transform: translateX(4px);
         }
         
-        /* Bottom Navigation */
-        .sidebar-bottom {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 16rem;
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(40px);
-            border-top: 1px solid rgba(0, 0, 0, 0.06);
-            z-index: 50;
-            padding: 12px;
+        .settings-item i {
+            color: var(--jain-gold);
+            width: 20px;
         }
         
         /* Main Content */
@@ -287,13 +324,13 @@
         
         /* Top Header */
         .top-header {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(40px) saturate(180%);
+            background: white;
             border-bottom: 1px solid rgba(0, 0, 0, 0.06);
             position: sticky;
             top: 0;
             z-index: 30;
             animation: slideDown 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
         }
         
         @keyframes slideDown {
@@ -307,51 +344,67 @@
             }
         }
         
+        .page-title {
+            color: var(--jain-blue);
+            font-size: 24px;
+            font-weight: 700;
+        }
+        
+        .page-subtitle {
+            color: #6b7280;
+        }
+        
         /* Search Bar */
         .search-bar {
-            background: rgba(0, 0, 0, 0.04);
+            background: #f3f4f6;
             border: none;
-            border-radius: 10px;
-            padding: 8px 16px 8px 36px;
+            border-radius: 30px;
+            padding: 10px 16px 10px 42px;
             font-size: 14px;
-            width: 240px;
+            width: 260px;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid transparent;
         }
         
         .search-bar:focus {
             outline: none;
-            background: rgba(0, 0, 0, 0.06);
-            width: 300px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            background: white;
+            width: 320px;
+            box-shadow: 0 4px 20px rgba(4, 4, 58, 0.1);
+            border-color: var(--jain-gold);
         }
         
         .search-icon {
             position: absolute;
-            left: 12px;
+            left: 16px;
             top: 50%;
             transform: translateY(-50%);
-            color: rgba(0, 0, 0, 0.4);
+            color: #9ca3af;
         }
         
-        /* Notification Badge */
+        /* Notification Bell */
         .notification-btn {
             position: relative;
-            padding: 8px;
-            border-radius: 10px;
+            padding: 10px;
+            border-radius: 50%;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #f3f4f6;
+            color: #4b5563;
         }
         
         .notification-btn:hover {
-            background: rgba(0, 0, 0, 0.05);
+            background: var(--jain-gold);
+            color: var(--jain-blue);
+            transform: scale(1.1);
         }
         
         .notification-badge {
             position: absolute;
             top: 6px;
             right: 6px;
-            width: 8px;
-            height: 8px;
-            background: #ff3b30;
+            width: 10px;
+            height: 10px;
+            background: #ef4444;
             border-radius: 50%;
             border: 2px solid white;
             animation: bounce 1s infinite;
@@ -366,32 +419,156 @@
             }
         }
         
-        /* Avatar */
-        .avatar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        /* Notification Dropdown */
+        .notification-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 380px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(4, 4, 58, 0.15);
+            margin-top: 12px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 100;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .notification-dropdown.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .notification-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, var(--jain-blue) 0%, #1e3c72 100%);
+            color: white;
+            border-radius: 20px 20px 0 0;
+        }
+        
+        .notification-header h3 {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .notification-header span {
+            background: var(--jain-gold);
+            color: var(--jain-blue);
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .notification-item {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            gap: 12px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .notification-item:hover {
+            background: #fafafa;
+            transform: translateX(4px);
+        }
+        
+        .notification-item.unread {
+            background: #fff7cc;
+        }
+        
+        .notification-icon {
             width: 40px;
             height: 40px;
-            border-radius: 50%;
+            border-radius: 12px;
+            background: var(--jain-gold-light);
+            color: var(--jain-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        
+        .notification-content {
+            flex: 1;
+        }
+        
+        .notification-title {
+            font-weight: 600;
+            color: var(--jain-blue);
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+        
+        .notification-message {
+            color: #6b7280;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+        
+        .notification-time {
+            color: #9ca3af;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .view-all-btn {
+            display: block;
+            padding: 14px;
+            text-align: center;
+            color: var(--jain-blue);
+            font-weight: 600;
+            font-size: 14px;
+            text-decoration: none;
+            border-top: 1px solid #f0f0f0;
+            transition: all 0.2s ease;
+        }
+        
+        .view-all-btn:hover {
+            background: var(--jain-gold-light);
+            color: var(--jain-blue);
+        }
+        
+        /* Avatar */
+        .avatar {
+            background: linear-gradient(135deg, var(--jain-blue) 0%, #1e3c72 100%);
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
             font-weight: 600;
-            font-size: 16px;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            font-size: 18px;
+            box-shadow: 0 4px 12px rgba(4, 4, 58, 0.2);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
         .avatar:hover {
-            transform: scale(1.05);
-            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+            transform: scale(1.05) rotate(5deg);
+            box-shadow: 0 6px 16px rgba(4, 4, 58, 0.3);
         }
         
         /* Alert Messages */
         .alert {
             animation: slideInAlert 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            border-radius: 12px;
+            border-radius: 16px;
             backdrop-filter: blur(10px);
+            margin: 20px 32px 0;
         }
         
         @keyframes slideInAlert {
@@ -405,45 +582,44 @@
             }
         }
         
-        /* Section Headers */
-        .section-header {
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: rgba(0, 0, 0, 0.5);
-            padding: 8px 16px;
+        .alert-success {
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            color: #065f46;
         }
         
-        /* Badge */
-        .badge {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            font-size: 11px;
-            font-weight: 600;
-            padding: 4px 8px;
-            border-radius: 6px;
+        .alert-error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+        }
+        
+        .alert-info {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            color: #1e40af;
+        }
+        
+        .alert-warning {
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            color: #92400e;
         }
         
         /* Footer */
         .footer {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(40px);
+            background: white;
             border-top: 1px solid rgba(0, 0, 0, 0.06);
             padding: 20px 32px;
         }
         
         .footer a {
+            color: #6b7280;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
         .footer a:hover {
-            color: #667eea;
-        }
-        
-        /* Smooth transitions for all interactive elements */
-        button, a, input {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: var(--jain-blue);
         }
         
         /* Staggered animation for nav items */
@@ -452,8 +628,42 @@
         .nav-item:nth-child(3) { animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.2s backwards; }
         .nav-item:nth-child(4) { animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.25s backwards; }
         .nav-item:nth-child(5) { animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.3s backwards; }
-        .nav-item:nth-child(6) { animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.35s backwards; }
-        .nav-item:nth-child(7) { animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.4s backwards; }
+        
+        /* Loading Spinner */
+        .spinner {
+            border: 3px solid rgba(255, 215, 0, 0.1);
+            border-top: 3px solid var(--jain-gold);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .notification-dropdown {
+                width: 320px;
+                right: -50px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -464,170 +674,192 @@
     
     <div class="flex h-screen">
         
-        <!-- SIDEBAR NAVIGATION -->
+        <!-- SIDEBAR NAVIGATION - Jain Dark Blue -->
         <aside class="sidebar">
-            <!-- Logo Section -->
+            <!-- Logo Section with Jain Colors -->
             <div class="p-6 logo-container">
                 <div class="flex items-center gap-3">
                     <div class="w-12 h-12 logo-icon rounded-xl flex items-center justify-center">
-                        <i class="fas fa-graduation-cap text-white text-xl"></i>
+                        <i class="fas fa-university text-2xl"></i>
                     </div>
-                    <div>
-                        <h1 class="text-base font-bold text-gray-900">Academic Affairs</h1>
-                        <p class="text-xs text-gray-500">Jain University</p>
+                    <div class="logo-text">
+                        <h1 class="text-lg font-bold">Jain University</h1>
+                        <p class="text-xs">Office of Academics</p>
                     </div>
                 </div>
             </div>
 
-            <!-- User Info Card -->
+            <!-- User Info Card - Enhanced with Gold -->
             {% if session.email %}
-            <div class="mx-4 mb-4 user-info-card">
-                <div class="flex items-center gap-3 mb-2">
-                    <div class="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-white font-semibold">
+            <div class="user-info-card">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="user-avatar">
                         {{ session.email[0:1].upper() }}
                     </div>
                     <div class="flex-1">
-                        <p class="text-sm font-semibold truncate">{{ session.email.split('@')[0] }}</p>
-                        <p class="text-xs opacity-80 capitalize">{{ session.role }}</p>
+                        <p class="text-sm font-semibold truncate text-white">{{ session.email.split('@')[0] }}</p>
+                        <div class="flex items-center gap-2 mt-1">
+                            <span class="role-badge">
+                                {% if session.special_role == 'leader' %}
+                                    <i class="fas fa-crown mr-1"></i> Leader
+                                {% elif session.special_role == 'office_barrier' or session.user_type == 'core' %}
+                                    <i class="fas fa-users mr-1"></i> Core Team
+                                {% else %}
+                                    <i class="fas fa-user mr-1"></i> Faculty
+                                {% endif %}
+                            </span>
+                        </div>
                     </div>
                 </div>
-                <div class="flex items-center justify-between pt-2 border-t border-white border-opacity-20">
-                    <span class="text-xs bg-white bg-opacity-20 px-2 py-1 rounded-full">
-                        <i class="fas fa-circle text-xs mr-1 online-indicator"></i>
+                
+                <!-- Status Bar -->
+                <div class="flex items-center justify-between pt-3 border-t border-yellow-500 border-opacity-20">
+                    <span class="text-xs bg-yellow-500 bg-opacity-20 text-yellow-300 px-3 py-1.5 rounded-full flex items-center gap-1.5">
+                        <i class="fas fa-circle online-indicator text-xs"></i>
                         Online
                     </span>
-                    <span class="text-xs opacity-80">{{ session.email.split('@')[0][:15] }}</span>
+                    {% if session.approved %}
+                    <span class="text-xs bg-green-500 bg-opacity-20 text-green-300 px-3 py-1.5 rounded-full">
+                        <i class="fas fa-check-circle mr-1"></i> Approved
+                    </span>
+                    {% else %}
+                    <span class="text-xs bg-red-500 bg-opacity-20 text-red-300 px-3 py-1.5 rounded-full">
+                        <i class="fas fa-clock mr-1"></i> Pending
+                    </span>
+                    {% endif %}
                 </div>
             </div>
             {% endif %}
 
-            <!-- Navigation Menu -->
-            <nav class="px-4 space-y-1">
+            <!-- Main Navigation -->
+            <div class="px-2 py-4">
+                <div class="section-header">
+                    <i class="fas fa-compass mr-2"></i> Main Menu
+                </div>
                 
-                <!-- Dashboard -->
-                <a href="{{ url_for('user_dashboard') }}" class="nav-item">
-                    <i class="fas fa-house"></i>
+                <a href="{{ url_for('home') }}" class="nav-item {% if request.endpoint == 'home' %}active{% endif %}">
+                    <i class="fas fa-home"></i>
                     <span>Dashboard</span>
                 </a>
-
-                <!-- Events -->
-                <a href="{{ url_for('jainevents') }}" class="nav-item">
-                    <i class="fas fa-calendar-days"></i>
-                    <span>Events</span>
-                </a>
-
-                <!-- Newsletters -->
-                <a href="{{ url_for('usernewsletters') }}" class="nav-item">
-                    <i class="fas fa-newspaper"></i>
-                    <span>Newsletters</span>
-                </a>
-
-                <!-- Monthly Reports -->
-                <a href="{{ url_for('monthlyengagement') }}" class="nav-item">
-                    <i class="fas fa-chart-simple"></i>
-                    <span>Monthly Reports</span>
-                </a>
-
-                <!-- Notices -->
-                <a href="{{ url_for('ugc') }}" class="nav-item">
-                    <i class="fas fa-bell"></i>
-                    <span>Notices & Updates</span>
-                </a>
-
-                <!-- Divider -->
-                <div class="py-2">
-                    <div class="border-t border-gray-200"></div>
-                </div>
-
-                <!-- Services Section -->
-                <div class="section-header">Services</div>
                 
-                <a href="{{ url_for('connect_drive') }}" class="nav-item">
-                    <i class="fab fa-google-drive"></i>
-                    <span>Google Drive</span>
+                
+                
+                <a href="{{ url_for('usernewsletters') }}" class="nav-item {% if request.endpoint == 'usernewsletters' %}active{% endif %}">
+                    <i class="fas fa-newspaper"></i>
+                    <span>AI Newsletters</span>
                 </a>
+                
+                
 
-                <a href="{{ url_for('drive_files') }}" class="nav-item">
-                    <i class="fas fa-folder"></i>
-                    <span>My Drive Files</span>
-                </a>
-
-                <!-- Divider -->
-                <div class="py-2">
-                    <div class="border-t border-gray-200"></div>
-                </div>
-
-                <!-- Custom Folders -->
-                {% if user_navbar and user_navbar|length > 0 %}
-                <div>
-                    <div class="flex items-center justify-between section-header">
-                        <span>My Folders</span>
-                        <span class="badge">{{ user_navbar|length }}</span>
+            <!-- Role-Based Navigation -->
+            {% if session.approved %}
+                {% if session.special_role == 'leader' %}
+                <div class="px-2 py-2">
+                    <div class="section-header">
+                        <i class="fas fa-crown mr-2"></i> Leadership
                     </div>
-                    
-                    <div class="space-y-2">
-                        {% for item in user_navbar %}
-                        <div class="folder-item">
-                            <a href="https://drive.google.com/drive/folders/{{ item.ref_id }}" target="_blank" class="folder-item-name">
-                                <i class="fas fa-folder text-yellow-500"></i>
-                                <span class="truncate">{{ item.label }}</span>
-                            </a>
-                            <button type="button" 
-                                    onclick="removeFolder('{{ item.ref_id }}', '{{ item.label|replace("'", "\\'") }}')" 
-                                    class="remove-btn" 
-                                    title="Remove">
-                                <i class="fas fa-xmark"></i>
-                            </button>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% else %}
-                <div class="px-4 py-6 text-center">
-                    <i class="fas fa-folder-open text-3xl text-gray-300 mb-2"></i>
-                    <p class="text-xs text-gray-500 mb-2">No folders saved</p>
-                    <a href="{{ url_for('drive_files') }}" class="text-xs text-purple-600 hover:text-purple-700 font-medium">
-                        Add from Drive →
+                    <a href="{{ url_for('leader_dashboard') }}" class="nav-item {% if request.endpoint == 'leader_dashboard' %}active{% endif %}">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Leader Dashboard</span>
                     </a>
                 </div>
                 {% endif %}
+                
+                {% if session.special_role == 'office_barrier' or session.user_type == 'core' %}
+                <div class="px-2 py-2">
+                    <div class="section-header">
+                        <i class="fas fa-users mr-2"></i> Core Team
+                    </div>
+                    <a href="{{ url_for('core_dashboard') }}" class="nav-item {% if request.endpoint == 'core_dashboard' %}active{% endif %}">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Core Dashboard</span>
+                    </a>
+                    <a href="{{ url_for('my_files') }}" class="nav-item {% if request.endpoint == 'my_files' %}active{% endif %}">
+                        <i class="fas fa-folder-open"></i>
+                        <span>My Documents</span>
+                    </a>
+                </div>
+                {% endif %}
+                
+                {% if session.role == 'admin' %}
+                <div class="px-2 py-2">
+                    <div class="section-header">
+                        <i class="fas fa-shield-alt mr-2"></i> Admin
+                    </div>
+                    <a href="{{ url_for('admin_dashboard') }}" class="nav-item {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">
+                        <i class="fas fa-users-cog"></i>
+                        <span>User Management</span>
+                    </a>
+                    <a href="{{ url_for('edit_ugc') }}" class="nav-item">
+                        <i class="fas fa-edit"></i>
+                        <span>Edit UGC</span>
+                    </a>
+                    <a href="{{ url_for('admin_events') }}" class="nav-item">
+                        <i class="fas fa-calendar-plus"></i>
+                        <span>Manage Events</span>
+                    </a>
+                </div>
+                {% endif %}
+            {% endif %}
 
-            </nav>
+            <!-- Drive Folders Section -->
+            {% if user_navbar and user_navbar|length > 0 %}
+            <div class="px-2 py-2">
+                <div class="section-header">
+                    <i class="fab fa-google-drive mr-2"></i> My Folders
+                    <span class="badge ml-2">{{ user_navbar|length }}</span>
+                </div>
+                {% for item in user_navbar %}
+                <div class="folder-item">
+                    <a href="{{ item.link }}" target="_blank" class="folder-item-name">
+                        <i class="fas fa-folder" style="color: var(--jain-gold);"></i>
+                        <span class="truncate">{{ item.name }}</span>
+                    </a>
+                    <button onclick="removeFolder('{{ item.ref_id }}', '{{ item.name }}')" class="remove-btn" title="Remove from sidebar">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
         </aside>
 
         <!-- Bottom Navigation (Fixed) -->
         <div class="sidebar-bottom">
             <div class="space-y-1">
-                <a href="{{ url_for('home') }}" class="nav-item text-sm">
-                    <i class="fas fa-arrow-left"></i>
-                    <span>Back to Home</span>
-                </a>
-
                 <!-- Settings with Dropdown -->
                 <div class="settings-dropdown">
                     <div class="settings-menu" id="settingsMenu">
-                        <a href="#" class="settings-item" onclick="alert('Profile settings coming soon!')">
+                        <a href="#" class="settings-item" onclick="showComingSoon('Profile Settings')">
                             <i class="fas fa-user"></i>
-                            <span>Profile</span>
+                            <span>Profile Settings</span>
                         </a>
-                        <a href="#" class="settings-item" onclick="alert('Appearance settings coming soon!')">
+                        <a href="#" class="settings-item" onclick="showComingSoon('Appearance Settings')">
                             <i class="fas fa-palette"></i>
                             <span>Appearance</span>
                         </a>
-                        <a href="#" class="settings-item" onclick="alert('Privacy settings coming soon!')">
+                        <a href="#" class="settings-item" onclick="showComingSoon('Notification Preferences')">
+                            <i class="fas fa-bell"></i>
+                            <span>Notifications</span>
+                        </a>
+                        <a href="#" class="settings-item" onclick="showComingSoon('Privacy & Security')">
                             <i class="fas fa-lock"></i>
                             <span>Privacy</span>
                         </a>
+                        <a href="#" class="settings-item" onclick="showComingSoon('Help & Support')">
+                            <i class="fas fa-question-circle"></i>
+                            <span>Help Center</span>
+                        </a>
                     </div>
                     <button onclick="toggleSettings()" class="nav-item text-sm w-full">
-                        <i class="fas fa-gear"></i>
+                        <i class="fas fa-cog"></i>
                         <span>Settings</span>
                         <i class="fas fa-chevron-up ml-auto text-xs" id="settingsChevron"></i>
                     </button>
                 </div>
 
-                <a href="{{ url_for('logout') }}" class="nav-item text-sm text-red-600 hover:bg-red-50">
-                    <i class="fas fa-arrow-right-from-bracket"></i>
+                <a href="{{ url_for('logout') }}" class="nav-item text-sm" onclick="return confirm('Are you sure you want to logout?')">
+                    <i class="fas fa-sign-out-alt"></i>
                     <span>Logout</span>
                 </a>
             </div>
@@ -640,27 +872,79 @@
             <header class="top-header">
                 <div class="px-8 py-4 flex items-center justify-between">
                     <div>
-                        <h2 class="text-2xl font-bold text-gray-900">{% block page_title %}Welcome{% endblock %}</h2>
-                        <p class="text-sm text-gray-500 mt-1">{% block page_subtitle %}Your academic dashboard{% endblock %}</p>
+                        <h2 class="page-title">{% block page_title %}Welcome{% endblock %}</h2>
+                        <p class="page-subtitle text-sm mt-1">{% block page_subtitle %}Jain University - Office of Academics{% endblock %}</p>
                     </div>
                     
                     <!-- Top Right Actions -->
                     <div class="flex items-center gap-4">
                         <!-- Search -->
                         <div class="relative hidden md:block">
-                            <i class="fas fa-magnifying-glass search-icon"></i>
-                            <input type="text" placeholder="Search..." class="search-bar">
+                            <i class="fas fa-search search-icon"></i>
+                            <input type="text" placeholder="Search..." class="search-bar" id="globalSearch">
                         </div>
 
-                        <!-- Notifications Bell -->
-                        <button class="notification-btn" onclick="window.location.href='{{ url_for('user_dashboard') }}'">
-                            <i class="fas fa-bell text-gray-600 text-lg"></i>
-                            {% if notifications is defined and notifications and notifications|length > 0 %}
-                            <span class="notification-badge"></span>
-                            {% endif %}
-                        </button>
+                        <!-- Notifications Bell with Dropdown -->
+                        <div class="relative">
+                            <button class="notification-btn" onclick="toggleNotifications()" id="notificationBtn">
+                                <i class="fas fa-bell text-lg"></i>
+                                {% if notifications and notifications|length > 0 %}
+                                <span class="notification-badge"></span>
+                                {% endif %}
+                            </button>
+                            
+                            <!-- Notification Dropdown -->
+                            <div class="notification-dropdown" id="notificationDropdown">
+                                <div class="notification-header">
+                                    <h3><i class="fas fa-bell mr-2"></i> Notifications</h3>
+                                    <span>{{ notifications|length }} new</span>
+                                </div>
+                                
+                                <div class="notification-list">
+                                    {% if notifications and notifications|length > 0 %}
+                                        {% for notification in notifications[:5] %}
+                                        <div class="notification-item {% if loop.first %}unread{% endif %}">
+                                            <div class="notification-icon">
+                                                {% if notification.type == 'reminder' %}
+                                                    <i class="fas fa-bell"></i>
+                                                {% elif notification.type == 'document' %}
+                                                    <i class="fas fa-file-alt"></i>
+                                                {% elif notification.type == 'event' %}
+                                                    <i class="fas fa-calendar"></i>
+                                                {% else %}
+                                                    <i class="fas fa-info-circle"></i>
+                                                {% endif %}
+                                            </div>
+                                            <div class="notification-content">
+                                                <div class="notification-title">{{ notification.title }}</div>
+                                                <div class="notification-message">{{ notification.message }}</div>
+                                                <div class="notification-time">
+                                                    <i class="far fa-clock"></i>
+                                                    {{ notification.time.strftime('%I:%M %p') if notification.time else 'Just now' }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <div class="text-center py-8 px-4">
+                                            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                                <i class="fas fa-bell-slash text-gray-400 text-2xl"></i>
+                                            </div>
+                                            <p class="text-gray-500 text-sm">No new notifications</p>
+                                            <p class="text-gray-400 text-xs mt-1">You're all caught up!</p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                {% if notifications and notifications|length > 0 %}
+                                <a href="{{ url_for('user_dashboard') }}" class="view-all-btn">
+                                    View All Notifications <i class="fas fa-arrow-right ml-2"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
 
-                        <!-- User Avatar -->
+                        <!-- User Avatar with Role Badge -->
                         <div class="flex items-center gap-3 border-l border-gray-200 pl-4">
                             <div class="avatar">
                                 {% if session.email %}
@@ -677,11 +961,15 @@
                                     Guest
                                     {% endif %}
                                 </p>
-                                <p class="text-xs text-gray-500 capitalize">
-                                    {% if session.role %}
-                                    {{ session.role }}
+                                <p class="text-xs text-gray-500 flex items-center gap-1">
+                                    {% if session.special_role == 'leader' %}
+                                        <span class="w-2 h-2 bg-yellow-500 rounded-full"></span> Leader
+                                    {% elif session.special_role == 'office_barrier' or session.user_type == 'core' %}
+                                        <span class="w-2 h-2 bg-purple-500 rounded-full"></span> Core Team
+                                    {% elif session.role == 'admin' %}
+                                        <span class="w-2 h-2 bg-red-500 rounded-full"></span> Admin
                                     {% else %}
-                                    Visitor
+                                        <span class="w-2 h-2 bg-blue-500 rounded-full"></span> Faculty
                                     {% endif %}
                                 </p>
                             </div>
@@ -696,40 +984,22 @@
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
                         {% for category, message in messages %}
-                            <div class="mx-6 mt-6 alert">
-                                {% if category == 'error' %}
-                                    <div class="bg-red-50 bg-opacity-80 backdrop-blur-lg border border-red-200 text-red-800 px-4 py-3 rounded-xl flex items-center gap-3 shadow-lg">
-                                        <i class="fas fa-circle-exclamation"></i>
-                                        <span class="flex-1">{{ message }}</span>
-                                        <button onclick="this.parentElement.parentElement.remove()" class="text-red-500 hover:text-red-700">
-                                            <i class="fas fa-xmark"></i>
-                                        </button>
-                                    </div>
-                                {% elif category == 'success' %}
-                                    <div class="bg-green-50 bg-opacity-80 backdrop-blur-lg border border-green-200 text-green-800 px-4 py-3 rounded-xl flex items-center gap-3 shadow-lg">
-                                        <i class="fas fa-circle-check"></i>
-                                        <span class="flex-1">{{ message }}</span>
-                                        <button onclick="this.parentElement.parentElement.remove()" class="text-green-500 hover:text-green-700">
-                                            <i class="fas fa-xmark"></i>
-                                        </button>
-                                    </div>
-                                {% elif category == 'info' %}
-                                    <div class="bg-blue-50 bg-opacity-80 backdrop-blur-lg border border-blue-200 text-blue-800 px-4 py-3 rounded-xl flex items-center gap-3 shadow-lg">
-                                        <i class="fas fa-circle-info"></i>
-                                        <span class="flex-1">{{ message }}</span>
-                                        <button onclick="this.parentElement.parentElement.remove()" class="text-blue-500 hover:text-blue-700">
-                                            <i class="fas fa-xmark"></i>
-                                        </button>
-                                    </div>
-                                {% else %}
-                                    <div class="bg-yellow-50 bg-opacity-80 backdrop-blur-lg border border-yellow-200 text-yellow-800 px-4 py-3 rounded-xl flex items-center gap-3 shadow-lg">
-                                        <i class="fas fa-triangle-exclamation"></i>
-                                        <span class="flex-1">{{ message }}</span>
-                                        <button onclick="this.parentElement.parentElement.remove()" class="text-yellow-500 hover:text-yellow-700">
-                                            <i class="fas fa-xmark"></i>
-                                        </button>
-                                    </div>
-                                {% endif %}
+                            <div class="alert">
+                                <div class="alert-{{ category }} px-4 py-3 rounded-xl flex items-center gap-3 shadow-lg">
+                                    {% if category == 'error' %}
+                                        <i class="fas fa-exclamation-circle text-xl"></i>
+                                    {% elif category == 'success' %}
+                                        <i class="fas fa-check-circle text-xl"></i>
+                                    {% elif category == 'info' %}
+                                        <i class="fas fa-info-circle text-xl"></i>
+                                    {% else %}
+                                        <i class="fas fa-exclamation-triangle text-xl"></i>
+                                    {% endif %}
+                                    <span class="flex-1">{{ message }}</span>
+                                    <button onclick="this.parentElement.parentElement.remove()" class="hover:opacity-70">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
                             </div>
                         {% endfor %}
                     {% endif %}
@@ -738,12 +1008,19 @@
                 <!-- Page Content -->
                 {% block content %}
                     <div class="p-8">
-                        <div class="bg-white bg-opacity-80 backdrop-blur-lg rounded-2xl shadow-lg p-12 text-center border border-gray-100">
-                            <div class="inline-block p-4 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full mb-4">
-                                <i class="fas fa-graduation-cap text-4xl text-purple-600"></i>
+                        <div class="bg-white rounded-2xl shadow-sm p-12 text-center border border-gray-100">
+                            <div class="inline-block p-4 bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-full mb-4">
+                                <i class="fas fa-graduation-cap text-4xl" style="color: var(--jain-blue);"></i>
                             </div>
-                            <h3 class="text-2xl font-bold text-gray-900 mb-2">Welcome to Academic Portal</h3>
-                            <p class="text-gray-500">Start exploring your academic resources</p>
+                            <h3 class="text-2xl font-bold mb-2" style="color: var(--jain-blue);">Welcome to Jain University</h3>
+                            <p class="text-gray-500">Office of Academics - Your gateway to academic excellence</p>
+                            
+                            {% if not session.approved and session.email %}
+                            <div class="mt-6 p-4 bg-yellow-50 rounded-xl border border-yellow-200">
+                                <i class="fas fa-clock text-yellow-600 mr-2"></i>
+                                <span class="text-yellow-800">Your account is pending approval. Limited access available.</span>
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                 {% endblock %}
@@ -752,14 +1029,37 @@
             <!-- FOOTER -->
             <footer class="footer">
                 <div class="flex items-center justify-between text-sm text-gray-600">
-                    <p>&copy; 2024 Jain University. All rights reserved.</p>
+                    <p>© 2026 Jain University. All rights reserved.</p>
                     <div class="flex gap-6">
-                        <a href="{{ url_for('about') }}" class="hover:text-purple-600">About</a>
-                        <a href="#" class="hover:text-purple-600">Contact</a>
-                        <a href="#" class="hover:text-purple-600">Privacy Policy</a>
+                        <a href="{{ url_for('about') }}" class="hover:text-yellow-600">About</a>
+                        <a href="#" class="hover:text-yellow-600" onclick="showComingSoon('Contact Page')">Contact</a>
+                        <a href="#" class="hover:text-yellow-600" onclick="showComingSoon('Privacy Policy')">Privacy</a>
+                        <a href="#" class="hover:text-yellow-600" onclick="showComingSoon('Terms of Use')">Terms</a>
                     </div>
                 </div>
             </footer>
+        </div>
+    </div>
+
+    <!-- Loading Spinner (Hidden by default) -->
+    <div id="loadingSpinner" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl text-center">
+            <div class="spinner mx-auto"></div>
+            <p class="mt-4 text-gray-700 font-medium">Loading...</p>
+        </div>
+    </div>
+
+    <!-- Coming Soon Modal -->
+    <div id="comingSoonModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-md text-center">
+            <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-rocket text-2xl" style="color: var(--jain-blue);"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-2" style="color: var(--jain-blue);">Coming Soon!</h3>
+            <p class="text-gray-600 mb-6" id="comingSoonMessage">This feature is under development</p>
+            <button onclick="closeComingSoon()" class="px-6 py-2 rounded-lg text-white" style="background: var(--jain-blue);">
+                Got it
+            </button>
         </div>
     </div>
 
@@ -772,16 +1072,59 @@
             chevron.style.transform = menu.classList.contains('active') ? 'rotate(180deg)' : 'rotate(0deg)';
         }
 
-        // Close settings when clicking outside
+        // Notifications Dropdown Toggle
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notificationDropdown');
+            dropdown.classList.toggle('active');
+            
+            // Mark as read when opened
+            if (dropdown.classList.contains('active')) {
+                const unreadItems = document.querySelectorAll('.notification-item.unread');
+                unreadItems.forEach(item => {
+                    item.classList.remove('unread');
+                });
+            }
+        }
+
+        // Close dropdowns when clicking outside
         document.addEventListener('click', function(event) {
-            const dropdown = document.querySelector('.settings-dropdown');
-            if (!dropdown.contains(event.target)) {
+            // Settings dropdown
+            const settingsDropdown = document.querySelector('.settings-dropdown');
+            if (settingsDropdown && !settingsDropdown.contains(event.target)) {
                 const menu = document.getElementById('settingsMenu');
                 const chevron = document.getElementById('settingsChevron');
                 if (menu) menu.classList.remove('active');
                 if (chevron) chevron.style.transform = 'rotate(0deg)';
             }
+            
+            // Notifications dropdown
+            const notificationBtn = document.getElementById('notificationBtn');
+            const notificationDropdown = document.getElementById('notificationDropdown');
+            if (notificationBtn && notificationDropdown && 
+                !notificationBtn.contains(event.target) && 
+                !notificationDropdown.contains(event.target)) {
+                notificationDropdown.classList.remove('active');
+            }
         });
+
+        // Show Coming Soon Modal
+        function showComingSoon(feature) {
+            document.getElementById('comingSoonMessage').textContent = `${feature} is under development`;
+            document.getElementById('comingSoonModal').classList.remove('hidden');
+        }
+
+        function closeComingSoon() {
+            document.getElementById('comingSoonModal').classList.add('hidden');
+        }
+
+        // Show/Hide Loading Spinner
+        function showLoading() {
+            document.getElementById('loadingSpinner').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingSpinner').classList.add('hidden');
+        }
 
         // Remove folder from navbar
         async function removeFolder(folderId, folderName) {
@@ -789,6 +1132,7 @@
                 return;
             }
             
+            showLoading();
             try {
                 const form = document.createElement('form');
                 form.method = 'POST';
@@ -797,6 +1141,7 @@
                 form.submit();
             } catch (error) {
                 console.error('Error removing folder:', error);
+                hideLoading();
                 alert('Error removing folder. Please try again.');
             }
         }
@@ -824,270 +1169,112 @@
                 }
             });
 
-            // Search bar animation
-            const searchBar = document.querySelector('.search-bar');
+            // Global search functionality
+            const searchBar = document.getElementById('globalSearch');
             if (searchBar) {
-                searchBar.addEventListener('focus', function() {
-                    this.parentElement.style.transform = 'scale(1.02)';
-                });
-                searchBar.addEventListener('blur', function() {
-                    this.parentElement.style.transform = 'scale(1)';
-                });
-            }
-
-            // Notification button animation
-            const notificationBtn = document.querySelector('.notification-btn');
-            if (notificationBtn) {
-                notificationBtn.addEventListener('click', function() {
-                    const badge = this.querySelector('.notification-badge');
-                    if (badge) {
-                        badge.style.animation = 'none';
-                        setTimeout(() => {
-                            badge.style.animation = '';
-                        }, 10);
-                    }
-                });
-            }
-
-            // Avatar hover effect
-            const avatar = document.querySelector('.avatar');
-            if (avatar) {
-                avatar.addEventListener('mouseenter', function() {
-                    this.style.transform = 'scale(1.1) rotate(5deg)';
-                });
-                avatar.addEventListener('mouseleave', function() {
-                    this.style.transform = 'scale(1) rotate(0deg)';
-                });
-            }
-
-            // Add parallax effect to logo
-            const logo = document.querySelector('.logo-icon');
-            if (logo) {
-                document.addEventListener('mousemove', function(e) {
-                    const x = (e.clientX / window.innerWidth - 0.5) * 10;
-                    const y = (e.clientY / window.innerHeight - 0.5) * 10;
-                    logo.style.transform = `translate(${x}px, ${y}px) scale(1)`;
-                });
-            }
-
-            // Folder item animation on load
-            const folderItems = document.querySelectorAll('.folder-item');
-            folderItems.forEach((item, index) => {
-                item.style.animation = `slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) ${0.1 * index}s backwards`;
-            });
-
-            // Add ripple effect to buttons
-            document.querySelectorAll('.nav-item, .settings-item').forEach(item => {
-                item.addEventListener('click', function(e) {
-                    // Skip if it's a settings item that should show alert
-                    if (this.onclick && this.onclick.toString().includes('alert')) {
-                        return;
-                    }
-                    
-                    const ripple = document.createElement('span');
-                    const rect = this.getBoundingClientRect();
-                    const size = Math.max(rect.width, rect.height);
-                    const x = e.clientX - rect.left - size / 2;
-                    const y = e.clientY - rect.top - size / 2;
-                    
-                    ripple.style.width = ripple.style.height = size + 'px';
-                    ripple.style.left = x + 'px';
-                    ripple.style.top = y + 'px';
-                    ripple.style.position = 'absolute';
-                    ripple.style.borderRadius = '50%';
-                    ripple.style.background = 'rgba(255, 255, 255, 0.5)';
-                    ripple.style.transform = 'scale(0)';
-                    ripple.style.animation = 'ripple 0.6s ease-out';
-                    ripple.style.pointerEvents = 'none';
-                    
-                    this.style.position = 'relative';
-                    this.style.overflow = 'hidden';
-                    this.appendChild(ripple);
-                    
-                    setTimeout(() => ripple.remove(), 600);
-                });
-            });
-
-            // Add loading animation
-            window.addEventListener('beforeunload', function() {
-                document.body.style.opacity = '0';
-                document.body.style.transform = 'scale(0.98)';
-            });
-
-            // Smooth scroll behavior
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function (e) {
-                    const href = this.getAttribute('href');
-                    if (href !== '#') {
-                        e.preventDefault();
-                        const target = document.querySelector(href);
-                        if (target) {
-                            target.scrollIntoView({
-                                behavior: 'smooth'
-                            });
+                searchBar.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        const query = this.value.trim();
+                        if (query) {
+                            showLoading();
+                            window.location.href = `/search?q=${encodeURIComponent(query)}`;
                         }
                     }
                 });
-            });
+            }
 
-            // Add keyboard shortcuts
+            // Keyboard shortcuts
             document.addEventListener('keydown', function(e) {
+                // Alt + N = Toggle notifications
+                if (e.altKey && e.key === 'n') {
+                    e.preventDefault();
+                    toggleNotifications();
+                }
+                
+                // Alt + S = Toggle settings
+                if (e.altKey && e.key === 's') {
+                    e.preventDefault();
+                    toggleSettings();
+                }
+                
                 // Alt + H = Home
                 if (e.altKey && e.key === 'h') {
-                    window.location.href = "{{ url_for('user_dashboard') }}";
+                    e.preventDefault();
+                    window.location.href = "{{ url_for('home') }}";
                 }
+                
                 // Alt + E = Events
                 if (e.altKey && e.key === 'e') {
+                    e.preventDefault();
                     window.location.href = "{{ url_for('jainevents') }}";
                 }
-                // Alt + D = Drive
-                if (e.altKey && e.key === 'd') {
-                    window.location.href = "{{ url_for('drive_files') }}";
-                }
-                // Esc = Close settings
-                if (e.key === 'Escape') {
-                    const menu = document.getElementById('settingsMenu');
-                    const chevron = document.getElementById('settingsChevron');
-                    if (menu && menu.classList.contains('active')) {
-                        menu.classList.remove('active');
-                        if (chevron) chevron.style.transform = 'rotate(0deg)';
-                    }
-                }
-            });
-
-            // Enhanced folder hover effects
-            const folders = document.querySelectorAll('.folder-item');
-            folders.forEach(folder => {
-                folder.addEventListener('mouseenter', function() {
-                    this.style.transform = 'translateX(6px) scale(1.02)';
-                });
-                folder.addEventListener('mouseleave', function() {
-                    this.style.transform = 'translateX(0) scale(1)';
-                });
-            });
-
-            // Add tooltips to icons
-            document.querySelectorAll('[title]').forEach(element => {
-                element.addEventListener('mouseenter', function() {
-                    const title = this.getAttribute('title');
-                    if (title) {
-                        const tooltip = document.createElement('div');
-                        tooltip.className = 'tooltip';
-                        tooltip.textContent = title;
-                        tooltip.style.position = 'absolute';
-                        tooltip.style.background = 'rgba(0, 0, 0, 0.8)';
-                        tooltip.style.color = 'white';
-                        tooltip.style.padding = '6px 12px';
-                        tooltip.style.borderRadius = '6px';
-                        tooltip.style.fontSize = '12px';
-                        tooltip.style.zIndex = '1000';
-                        tooltip.style.pointerEvents = 'none';
-                        tooltip.style.whiteSpace = 'nowrap';
-                        document.body.appendChild(tooltip);
-                        
-                        const rect = this.getBoundingClientRect();
-                        tooltip.style.left = rect.left + (rect.width / 2) - (tooltip.offsetWidth / 2) + 'px';
-                        tooltip.style.top = rect.bottom + 8 + 'px';
-                        
-                        this.tooltipElement = tooltip;
-                    }
-                });
                 
-                element.addEventListener('mouseleave', function() {
-                    if (this.tooltipElement) {
-                        this.tooltipElement.remove();
-                        this.tooltipElement = null;
+                // Esc = Close all dropdowns
+                if (e.key === 'Escape') {
+                    document.getElementById('notificationDropdown')?.classList.remove('active');
+                    document.getElementById('settingsMenu')?.classList.remove('active');
+                    document.getElementById('comingSoonModal')?.classList.add('hidden');
+                }
+            });
+
+            // Mobile sidebar toggle (if needed)
+            function toggleSidebar() {
+                document.querySelector('.sidebar').classList.toggle('open');
+            }
+
+            // Add loading state to links
+            document.querySelectorAll('a[href]:not([href^="#"]):not([target="_blank"])').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    if (!e.ctrlKey && !e.metaKey) {
+                        showLoading();
                     }
                 });
             });
 
-            // Animate badge on load
-            const badges = document.querySelectorAll('.badge');
-            badges.forEach((badge, index) => {
-                setTimeout(() => {
-                    badge.style.animation = 'bounce 0.5s ease';
-                }, 500 + (index * 100));
-            });
-
-            // Add connection status indicator
-            window.addEventListener('online', function() {
-                const indicator = document.querySelector('.online-indicator');
-                if (indicator) {
-                    indicator.style.color = '#34d399';
-                }
-            });
-
-            window.addEventListener('offline', function() {
-                const indicator = document.querySelector('.online-indicator');
-                if (indicator) {
-                    indicator.style.color = '#ef4444';
-                }
-            });
-
-            // Performance optimization - lazy load images
-            const images = document.querySelectorAll('img[data-src]');
-            const imageObserver = new IntersectionObserver((entries, observer) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        const img = entry.target;
-                        img.src = img.dataset.src;
-                        img.removeAttribute('data-src');
-                        observer.unobserve(img);
-                    }
+            // Handle form submissions
+            document.querySelectorAll('form').forEach(form => {
+                form.addEventListener('submit', function() {
+                    showLoading();
                 });
             });
-
-            images.forEach(img => imageObserver.observe(img));
         });
 
-        // Add CSS for ripple animation dynamically
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes ripple {
-                to {
-                    transform: scale(4);
-                    opacity: 0;
-                }
-            }
-            
-            .tooltip {
-                animation: fadeIn 0.2s ease-in-out;
-            }
-            
-            @keyframes fadeIn {
-                from {
-                    opacity: 0;
-                    transform: translateY(-5px);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-            }
-        `;
-        document.head.appendChild(style);
+        // Network status indicator
+        window.addEventListener('online', function() {
+            const statusDiv = document.createElement('div');
+            statusDiv.className = 'fixed top-20 right-8 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+            statusDiv.innerHTML = '<i class="fas fa-wifi mr-2"></i> Back Online';
+            document.body.appendChild(statusDiv);
+            setTimeout(() => statusDiv.remove(), 3000);
+        });
 
-        // Console welcome message
-        console.log('%c🎓 Jain University Academic Portal', 
-            'font-size: 20px; font-weight: bold; color: #667eea;');
+        window.addEventListener('offline', function() {
+            const statusDiv = document.createElement('div');
+            statusDiv.className = 'fixed top-20 right-8 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+            statusDiv.innerHTML = '<i class="fas fa-exclamation-circle mr-2"></i> You are offline';
+            document.body.appendChild(statusDiv);
+        });
+
+        // Error handling for AJAX requests
+        window.addEventListener('unhandledrejection', function(event) {
+            console.error('Unhandled Promise Rejection:', event.reason);
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'fixed bottom-8 right-8 bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg z-50';
+            errorDiv.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i> An error occurred. Please try again.';
+            document.body.appendChild(errorDiv);
+            setTimeout(() => errorDiv.remove(), 5000);
+        });
+
+        // Console welcome message with Jain colors
+        console.log('%c🎓 Jain University - Office of Academics', 
+            'font-size: 20px; font-weight: bold; color: #04043a;');
         console.log('%cWelcome! Keyboard shortcuts:', 
             'font-size: 14px; color: #666;');
-        console.log('%cAlt + H = Dashboard', 'color: #888;');
-        console.log('%cAlt + E = Events', 'color: #888;');
-        console.log('%cAlt + D = Drive Files', 'color: #888;');
-        console.log('%cEsc = Close Menus', 'color: #888;');
-
-        // Error handling for missing routes
-        window.addEventListener('error', function(e) {
-            if (e.message.includes('404') || e.message.includes('route')) {
-                console.warn('Route not found:', e.message);
-            }
-        });
-
-        // Prevent form resubmission on refresh
-        if (window.history.replaceState) {
-            window.history.replaceState(null, null, window.location.href);
-        }
+        console.log('%cAlt + H = Home', 'color: #04043a;');
+        console.log('%cAlt + E = Events', 'color: #04043a;');
+        console.log('%cAlt + N = Notifications', 'color: #04043a;');
+        console.log('%cAlt + S = Settings', 'color: #04043a;');
+        console.log('%cEsc = Close menus', 'color: #04043a;');
     </script>
 
     {% block scripts %}{% endblock %}

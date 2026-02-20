@@ -2576,7 +2576,7 @@
                                     <!-- Show My Files only for APPROVED users -->
                                     <a href="{{ url_for('my_files') }}">
                                         <i class="fas fa-folder-open"></i>
-                                        My Files
+                                        My Files(will launch soon)
                                     </a>
                                 {% endif %}
                                 
@@ -2584,7 +2584,7 @@
                                     <!-- Show Core Dashboard for APPROVED core/office barriers -->
                                     <a href="{{ url_for('core_dashboard') }}">
                                         <i class="fas fa-tachometer-alt"></i>
-                                        Office Barriers Dashboard
+                                        Core Members Dashboard
                                     </a>
                                 {% endif %}
                                 
@@ -2592,7 +2592,7 @@
                                     <!-- Show Leader Dashboard for APPROVED leaders -->
                                     <a href="{{ url_for('leader_dashboard') }}">
                                         <i class="fas fa-crown"></i>
-                                        Leadership Dashboard
+                                         Admin Dashboard
                                     </a>
                                 {% endif %}
                                 
@@ -2949,16 +2949,48 @@
                             </div>
                         </div>
 
-                        <!-- SAMUDI Categories -->
-                        <div class="samudi-badge-container">
-                            <span class="samudi-badge ai"><i class="fas fa-robot"></i> AI & New Technologies</span>
-                            <span class="samudi-badge entrepreneurship"><i class="fas fa-chart-line"></i> Entrepreneurship</span>
-                            <span class="samudi-badge iks"><i class="fas fa-om"></i> Indian Knowledge Systems</span>
-                            <span class="samudi-badge sustainability"><i class="fas fa-leaf"></i> Sustainability</span>
-                            <span class="samudi-badge bhasha"><i class="fas fa-language"></i> Bhartiya Bhasha</span>
-                        </div>
+                       
                          
-                        <!-- Understanding SWAYAM Section -->
+                                               <!-- SWAYAM Content (Default) -->
+                        <div id="swayamContent">
+                            <!-- SAMUDI Implementation -->
+                            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px; padding: 30px; margin: 30px 0; color: white;">
+                                <h3 style="color: var(--jain-gold); margin-bottom: 15px;">Implementation of SAMUDI Courses as University Open Electives</h3>
+                                <p>In accordance with the National Education Policy (NEP)-2020, Higher Education Institutions are required to provide flexible, multidisciplinary, and holistic learning opportunities to students through Open Electives. The University has conceptualized SAMUDI (Skills, Attitude, Mindset, Understanding, Digital and Interdisciplinary) courses as University Open Electives.</p>
+                            </div>
+
+                            <!-- Approved SAMUDI Categories -->
+                            <div style="background: white; border-radius: 20px; padding: 25px; margin: 30px 0; box-shadow: var(--shadow-lg);">
+                                <h3 style="color: var(--jain-blue); margin-bottom: 20px;">1. Approved SAMUDI Categories</h3>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                                    <div style="background: #e3f2fd; padding: 15px; border-radius: 12px;">
+                                        <i class="fas fa-robot" style="color: #00bcd4; font-size: 1.5rem; margin-bottom: 10px;"></i>
+                                        <h4 style="color: #333;">AI and New Technologies</h4>
+                                        <p style="font-size: 0.85rem;">AI, Machine Learning, Digital Literacy</p>
+                                    </div>
+                                    <div style="background: #fff3e0; padding: 15px; border-radius: 12px;">
+                                        <i class="fas fa-chart-line" style="color: #ff9800; font-size: 1.5rem; margin-bottom: 10px;"></i>
+                                        <h4 style="color: #333;">Entrepreneurship</h4>
+                                        <p style="font-size: 0.85rem;">Innovation, startups, financial literacy</p>
+                                    </div>
+                                    <div style="background: #f3e5f5; padding: 15px; border-radius: 12px;">
+                                        <i class="fas fa-om" style="color: #9c27b0; font-size: 1.5rem; margin-bottom: 10px;"></i>
+                                        <h4 style="color: #333;">Indian Knowledge Systems</h4>
+                                        <p style="font-size: 0.85rem;">IKS, philosophy, governance</p>
+                                    </div>
+                                    <div style="background: #e8f5e8; padding: 15px; border-radius: 12px;">
+                                        <i class="fas fa-leaf" style="color: #4caf50; font-size: 1.5rem; margin-bottom: 10px;"></i>
+                                        <h4 style="color: #333;">Sustainability</h4>
+                                        <p style="font-size: 0.85rem;">Environmental, social, economic</p>
+                                    </div>
+                                    <div style="background: #ffebee; padding: 15px; border-radius: 12px;">
+                                        <i class="fas fa-language" style="color: #f44336; font-size: 1.5rem; margin-bottom: 10px;"></i>
+                                        <h4 style="color: #333;">Bhartiya Bhasha</h4>
+                                        <p style="font-size: 0.85rem;">Indian languages and literature</p>
+                                    </div>
+                                </div>
+                            </div>
+ <!-- Understanding SWAYAM Section -->
                         <div class="guidelines-section">
                             <h3><i class="fas fa-info-circle"></i> Understanding the SWAYAM Platform</h3>
                             <p>SWAYAM (Study Webs of Active—Learning for Young Aspiring Minds) is the national online learning platform of the Government of India, initiated by the Ministry of Education. It offers high-quality, credit-bearing online courses developed by premier institutions and universities across the country.</p>
@@ -3006,45 +3038,6 @@
                             </div>
                         </div>
 
-                        <!-- SWAYAM Content (Default) -->
-                        <div id="swayamContent">
-                            <!-- SAMUDI Implementation -->
-                            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px; padding: 30px; margin: 30px 0; color: white;">
-                                <h3 style="color: var(--jain-gold); margin-bottom: 15px;">Implementation of SAMUDI Courses as University Open Electives</h3>
-                                <p>In accordance with the National Education Policy (NEP)-2020, Higher Education Institutions are required to provide flexible, multidisciplinary, and holistic learning opportunities to students through Open Electives. The University has conceptualized SAMUDI (Skills, Attitude, Mindset, Understanding, Digital and Interdisciplinary) courses as University Open Electives.</p>
-                            </div>
-
-                            <!-- Approved SAMUDI Categories -->
-                            <div style="background: white; border-radius: 20px; padding: 25px; margin: 30px 0; box-shadow: var(--shadow-lg);">
-                                <h3 style="color: var(--jain-blue); margin-bottom: 20px;">1. Approved SAMUDI Categories</h3>
-                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-                                    <div style="background: #e3f2fd; padding: 15px; border-radius: 12px;">
-                                        <i class="fas fa-robot" style="color: #00bcd4; font-size: 1.5rem; margin-bottom: 10px;"></i>
-                                        <h4 style="color: #333;">AI and New Technologies</h4>
-                                        <p style="font-size: 0.85rem;">AI, Machine Learning, Digital Literacy</p>
-                                    </div>
-                                    <div style="background: #fff3e0; padding: 15px; border-radius: 12px;">
-                                        <i class="fas fa-chart-line" style="color: #ff9800; font-size: 1.5rem; margin-bottom: 10px;"></i>
-                                        <h4 style="color: #333;">Entrepreneurship</h4>
-                                        <p style="font-size: 0.85rem;">Innovation, startups, financial literacy</p>
-                                    </div>
-                                    <div style="background: #f3e5f5; padding: 15px; border-radius: 12px;">
-                                        <i class="fas fa-om" style="color: #9c27b0; font-size: 1.5rem; margin-bottom: 10px;"></i>
-                                        <h4 style="color: #333;">Indian Knowledge Systems</h4>
-                                        <p style="font-size: 0.85rem;">IKS, philosophy, governance</p>
-                                    </div>
-                                    <div style="background: #e8f5e8; padding: 15px; border-radius: 12px;">
-                                        <i class="fas fa-leaf" style="color: #4caf50; font-size: 1.5rem; margin-bottom: 10px;"></i>
-                                        <h4 style="color: #333;">Sustainability</h4>
-                                        <p style="font-size: 0.85rem;">Environmental, social, economic</p>
-                                    </div>
-                                    <div style="background: #ffebee; padding: 15px; border-radius: 12px;">
-                                        <i class="fas fa-language" style="color: #f44336; font-size: 1.5rem; margin-bottom: 10px;"></i>
-                                        <h4 style="color: #333;">Bhartiya Bhasha</h4>
-                                        <p style="font-size: 0.85rem;">Indian languages and literature</p>
-                                    </div>
-                                </div>
-                            </div>
 
                             <!-- Course Identification Process -->
                             <div style="background: white; border-radius: 20px; padding: 25px; margin: 30px 0; box-shadow: var(--shadow-lg);">

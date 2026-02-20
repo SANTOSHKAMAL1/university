@@ -1,113 +1,155 @@
 {% extends 'base_user.html' %}
 
-{% block title %}Core Team Dashboard{% endblock %}
-{% block page_title %}Office of Academic Barriers - Core Team{% endblock %}
+{% block title %}Core Team Dashboard - Jain University{% endblock %}
+{% block page_title %}Core Team Dashboard{% endblock %}
+{% block page_subtitle %}Document Management & Team Collaboration{% endblock %}
 
 {% block content %}
 <div class="min-h-screen bg-gray-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        <!-- Header -->
-        <div class="bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg shadow-lg p-8 mb-8 text-white">
-            <h1 class="text-3xl font-bold mb-2">
-                <i class="fas fa-star mr-2"></i>Welcome to Core Team Dashboard
-            </h1>
-            <p class="text-purple-100">Office of Academic Barriers - Upload documents and collaborate with your team</p>
+        <!-- Header with Jain Colors -->
+        <div class="bg-gradient-to-r from-[#04043a] to-[#1e3c72] rounded-2xl shadow-xl p-8 mb-8 text-white relative overflow-hidden">
+            <!-- Decorative Elements -->
+            <div class="absolute top-0 right-0 w-64 h-64 bg-yellow-500 opacity-10 rounded-full transform translate-x-32 -translate-y-32"></div>
+            <div class="absolute bottom-0 left-0 w-48 h-48 bg-yellow-500 opacity-10 rounded-full transform -translate-x-24 translate-y-24"></div>
+            
+            <div class="relative z-10">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="w-16 h-16 bg-yellow-400 rounded-2xl flex items-center justify-center">
+                        <i class="fas fa-users text-3xl text-[#04043a]"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold mb-2">Core Team Dashboard</h1>
+                        <p class="text-yellow-300 text-lg">Upload documents, collaborate with your team, and communicate with Leaders</p>
+                    </div>
+                </div>
+                
+                <!-- Quick Info Badges -->
+                <div class="flex flex-wrap gap-3 mt-4">
+                    <span class="bg-yellow-400 text-[#04043a] px-4 py-2 rounded-full text-sm font-semibold">
+                        <i class="fas fa-shield-alt mr-2"></i>Core Member Access
+                    </span>
+                    <span class="bg-white bg-opacity-20 text-white px-4 py-2 rounded-full text-sm">
+                        <i class="fas fa-clock mr-2"></i>{{ now.strftime('%d %B %Y') if now else 'Today' }}
+                    </span>
+                </div>
+            </div>
         </div>
 
-        <!-- Quick Stats -->
+        <!-- Quick Stats with Jain Colors -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white rounded-lg shadow p-6">
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-[#04043a] hover:shadow-xl transition-all">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-gray-500 text-sm">My Documents</p>
-                        <p class="text-3xl font-bold text-purple-600">{{ my_documents|length }}</p>
+                        <p class="text-gray-500 text-sm font-medium">My Documents</p>
+                        <p class="text-3xl font-bold text-[#04043a]">{{ my_documents|length }}</p>
                     </div>
-                    <div class="bg-purple-100 rounded-full p-3">
-                        <i class="fas fa-file-alt text-purple-600 text-2xl"></i>
+                    <div class="bg-[#04043a] bg-opacity-10 rounded-full p-3">
+                        <i class="fas fa-file-alt text-2xl text-[#04043a]"></i>
                     </div>
+                </div>
+                <div class="mt-2 text-xs text-gray-500">
+                    <span class="text-yellow-600 font-semibold">{{ my_documents|selectattr('status', 'equalto', 'pending')|list|length }}</span> pending review
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow p-6">
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-yellow-500 hover:shadow-xl transition-all">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-gray-500 text-sm">Core Members</p>
-                        <p class="text-3xl font-bold text-blue-600">{{ core_members|length }}</p>
+                        <p class="text-gray-500 text-sm font-medium">Core Members</p>
+                        <p class="text-3xl font-bold text-[#04043a]">{{ core_members|length }}</p>
                     </div>
-                    <div class="bg-blue-100 rounded-full p-3">
-                        <i class="fas fa-users text-blue-600 text-2xl"></i>
+                    <div class="bg-yellow-500 bg-opacity-10 rounded-full p-3">
+                        <i class="fas fa-users text-2xl text-yellow-600"></i>
                     </div>
+                </div>
+                <div class="mt-2 text-xs text-gray-500">
+                    <span class="text-green-600 font-semibold">{{ online_core|length if online_core else 0 }}</span> online now
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow p-6">
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-600 hover:shadow-xl transition-all">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-gray-500 text-sm">Total Leaders</p>
-                        <p class="text-3xl font-bold text-green-600">{{ leaders|length }}</p>
+                        <p class="text-gray-500 text-sm font-medium">Total Leaders</p>
+                        <p class="text-3xl font-bold text-[#04043a]">{{ leaders|length }}</p>
                     </div>
-                    <div class="bg-green-100 rounded-full p-3">
-                        <i class="fas fa-crown text-green-600 text-2xl"></i>
+                    <div class="bg-green-600 bg-opacity-10 rounded-full p-3">
+                        <i class="fas fa-crown text-2xl text-green-600"></i>
                     </div>
+                </div>
+                <div class="mt-2 text-xs text-gray-500">
+                    Ready to review documents
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow p-6">
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-orange-500 hover:shadow-xl transition-all">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-gray-500 text-sm">Pending Reviews</p>
-                        <p class="text-3xl font-bold text-orange-600">
+                        <p class="text-gray-500 text-sm font-medium">Pending Reviews</p>
+                        <p class="text-3xl font-bold text-[#04043a]">
                             {{ my_documents|selectattr('status', 'equalto', 'pending')|list|length }}
                         </p>
                     </div>
-                    <div class="bg-orange-100 rounded-full p-3">
-                        <i class="fas fa-clock text-orange-600 text-2xl"></i>
+                    <div class="bg-orange-500 bg-opacity-10 rounded-full p-3">
+                        <i class="fas fa-clock text-2xl text-orange-600"></i>
                     </div>
+                </div>
+                <div class="mt-2 text-xs text-gray-500">
+                    Awaiting leader feedback
                 </div>
             </div>
         </div>
 
         <!-- Upload Document Section -->
-        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-            <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                <i class="fas fa-cloud-upload-alt text-purple-600"></i>
-                Upload Document for Review
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <h2 class="text-2xl font-bold text-[#04043a] mb-6 flex items-center gap-3">
+                <div class="w-10 h-10 bg-yellow-500 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-cloud-upload-alt text-white"></i>
+                </div>
+                Upload Document for Leader Review
             </h2>
 
             <form action="{{ url_for('upload_document') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Document Name *</label>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-heading text-[#04043a] mr-2"></i>Document Name *
+                        </label>
                         <input type="text" name="document_name" required 
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition"
                                placeholder="Enter document name">
                     </div>
 
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Select File *</label>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-file text-[#04043a] mr-2"></i>Select File *
+                        </label>
                         <input type="file" name="file" required 
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition">
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Description</label>
-                    <textarea name="description" rows="3" 
-                              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-                              placeholder="Describe the document..."></textarea>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-comment text-[#04043a] mr-2"></i>Description / Message to Leaders
+                    </label>
+                    <textarea name="description" rows="4" 
+                              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition"
+                              placeholder="Describe the document and add any message for the leaders..."></textarea>
                 </div>
 
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-3">
-                        Assign to Leaders 
-                        <span class="text-xs text-gray-500">(Leave empty to assign to all leaders)</span>
+                        <i class="fas fa-user-tie text-[#04043a] mr-2"></i>Assign to Leaders 
+                        <span class="text-xs text-gray-500 ml-2">(Leave empty to assign to all leaders)</span>
                     </label>
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                         {% for leader in leaders %}
-                        <label class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-purple-50 cursor-pointer">
+                        <label class="flex items-center space-x-3 p-3 border border-gray-200 rounded-xl hover:bg-yellow-50 hover:border-yellow-500 cursor-pointer transition">
                             <input type="checkbox" name="assigned_leaders" value="{{ leader._id }}"
-                                   class="form-checkbox h-5 w-5 text-purple-600">
+                                   class="form-checkbox h-5 w-5 text-yellow-500 rounded">
                             <div class="flex-1">
                                 <p class="text-sm font-medium text-gray-900">{{ leader.email.split('@')[0] }}</p>
                                 <p class="text-xs text-gray-500">{{ leader.email }}</p>
@@ -115,76 +157,101 @@
                         </label>
                         {% endfor %}
                     </div>
-                    <p class="text-xs text-gray-500 mt-2">
-                        <i class="fas fa-info-circle"></i>
-                        If no leaders are selected, the document will be visible to all leaders.
-                    </p>
+                </div>
+
+                <div class="flex items-center space-x-3 p-4 bg-yellow-50 rounded-xl border border-yellow-200">
+                    <input type="checkbox" name="notify_leaders" id="notify_leaders" checked 
+                           class="h-5 w-5 text-yellow-500 rounded">
+                    <label for="notify_leaders" class="text-sm font-medium text-gray-700">
+                        <i class="fas fa-envelope mr-2 text-yellow-600"></i>
+                        Send email notification to assigned leaders with document details
+                    </label>
                 </div>
 
                 <button type="submit" 
-                        class="w-full bg-purple-600 text-white px-6 py-4 rounded-lg font-bold text-lg hover:bg-purple-700 transition">
-                    <i class="fas fa-upload mr-2"></i>Submit Document for Review
+                        class="w-full bg-[#04043a] text-white px-6 py-4 rounded-xl font-bold text-lg hover:bg-[#1e3c72] transition-all flex items-center justify-center gap-3">
+                    <i class="fas fa-upload"></i>
+                    Submit Document for Review
                 </button>
             </form>
         </div>
 
-        <!-- My Documents -->
-        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-            <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                <i class="fas fa-folder-open text-blue-600"></i>
+        <!-- My Documents Section -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <h2 class="text-2xl font-bold text-[#04043a] mb-6 flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-folder-open text-white"></i>
+                </div>
                 My Uploaded Documents
             </h2>
 
             {% if my_documents %}
             <div class="space-y-4">
                 {% for doc in my_documents %}
-                <div class="border border-gray-200 rounded-lg p-6 hover:shadow-md transition">
+                <div class="border border-gray-200 rounded-xl p-6 hover:shadow-xl transition-all hover:border-yellow-500">
                     <div class="flex items-start justify-between">
                         <div class="flex-1">
-                            <h3 class="text-lg font-bold text-gray-900 mb-2">{{ doc.document_name }}</h3>
-                            <p class="text-sm text-gray-600 mb-3">{{ doc.description }}</p>
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="w-10 h-10 bg-[#04043a] bg-opacity-10 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-file-alt text-[#04043a]"></i>
+                                </div>
+                                <h3 class="text-lg font-bold text-gray-900">{{ doc.document_name }}</h3>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-4 ml-13">{{ doc.description }}</p>
                             
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm bg-gray-50 p-4 rounded-xl">
                                 <div>
-                                    <span class="font-semibold">Submitted:</span>
-                                    <span class="text-gray-600">{{ doc.submitted_at.strftime('%d %b %Y, %I:%M %p') }}</span>
+                                    <span class="font-semibold text-gray-700">Submitted:</span>
+                                    <span class="text-gray-600 ml-2">{{ doc.submitted_at.strftime('%d %b %Y, %I:%M %p') }}</span>
                                 </div>
                                 <div>
-                                    <span class="font-semibold">Status:</span>
+                                    <span class="font-semibold text-gray-700">Status:</span>
                                     {% if doc.status == 'pending' %}
-                                    <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-bold ml-2">
+                                    <span class="inline-flex items-center gap-1 bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-bold ml-2">
                                         <i class="fas fa-clock"></i> PENDING
                                     </span>
                                     {% elif doc.status == 'approved' %}
-                                    <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-bold ml-2">
+                                    <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-bold ml-2">
                                         <i class="fas fa-check-circle"></i> APPROVED
                                     </span>
                                     {% elif doc.status == 'rejected' %}
-                                    <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-bold ml-2">
+                                    <span class="inline-flex items-center gap-1 bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-bold ml-2">
                                         <i class="fas fa-times-circle"></i> REJECTED
                                     </span>
                                     {% endif %}
                                 </div>
                                 {% if doc.reviewed_at %}
                                 <div>
-                                    <span class="font-semibold">Reviewed:</span>
-                                    <span class="text-gray-600">{{ doc.reviewed_at.strftime('%d %b %Y') }}</span>
+                                    <span class="font-semibold text-gray-700">Reviewed:</span>
+                                    <span class="text-gray-600 ml-2">{{ doc.reviewed_at.strftime('%d %b %Y') }}</span>
                                 </div>
                                 {% endif %}
                             </div>
 
                             {% if doc.comments %}
-                            <div class="mt-4 p-3 bg-blue-50 border-l-4 border-blue-500 rounded">
-                                <p class="text-sm font-semibold text-blue-900">Leader's Comments:</p>
-                                <p class="text-sm text-blue-800 mt-1">{{ doc.comments }}</p>
+                            <div class="mt-4 p-4 bg-yellow-50 border-l-4 border-yellow-500 rounded-xl">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                        <i class="fas fa-user-tie text-white text-sm"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-semibold text-yellow-900">Leader's Response:</p>
+                                        <p class="text-sm text-yellow-800 mt-1">{{ doc.comments }}</p>
+                                        <p class="text-xs text-yellow-600 mt-2 flex items-center gap-1">
+                                            <i class="fas fa-envelope"></i> 
+                                            Received on {{ doc.reviewed_at.strftime('%d %b %Y at %I:%M %p') }}
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                             {% endif %}
                         </div>
 
                         {% if doc.file_url %}
                         <a href="{{ doc.file_url }}" target="_blank" download
-                           class="ml-4 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition">
+                           class="ml-4 px-4 py-2 bg-[#04043a] text-white rounded-lg hover:bg-[#1e3c72] transition flex items-center gap-2">
                             <i class="fas fa-download"></i>
+                            <span class="text-sm">Download</span>
                         </a>
                         {% endif %}
                     </div>
@@ -192,46 +259,161 @@
                 {% endfor %}
             </div>
             {% else %}
-            <div class="text-center py-12 text-gray-500">
-                <i class="fas fa-file-upload text-6xl mb-4 opacity-20"></i>
-                <p class="text-lg">No documents uploaded yet</p>
-                <p class="text-sm mt-2">Upload your first document using the form above</p>
+            <div class="text-center py-16 bg-gray-50 rounded-xl">
+                <div class="w-24 h-24 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-file-upload text-4xl text-yellow-600"></i>
+                </div>
+                <p class="text-lg text-gray-600">No documents uploaded yet</p>
+                <p class="text-sm text-gray-500 mt-2">Upload your first document using the form above</p>
             </div>
             {% endif %}
         </div>
 
         <!-- Core Team Chat -->
-        <div class="bg-white rounded-lg shadow-lg p-6">
-            <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                <i class="fas fa-comments text-green-600"></i>
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+            <h2 class="text-2xl font-bold text-[#04043a] mb-6 flex items-center gap-3">
+                <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-comments text-white"></i>
+                </div>
                 Core Team Chat
             </h2>
 
-            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-xl mb-6 flex items-start gap-3">
+                <i class="fas fa-info-circle text-blue-500 mt-1"></i>
                 <p class="text-sm text-blue-800">
-                    <i class="fas fa-info-circle mr-2"></i>
-                    This is an automatic chat group for all Office of Academic Barriers members. 
+                    This is an automatic chat group for all Core Team members. 
                     You can communicate and collaborate with your team here.
                 </p>
             </div>
 
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {% for member in core_members %}
-                <div class="border border-gray-200 rounded-lg p-4 text-center">
-                    <div class="w-16 h-16 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-3">
-                        {{ member.email[0]|upper }}
+            <!-- Chat Messages -->
+            <div id="chatMessages" class="space-y-4 mb-6 max-h-96 overflow-y-auto p-4 border border-gray-200 rounded-xl bg-gray-50">
+                {% for msg in chat_messages %}
+                <div class="flex {% if msg.is_me %}justify-end{% endif %}">
+                    <div class="max-w-lg {% if msg.is_me %}bg-yellow-500 text-white{% else %}bg-white border border-gray-200{% endif %} rounded-2xl p-3 shadow-sm">
+                        <p class="text-xs {% if msg.is_me %}text-yellow-100{% else %}text-gray-600{% endif %} mb-1">
+                            {% if not msg.is_me %}
+                            <span class="font-semibold">{{ msg.sender_name }}</span> • 
+                            {% endif %}
+                            {{ msg.timestamp }}
+                        </p>
+                        <p class="text-sm {% if msg.is_me %}text-white{% else %}text-gray-800{% endif %}">{{ msg.content }}</p>
+                        {% if msg.file_url %}
+                        <a href="{{ msg.file_url }}" target="_blank" class="text-xs {% if msg.is_me %}text-yellow-200 hover:text-white{% else %}text-blue-600 hover:text-blue-800{% endif %} flex items-center gap-1 mt-2">
+                            <i class="fas fa-paperclip"></i> Attachment
+                        </a>
+                        {% endif %}
                     </div>
-                    <p class="font-semibold text-gray-900 text-sm">{{ member.email.split('@')[0] }}</p>
-                    <p class="text-xs text-gray-500">{{ member.email }}</p>
-                    {% if member.is_online %}
-                    <span class="inline-block mt-2 bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
-                        <i class="fas fa-circle text-green-500" style="font-size: 6px;"></i> Online
-                    </span>
-                    {% endif %}
                 </div>
                 {% endfor %}
+            </div>
+
+            <!-- Chat Input -->
+            <form id="chatForm" class="flex gap-3" onsubmit="sendChatMessage(event)">
+                <input type="text" id="chatInput" 
+                       class="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition"
+                       placeholder="Type your message...">
+                <button type="submit" 
+                        class="bg-[#04043a] text-white px-6 py-3 rounded-xl hover:bg-[#1e3c72] transition flex items-center gap-2">
+                    <i class="fas fa-paper-plane"></i>
+                    <span class="hidden md:inline">Send</span>
+                </button>
+            </form>
+
+            <!-- Core Members List -->
+            <div class="mt-8">
+                <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <i class="fas fa-users text-[#04043a]"></i>
+                    Core Team Members ({{ core_members|length }})
+                </h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {% for member in core_members %}
+                    <div class="border border-gray-200 rounded-xl p-4 text-center hover:shadow-lg transition hover:border-yellow-500">
+                        <div class="relative inline-block">
+                            <div class="w-16 h-16 bg-gradient-to-r from-[#04043a] to-[#1e3c72] rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-3">
+                                {{ member.email[0]|upper }}
+                            </div>
+                            {% if member.is_online %}
+                            <span class="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></span>
+                            {% endif %}
+                        </div>
+                        <p class="font-semibold text-gray-900 text-sm">{{ member.email.split('@')[0] }}</p>
+                        <p class="text-xs text-gray-500 mb-2">{{ member.email }}</p>
+                        {% if member.is_online %}
+                        <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
+                            <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                            Online
+                        </span>
+                        {% else %}
+                        <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">
+                            <span class="w-1.5 h-1.5 bg-gray-400 rounded-full"></span>
+                            Offline
+                        </span>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    function sendChatMessage(event) {
+        event.preventDefault();
+        const input = document.getElementById('chatInput');
+        const message = input.value.trim();
+        
+        if (!message) return;
+        
+        fetch('/api/chat/send', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                content: message
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                input.value = '';
+                loadChatMessages();
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+    
+    function loadChatMessages() {
+        fetch('/api/chat/messages')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const chatDiv = document.getElementById('chatMessages');
+                    chatDiv.innerHTML = '';
+                    
+                    data.messages.forEach(msg => {
+                        const msgDiv = document.createElement('div');
+                        msgDiv.className = `flex ${msg.is_me ? 'justify-end' : ''}`;
+                        msgDiv.innerHTML = `
+                            <div class="max-w-lg ${msg.is_me ? 'bg-yellow-500 text-white' : 'bg-white border border-gray-200'} rounded-2xl p-3 shadow-sm">
+                                <p class="text-xs ${msg.is_me ? 'text-yellow-100' : 'text-gray-600'} mb-1">
+                                    ${!msg.is_me ? '<span class="font-semibold">' + msg.sender_name + '</span> • ' : ''}${msg.timestamp}
+                                </p>
+                                <p class="text-sm ${msg.is_me ? 'text-white' : 'text-gray-800'}">${msg.content}</p>
+                            </div>
+                        `;
+                        chatDiv.appendChild(msgDiv);
+                    });
+                    
+                    chatDiv.scrollTop = chatDiv.scrollHeight;
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }
+    
+    setInterval(loadChatMessages, 5000);
+    loadChatMessages();
+</script>
 {% endblock %}

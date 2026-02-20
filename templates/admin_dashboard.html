@@ -145,6 +145,46 @@
             font-size: 0.85rem;
         }
 
+        /* Tabs */
+        .admin-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+        }
+
+        .tab-btn {
+            padding: 12px 25px;
+            border: none;
+            background: white;
+            border-radius: 8px 8px 0 0;
+            font-weight: 600;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn.active {
+            background: var(--jain-blue);
+            color: white;
+        }
+
+        .tab-btn i {
+            font-size: 1.1rem;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
         /* Filters */
         .filters-section {
             background: white;
@@ -216,6 +256,15 @@
 
         .btn-secondary:hover {
             background: #5a6268;
+        }
+
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #219a52;
         }
 
         /* Table */
@@ -393,7 +442,7 @@
             border-left: 4px solid #e74c3c;
         }
 
-        /* Edit Modal */
+        /* Pre-assign Modal */
         .modal {
             display: none;
             position: fixed;
@@ -511,6 +560,15 @@
                 width: 100%;
                 justify-content: center;
             }
+
+            .admin-tabs {
+                flex-direction: column;
+            }
+
+            .tab-btn {
+                width: 100%;
+                text-align: center;
+            }
         }
     </style>
 </head>
@@ -538,8 +596,8 @@
 </header>
 
 <div class="main-content">
-    <h2><i class="fas fa-users-cog"></i> User Approval & Role Management</h2>
-    <p class="subtitle">Approve users and assign them to Core Team, Office Barriers, or Leaders</p>
+    <h2><i class="fas fa-users-cog"></i> User Management & Role Assignment</h2>
+    <p class="subtitle">Approve users, assign them as Core Members or Leaders, and manage pre-assigned roles</p>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -552,62 +610,7 @@
         {% endif %}
     {% endwith %}
 
-    <!-- Quick Action Buttons -->
-    <div class="quick-actions">
-        <a href="/debug/users" class="btn btn-secondary" target="_blank">
-            <i class="fas fa-bug"></i> Debug Users
-        </a>
-        <a href="/debug/db" class="btn btn-secondary" target="_blank">
-            <i class="fas fa-database"></i> Check DB
-        </a>
-        <a href="/debug/create_test_user" class="btn btn-secondary" target="_blank">
-            <i class="fas fa-user-plus"></i> Create Test User
-        </a>
-        <a href="/setup/admin" class="btn btn-primary" target="_blank">
-            <i class="fas fa-user-shield"></i> Setup Admin
-        </a>
-    </div>
-
-    <!-- Filters -->
-    <div class="filters-section">
-        <form method="GET" action="{{ url_for('admin_dashboard') }}" class="filter-form">
-            <div class="filter-group">
-                <label for="search"><i class="fas fa-search"></i> Search Email</label>
-                <input type="text" id="search" name="search" value="{{ request.args.get('search', '') }}" 
-                       placeholder="Search by email...">
-            </div>
-            
-            <div class="filter-group">
-                <label for="type_filter"><i class="fas fa-user-tag"></i> User Type</label>
-                <select id="type_filter" name="type_filter">
-                    <option value="">All Types</option>
-                    <option value="faculty" {% if request.args.get('type_filter') == 'faculty' %}selected{% endif %}>Faculty</option>
-                    <option value="core" {% if request.args.get('type_filter') == 'core' %}selected{% endif %}>Core Team</option>
-                </select>
-            </div>
-            
-            <div class="filter-group">
-                <label for="role_filter"><i class="fas fa-user-shield"></i> Special Role</label>
-                <select id="role_filter" name="role_filter">
-                    <option value="">All Roles</option>
-                    <option value="office_barrier" {% if request.args.get('role_filter') == 'office_barrier' %}selected{% endif %}>Office Barrier</option>
-                    <option value="leader" {% if request.args.get('role_filter') == 'leader' %}selected{% endif %}>Leader</option>
-                    <option value="none" {% if request.args.get('role_filter') == 'none' %}selected{% endif %}>None</option>
-                </select>
-            </div>
-            
-            <div class="filter-buttons">
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-filter"></i> Apply Filters
-                </button>
-                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">
-                    <i class="fas fa-redo"></i> Clear Filters
-                </a>
-            </div>
-        </form>
-    </div>
-
-    <!-- Stats -->
+    <!-- Quick Stats -->
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-icon total"><i class="fas fa-users"></i></div>
@@ -632,119 +635,310 @@
         </div>
     </div>
 
-    <!-- Table -->
-    <div class="table-container">
-        <div class="table-header">
-            <h3><i class="fas fa-table"></i> User Accounts ({{ users|length }})</h3>
-            <div>
-                {% if users %}
-                <span style="background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px;">
-                    <i class="fas fa-info-circle"></i> Click on user name to edit details
-                </span>
-                {% endif %}
+    <!-- Tabs Navigation -->
+    <div class="admin-tabs">
+        <button class="tab-btn active" onclick="switchTab('users')">
+            <i class="fas fa-users"></i> Registered Users
+        </button>
+        <button class="tab-btn" onclick="switchTab('preassign')">
+            <i class="fas fa-user-plus"></i> Pre-Assign Roles
+        </button>
+        <button class="tab-btn" onclick="switchTab('quick')">
+            <i class="fas fa-bolt"></i> Quick Actions
+        </button>
+    </div>
+
+    <!-- Tab 1: Registered Users -->
+    <div id="tab-users" class="tab-content active">
+        <!-- Filters -->
+        <div class="filters-section">
+            <form method="GET" action="{{ url_for('admin_dashboard') }}" class="filter-form">
+                <div class="filter-group">
+                    <label for="search"><i class="fas fa-search"></i> Search Email</label>
+                    <input type="text" id="search" name="search" value="{{ request.args.get('search', '') }}" 
+                           placeholder="Search by email...">
+                </div>
+                
+                <div class="filter-group">
+                    <label for="type_filter"><i class="fas fa-user-tag"></i> User Type</label>
+                    <select id="type_filter" name="type_filter">
+                        <option value="">All Types</option>
+                        <option value="faculty" {% if request.args.get('type_filter') == 'faculty' %}selected{% endif %}>Faculty</option>
+                        <option value="core" {% if request.args.get('type_filter') == 'core' %}selected{% endif %}>Core Team</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="role_filter"><i class="fas fa-user-shield"></i> Special Role</label>
+                    <select id="role_filter" name="role_filter">
+                        <option value="">All Roles</option>
+                        <option value="office_barrier" {% if request.args.get('role_filter') == 'office_barrier' %}selected{% endif %}>Core Member</option>
+                        <option value="leader" {% if request.args.get('role_filter') == 'leader' %}selected{% endif %}>Leader</option>
+                        <option value="none" {% if request.args.get('role_filter') == 'none' %}selected{% endif %}>None</option>
+                    </select>
+                </div>
+                
+                <div class="filter-buttons">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-filter"></i> Apply Filters
+                    </button>
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">
+                        <i class="fas fa-redo"></i> Clear Filters
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Users Table -->
+        <div class="table-container">
+            <div class="table-header">
+                <h3><i class="fas fa-table"></i> Registered Users ({{ users|length }})</h3>
+                <div>
+                    <span style="background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px;">
+                        <i class="fas fa-info-circle"></i> Click on user name to edit details
+                    </span>
+                </div>
+            </div>
+            
+            {% if users %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                        <th>Type</th>
+                        <th>Role</th>
+                        <th>Approve</th>
+                        <th style="min-width: 120px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr style="{% if not user.approved %}background-color: #fff3cd;{% endif %}">
+                        <td>
+                            <div class="user-email" onclick="openEditModal('{{ user._id }}', '{{ user.email }}', '{{ user.user_type }}', '{{ user.special_role if user.special_role else "" }}', '{{ "true" if user.approved else "false" }}', '{{ user.role }}')" style="cursor: pointer;">
+                                <div class="user-avatar">{{ user.email[0]|upper }}</div>
+                                <div>
+                                    <strong>{{ user.email.split('@')[0]|title }}</strong><br>
+                                    <small style="color: #666; font-size: 0.8rem;">
+                                        Joined: {{ user.created_at.strftime('%d/%m/%Y') if user.created_at else 'N/A' }}
+                                    </small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ user.email }}</td>
+                        <td>
+                            <span class="badge {% if user.approved %}approved{% else %}pending{% endif %}">
+                                {% if user.approved %}
+                                    <i class="fas fa-check-circle"></i> APPROVED
+                                {% else %}
+                                    <i class="fas fa-clock"></i> PENDING
+                                {% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge {% if user.user_type == 'core' %}core{% else %}faculty{% endif %}">
+                                {{ user.display_type }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if user.special_role == 'leader' %}
+                                <span class="badge leader"><i class="fas fa-crown"></i> LEADER</span>
+                            {% elif user.special_role == 'office_barrier' %}
+                                <span class="badge core"><i class="fas fa-users"></i> CORE MEMBER</span>
+                            {% else %}
+                                <span style="color: #666;">None</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form method="POST" action="{{ url_for('update_user', user_id=user._id) }}" id="approvalForm{{ loop.index }}" class="toggle-form">
+                                <input type="hidden" name="email" value="{{ user.email }}">
+                                <input type="hidden" name="role" value="{{ user.role }}">
+                                <input type="hidden" name="user_type" value="{{ user.user_type }}">
+                                <input type="hidden" name="special_role" value="{{ user.special_role if user.special_role else '' }}">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" 
+                                           name="approved" 
+                                           value="true" 
+                                           {% if user.approved %}checked{% endif %}
+                                           class="approval-toggle"
+                                           data-user-email="{{ user.email }}">
+                                    <span class="slider"></span>
+                                </label>
+                            </form>
+                        </td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="btn btn-edit" onclick="openEditModal('{{ user._id }}', '{{ user.email }}', '{{ user.user_type }}', '{{ user.special_role if user.special_role else "" }}', '{{ "true" if user.approved else "false" }}', '{{ user.role }}')">
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
+                                {% if user.email != session.email %}
+                                <form method="POST" action="{{ url_for('delete_user', user_id=user._id) }}" style="display: inline;" 
+                                      onsubmit="return confirm('Delete {{ user.email }}? This cannot be undone!');">
+                                    <button type="submit" class="btn btn-danger">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div style="text-align: center; padding: 60px 20px; color: #999;">
+                <i class="fas fa-users-slash" style="font-size: 4rem; opacity: 0.3;"></i>
+                <h3>No users found</h3>
+                <p>Try changing your search filters or check if users are registered.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Tab 2: Pre-Assign Roles -->
+    <div id="tab-preassign" class="tab-content">
+        <div class="filters-section">
+            <h3 style="margin-top: 0;">Pre-Assign Leader Emails</h3>
+            <p class="text-sm text-gray-600 mb-4">Add emails that will automatically become Leaders when they register</p>
+            
+            <div class="filter-form">
+                <div class="filter-group">
+                    <label for="leaderEmail">Leader Email</label>
+                    <input type="email" id="leaderEmail" placeholder="leader@jainuniversity.ac.in">
+                </div>
+                <div class="filter-group">
+                    <label for="leaderSchool">School (Optional)</label>
+                    <input type="text" id="leaderSchool" placeholder="e.g., School of Management">
+                </div>
+                <div class="filter-buttons">
+                    <button class="btn btn-success" onclick="preAssignLeader()">
+                        <i class="fas fa-user-plus"></i> Add Leader
+                    </button>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px;">Pre-Assign Core Member Emails</h3>
+            <p class="text-sm text-gray-600 mb-4">Add emails that will automatically become Core Team members when they register</p>
+            
+            <div class="filter-form">
+                <div class="filter-group">
+                    <label for="coreEmail">Core Member Email</label>
+                    <input type="email" id="coreEmail" placeholder="core@jainuniversity.ac.in">
+                </div>
+                <div class="filter-group">
+                    <label for="coreDepartment">Department (Optional)</label>
+                    <input type="text" id="coreDepartment" placeholder="e.g., Computer Science">
+                </div>
+                <div class="filter-buttons">
+                    <button class="btn btn-success" onclick="preAssignCore()">
+                        <i class="fas fa-user-plus"></i> Add Core Member
+                    </button>
+                </div>
             </div>
         </div>
-        
-        {% if users %}
-        <table>
-            <thead>
-                <tr>
-                    <th>User</th>
-                    <th>Email</th>
-                    <th>Status</th>
-                    <th>Type</th>
-                    <th>Special Role</th>
-                    <th>Approve</th>
-                    <th style="min-width: 120px;">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for user in users %}
-                <tr style="{% if not user.approved %}background-color: #fff3cd;{% endif %}">
-                    <td>
-                        <div class="user-email" onclick="openEditModal('{{ user._id }}', '{{ user.email }}', '{{ user.user_type }}', '{{ user.special_role if user.special_role else "" }}', '{{ "true" if user.approved else "false" }}')" style="cursor: pointer;">
-                            <div class="user-avatar">{{ user.email[0]|upper }}</div>
-                            <div>
-                                <strong>{{ user.email.split('@')[0]|title }}</strong><br>
-                                <small style="color: #666; font-size: 0.8rem;">
-                                    Joined: {{ user.created_at.strftime('%d/%m/%Y') if user.created_at else 'N/A' }}
-                                </small>
-                            </div>
-                        </div>
-                    </td>
-                    <td>{{ user.email }}</td>
-                    <td>
-                        <span class="badge {% if user.approved %}approved{% else %}pending{% endif %}">
-                            {% if user.approved %}
-                                <i class="fas fa-check-circle"></i> APPROVED
-                            {% else %}
-                                <i class="fas fa-clock"></i> PENDING
-                            {% endif %}
-                        </span>
-                    </td>
-                    <td>
-                        <span class="badge {% if user.user_type == 'core' %}core{% else %}faculty{% endif %}">
-                            {{ user.user_type|upper if user.user_type else 'FACULTY' }}
-                        </span>
-                    </td>
-                    <td>
-                        {% if user.special_role == 'leader' %}
-                            <span class="badge leader"><i class="fas fa-crown"></i> LEADER</span>
-                        {% elif user.special_role == 'office_barrier' %}
-                            <span class="badge core"><i class="fas fa-shield-alt"></i> OFFICE BARRIER</span>
-                        {% else %}
-                            <span style="color: #666;">None</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <form method="POST" action="{{ url_for('update_user', user_id=user._id) }}" id="approvalForm{{ loop.index }}" class="toggle-form">
-                            <input type="hidden" name="email" value="{{ user.email }}">
-                            <input type="hidden" name="role" value="{{ user.role }}">
-                            <input type="hidden" name="user_type" value="{{ user.user_type }}">
-                            <input type="hidden" name="special_role" value="{{ user.special_role if user.special_role else '' }}">
-                            <label class="toggle-switch">
-                                <input type="checkbox" 
-                                       name="approved" 
-                                       value="true" 
-                                       {% if user.approved %}checked{% endif %}
-                                       class="approval-toggle"
-                                       data-user-email="{{ user.email }}">
-                                <span class="slider"></span>
-                            </label>
-                        </form>
-                    </td>
-                    <td>
-                        <div class="action-btns">
-                            <button class="btn btn-edit" onclick="openEditModal('{{ user._id }}', '{{ user.email }}', '{{ user.user_type }}', '{{ user.special_role if user.special_role else "" }}', '{{ "true" if user.approved else "false" }}')">
-                                <i class="fas fa-edit"></i> Edit
+
+        <!-- Pre-Assigned Leaders List -->
+        <div class="table-container">
+            <div class="table-header">
+                <h3><i class="fas fa-crown"></i> Pre-Assigned Leaders ({{ pre_assigned_leaders|length }})</h3>
+            </div>
+            {% if pre_assigned_leaders %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>School</th>
+                        <th>Assigned By</th>
+                        <th>Assigned Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for leader in pre_assigned_leaders %}
+                    <tr>
+                        <td>{{ leader.email }}</td>
+                        <td>{{ leader.school or '-' }}</td>
+                        <td>{{ leader.assigned_by }}</td>
+                        <td>{{ leader.assigned_at.strftime('%d/%m/%Y') }}</td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" onclick="removePreAssigned('leader', '{{ leader.email }}')">
+                                <i class="fas fa-trash"></i> Remove
                             </button>
-                            <form method="POST" action="{{ url_for('delete_user', user_id=user._id) }}" style="display: inline;" 
-                                  onsubmit="return confirm('Delete {{ user.email }}? This cannot be undone!');">
-                                <button type="submit" class="btn btn-danger">
-                                    <i class="fas fa-trash"></i> Delete
-                                </button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% else %}
-        <div style="text-align: center; padding: 60px 20px; color: #999;">
-            <i class="fas fa-users-slash" style="font-size: 4rem; opacity: 0.3;"></i>
-            <h3>No users found</h3>
-            <p>Try changing your search filters or check if users are registered.</p>
-            <div style="margin-top: 20px;">
-                <a href="/debug/create_test_user" class="btn btn-primary" target="_blank">
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div style="text-align: center; padding: 40px 20px; color: #999;">
+                <i class="fas fa-crown" style="font-size: 3rem; opacity: 0.3;"></i>
+                <p>No pre-assigned leaders</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Pre-Assigned Core Members List -->
+        <div class="table-container">
+            <div class="table-header">
+                <h3><i class="fas fa-users"></i> Pre-Assigned Core Members ({{ pre_assigned_core|length }})</h3>
+            </div>
+            {% if pre_assigned_core %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>Department</th>
+                        <th>Assigned By</th>
+                        <th>Assigned Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for core in pre_assigned_core %}
+                    <tr>
+                        <td>{{ core.email }}</td>
+                        <td>{{ core.department or '-' }}</td>
+                        <td>{{ core.assigned_by }}</td>
+                        <td>{{ core.assigned_at.strftime('%d/%m/%Y') }}</td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" onclick="removePreAssigned('core', '{{ core.email }}')">
+                                <i class="fas fa-trash"></i> Remove
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div style="text-align: center; padding: 40px 20px; color: #999;">
+                <i class="fas fa-users" style="font-size: 3rem; opacity: 0.3;"></i>
+                <p>No pre-assigned core members</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Tab 3: Quick Actions -->
+    <div id="tab-quick" class="tab-content">
+        <div class="filters-section">
+            <h3>Quick Debug Actions</h3>
+            <div class="quick-actions">
+                <a href="/debug/users" class="btn btn-secondary" target="_blank">
+                    <i class="fas fa-bug"></i> Debug Users
+                </a>
+                <a href="/debug/db" class="btn btn-secondary" target="_blank">
+                    <i class="fas fa-database"></i> Check DB
+                </a>
+                <a href="/debug/create_test_user" class="btn btn-secondary" target="_blank">
                     <i class="fas fa-user-plus"></i> Create Test User
                 </a>
-                <a href="/setup/admin" class="btn btn-secondary" target="_blank" style="margin-left: 10px;">
+                <a href="/setup/admin" class="btn btn-primary" target="_blank">
                     <i class="fas fa-user-shield"></i> Setup Admin
                 </a>
             </div>
         </div>
-        {% endif %}
     </div>
 </div>
 
@@ -756,7 +950,7 @@
             <button class="close-modal" onclick="closeEditModal()">&times;</button>
         </div>
         <form id="editUserForm" method="POST">
-            <input type="hidden" name="role" value="user">
+            <input type="hidden" name="role" id="editRole" value="user">
             
             <div class="modal-form">
                 <div class="form-group">
@@ -776,7 +970,7 @@
                     <label for="editSpecialRole">Special Role</label>
                     <select id="editSpecialRole" name="special_role">
                         <option value="">None</option>
-                        <option value="office_barrier">Office Barrier</option>
+                        <option value="office_barrier">Core Member</option>
                         <option value="leader">Leader</option>
                     </select>
                 </div>
@@ -807,13 +1001,32 @@
 <script>
     let currentUserId = '';
     
-    function openEditModal(userId, email, userType, specialRole, approved) {
+    function switchTab(tabName) {
+        // Hide all tabs
+        document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        
+        // Remove active class from all buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        // Show selected tab
+        document.getElementById('tab-' + tabName).classList.add('active');
+        
+        // Add active class to clicked button
+        event.target.closest('.tab-btn').classList.add('active');
+    }
+    
+    function openEditModal(userId, email, userType, specialRole, approved, role) {
         currentUserId = userId;
         
         document.getElementById('editEmail').value = email;
-        document.getElementById('editUserType').value = userType;
-        document.getElementById('editSpecialRole').value = specialRole;
+        document.getElementById('editUserType').value = userType || 'faculty';
+        document.getElementById('editSpecialRole').value = specialRole || '';
         document.getElementById('editApproved').checked = (approved === 'true');
+        document.getElementById('editRole').value = role || 'user';
         
         // Update form action
         const editForm = document.getElementById('editUserForm');
@@ -837,7 +1050,7 @@
         const roleSelect = document.getElementById('editSpecialRole');
         
         if (userType === 'core') {
-            // For core team, show office_barrier as default if not already set
+            // For core team, show core member as default if not already set
             if (!roleSelect.value || roleSelect.value === '') {
                 roleSelect.value = 'office_barrier';
             }
@@ -847,6 +1060,101 @@
                 roleSelect.value = '';
             }
         }
+    }
+    
+    function preAssignLeader() {
+        const email = document.getElementById('leaderEmail').value.trim();
+        const school = document.getElementById('leaderSchool').value.trim();
+        
+        if (!email) {
+            alert('Please enter an email address');
+            return;
+        }
+        
+        if (!email.endsWith('@jainuniversity.ac.in')) {
+            alert('Email must be @jainuniversity.ac.in');
+            return;
+        }
+        
+        fetch('/pre_assign_leader', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, school })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Leader pre-assigned successfully! Invitation email sent.');
+                location.reload();
+            } else {
+                alert(data.error || 'Error pre-assigning leader');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error pre-assigning leader');
+        });
+    }
+    
+    function preAssignCore() {
+        const email = document.getElementById('coreEmail').value.trim();
+        const department = document.getElementById('coreDepartment').value.trim();
+        
+        if (!email) {
+            alert('Please enter an email address');
+            return;
+        }
+        
+        if (!email.endsWith('@jainuniversity.ac.in')) {
+            alert('Email must be @jainuniversity.ac.in');
+            return;
+        }
+        
+        fetch('/pre_assign_core', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, department })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Core member pre-assigned successfully! Invitation email sent.');
+                location.reload();
+            } else {
+                alert(data.error || 'Error pre-assigning core member');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error pre-assigning core member');
+        });
+    }
+    
+    function removePreAssigned(type, email) {
+        if (!confirm(`Remove ${email} from pre-assigned list?`)) {
+            return;
+        }
+        
+        fetch(`/remove_pre_assigned/${type}/${email}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Removed successfully');
+                location.reload();
+            } else {
+                alert(data.error || 'Error removing');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error removing');
+        });
     }
     
     // Handle approval toggle forms
