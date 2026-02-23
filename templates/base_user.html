@@ -50,7 +50,6 @@
             color: white;
         }
         
-        /* Custom Scrollbar for Sidebar */
         .sidebar::-webkit-scrollbar {
             width: 8px;
         }
@@ -69,7 +68,6 @@
             background: var(--jain-gold-dark);
         }
         
-        /* Logo Animation */
         .logo-container {
             animation: fadeInDown 0.6s cubic-bezier(0.4, 0, 0.2, 1);
             border-bottom: 1px solid rgba(255, 215, 0, 0.15);
@@ -109,7 +107,6 @@
             opacity: 0.9;
         }
         
-        /* Navigation Items - Jain Style */
         .nav-item {
             display: flex;
             align-items: center;
@@ -170,7 +167,6 @@
             color: var(--jain-gold);
         }
         
-        /* User Info Card with Gold Accents */
         .user-info-card {
             background: rgba(255, 215, 0, 0.1);
             border: 1px solid rgba(255, 215, 0, 0.2);
@@ -230,7 +226,6 @@
             font-weight: 600;
         }
         
-        /* Section Headers */
         .section-header {
             font-size: 11px;
             font-weight: 600;
@@ -241,7 +236,6 @@
             padding: 16px 16px 8px;
         }
         
-        /* Badge */
         .badge {
             background: var(--jain-gold);
             color: var(--jain-blue);
@@ -251,7 +245,6 @@
             border-radius: 20px;
         }
         
-        /* Bottom Navigation */
         .sidebar-bottom {
             position: fixed;
             bottom: 0;
@@ -264,7 +257,6 @@
             padding: 16px 12px;
         }
         
-        /* Settings Dropdown */
         .settings-dropdown {
             position: relative;
         }
@@ -316,13 +308,11 @@
             width: 20px;
         }
         
-        /* Main Content */
         .main-content {
             margin-left: 16rem;
             min-height: 100vh;
         }
         
-        /* Top Header */
         .top-header {
             background: white;
             border-bottom: 1px solid rgba(0, 0, 0, 0.06);
@@ -354,7 +344,6 @@
             color: #6b7280;
         }
         
-        /* Search Bar */
         .search-bar {
             background: #f3f4f6;
             border: none;
@@ -382,7 +371,6 @@
             color: #9ca3af;
         }
         
-        /* Notification Bell */
         .notification-btn {
             position: relative;
             padding: 10px;
@@ -419,7 +407,6 @@
             }
         }
         
-        /* Notification Dropdown */
         .notification-dropdown {
             position: absolute;
             top: 100%;
@@ -542,7 +529,6 @@
             color: var(--jain-blue);
         }
         
-        /* Avatar */
         .avatar {
             background: linear-gradient(135deg, var(--jain-blue) 0%, #1e3c72 100%);
             width: 44px;
@@ -563,7 +549,6 @@
             box-shadow: 0 6px 16px rgba(4, 4, 58, 0.3);
         }
         
-        /* Alert Messages */
         .alert {
             animation: slideInAlert 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             border-radius: 16px;
@@ -606,7 +591,6 @@
             color: #92400e;
         }
         
-        /* Footer */
         .footer {
             background: white;
             border-top: 1px solid rgba(0, 0, 0, 0.06);
@@ -622,14 +606,12 @@
             color: var(--jain-blue);
         }
         
-        /* Staggered animation for nav items */
         .nav-item:nth-child(1) { animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.1s backwards; }
         .nav-item:nth-child(2) { animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.15s backwards; }
         .nav-item:nth-child(3) { animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.2s backwards; }
         .nav-item:nth-child(4) { animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.25s backwards; }
         .nav-item:nth-child(5) { animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.3s backwards; }
         
-        /* Loading Spinner */
         .spinner {
             border: 3px solid rgba(255, 215, 0, 0.1);
             border-top: 3px solid var(--jain-gold);
@@ -644,7 +626,54 @@
             100% { transform: rotate(360deg); }
         }
         
-        /* Responsive */
+        /* Notification Center */
+        #notificationCenter {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+            width: 350px;
+            max-width: 90vw;
+        }
+        
+        .notification-toast {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            margin-bottom: 10px;
+            padding: 15px;
+            transform: translateX(100%);
+            opacity: 0;
+            transition: all 0.3s ease;
+            border-left: 4px solid;
+        }
+        
+        .notification-toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        
+        .notification-toast.success { border-left-color: #10b981; }
+        .notification-toast.error { border-left-color: #ef4444; }
+        .notification-toast.warning { border-left-color: #f59e0b; }
+        .notification-toast.info { border-left-color: #3b82f6; }
+        
+        /* Attachment Styles */
+        .attachment-preview {
+            transition: all 0.3s ease;
+        }
+        
+        .attachment-preview:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.5);
+        }
+        
+        .file-pdf { color: #dc2626; }
+        .file-word { color: #2563eb; }
+        .file-excel { color: #059669; }
+        .file-image { color: #9333ea; }
+        .file-default { color: #6b7280; }
+        
         @media (max-width: 768px) {
             .sidebar {
                 transform: translateX(-100%);
@@ -674,9 +703,9 @@
     
     <div class="flex h-screen">
         
-        <!-- SIDEBAR NAVIGATION - Jain Dark Blue -->
+        <!-- SIDEBAR NAVIGATION -->
         <aside class="sidebar">
-            <!-- Logo Section with Jain Colors -->
+            <!-- Logo Section -->
             <div class="p-6 logo-container">
                 <div class="flex items-center gap-3">
                     <div class="w-12 h-12 logo-icon rounded-xl flex items-center justify-center">
@@ -689,7 +718,7 @@
                 </div>
             </div>
 
-            <!-- User Info Card - Enhanced with Gold -->
+            <!-- User Info Card -->
             {% if session.email %}
             <div class="user-info-card">
                 <div class="flex items-center gap-3 mb-3">
@@ -742,14 +771,10 @@
                     <span>Dashboard</span>
                 </a>
                 
-                
-                
                 <a href="{{ url_for('usernewsletters') }}" class="nav-item {% if request.endpoint == 'usernewsletters' %}active{% endif %}">
                     <i class="fas fa-newspaper"></i>
                     <span>AI Newsletters</span>
                 </a>
-                
-                
 
             <!-- Role-Based Navigation -->
             {% if session.approved %}
@@ -815,9 +840,6 @@
                         <i class="fas fa-folder" style="color: var(--jain-gold);"></i>
                         <span class="truncate">{{ item.name }}</span>
                     </a>
-                    <button onclick="removeFolder('{{ item.ref_id }}', '{{ item.name }}')" class="remove-btn" title="Remove from sidebar">
-                        <i class="fas fa-times"></i>
-                    </button>
                 </div>
                 {% endfor %}
             </div>
@@ -834,19 +856,19 @@
                             <i class="fas fa-user"></i>
                             <span>Profile Settings</span>
                         </a>
-                        <a href="#" class="settings-item" onclick="showComingSoon('Appearance Settings')">
+                        <a href="#" class="settings-item" onclick="showComingSoon('Appearance')">
                             <i class="fas fa-palette"></i>
                             <span>Appearance</span>
                         </a>
-                        <a href="#" class="settings-item" onclick="showComingSoon('Notification Preferences')">
+                        <a href="#" class="settings-item" onclick="showComingSoon('Notifications')">
                             <i class="fas fa-bell"></i>
                             <span>Notifications</span>
                         </a>
-                        <a href="#" class="settings-item" onclick="showComingSoon('Privacy & Security')">
+                        <a href="#" class="settings-item" onclick="showComingSoon('Privacy')">
                             <i class="fas fa-lock"></i>
                             <span>Privacy</span>
                         </a>
-                        <a href="#" class="settings-item" onclick="showComingSoon('Help & Support')">
+                        <a href="#" class="settings-item" onclick="showComingSoon('Help')">
                             <i class="fas fa-question-circle"></i>
                             <span>Help Center</span>
                         </a>
@@ -911,6 +933,8 @@
                                                     <i class="fas fa-file-alt"></i>
                                                 {% elif notification.type == 'event' %}
                                                     <i class="fas fa-calendar"></i>
+                                                {% elif notification.type == 'task' %}
+                                                    <i class="fas fa-tasks"></i>
                                                 {% else %}
                                                     <i class="fas fa-info-circle"></i>
                                                 {% endif %}
@@ -944,7 +968,7 @@
                             </div>
                         </div>
 
-                        <!-- User Avatar with Role Badge -->
+                        <!-- User Avatar -->
                         <div class="flex items-center gap-3 border-l border-gray-200 pl-4">
                             <div class="avatar">
                                 {% if session.email %}
@@ -1032,16 +1056,19 @@
                     <p>© 2026 Jain University. All rights reserved.</p>
                     <div class="flex gap-6">
                         <a href="{{ url_for('about') }}" class="hover:text-yellow-600">About</a>
-                        <a href="#" class="hover:text-yellow-600" onclick="showComingSoon('Contact Page')">Contact</a>
-                        <a href="#" class="hover:text-yellow-600" onclick="showComingSoon('Privacy Policy')">Privacy</a>
-                        <a href="#" class="hover:text-yellow-600" onclick="showComingSoon('Terms of Use')">Terms</a>
+                        <a href="#" class="hover:text-yellow-600" onclick="showComingSoon('Contact')">Contact</a>
+                        <a href="#" class="hover:text-yellow-600" onclick="showComingSoon('Privacy')">Privacy</a>
+                        <a href="#" class="hover:text-yellow-600" onclick="showComingSoon('Terms')">Terms</a>
                     </div>
                 </div>
             </footer>
         </div>
     </div>
 
-    <!-- Loading Spinner (Hidden by default) -->
+    <!-- Notification Center -->
+    <div id="notificationCenter"></div>
+
+    <!-- Loading Spinner -->
     <div id="loadingSpinner" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-white p-8 rounded-2xl shadow-2xl text-center">
             <div class="spinner mx-auto"></div>
@@ -1077,7 +1104,6 @@
             const dropdown = document.getElementById('notificationDropdown');
             dropdown.classList.toggle('active');
             
-            // Mark as read when opened
             if (dropdown.classList.contains('active')) {
                 const unreadItems = document.querySelectorAll('.notification-item.unread');
                 unreadItems.forEach(item => {
@@ -1088,7 +1114,6 @@
 
         // Close dropdowns when clicking outside
         document.addEventListener('click', function(event) {
-            // Settings dropdown
             const settingsDropdown = document.querySelector('.settings-dropdown');
             if (settingsDropdown && !settingsDropdown.contains(event.target)) {
                 const menu = document.getElementById('settingsMenu');
@@ -1097,7 +1122,6 @@
                 if (chevron) chevron.style.transform = 'rotate(0deg)';
             }
             
-            // Notifications dropdown
             const notificationBtn = document.getElementById('notificationBtn');
             const notificationDropdown = document.getElementById('notificationDropdown');
             if (notificationBtn && notificationDropdown && 
@@ -1126,25 +1150,40 @@
             document.getElementById('loadingSpinner').classList.add('hidden');
         }
 
-        // Remove folder from navbar
-        async function removeFolder(folderId, folderName) {
-            if (!confirm(`Remove "${folderName}" from your sidebar?`)) {
-                return;
-            }
+        // Notification System
+        window.showNotification = function(title, message, type = 'info') {
+            const container = document.getElementById('notificationCenter');
+            const id = 'notif-' + Date.now();
             
-            showLoading();
-            try {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = `/remove_folder_from_navbar/${folderId}`;
-                document.body.appendChild(form);
-                form.submit();
-            } catch (error) {
-                console.error('Error removing folder:', error);
-                hideLoading();
-                alert('Error removing folder. Please try again.');
-            }
-        }
+            const notification = document.createElement('div');
+            notification.id = id;
+            notification.className = `notification-toast ${type}`;
+            notification.innerHTML = `
+                <div class="flex items-start gap-3">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'} text-${type === 'success' ? 'green' : type === 'error' ? 'red' : type === 'warning' ? 'yellow' : 'blue'}-500"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-semibold text-gray-900">${title}</p>
+                        <p class="text-sm text-gray-600">${message}</p>
+                    </div>
+                    <button onclick="this.closest('.notification-toast').remove()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            container.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 10);
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }, 5000);
+        };
 
         // Auto-hide flash messages
         document.addEventListener('DOMContentLoaded', function() {
@@ -1169,7 +1208,7 @@
                 }
             });
 
-            // Global search functionality
+            // Global search
             const searchBar = document.getElementById('globalSearch');
             if (searchBar) {
                 searchBar.addEventListener('keypress', function(e) {
@@ -1185,42 +1224,24 @@
 
             // Keyboard shortcuts
             document.addEventListener('keydown', function(e) {
-                // Alt + N = Toggle notifications
                 if (e.altKey && e.key === 'n') {
                     e.preventDefault();
                     toggleNotifications();
                 }
-                
-                // Alt + S = Toggle settings
                 if (e.altKey && e.key === 's') {
                     e.preventDefault();
                     toggleSettings();
                 }
-                
-                // Alt + H = Home
                 if (e.altKey && e.key === 'h') {
                     e.preventDefault();
                     window.location.href = "{{ url_for('home') }}";
                 }
-                
-                // Alt + E = Events
-                if (e.altKey && e.key === 'e') {
-                    e.preventDefault();
-                    window.location.href = "{{ url_for('jainevents') }}";
-                }
-                
-                // Esc = Close all dropdowns
                 if (e.key === 'Escape') {
                     document.getElementById('notificationDropdown')?.classList.remove('active');
                     document.getElementById('settingsMenu')?.classList.remove('active');
                     document.getElementById('comingSoonModal')?.classList.add('hidden');
                 }
             });
-
-            // Mobile sidebar toggle (if needed)
-            function toggleSidebar() {
-                document.querySelector('.sidebar').classList.toggle('open');
-            }
 
             // Add loading state to links
             document.querySelectorAll('a[href]:not([href^="#"]):not([target="_blank"])').forEach(link => {
@@ -1239,39 +1260,20 @@
             });
         });
 
-        // Network status indicator
+        // Network status
         window.addEventListener('online', function() {
-            const statusDiv = document.createElement('div');
-            statusDiv.className = 'fixed top-20 right-8 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
-            statusDiv.innerHTML = '<i class="fas fa-wifi mr-2"></i> Back Online';
-            document.body.appendChild(statusDiv);
-            setTimeout(() => statusDiv.remove(), 3000);
+            showNotification('Back Online', 'Your internet connection has been restored', 'success');
         });
 
         window.addEventListener('offline', function() {
-            const statusDiv = document.createElement('div');
-            statusDiv.className = 'fixed top-20 right-8 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
-            statusDiv.innerHTML = '<i class="fas fa-exclamation-circle mr-2"></i> You are offline';
-            document.body.appendChild(statusDiv);
+            showNotification('You are offline', 'Please check your internet connection', 'error');
         });
 
-        // Error handling for AJAX requests
-        window.addEventListener('unhandledrejection', function(event) {
-            console.error('Unhandled Promise Rejection:', event.reason);
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'fixed bottom-8 right-8 bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg z-50';
-            errorDiv.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i> An error occurred. Please try again.';
-            document.body.appendChild(errorDiv);
-            setTimeout(() => errorDiv.remove(), 5000);
-        });
-
-        // Console welcome message with Jain colors
+        // Console welcome message
         console.log('%c🎓 Jain University - Office of Academics', 
             'font-size: 20px; font-weight: bold; color: #04043a;');
-        console.log('%cWelcome! Keyboard shortcuts:', 
-            'font-size: 14px; color: #666;');
+        console.log('%cWelcome! Keyboard shortcuts:', 'font-size: 14px; color: #666;');
         console.log('%cAlt + H = Home', 'color: #04043a;');
-        console.log('%cAlt + E = Events', 'color: #04043a;');
         console.log('%cAlt + N = Notifications', 'color: #04043a;');
         console.log('%cAlt + S = Settings', 'color: #04043a;');
         console.log('%cEsc = Close menus', 'color: #04043a;');

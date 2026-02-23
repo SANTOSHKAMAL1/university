@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Login | Office of Academic Affairs – Jain University</title>
+    <title>Verify OTP | Office of Academic Affairs – Jain University</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- Google Fonts & Font Awesome -->
@@ -33,7 +33,6 @@
             --shadow-md: 0 15px 35px rgba(10,42,68,0.08);
         }
 
-        /* ===== BEAUTIFUL NAVBAR (refined) ===== */
         .navbar {
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(18px);
@@ -93,7 +92,6 @@
             letter-spacing: 0.3px;
         }
 
-        /* Back link styled as refined button */
         .back-link {
             background: white;
             padding: 0.5rem 1.4rem;
@@ -126,8 +124,7 @@
             color: var(--gold);
         }
 
-        /* ===== LOGIN CARD (elevated) ===== */
-        .login-wrapper {
+        .otp-wrapper {
             flex: 1;
             display: flex;
             align-items: center;
@@ -135,7 +132,7 @@
             padding: 3rem 1.5rem;
         }
 
-        .login-card {
+        .otp-card {
             background: white;
             padding: 2.8rem 2.8rem 3rem;
             border-radius: 36px;
@@ -147,7 +144,7 @@
             backdrop-filter: blur(4px);
         }
 
-        .login-card:hover {
+        .otp-card:hover {
             transform: translateY(-5px);
         }
 
@@ -160,7 +157,7 @@
             letter-spacing: -0.02em;
         }
 
-        .welcome-sub {
+        .info-sub {
             color: #5f6f82;
             font-size: 0.95rem;
             margin-bottom: 2rem;
@@ -169,6 +166,17 @@
             background: #fafcff;
             border-radius: 0 8px 8px 0;
             line-height: 1.5;
+        }
+
+        .email-display {
+            background: #f0f4f8;
+            padding: 0.8rem 1.2rem;
+            border-radius: 40px;
+            text-align: center;
+            margin-bottom: 2rem;
+            font-weight: 500;
+            color: var(--navy);
+            border: 1px dashed var(--gold);
         }
 
         .input-group {
@@ -202,30 +210,7 @@
             background: white;
         }
 
-        .password-wrapper {
-            position: relative;
-        }
-
-        .password-wrapper .input-field {
-            padding-right: 3rem;
-        }
-
-        .toggle-password {
-            position: absolute;
-            right: 1.2rem;
-            top: 50%;
-            transform: translateY(-50%);
-            cursor: pointer;
-            font-size: 1.3rem;
-            color: #7b8b9f;
-            transition: color 0.2s;
-            line-height: 1;
-        }
-        .toggle-password:hover {
-            color: var(--navy);
-        }
-
-        .login-btn {
+        .verify-btn {
             width: 100%;
             background: var(--navy);
             color: white;
@@ -234,7 +219,7 @@
             font-size: 1.1rem;
             font-weight: 600;
             border-radius: 40px;
-            margin: 1.8rem 0 1.2rem;
+            margin: 1rem 0 1.2rem;
             cursor: pointer;
             transition: all 0.3s ease;
             display: flex;
@@ -244,48 +229,26 @@
             box-shadow: 0 10px 20px rgba(10,42,68,0.2);
         }
 
-        .login-btn:hover {
+        .verify-btn:hover {
             background: #1a3a5c;
             transform: translateY(-3px);
             box-shadow: 0 18px 30px rgba(10,42,68,0.25);
         }
 
-        .login-btn i {
+        .verify-btn i {
             font-size: 1.1rem;
             transition: transform 0.2s;
         }
-        .login-btn:hover i {
+        .verify-btn:hover i {
             transform: translateX(5px);
         }
 
-        /* Forgot password link */
-        .forgot-password {
-            text-align: right;
-            margin-top: -0.5rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        .forgot-password a {
-            color: var(--navy);
-            font-size: 0.9rem;
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.2s;
-        }
-        
-        .forgot-password a:hover {
-            color: var(--gold);
-            text-decoration: underline;
-        }
-
-        .register-link {
+        .resend-link {
             text-align: center;
             margin-top: 1rem;
-            font-size: 0.95rem;
-            color: #405b73;
         }
 
-        .register-link a {
+        .resend-link a {
             color: var(--navy);
             font-weight: 600;
             text-decoration: none;
@@ -293,7 +256,7 @@
             transition: border-color 0.2s, color 0.2s;
         }
 
-        .register-link a:hover {
+        .resend-link a:hover {
             color: var(--gold);
             border-bottom-color: var(--gold);
         }
@@ -320,7 +283,6 @@
             font-weight: 500;
         }
 
-        /* footer optional */
         .footer-mini {
             text-align: center;
             padding: 1.5rem;
@@ -331,7 +293,6 @@
             backdrop-filter: blur(4px);
         }
 
-        /* Responsive */
         @media (max-width: 600px) {
             .navbar {
                 padding: 0.6rem 1rem;
@@ -349,7 +310,7 @@
                 padding: 0.4rem 1.2rem;
                 font-size: 0.85rem;
             }
-            .login-card {
+            .otp-card {
                 padding: 2rem 1.5rem;
                 border-radius: 28px;
             }
@@ -394,42 +355,34 @@
     </div>
 </nav>
 
-<!-- ===== MAIN LOGIN AREA ===== -->
-<div class="login-wrapper">
-    <div class="login-card">
-        <h2>Welcome back</h2>
-        <div class="welcome-sub">Sign in to access the Office of Academic Portal</div>
+<!-- ===== OTP VERIFICATION AREA ===== -->
+<div class="otp-wrapper">
+    <div class="otp-card">
+        <h2>Verify OTP</h2>
+        <div class="info-sub">Enter the 6-digit code sent to your email</div>
 
-        <form method="POST">
+        <div class="email-display">
+            <i class="fas fa-envelope" style="margin-right: 8px; color: var(--gold);"></i>
+            {{ session.get('reset_email', 'your email') }}
+        </div>
+
+        <form method="POST" action="{{ url_for('verify_reset_otp') }}">
             <div class="input-group">
-                <label class="input-label">Email address</label>
-                <input type="email" name="email" class="input-field" placeholder="you@example.com" required>
+                <label class="input-label">Enter OTP</label>
+                <input type="text" name="otp" class="input-field" placeholder="6-digit code" maxlength="6" pattern="[0-9]{6}" inputmode="numeric" required>
             </div>
 
-            <div class="input-group">
-                <label class="input-label">Password</label>
-                <div class="password-wrapper">
-                    <input type="password" name="password" id="password" class="input-field" placeholder="••••••••" required>
-                    <span class="toggle-password" onclick="togglePassword()">👁️</span>
-                </div>
-            </div>
-
-            <!-- Forgot password link -->
-            <div class="forgot-password">
-                <a href="{{ url_for('forgot_password') }}">Forgot password?</a>
-            </div>
-
-            <button type="submit" class="login-btn">
-                <span>Log in</span>
-                <i class="fas fa-arrow-right"></i>
+            <button type="submit" class="verify-btn">
+                <span>Verify OTP</span>
+                <i class="fas fa-check-circle"></i>
             </button>
         </form>
 
-        <div class="register-link">
-            <p>New to the platform? <a href="{{ url_for('register') }}">Create an account</a></p>
+        <div class="resend-link">
+            <a href="{{ url_for('resend_reset_otp') }}">Resend OTP</a>
         </div>
 
-        <!-- flash messages styled as error / info -->
+        <!-- flash messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
@@ -444,29 +397,8 @@
 
 <!-- subtle footer -->
 <div class="footer-mini">
-    <p>© 2026 Jain University – Office of Academic Affairs. Secure login.</p>
+    <p>© 2026 Jain University – Office of Academic Affairs. Secure OTP verification.</p>
 </div>
-
-<script>
-    function togglePassword() {
-        const pwd = document.getElementById("password");
-        if (pwd.type === "password") {
-            pwd.type = "text";
-        } else {
-            pwd.type = "password";
-        }
-    }
-
-    // optional: make password toggle icon change (bonus)
-    document.querySelector('.toggle-password')?.addEventListener('click', function(e) {
-        const icon = this;
-        if (icon.textContent === '👁️') {
-            icon.textContent = '👁️‍🗨️';
-        } else {
-            icon.textContent = '👁️';
-        }
-    });
-</script>
 
 </body>
 </html>

@@ -10,7 +10,6 @@
         
         <!-- Header with Jain Colors -->
         <div class="bg-gradient-to-r from-[#04043a] to-[#1e3c72] rounded-2xl shadow-xl p-8 mb-8 text-white relative overflow-hidden">
-            <!-- Decorative Elements -->
             <div class="absolute top-0 right-0 w-64 h-64 bg-yellow-500 opacity-10 rounded-full transform translate-x-32 -translate-y-32"></div>
             <div class="absolute bottom-0 left-0 w-48 h-48 bg-yellow-500 opacity-10 rounded-full transform -translate-x-24 translate-y-24"></div>
             
@@ -21,7 +20,7 @@
                     </div>
                     <div>
                         <h1 class="text-3xl font-bold mb-2">Core Team Dashboard</h1>
-                        <p class="text-yellow-300 text-lg">Upload documents, collaborate with your team, and communicate with Leaders</p>
+                        <p class="text-yellow-300 text-lg">Upload documents, collaborate with your team, and communicate with Leaders & Core Members</p>
                     </div>
                 </div>
                 
@@ -37,68 +36,214 @@
             </div>
         </div>
 
-        <!-- Quick Stats with Jain Colors -->
+        <!-- Quick Stats Cards -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-[#04043a] hover:shadow-xl transition-all">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-500 text-sm font-medium">My Documents</p>
-                        <p class="text-3xl font-bold text-[#04043a]">{{ my_documents|length }}</p>
+                        <p class="text-3xl font-bold text-[#04043a]">{{ total_docs|default(0) }}</p>
                     </div>
                     <div class="bg-[#04043a] bg-opacity-10 rounded-full p-3">
                         <i class="fas fa-file-alt text-2xl text-[#04043a]"></i>
                     </div>
                 </div>
                 <div class="mt-2 text-xs text-gray-500">
-                    <span class="text-yellow-600 font-semibold">{{ my_documents|selectattr('status', 'equalto', 'pending')|list|length }}</span> pending review
+                    <span class="text-yellow-600 font-semibold">{{ pending_count|default(0) }}</span> pending review
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-yellow-500 hover:shadow-xl transition-all">
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500 hover:shadow-xl transition-all">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm font-medium">My Tasks</p>
+                        <p class="text-3xl font-bold text-[#04043a]">{{ total_tasks|default(0) }}</p>
+                    </div>
+                    <div class="bg-green-500 bg-opacity-10 rounded-full p-3">
+                        <i class="fas fa-tasks text-2xl text-green-600"></i>
+                    </div>
+                </div>
+                <div class="mt-2 text-xs text-gray-500">
+                    <span class="text-orange-600 font-semibold">{{ pending_tasks|default(0) }}</span> pending
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500 hover:shadow-xl transition-all">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-500 text-sm font-medium">Core Members</p>
-                        <p class="text-3xl font-bold text-[#04043a]">{{ core_members|length }}</p>
+                        <p class="text-3xl font-bold text-[#04043a]">{{ core_members|length|default(0) }}</p>
                     </div>
-                    <div class="bg-yellow-500 bg-opacity-10 rounded-full p-3">
-                        <i class="fas fa-users text-2xl text-yellow-600"></i>
-                    </div>
-                </div>
-                <div class="mt-2 text-xs text-gray-500">
-                    <span class="text-green-600 font-semibold">{{ online_core|length if online_core else 0 }}</span> online now
-                </div>
-            </div>
-
-            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-600 hover:shadow-xl transition-all">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-500 text-sm font-medium">Total Leaders</p>
-                        <p class="text-3xl font-bold text-[#04043a]">{{ leaders|length }}</p>
-                    </div>
-                    <div class="bg-green-600 bg-opacity-10 rounded-full p-3">
-                        <i class="fas fa-crown text-2xl text-green-600"></i>
+                    <div class="bg-blue-500 bg-opacity-10 rounded-full p-3">
+                        <i class="fas fa-users text-2xl text-blue-600"></i>
                     </div>
                 </div>
                 <div class="mt-2 text-xs text-gray-500">
-                    Ready to review documents
+                    <span class="text-green-600 font-semibold">{{ online_core|length|default(0) }}</span> online now
                 </div>
             </div>
 
             <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-orange-500 hover:shadow-xl transition-all">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-gray-500 text-sm font-medium">Pending Reviews</p>
-                        <p class="text-3xl font-bold text-[#04043a]">
-                            {{ my_documents|selectattr('status', 'equalto', 'pending')|list|length }}
-                        </p>
+                        <p class="text-gray-500 text-sm font-medium">Total Leaders</p>
+                        <p class="text-3xl font-bold text-[#04043a]">{{ leaders|length|default(0) }}</p>
                     </div>
                     <div class="bg-orange-500 bg-opacity-10 rounded-full p-3">
-                        <i class="fas fa-clock text-2xl text-orange-600"></i>
+                        <i class="fas fa-crown text-2xl text-orange-600"></i>
                     </div>
                 </div>
                 <div class="mt-2 text-xs text-gray-500">
-                    Awaiting leader feedback
+                    Ready to review documents
                 </div>
+            </div>
+        </div>
+
+        <!-- Analytics Dashboard -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Document Analytics Card -->
+            <div class="bg-white rounded-2xl shadow-xl p-6 lg:col-span-2">
+                <h2 class="text-xl font-bold text-[#04043a] mb-4 flex items-center gap-2">
+                    <i class="fas fa-chart-line text-yellow-500"></i>
+                    Document Analytics
+                </h2>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-blue-50 rounded-lg p-3 text-center">
+                        <p class="text-2xl font-bold text-blue-600">{{ docs_today|default(0) }}</p>
+                        <p class="text-xs text-gray-600">Today</p>
+                    </div>
+                    <div class="bg-green-50 rounded-lg p-3 text-center">
+                        <p class="text-2xl font-bold text-green-600">{{ docs_this_week|default(0) }}</p>
+                        <p class="text-xs text-gray-600">This Week</p>
+                    </div>
+                    <div class="bg-purple-50 rounded-lg p-3 text-center">
+                        <p class="text-2xl font-bold text-purple-600">{{ docs_this_month|default(0) }}</p>
+                        <p class="text-xs text-gray-600">This Month</p>
+                    </div>
+                    <div class="bg-yellow-50 rounded-lg p-3 text-center">
+                        <p class="text-2xl font-bold text-yellow-600">{{ total_docs|default(0) }}</p>
+                        <p class="text-xs text-gray-600">Total</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-green-50 rounded-lg p-3">
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                            <span class="text-sm font-medium">Approved</span>
+                        </div>
+                        <p class="text-xl font-bold text-green-600 mt-1">{{ approved_count|default(0) }}</p>
+                    </div>
+                    <div class="bg-yellow-50 rounded-lg p-3">
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                            <span class="text-sm font-medium">Pending</span>
+                        </div>
+                        <p class="text-xl font-bold text-yellow-600 mt-1">{{ pending_count|default(0) }}</p>
+                    </div>
+                    <div class="bg-orange-50 rounded-lg p-3">
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 bg-orange-500 rounded-full"></div>
+                            <span class="text-sm font-medium">Revision</span>
+                        </div>
+                        <p class="text-xl font-bold text-orange-600 mt-1">{{ revision_count|default(0) }}</p>
+                    </div>
+                    <div class="bg-red-50 rounded-lg p-3">
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                            <span class="text-sm font-medium">Rejected</span>
+                        </div>
+                        <p class="text-xl font-bold text-red-600 mt-1">{{ rejected_count|default(0) }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Task Analytics Card -->
+            <div class="bg-white rounded-2xl shadow-xl p-6">
+                <h2 class="text-xl font-bold text-[#04043a] mb-4 flex items-center gap-2">
+                    <i class="fas fa-tasks text-green-500"></i>
+                    Task Analytics
+                </h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-gray-600">Completed</span>
+                            <span class="font-semibold">{{ completed_tasks|default(0) }}/{{ total_tasks|default(0) }}</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-green-500 rounded-full h-2" style="width: {{ (completed_tasks/total_tasks*100) if total_tasks and total_tasks > 0 else 0 }}%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-yellow-50 rounded-lg p-3 text-center">
+                            <p class="text-xl font-bold text-yellow-600">{{ pending_tasks|default(0) }}</p>
+                            <p class="text-xs text-gray-600">Pending</p>
+                        </div>
+                        <div class="bg-blue-50 rounded-lg p-3 text-center">
+                            <p class="text-xl font-bold text-blue-600">{{ in_progress_tasks|default(0) }}</p>
+                            <p class="text-xs text-gray-600">In Progress</p>
+                        </div>
+                    </div>
+
+                    <div class="border-t pt-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm font-medium text-red-600">
+                                <i class="fas fa-exclamation-triangle mr-1"></i>High Priority
+                            </span>
+                            <span class="text-lg font-bold text-red-600">{{ high_priority_tasks|default(0) }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-medium text-orange-600">
+                                <i class="fas fa-clock mr-1"></i>Overdue
+                            </span>
+                            <span class="text-lg font-bold text-orange-600">{{ overdue_tasks|default(0) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity Timeline -->
+        <div class="bg-white rounded-2xl shadow-xl p-6 mb-8">
+            <h2 class="text-xl font-bold text-[#04043a] mb-4 flex items-center gap-2">
+                <i class="fas fa-history text-purple-500"></i>
+                Recent Activity
+            </h2>
+            
+            <div class="space-y-3 max-h-96 overflow-y-auto pr-2">
+                {% if recent_activity and recent_activity|length > 0 %}
+                    {% for activity in recent_activity %}
+                    <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-xl hover:shadow-md transition">
+                        <div class="w-8 h-8 bg-{{ activity.color }}-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-{{ activity.icon }} text-{{ activity.color }}-600"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-gray-900">{{ activity.title }}</p>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span class="text-xs text-gray-500">{{ activity.time }}</span>
+                                {% if activity.status %}
+                                <span class="text-xs px-2 py-0.5 rounded-full
+                                    {% if activity.status == 'approved' %}bg-green-100 text-green-800
+                                    {% elif activity.status == 'pending' %}bg-yellow-100 text-yellow-800
+                                    {% elif activity.status == 'revision' %}bg-orange-100 text-orange-800
+                                    {% elif activity.status == 'rejected' %}bg-red-100 text-red-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ activity.status }}
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="text-center py-8 text-gray-500">
+                    <i class="fas fa-inbox text-4xl mb-2 opacity-50"></i>
+                    <p>No recent activity</p>
+                </div>
+                {% endif %}
             </div>
         </div>
 
@@ -108,7 +253,7 @@
                 <div class="w-10 h-10 bg-yellow-500 rounded-lg flex items-center justify-center">
                     <i class="fas fa-cloud-upload-alt text-white"></i>
                 </div>
-                Upload Document for Leader Review
+                Upload Document for Review
             </h2>
 
             <form action="{{ url_for('upload_document') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
@@ -127,44 +272,104 @@
                             <i class="fas fa-file text-[#04043a] mr-2"></i>Select File *
                         </label>
                         <input type="file" name="file" required 
-                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition">
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition"
+                               accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.gif,.xlsx,.csv,.xls">
                     </div>
                 </div>
 
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        <i class="fas fa-comment text-[#04043a] mr-2"></i>Description / Message to Leaders
+                        <i class="fas fa-comment text-[#04043a] mr-2"></i>Description / Message
                     </label>
                     <textarea name="description" rows="4" 
                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition"
-                              placeholder="Describe the document and add any message for the leaders..."></textarea>
+                              placeholder="Describe the document and add any message for the reviewers..."></textarea>
                 </div>
 
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-3">
-                        <i class="fas fa-user-tie text-[#04043a] mr-2"></i>Assign to Leaders 
-                        <span class="text-xs text-gray-500 ml-2">(Leave empty to assign to all leaders)</span>
+                        <i class="fas fa-user-tie text-[#04043a] mr-2"></i>Assign to Reviewers 
+                        <span class="text-xs text-gray-500 ml-2">(Select multiple leaders and/or core members - leave empty to assign to all)</span>
                     </label>
-                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        {% for leader in leaders %}
-                        <label class="flex items-center space-x-3 p-3 border border-gray-200 rounded-xl hover:bg-yellow-50 hover:border-yellow-500 cursor-pointer transition">
-                            <input type="checkbox" name="assigned_leaders" value="{{ leader._id }}"
-                                   class="form-checkbox h-5 w-5 text-yellow-500 rounded">
-                            <div class="flex-1">
-                                <p class="text-sm font-medium text-gray-900">{{ leader.email.split('@')[0] }}</p>
-                                <p class="text-xs text-gray-500">{{ leader.email }}</p>
-                            </div>
-                        </label>
-                        {% endfor %}
+                    
+                    <!-- Leaders Section -->
+                    <div class="mb-6">
+                        <h4 class="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                            <i class="fas fa-crown text-yellow-600 mr-2"></i>Leaders
+                            <span class="text-xs text-gray-500 ml-2">(Can approve/reject documents)</span>
+                        </h4>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            {% for leader in leaders %}
+                            <label class="flex items-center space-x-3 p-3 border border-gray-200 rounded-xl hover:bg-yellow-50 hover:border-yellow-500 cursor-pointer transition group">
+                                <input type="checkbox" name="assigned_users" value="{{ leader._id }}" 
+                                       class="form-checkbox h-5 w-5 text-yellow-500 rounded leader-checkbox">
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-gray-900 group-hover:text-yellow-700">{{ leader.email.split('@')[0] }}</p>
+                                    <p class="text-xs text-gray-500">{{ leader.email }}</p>
+                                    <span class="inline-flex items-center gap-1 bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full text-xs mt-1">
+                                        <i class="fas fa-crown text-xs"></i> Leader
+                                    </span>
+                                </div>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Core Members Section -->
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                            <i class="fas fa-users text-blue-600 mr-2"></i>Core Team Members
+                            <span class="text-xs text-gray-500 ml-2">(Can view and comment)</span>
+                        </h4>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            {% for member in core_members %}
+                            {% if member._id != user._id %}
+                            <label class="flex items-center space-x-3 p-3 border border-gray-200 rounded-xl hover:bg-blue-50 hover:border-blue-500 cursor-pointer transition group">
+                                <input type="checkbox" name="assigned_users" value="{{ member._id }}" 
+                                       class="form-checkbox h-5 w-5 text-blue-500 rounded core-checkbox">
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-gray-900 group-hover:text-blue-700">{{ member.email.split('@')[0] }}</p>
+                                    <p class="text-xs text-gray-500">{{ member.email }}</p>
+                                    <span class="inline-flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full text-xs mt-1">
+                                        <i class="fas fa-users text-xs"></i> Core Team
+                                    </span>
+                                </div>
+                            </label>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Quick Selection Buttons -->
+                    <div class="flex flex-wrap gap-2 mt-6 p-4 bg-gray-50 rounded-xl">
+                        <span class="text-xs font-medium text-gray-600 mr-2 self-center">Quick select:</span>
+                        <button type="button" onclick="selectAllLeaders()" class="text-xs px-3 py-1.5 bg-yellow-100 text-yellow-800 rounded-full hover:bg-yellow-200 transition flex items-center gap-1">
+                            <i class="fas fa-crown text-xs"></i> All Leaders
+                        </button>
+                        <button type="button" onclick="selectAllCore()" class="text-xs px-3 py-1.5 bg-blue-100 text-blue-800 rounded-full hover:bg-blue-200 transition flex items-center gap-1">
+                            <i class="fas fa-users text-xs"></i> All Core
+                        </button>
+                        <button type="button" onclick="selectAll()" class="text-xs px-3 py-1.5 bg-green-100 text-green-800 rounded-full hover:bg-green-200 transition flex items-center gap-1">
+                            <i class="fas fa-check-double text-xs"></i> Everyone
+                        </button>
+                        <button type="button" onclick="clearAll()" class="text-xs px-3 py-1.5 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 transition flex items-center gap-1">
+                            <i class="fas fa-times text-xs"></i> Clear All
+                        </button>
+                    </div>
+
+                    <!-- Selected Count Display -->
+                    <div class="mt-3 text-sm text-gray-600" id="selectedCount">
+                        <i class="fas fa-users mr-1"></i>
+                        <span>0 reviewers selected</span>
                     </div>
                 </div>
 
                 <div class="flex items-center space-x-3 p-4 bg-yellow-50 rounded-xl border border-yellow-200">
-                    <input type="checkbox" name="notify_leaders" id="notify_leaders" checked 
+                    <input type="checkbox" name="notify_users" id="notify_users" checked 
                            class="h-5 w-5 text-yellow-500 rounded">
-                    <label for="notify_leaders" class="text-sm font-medium text-gray-700">
+                    <label for="notify_users" class="text-sm font-medium text-gray-700">
                         <i class="fas fa-envelope mr-2 text-yellow-600"></i>
-                        Send email notification to assigned leaders with document details
+                        Send email notification to assigned reviewers with document details
                     </label>
                 </div>
 
@@ -176,16 +381,148 @@
             </form>
         </div>
 
-        <!-- My Documents Section -->
+        <!-- My Assigned Tasks Section - FIXED ATTACHMENT DISPLAY -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <h2 class="text-2xl font-bold text-[#04043a] mb-6 flex items-center gap-3">
+                <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-tasks text-white"></i>
+                </div>
+                My Assigned Tasks
+                {% if total_tasks and total_tasks > 0 %}
+                <span class="bg-green-500 text-white px-3 py-1 rounded-full text-sm">{{ total_tasks }}</span>
+                {% endif %}
+            </h2>
+
+            {% if my_tasks and my_tasks|length > 0 %}
+            <div class="space-y-4">
+                {% for task in my_tasks %}
+                <div class="border-l-4 
+                    {% if task.priority == 'high' %}border-red-500
+                    {% elif task.priority == 'medium' %}border-yellow-500
+                    {% else %}border-green-500{% endif %}
+                    bg-gray-50 rounded-xl p-6 hover:shadow-lg transition">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="w-10 h-10 {% if task.priority == 'high' %}bg-red-100{% elif task.priority == 'medium' %}bg-yellow-100{% else %}bg-green-100{% endif %} rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-clipboard-list {% if task.priority == 'high' %}text-red-600{% elif task.priority == 'medium' %}text-yellow-600{% else %}text-green-600{% endif %}"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-bold text-gray-900">{{ task.title }}</h3>
+                                    <p class="text-sm text-gray-600">Assigned by: {{ task.assigned_by_name }}</p>
+                                </div>
+                            </div>
+                            
+                            <p class="text-sm text-gray-700 mb-4 ml-13">{{ task.description }}</p>
+                            
+                            <!-- Attachment Display - FIXED VERSION -->
+                            {% if task.has_attachment and task.attachment_url %}
+                            <div class="mb-4 ml-13">
+                                <div class="inline-flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-xl hover:bg-blue-100 transition-all group">
+                                    <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center text-white">
+                                        {% if task.attachment_type in ['.pdf'] %}
+                                        <i class="fas fa-file-pdf"></i>
+                                        {% elif task.attachment_type in ['.docx', '.doc'] %}
+                                        <i class="fas fa-file-word"></i>
+                                        {% elif task.attachment_type in ['.xlsx', '.xls', '.csv'] %}
+                                        <i class="fas fa-file-excel"></i>
+                                        {% elif task.attachment_type in ['.jpg', '.jpeg', '.png', '.gif'] %}
+                                        <i class="fas fa-file-image"></i>
+                                        {% else %}
+                                        <i class="fas fa-file"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <a href="{{ task.attachment_url }}" target="_blank" class="text-blue-700 hover:text-blue-900 font-medium flex items-center gap-2">
+                                            <span>{{ task.attachment_name or 'Document' }}</span>
+                                            <i class="fas fa-external-link-alt text-xs"></i>
+                                        </a>
+                                        <p class="text-xs text-gray-500 mt-1">
+                                            {% if task.attachment_size_display %}
+                                            {{ task.attachment_size_display }} •
+                                            {% endif %}
+                                            Click to view/download
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm bg-white p-4 rounded-xl">
+                                <div>
+                                    <span class="font-semibold text-gray-700">Due Date:</span>
+                                    <p class="text-gray-900 mt-1">
+                                        {% if task.due_date and task.due_date < now and task.status != 'completed' %}
+                                        <span class="text-red-600 font-semibold">
+                                            <i class="fas fa-exclamation-circle mr-1"></i>
+                                            {{ task.due_date_str }}
+                                        </span>
+                                        {% else %}
+                                        {{ task.due_date_str }}
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                <div>
+                                    <span class="font-semibold text-gray-700">Priority:</span>
+                                    <p class="mt-1">
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                                            {% if task.priority == 'high' %}bg-red-100 text-red-800
+                                            {% elif task.priority == 'medium' %}bg-yellow-100 text-yellow-800
+                                            {% else %}bg-green-100 text-green-800{% endif %}">
+                                            {% if task.priority == 'high' %}🔴{% elif task.priority == 'medium' %}🟡{% else %}🟢{% endif %}
+                                            {{ task.priority|upper }}
+                                        </span>
+                                    </p>
+                                </div>
+                                <div>
+                                    <span class="font-semibold text-gray-700">Status:</span>
+                                    <p class="mt-1">
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                                            {% if task.status == 'completed' %}bg-green-100 text-green-800
+                                            {% elif task.status == 'in_progress' %}bg-blue-100 text-blue-800
+                                            {% elif task.status == 'pending' %}bg-yellow-100 text-yellow-800
+                                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                            {{ task.status|replace('_', ' ')|title }}
+                                        </span>
+                                    </p>
+                                </div>
+                                <div>
+                                    <span class="font-semibold text-gray-700">Progress:</span>
+                                    <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                                        <div class="{% if task.priority == 'high' %}bg-red-500{% elif task.priority == 'medium' %}bg-yellow-500{% else %}bg-green-500{% endif %} rounded-full h-2" style="width: {{ task.progress }}%"></div>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1 text-right">{{ task.progress }}%</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-16 bg-gray-50 rounded-xl">
+                <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-tasks text-4xl text-green-600"></i>
+                </div>
+                <p class="text-lg text-gray-600">No tasks assigned yet</p>
+                <p class="text-sm text-gray-500 mt-2">Tasks assigned by leaders will appear here</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- My Uploaded Documents Section -->
         <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
             <h2 class="text-2xl font-bold text-[#04043a] mb-6 flex items-center gap-3">
                 <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
                     <i class="fas fa-folder-open text-white"></i>
                 </div>
                 My Uploaded Documents
+                {% if total_docs and total_docs > 0 %}
+                <span class="bg-blue-500 text-white px-3 py-1 rounded-full text-sm">{{ total_docs }}</span>
+                {% endif %}
             </h2>
 
-            {% if my_documents %}
+            {% if my_documents and my_documents|length > 0 %}
             <div class="space-y-4">
                 {% for doc in my_documents %}
                 <div class="border border-gray-200 rounded-xl p-6 hover:shadow-xl transition-all hover:border-yellow-500">
@@ -214,6 +551,10 @@
                                     <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-bold ml-2">
                                         <i class="fas fa-check-circle"></i> APPROVED
                                     </span>
+                                    {% elif doc.status == 'revision' %}
+                                    <span class="inline-flex items-center gap-1 bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-xs font-bold ml-2">
+                                        <i class="fas fa-edit"></i> NEEDS REVISION
+                                    </span>
                                     {% elif doc.status == 'rejected' %}
                                     <span class="inline-flex items-center gap-1 bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-bold ml-2">
                                         <i class="fas fa-times-circle"></i> REJECTED
@@ -228,6 +569,39 @@
                                 {% endif %}
                             </div>
 
+                            <!-- Assigned Reviewers -->
+                            <div class="mt-3">
+                                <span class="text-xs font-semibold text-gray-500">Assigned to:</span>
+                                <div class="flex flex-wrap gap-2 mt-1">
+                                    {% if doc.assigned_reviewers %}
+                                        {% for reviewer_id in doc.assigned_reviewers %}
+                                            {% if reviewer_id|string != user._id|string %}
+                                                {% set reviewer = namespace(found=false) %}
+                                                {% for leader in leaders %}
+                                                    {% if leader._id|string == reviewer_id|string %}
+                                                        <span class="inline-flex items-center gap-1 bg-yellow-50 text-yellow-700 px-2 py-0.5 rounded-full text-xs border border-yellow-200">
+                                                            <i class="fas fa-crown text-yellow-600 text-xs"></i>
+                                                            {{ leader.email.split('@')[0] }}
+                                                        </span>
+                                                        {% set reviewer.found = true %}
+                                                    {% endif %}
+                                                {% endfor %}
+                                                {% for member in core_members %}
+                                                    {% if member._id|string == reviewer_id|string and not reviewer.found %}
+                                                        <span class="inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full text-xs border border-blue-200">
+                                                            <i class="fas fa-users text-blue-600 text-xs"></i>
+                                                            {{ member.email.split('@')[0] }}
+                                                        </span>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% else %}
+                                        <span class="text-xs text-gray-400">All reviewers</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
                             {% if doc.comments %}
                             <div class="mt-4 p-4 bg-yellow-50 border-l-4 border-yellow-500 rounded-xl">
                                 <div class="flex items-start gap-3">
@@ -235,7 +609,7 @@
                                         <i class="fas fa-user-tie text-white text-sm"></i>
                                     </div>
                                     <div>
-                                        <p class="text-sm font-semibold text-yellow-900">Leader's Response:</p>
+                                        <p class="text-sm font-semibold text-yellow-900">Reviewer's Response:</p>
                                         <p class="text-sm text-yellow-800 mt-1">{{ doc.comments }}</p>
                                         <p class="text-xs text-yellow-600 mt-2 flex items-center gap-1">
                                             <i class="fas fa-envelope"></i> 
@@ -268,6 +642,48 @@
             </div>
             {% endif %}
         </div>
+
+        <!-- Shared Documents Section -->
+        {% if recent_shares and recent_shares|length > 0 %}
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <h2 class="text-2xl font-bold text-[#04043a] mb-6 flex items-center gap-3">
+                <div class="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-share-alt text-white"></i>
+                </div>
+                Recent Document Shares
+            </h2>
+            <div class="space-y-4">
+                {% for share in recent_shares %}
+                <div class="border border-gray-200 rounded-xl p-4 hover:shadow-lg transition">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <div class="flex items-center gap-2 mb-2">
+                                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-user text-blue-600"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-900">{{ share.document_name }}</h4>
+                                    <p class="text-xs text-gray-500">Shared by: {{ share.sender_name }}</p>
+                                </div>
+                            </div>
+                            <p class="text-sm text-gray-600 mt-1">Shared with:</p>
+                            <div class="flex flex-wrap gap-2 mt-1">
+                                {% for name in share.shared_with_names %}
+                                <span class="inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-1 rounded-full text-xs">
+                                    <i class="fas fa-user"></i> {{ name.name }}
+                                </span>
+                                {% endfor %}
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2">
+                                <i class="far fa-clock mr-1"></i> {{ share.shared_at.strftime('%d %b %Y, %I:%M %p') }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
 
         <!-- Core Team Chat -->
         <div class="bg-white rounded-2xl shadow-xl p-8">
@@ -347,7 +763,7 @@
                         {% else %}
                         <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">
                             <span class="w-1.5 h-1.5 bg-gray-400 rounded-full"></span>
-                            Offline
+                            Last seen {{ member.last_seen_formatted }}
                         </span>
                         {% endif %}
                     </div>
@@ -359,6 +775,50 @@
 </div>
 
 <script>
+    // Update selected count
+    function updateSelectedCount() {
+        const checkboxes = document.querySelectorAll('input[name="assigned_users"]:checked');
+        const count = checkboxes.length;
+        document.getElementById('selectedCount').innerHTML = `
+            <i class="fas fa-users mr-1"></i>
+            <span>${count} reviewer${count !== 1 ? 's' : ''} selected</span>
+        `;
+    }
+
+    // Add event listeners to all checkboxes
+    document.querySelectorAll('input[name="assigned_users"]').forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectedCount);
+    });
+
+    // Select all leaders
+    function selectAllLeaders() {
+        const checkboxes = document.querySelectorAll('.leader-checkbox');
+        checkboxes.forEach(cb => cb.checked = true);
+        updateSelectedCount();
+    }
+
+    // Select all core members
+    function selectAllCore() {
+        const checkboxes = document.querySelectorAll('.core-checkbox');
+        checkboxes.forEach(cb => cb.checked = true);
+        updateSelectedCount();
+    }
+
+    // Select all reviewers
+    function selectAll() {
+        const checkboxes = document.querySelectorAll('input[name="assigned_users"]');
+        checkboxes.forEach(cb => cb.checked = true);
+        updateSelectedCount();
+    }
+
+    // Clear all selections
+    function clearAll() {
+        const checkboxes = document.querySelectorAll('input[name="assigned_users"]');
+        checkboxes.forEach(cb => cb.checked = false);
+        updateSelectedCount();
+    }
+
+    // Chat functionality
     function sendChatMessage(event) {
         event.preventDefault();
         const input = document.getElementById('chatInput');
@@ -372,7 +832,8 @@
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                content: message
+                content: message,
+                group_id: 'core_team'
             })
         })
         .then(response => response.json())
@@ -402,6 +863,11 @@
                                     ${!msg.is_me ? '<span class="font-semibold">' + msg.sender_name + '</span> • ' : ''}${msg.timestamp}
                                 </p>
                                 <p class="text-sm ${msg.is_me ? 'text-white' : 'text-gray-800'}">${msg.content}</p>
+                                ${msg.file_url ? `
+                                <a href="${msg.file_url}" target="_blank" class="text-xs ${msg.is_me ? 'text-yellow-200 hover:text-white' : 'text-blue-600 hover:text-blue-800'} flex items-center gap-1 mt-2">
+                                    <i class="fas fa-paperclip"></i> Attachment
+                                </a>
+                                ` : ''}
                             </div>
                         `;
                         chatDiv.appendChild(msgDiv);
@@ -413,7 +879,66 @@
             .catch(error => console.error('Error:', error));
     }
     
+    // Auto-refresh chat every 5 seconds
     setInterval(loadChatMessages, 5000);
+    
+    // Initial load
     loadChatMessages();
+    updateSelectedCount();
+
+    // Auto-refresh activity status
+    function refreshActivityStatus() {
+        fetch('/api/activity/status')
+            .then(response => response.json())
+            .then(data => {
+                if (data.new_tasks > 0) {
+                    window.showNotification('New Tasks', `You have ${data.new_tasks} new task${data.new_tasks > 1 ? 's' : ''} assigned`, 'info');
+                }
+                if (data.new_documents > 0) {
+                    window.showNotification('New Documents', `${data.new_documents} new document${data.new_documents > 1 ? 's' : ''} shared`, 'success');
+                }
+                if (data.overdue_tasks > 0) {
+                    window.showNotification('⚠️ Overdue Tasks', `You have ${data.overdue_tasks} overdue task${data.overdue_tasks > 1 ? 's' : ''}`, 'warning');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }
+    
+    setInterval(refreshActivityStatus, 30000);
+
+    // Handle attachment clicks
+    document.querySelectorAll('.task-attachment').forEach(link => {
+        link.addEventListener('click', function(e) {
+            window.showNotification('Opening file...', 'Your download will start shortly', 'info');
+        });
+    });
 </script>
+
+<style>
+    .form-checkbox {
+        border-radius: 0.25rem;
+        border-width: 2px;
+        border-color: #d1d5db;
+    }
+    .form-checkbox:checked {
+        background-color: currentColor;
+        border-color: currentColor;
+    }
+    .leader-checkbox:checked {
+        color: #eab308;
+    }
+    .core-checkbox:checked {
+        color: #3b82f6;
+    }
+    .transition-all {
+        transition: all 0.3s ease;
+    }
+    .attachment-preview {
+        transition: all 0.3s ease;
+    }
+    .attachment-preview:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.5);
+    }
+</style>
 {% endblock %}

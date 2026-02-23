@@ -41,12 +41,12 @@ app.wsgi_app = ProxyFix(
     x_proto=1,
     x_host=1
 )
-from datetime import timedelta
 
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)
 app.config['SESSION_COOKIE_SECURE'] = False   # Set True only if HTTPS
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+
 # Upload folder settings
 UPLOAD_FOLDER = 'static/uploads'
 ALLOWED_EXTENSIONS = {'pdf', 'docx', 'txt', 'png', 'jpg', 'jpeg', 'gif', 'xlsx', 'csv', 'xls'}
@@ -60,7 +60,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 mongo = PyMongo(app)
 db = mongo.db
 
-# FIXED: Mail Configuration - Test this configuration first
+# Mail Configuration
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
@@ -76,11 +76,10 @@ mail = Mail(app)
 # Test mail configuration on startup
 with app.app_context():
     try:
-        # Test sending a test email to yourself
         test_msg = Message(
             subject="Reminder System Test",
             sender=app.config['MAIL_USERNAME'],
-            recipients=[app.config['MAIL_USERNAME']]  # Send to yourself for testing
+            recipients=[app.config['MAIL_USERNAME']]
         )
         test_msg.body = "This is a test email to verify the reminder system is working."
         mail.send(test_msg)
@@ -97,6 +96,32 @@ DRIVE_SCOPES = [
     'https://www.googleapis.com/auth/drive'
 ]
 GMAIL_SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
+
+# ===================== TIMEZONE HELPER FUNCTIONS =====================
+def make_timezone_aware(dt):
+    """Convert a datetime to timezone-aware IST if it's naive"""
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        return IST.localize(dt)
+    return dt.astimezone(IST)
+
+def make_timezone_naive(dt):
+    """Convert a timezone-aware datetime to naive for storage in MongoDB"""
+    if dt is None:
+        return None
+    if dt.tzinfo is not None:
+        dt_ist = dt.astimezone(IST)
+        return dt_ist.replace(tzinfo=None)
+    return dt
+
+def normalize_datetime_for_query(dt):
+    """Convert datetime to naive for MongoDB query comparison"""
+    if dt is None:
+        return None
+    if dt.tzinfo is not None:
+        return dt.replace(tzinfo=None)
+    return dt
 
 # ===================== DATABASE INDEXES =====================
 def create_indexes():
@@ -115,12 +140,22 @@ def create_indexes():
         db.events.create_index([('school', 1)])
         db.events.create_index([('department', 1)])
         
-        # Reminders collection indexes - FIXED: Added better indexes
+        # Reminders collection indexes
         db.event_reminders.create_index([('user_id', 1)])
         db.event_reminders.create_index([('reminder_datetime', 1)])
         db.event_reminders.create_index([('sent', 1)])
-        db.event_reminders.create_index([('sent', 1), ('reminder_datetime', 1)])  # Composite index for faster queries
-        db.event_reminders.create_index([('sent', 1), ('reminder_datetime', 1), ('user_id', 1)])  # Most efficient query
+        db.event_reminders.create_index([('sent', 1), ('reminder_datetime', 1)])
+        db.event_reminders.create_index([('sent', 1), ('reminder_datetime', 1), ('user_id', 1)])
+        
+        # Office documents indexes
+        db.office_documents.create_index([('user_id', 1)])
+        db.office_documents.create_index([('status', 1)])
+        db.office_documents.create_index([('submitted_at', -1)])
+        
+        # Document shares indexes
+        db.document_shares.create_index([('shared_by', 1)])
+        db.document_shares.create_index([('shared_with', 1)])
+        db.document_shares.create_index([('shared_at', -1)])
         
         # Chat collection indexes
         db.chat_messages.create_index([('sender_id', 1)])
@@ -128,19 +163,29 @@ def create_indexes():
         db.chat_messages.create_index([('group_id', 1)])
         db.chat_messages.create_index([('timestamp', -1)])
         
-        # Document shares indexes
-        db.document_shares.create_index([('shared_by', 1)])
-        db.document_shares.create_index([('shared_with', 1)])
-        db.document_shares.create_index([('shared_at', -1)])
+        # Chat groups indexes
+        db.chat_groups.create_index([('group_type', 1)])
         
-        # Office documents indexes
-        db.office_documents.create_index([('user_email', 1)])
-        db.office_documents.create_index([('status', 1)])
-        db.office_documents.create_index([('submitted_at', -1)])
+        # Tasks indexes
+        db.tasks.create_index([('assigned_to', 1)])
+        db.tasks.create_index([('assigned_by', 1)])
+        db.tasks.create_index([('status', 1)])
+        db.tasks.create_index([('due_date', 1)])
         
         # Activity logs indexes
         db.activity_logs.create_index([('user_id', 1)])
         db.activity_logs.create_index([('timestamp', -1)])
+        
+        # File collections indexes
+        db.user_files.create_index([('user_email', 1)])
+        db.user_files.create_index([('uploaded_at', -1)])
+        
+        db.public_files.create_index([('uploaded_at', -1)])
+        
+        # UGC and Monthly Engagement indexes
+        db.ugc_data.create_index([('uploaded_at', -1)])
+        db.monthly_engagement.create_index([('uploaded_at', -1)])
+        db.newsletters.create_index([('uploaded_at', -1)])
         
         logger.info("✅ Database indexes created successfully")
     except Exception as e:
@@ -148,7 +193,11 @@ def create_indexes():
 
 # ===================== HELPER FUNCTIONS =====================
 def get_indian_time():
-    """Get current time in Indian Standard Time (IST)"""
+    """Get current time in Indian Standard Time (IST) - Returns naive datetime for storage"""
+    return datetime.now(IST).replace(tzinfo=None)
+
+def get_indian_time_aware():
+    """Get current time in Indian Standard Time (IST) - Returns aware datetime for calculations"""
     return datetime.now(IST)
 
 def convert_to_ist(dt):
@@ -161,22 +210,47 @@ def allowed_file(filename):
     """Check if file extension is allowed"""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def get_today_ist_string():
+    """Get today date as YYYY-MM-DD string in IST"""
+    utc_now = datetime.utcnow().replace(tzinfo=pytz.utc)
+    ist_now = utc_now.astimezone(IST)
+    return ist_now.strftime("%Y-%m-%d")
+
+def normalize_date(date_str):
+    """Normalize any date string to YYYY-MM-DD format."""
+    if not date_str:
+        return ""
+    date_str = str(date_str).strip()
+    if len(date_str) == 10 and date_str[4] == "-":
+        return date_str
+    for fmt in ["%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y", "%m/%d/%Y", "%Y/%m/%d"]:
+        try:
+            return datetime.strptime(date_str, fmt).strftime("%Y-%m-%d")
+        except ValueError:
+            continue
+    return date_str
+
 # ===================== DECORATORS =====================
 def approval_required(f):
     """Decorator to require admin approval before accessing route"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        # Check if user is logged in
         if 'email' not in session:
             flash('Please log in to access this page', 'error')
             return redirect(url_for('login'))
         
-        # Check if user is approved
-        if not session.get('approved', False):
+        approved = session.get('approved', False)
+        
+        if not approved and 'email' in session:
+            user = db.users.find_one({'email': session['email']})
+            if user:
+                approved = user.get('approved', False)
+                session['approved'] = approved
+        
+        if not approved:
             flash('⏳ Your account is pending admin approval. Access denied.', 'warning')
             return redirect(url_for('home'))
         
-        # User is approved, proceed to the route
         return f(*args, **kwargs)
     
     return decorated_function
@@ -191,6 +265,49 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+# ===================== ROLE CHECK FUNCTIONS =====================
+def is_faculty():
+    """Check if user is regular faculty (not core or leader)"""
+    return (session.get('role') == 'user' and 
+            session.get('user_type') == 'faculty' and 
+            not session.get('special_role'))
+
+def is_core_member():
+    """Check if user is core team member"""
+    if session.get('special_role') in ['core', 'office_barrier'] or session.get('user_type') == 'core':
+        return True
+    
+    if 'email' in session:
+        user = db.users.find_one({'email': session['email']})
+        if user and (user.get('special_role') in ['core', 'office_barrier'] or user.get('user_type') == 'core'):
+            return True
+    
+    return False
+
+def is_leader():
+    """Check if user is a leader"""
+    if session.get('special_role') == 'leader':
+        return True
+    
+    if 'email' in session:
+        user = db.users.find_one({'email': session['email']})
+        if user and user.get('special_role') == 'leader':
+            return True
+    
+    return False
+
+def is_core_or_leader():
+    """Check if user is core member or leader"""
+    return is_core_member() or is_leader()
+
+def is_office_barrier():
+    """Check if user is office barrier (core team)"""
+    return is_core_member()
+
+def has_special_access():
+    """Check if user has special access (core, leader)"""
+    return is_core_or_leader()
+
 # ===================== GOOGLE DRIVE FUNCTIONS =====================
 def get_drive_service():
     """Get authenticated Google Drive service with proper error handling"""
@@ -201,7 +318,6 @@ def get_drive_service():
     try:
         creds_data = session['drive_creds']
         
-        # Validate credentials data
         required_fields = ['token', 'refresh_token', 'token_uri', 'client_id', 'client_secret']
         for field in required_fields:
             if field not in creds_data:
@@ -217,14 +333,12 @@ def get_drive_service():
             scopes=creds_data.get('scopes', DRIVE_SCOPES)
         )
         
-        # Build and return service
         service = build('drive', 'v3', credentials=creds)
         logger.info("✅ Drive service created successfully")
         return service
         
     except Exception as e:
         logger.error(f"❌ Error getting drive service: {e}", exc_info=True)
-        # Clear invalid credentials
         session.pop('drive_creds', None)
         return None
 
@@ -248,10 +362,8 @@ def make_file_public(service, file_id):
 def make_file_private(service, file_id):
     """Make a file private (remove public access)"""
     try:
-        # Get all permissions
         permissions = service.permissions().list(fileId=file_id).execute()
         
-        # Find and delete 'anyone' permission
         for perm in permissions.get('permissions', []):
             if perm.get('type') == 'anyone':
                 service.permissions().delete(
@@ -286,7 +398,6 @@ def get_drive_stats():
             logger.warning("Drive service unavailable for stats")
             return {'total_files': 0, 'recent_uploads': []}
         
-        # Get recent files
         seven_days_ago = (get_indian_time() - timedelta(days=7)).isoformat()
         recent = service.files().list(
             q=f"createdTime >= '{seven_days_ago}' and trashed=false",
@@ -297,7 +408,6 @@ def get_drive_stats():
         
         recent_files = recent.get('files', [])
         
-        # Enrich with folder names
         for file in recent_files:
             if file.get('parents'):
                 try:
@@ -312,7 +422,6 @@ def get_drive_stats():
             else:
                 file['folder_name'] = 'Root'
         
-        # Get total file count
         all_files = service.files().list(
             q="trashed=false",
             pageSize=1000,
@@ -340,63 +449,7 @@ def get_user_navbar(email):
         logger.error(f"Error getting user navbar: {e}")
         return []
 
-# ===================== ROLE CHECK FUNCTIONS =====================
-def is_faculty():
-    """Check if user is regular faculty (not core or leader)"""
-    return (session.get('role') == 'user' and 
-            session.get('user_type') == 'faculty' and 
-            not session.get('special_role'))
-
-def is_core_member():
-    """Check if user is core team member"""
-    return (session.get('role') == 'user' and 
-            session.get('special_role') in ['core', 'office_barrier'])
-
-def is_leader():
-    """Check if user is a leader"""
-    return (session.get('role') == 'user' and 
-            session.get('special_role') == 'leader')
-
-def is_core_or_leader():
-    """Check if user is core member or leader"""
-    return is_core_member() or is_leader()
-
-def is_office_barrier():
-    """Check if user is office barrier (core team)"""
-    return is_core_member()
-
-def has_special_access():
-    """Check if user has special access (core, leader)"""
-    return is_core_or_leader()
-
-# ===================== CONTEXT PROCESSORS =====================
-@app.context_processor
-def inject_notifications():
-    """Inject notifications into all templates if user is logged in"""
-    try:
-        if 'email' in session and session.get('role') == 'user':
-            notifications = get_user_notifications()
-            return dict(notifications=notifications)
-    except Exception as e:
-        logger.error(f"Error injecting notifications: {e}")
-    return dict(notifications=[])
-
-@app.context_processor
-def inject_user_navbar():
-    """Inject user navbar into all templates"""
-    try:
-        if 'email' in session and session.get('role') == 'user':
-            navbar = get_user_navbar(session['email'])
-            return dict(user_navbar=navbar)
-    except Exception as e:
-        logger.error(f"Error injecting navbar: {e}")
-    return dict(user_navbar=[])
-
-@app.context_processor
-def inject_current_time():
-    """Inject current Indian time into templates"""
-    return dict(now=get_indian_time())
-
+# ===================== NOTIFICATION FUNCTIONS =====================
 def get_user_notifications():
     """Get user notifications (reminders, subscriptions, recent activities)"""
     try:
@@ -496,373 +549,216 @@ def get_user_notifications():
         logger.error(f"Error getting notifications: {e}")
         return []
 
-def validate_excel_data(df):
-    """Validate Excel data before insertion"""
-    errors = []
-    required_columns = ['event_name', 'description', 'school', 'department', 'event_type', 'venue', 'event_date']
-    
-    missing_cols = [col for col in required_columns if col not in df.columns]
-    if missing_cols:
-        return False, [f"Missing required columns: {', '.join(missing_cols)}"], None
-    
-    cleaned_records = []
-    
-    for idx, row in df.iterrows():
-        record_errors = []
-        
-        if pd.isna(row.get('event_name')) or str(row['event_name']).strip() == '':
-            record_errors.append(f"Row {idx+2}: event_name is required")
-            continue
-        
-        if pd.isna(row.get('description')) or str(row['description']).strip() == '':
-            record_errors.append(f"Row {idx+2}: description is required")
-            continue
-        
-        try:
-            event_date = pd.to_datetime(row['event_date']).strftime('%Y-%m-%d')
-        except Exception as e:
-            record_errors.append(f"Row {idx+2}: Invalid event_date format (use YYYY-MM-DD)")
-            continue
-        
-        end_date = None
-        if not pd.isna(row.get('end_date')):
-            try:
-                end_date = pd.to_datetime(row['end_date']).strftime('%Y-%m-%d')
-            except:
-                record_errors.append(f"Row {idx+2}: Invalid end_date format (use YYYY-MM-DD)")
-                continue
-        
-        if record_errors:
-            errors.extend(record_errors)
-            continue
-        
-        clean_record = {
-            'event_name': str(row['event_name']).strip(),
-            'description': str(row['description']).strip(),
-            'school': str(row['school']).strip(),
-            'department': str(row['department']).strip(),
-            'event_type': str(row['event_type']).strip(),
-            'venue': str(row['venue']).strip(),
-            'event_date': event_date,
-            'end_date': end_date,
-            'event_time': str(row.get('event_time', 'All Day')).strip() if not pd.isna(row.get('event_time')) else 'All Day',
-            'event_action': str(row.get('event_action', '')).strip() or None,
-            'image': None,
-            'pdf': None,
-            'created_at': get_indian_time()
-        }
-        
-        cleaned_records.append(clean_record)
-    
-    if errors:
-        return False, errors, None
-    
-    return True, [], cleaned_records
-
-# ===================== SCHEDULED TASKS - COMPLETELY FIXED =====================
-def send_event_reminders():
-    """Send event reminders based on user preferences - FIXED VERSION"""
+# ===================== CONTEXT PROCESSORS =====================
+@app.context_processor
+def inject_notifications():
+    """Inject notifications into all templates if user is logged in"""
     try:
-        now = get_indian_time()
-        now_naive = now.replace(tzinfo=None)  # Convert to naive for comparison with DB if needed
-        
-        logger.info("=" * 60)
-        logger.info(f"[REMINDER CHECK] Starting reminder check at {now.strftime('%Y-%m-%d %H:%M:%S')} IST")
-        
-        # FIXED: Get all unsent reminders with reminder_datetime <= now
-        # We need to handle both timezone-aware and naive datetimes in DB
-        reminders = list(db.event_reminders.find({
-            'sent': False,
-            'reminder_datetime': {'$lte': now}
-        }))
-        
-        logger.info(f"[REMINDER CHECK] Found {len(reminders)} pending reminders to send")
-        
-        if not reminders:
-            logger.info("[REMINDER CHECK] No reminders to send at this time")
-            return
-        
-        sent_count = 0
-        error_count = 0
-        
-        for reminder in reminders:
-            try:
-                reminder_id = reminder['_id']
-                reminder_dt = reminder.get('reminder_datetime')
-                
-                # Handle string dates
-                if isinstance(reminder_dt, str):
-                    try:
-                        # Try parsing with timezone
-                        reminder_dt = datetime.fromisoformat(reminder_dt.replace('Z', '+00:00'))
-                    except:
-                        try:
-                            reminder_dt = datetime.strptime(reminder_dt, '%Y-%m-%d %H:%M:%S')
-                        except:
-                            try:
-                                reminder_dt = datetime.strptime(reminder_dt, '%Y-%m-%dT%H:%M:%S')
-                            except Exception as e:
-                                logger.error(f"Could not parse reminder datetime: {reminder_dt} - {e}")
-                                # Mark as errored
-                                db.event_reminders.update_one(
-                                    {'_id': reminder_id},
-                                    {'$set': {'error': f'Invalid date format: {reminder_dt}', 'last_attempt': now}}
-                                )
-                                error_count += 1
-                                continue
-                
-                # Ensure timezone awareness and convert to IST for comparison
-                if isinstance(reminder_dt, datetime):
-                    if reminder_dt.tzinfo is None:
-                        # Assume IST if no timezone
-                        reminder_dt = IST.localize(reminder_dt)
-                    else:
-                        reminder_dt = reminder_dt.astimezone(IST)
-                
-                logger.info(f"[REMINDER] Processing reminder {reminder_id} - Scheduled: {reminder_dt.strftime('%Y-%m-%d %H:%M:%S')}")
-                
-                # Get event details
-                event = db.events.find_one({'_id': reminder['event_id']})
-                if not event:
-                    logger.warning(f"[REMINDER] Event not found: {reminder['event_id']}")
-                    # Mark as sent to avoid repeated errors
-                    db.event_reminders.update_one(
-                        {'_id': reminder_id},
-                        {'$set': {'sent': True, 'error': 'Event not found'}}
-                    )
-                    error_count += 1
-                    continue
-                
-                # Get user details
-                user = db.users.find_one({'_id': reminder['user_id']})
-                if not user:
-                    logger.warning(f"[REMINDER] User not found: {reminder['user_id']}")
-                    # Mark as sent to avoid repeated errors
-                    db.event_reminders.update_one(
-                        {'_id': reminder_id},
-                        {'$set': {'sent': True, 'error': 'User not found'}}
-                    )
-                    error_count += 1
-                    continue
-                
-                logger.info(f"[REMINDER] Sending to: {user['email']} | Event: {event['event_name']}")
-                
-                # FIXED: Simplified email - plain text first to ensure delivery
-                msg = Message(
-                    subject=f"🔔 REMINDER: {event['event_name']}",
-                    sender=app.config['MAIL_USERNAME'],
-                    recipients=[user['email']]
-                )
-                
-                # Plain text version (always works)
-                msg.body = f"""
+        if 'email' in session and session.get('role') == 'user':
+            notifications = get_user_notifications()
+            return dict(notifications=notifications)
+    except Exception as e:
+        logger.error(f"Error injecting notifications: {e}")
+    return dict(notifications=[])
+
+@app.context_processor
+def inject_user_navbar():
+    """Inject user navbar into all templates"""
+    try:
+        if 'email' in session and session.get('role') == 'user':
+            navbar = get_user_navbar(session['email'])
+            return dict(user_navbar=navbar)
+    except Exception as e:
+        logger.error(f"Error injecting navbar: {e}")
+    return dict(user_navbar=[])
+
+@app.context_processor
+def inject_current_time():
+    """Inject current Indian time into templates"""
+    return dict(now=get_indian_time())
+
+# ===================== EMAIL NOTIFICATION FUNCTIONS =====================
+def send_document_notification(sender, receiver, document, message):
+    """Send email notification for uploaded document"""
+    try:
+        msg = Message(
+            subject=f"📄 New Document for Review: {document['document_name']}",
+            sender=app.config['MAIL_USERNAME'],
+            recipients=[receiver['email']]
+        )
+        msg.body = f"""
 ========================================
-           EVENT REMINDER
+        NEW DOCUMENT FOR REVIEW
 ========================================
 
-Event: {event['event_name']}
-Date: {event['event_date']}
-Time: {event.get('event_time', 'All Day')}
-Venue: {event['venue']}
+From: {sender['email']} ({sender['email'].split('@')[0]})
+Document: {document['document_name']}
+Description: {document.get('description', 'No description provided')}
+
+Message from sender:
+{message}
+
+Please log in to review this document:
+{request.url_root}leader_dashboard
+
+========================================
+Jain University - Office of Academics
+========================================
+        """
+        mail.send(msg)
+        logger.info(f"Document notification sent to {receiver['email']}")
+    except Exception as e:
+        logger.error(f"Error sending document notification: {e}")
+
+def send_task_notification(sender, receiver, task_title, due_date, attachment_msg=""):
+    """Send email notification for assigned task"""
+    try:
+        msg = Message(
+            subject=f"📋 New Task Assigned: {task_title}",
+            sender=app.config['MAIL_USERNAME'],
+            recipients=[receiver['email']]
+        )
+        msg.body = f"""
+========================================
+            NEW TASK ASSIGNED
+========================================
+
+{sender['email'].split('@')[0]} has assigned a new task to you:
+
+Task: {task_title}
+Due Date: {due_date}
+Priority: {task.get('priority', 'medium')}
+{attachment_msg}
 
 Description:
-{event.get('description', 'No description provided')}
+{task.get('description', 'No description provided')}
 
-========================================
-This reminder was scheduled for: {reminder_dt.strftime('%d %B %Y at %I:%M %p')} IST
-
-View all events: {request.url_root}jainevents
+Please log in to view and manage your tasks:
+{request.url_root}core_dashboard
 
 ========================================
 Jain University Portal - Office of Academics
-This is an automated reminder. Please do not reply.
 ========================================
-                """
-                
-                # HTML version for better appearance
-                msg.html = f"""
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <meta charset="UTF-8">
-                    <style>
-                        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
-                        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-                        .header {{ background: #04043a; color: #FFD700; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
-                        .content {{ background: #f9f9f9; padding: 20px; border-radius: 0 0 10px 10px; }}
-                        .event-details {{ background: white; padding: 15px; border-radius: 8px; margin: 15px 0; }}
-                        .footer {{ text-align: center; margin-top: 20px; font-size: 12px; color: #666; }}
-                        .button {{ display: inline-block; background: #04043a; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; }}
-                    </style>
-                </head>
-                <body>
-                    <div class="container">
-                        <div class="header">
-                            <h1>⏰ Event Reminder</h1>
-                        </div>
-                        <div class="content">
-                            <h2 style="color: #04043a;">{event['event_name']}</h2>
-                            
-                            <div class="event-details">
-                                <p><strong>📅 Date:</strong> {event['event_date']}</p>
-                                <p><strong>⏰ Time:</strong> {event.get('event_time', 'All Day')}</p>
-                                <p><strong>📍 Venue:</strong> {event['venue']}</p>
-                                <p><strong>🏢 Department:</strong> {event.get('department', 'N/A')}</p>
-                                <p><strong>🏫 School:</strong> {event.get('school', 'N/A')}</p>
-                            </div>
-                            
-                            <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 15px 0;">
-                                <p style="margin: 0;"><strong>📝 Description:</strong></p>
-                                <p style="margin: 10px 0 0 0;">{event.get('description', 'No description provided')}</p>
-                            </div>
-                            
-                            <div style="background: #e8f4fd; padding: 15px; border-radius: 8px; margin: 15px 0;">
-                                <p style="margin: 0; color: #0056b3;">
-                                    <strong>⏳ This reminder was scheduled for:</strong><br>
-                                    <span style="font-size: 16px; font-weight: bold;">{reminder_dt.strftime('%d %B %Y at %I:%M %p')} IST</span>
-                                </p>
-                            </div>
-                            
-                            <div style="text-align: center; margin: 30px 0;">
-                                <a href="{request.url_root}jainevents" class="button">View All Events</a>
-                            </div>
-                        </div>
-                        <div class="footer">
-                            <p>Jain University Portal - Office of Academics</p>
-                            <p>This is an automated reminder. Please do not reply.</p>
-                            <p>Sent at: {now.strftime('%Y-%m-%d %I:%M %p')} IST</p>
-                        </div>
+        """
+        
+        # Add HTML version
+        msg.html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ background: #04043a; color: #FFD700; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
+                .content {{ background: #f9f9f9; padding: 20px; border-radius: 0 0 10px 10px; }}
+                .task-detail {{ background: white; padding: 15px; border-left: 4px solid #28a745; margin: 15px 0; }}
+                .button {{ background: #04043a; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 15px; }}
+                .footer {{ text-align: center; margin-top: 20px; font-size: 12px; color: #666; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>📋 New Task Assigned</h1>
+                </div>
+                <div class="content">
+                    <p><strong>{sender['email'].split('@')[0]}</strong> has assigned a new task to you:</p>
+                    
+                    <div class="task-detail">
+                        <h2 style="margin-top: 0;">{task_title}</h2>
+                        <p><strong>Due Date:</strong> {due_date}</p>
+                        <p><strong>Priority:</strong> <span style="color: {'#dc3545' if priority == 'high' else '#ffc107' if priority == 'medium' else '#28a745'};">{priority.upper()}</span></p>
+                        {attachment_msg}
+                        <p><strong>Description:</strong></p>
+                        <p>{description}</p>
                     </div>
-                </body>
-                </html>
-                """
-                
-                # Send the email
-                mail.send(msg)
-                logger.info(f"✅ [REMINDER SENT] To: {user['email']} | Event: {event['event_name']}")
-                
-                # Mark as sent in database
-                db.event_reminders.update_one(
-                    {'_id': reminder_id},
-                    {'$set': {
-                        'sent': True,
-                        'sent_at': now,
-                        'email_sent': True
-                    }}
-                )
-                
-                sent_count += 1
-                
-            except Exception as e:
-                logger.error(f"❌ [REMINDER ERROR] Failed to send reminder {reminder.get('_id')}: {str(e)}", exc_info=True)
-                
-                # Mark as errored but don't mark as sent - will retry
-                db.event_reminders.update_one(
-                    {'_id': reminder['_id']},
-                    {'$set': {
-                        'last_error': str(e),
-                        'last_attempt': now,
-                        'attempt_count': (reminder.get('attempt_count', 0) + 1)
-                    }}
-                )
-                error_count += 1
-                continue
+                    
+                    <a href="{request.url_root}core_dashboard" class="button">View Task Dashboard</a>
+                </div>
+                <div class="footer">
+                    <p>Jain University - Office of Academics</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
         
-        logger.info(f"[REMINDER CHECK] Completed: {sent_count} sent, {error_count} errors")
-        logger.info("=" * 60)
-        
+        mail.send(msg)
+        logger.info(f"Task notification sent to {receiver['email']}")
     except Exception as e:
-        logger.error(f"❌ [REMINDER SYSTEM ERROR] {str(e)}", exc_info=True)
-
-def send_daily_event_emails():
-    """Send daily digest of upcoming events to subscribers"""
+        logger.error(f"Error sending task notification: {e}")
+def send_review_reply(reviewer, recipient, document, comments, status):
+    """Send reply email to core member after review"""
     try:
-        today_ist = get_indian_time().strftime("%Y-%m-%d")
-        upcoming_ist = (get_indian_time() + timedelta(days=7)).strftime("%Y-%m-%d")
+        status_emoji = '✅' if status == 'approved' else '❌'
+        status_color = '#27ae60' if status == 'approved' else '#e74c3c'
         
-        subscribers = list(db.subscribers.find())
-        events = list(db.events.find({
-            "event_date": {"$gte": today_ist, "$lte": upcoming_ist}
-        }).sort("event_date", 1))
-        
-        logger.info(f"[DAILY EMAIL] Sending to {len(subscribers)} subscribers about {len(events)} events")
-        
-        for sub in subscribers:
-            try:
-                # Filter events by school if subscriber has preference
-                user_events = events
-                if sub.get('school'):
-                    user_events = [e for e in events if e.get('school') == sub.get('school')]
-                
-                if not user_events:
-                    continue
-                
-                msg = Message(
-                    subject="📅 Upcoming University Events - Weekly Digest",
-                    sender=app.config['MAIL_USERNAME'],
-                    recipients=[sub['email']]
-                )
-                
-                # Build email content
-                html_content = f"""
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <meta charset="UTF-8">
-                    <style>
-                        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
-                        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-                        .header {{ background: #04043a; color: #FFD700; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
-                        .content {{ background: #f9f9f9; padding: 20px; border-radius: 0 0 10px 10px; }}
-                        .event {{ background: white; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #FFD700; }}
-                        .footer {{ text-align: center; margin-top: 20px; font-size: 12px; color: #666; }}
-                    </style>
-                </head>
-                <body>
-                    <div class="container">
-                        <div class="header">
-                            <h1>📅 Weekly Events Digest</h1>
-                        </div>
-                        <div class="content">
-                            <p>Hello,</p>
-                            <p>Here are the upcoming events for this week:</p>
-                """
-                
-                for event in user_events:
-                    html_content += f"""
-                            <div class="event">
-                                <h3 style="color: #04043a; margin-top: 0;">{event['event_name']}</h3>
-                                <p><strong>📅 Date:</strong> {event['event_date']}</p>
-                                <p><strong>⏰ Time:</strong> {event.get('event_time', 'All Day')}</p>
-                                <p><strong>📍 Venue:</strong> {event['venue']}</p>
-                                <p><strong>🏫 School:</strong> {event.get('school', 'N/A')}</p>
-                                <p><strong>📝 Description:</strong> {event.get('description', '')[:100]}{'...' if len(event.get('description', '')) > 100 else ''}</p>
-                            </div>
-                    """
-                
-                html_content += f"""
-                            <div style="text-align: center; margin: 30px 0;">
-                                <a href="{request.url_root}jainevents" style="display: inline-block; background: #04043a; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px;">View All Events</a>
-                            </div>
-                        </div>
-                        <div class="footer">
-                            <p>Jain University Portal - Office of Academics</p>
-                            <p>To unsubscribe, please visit your preferences page.</p>
-                        </div>
-                    </div>
-                </body>
-                </html>
-                """
-                
-                msg.html = html_content
-                mail.send(msg)
-                logger.info(f"✅ Daily digest sent to {sub['email']}")
-                
-            except Exception as e:
-                logger.error(f"❌ Error sending daily email to {sub['email']}: {e}")
-                
+        msg = Message(
+            subject=f"{status_emoji} Document Review Complete: {document['document_name']}",
+            sender=app.config['MAIL_USERNAME'],
+            recipients=[recipient['email']]
+        )
+        msg.body = f"""
+========================================
+        DOCUMENT REVIEW COMPLETE
+========================================
+
+Document: {document['document_name']}
+Status: {status.upper()}
+Reviewed by: {reviewer['email']}
+
+Reviewer's Comments:
+{comments}
+
+View in Dashboard: {request.url_root}core_dashboard
+
+========================================
+Jain University - Office of Academics
+========================================
+        """
+        mail.send(msg)
+        logger.info(f"Review reply sent to {recipient['email']}")
     except Exception as e:
-        logger.error(f"❌ Error in send_daily_event_emails: {e}")
+        logger.error(f"Error sending review reply: {e}")
+
+def send_chat_notification(sender, receiver, message_preview):
+    """Send email notification for new chat message"""
+    try:
+        msg = Message(
+            subject=f"💬 New message from {sender['email'].split('@')[0]}",
+            sender=app.config['MAIL_USERNAME'],
+            recipients=[receiver['email']]
+        )
+        msg.body = f"""
+New Message
+
+You have received a new message from {sender['email'].split('@')[0]}:
+
+"{message_preview}..."
+
+View Message: {request.url_root}core_dashboard
+        """
+        mail.send(msg)
+        logger.info(f"Chat notification sent to {receiver['email']}")
+    except Exception as e:
+        logger.error(f"Error sending chat notification: {e}")
+
+def notify_group_chat(sender, message_preview):
+    """Notify all online core members about group chat message"""
+    try:
+        online_core = list(db.users.find({
+            'is_online': True,
+            '$or': [
+                {'user_type': 'core'},
+                {'special_role': 'office_barrier'}
+            ],
+            'email': {'$ne': sender['email']}
+        }))
+        
+        for member in online_core:
+            send_chat_notification(sender, member, message_preview)
+    except Exception as e:
+        logger.error(f"Error notifying group chat: {e}")
 
 def send_newsletter_email(title, content, image_filename, recipients):
     """Send newsletter email to recipients"""
@@ -915,6 +811,146 @@ def send_newsletter_email(title, content, image_filename, recipients):
         logger.error(f"Error sending newsletter email: {e}")
         raise
 
+# ===================== SCHEDULED TASKS =====================
+def send_event_reminders():
+    """Send event reminders based on user preferences"""
+    try:
+        now = get_indian_time_aware()
+        now_naive = make_timezone_naive(now)
+        
+        logger.info("=" * 60)
+        logger.info(f"[REMINDER CHECK] Starting reminder check at {now.strftime('%Y-%m-%d %H:%M:%S')} IST")
+        
+        reminders = list(db.event_reminders.find({
+            'sent': False,
+            'reminder_datetime': {'$lte': now_naive}
+        }))
+        
+        logger.info(f"[REMINDER CHECK] Found {len(reminders)} pending reminders to send")
+        
+        if not reminders:
+            logger.info("[REMINDER CHECK] No reminders to send at this time")
+            return
+        
+        sent_count = 0
+        error_count = 0
+        
+        for reminder in reminders:
+            try:
+                reminder_id = reminder['_id']
+                reminder_dt = reminder.get('reminder_datetime')
+                
+                if isinstance(reminder_dt, str):
+                    try:
+                        reminder_dt = datetime.fromisoformat(reminder_dt.replace('Z', '+00:00'))
+                    except:
+                        try:
+                            reminder_dt = datetime.strptime(reminder_dt, '%Y-%m-%d %H:%M:%S')
+                        except:
+                            try:
+                                reminder_dt = datetime.strptime(reminder_dt, '%Y-%m-%dT%H:%M:%S')
+                            except Exception as e:
+                                logger.error(f"Could not parse reminder datetime: {reminder_dt} - {e}")
+                                db.event_reminders.update_one(
+                                    {'_id': reminder_id},
+                                    {'$set': {'error': f'Invalid date format: {reminder_dt}', 'last_attempt': now_naive}}
+                                )
+                                error_count += 1
+                                continue
+                
+                if isinstance(reminder_dt, datetime):
+                    if reminder_dt.tzinfo is None:
+                        reminder_dt = IST.localize(reminder_dt)
+                    else:
+                        reminder_dt = reminder_dt.astimezone(IST)
+                
+                logger.info(f"[REMINDER] Processing reminder {reminder_id} - Scheduled: {reminder_dt.strftime('%Y-%m-%d %H:%M:%S')}")
+                
+                event = db.events.find_one({'_id': reminder['event_id']})
+                if not event:
+                    logger.warning(f"[REMINDER] Event not found: {reminder['event_id']}")
+                    db.event_reminders.update_one(
+                        {'_id': reminder_id},
+                        {'$set': {'sent': True, 'error': 'Event not found'}}
+                    )
+                    error_count += 1
+                    continue
+                
+                user = db.users.find_one({'_id': reminder['user_id']})
+                if not user:
+                    logger.warning(f"[REMINDER] User not found: {reminder['user_id']}")
+                    db.event_reminders.update_one(
+                        {'_id': reminder_id},
+                        {'$set': {'sent': True, 'error': 'User not found'}}
+                    )
+                    error_count += 1
+                    continue
+                
+                logger.info(f"[REMINDER] Sending to: {user['email']} | Event: {event['event_name']}")
+                
+                msg = Message(
+                    subject=f"🔔 REMINDER: {event['event_name']}",
+                    sender=app.config['MAIL_USERNAME'],
+                    recipients=[user['email']]
+                )
+                
+                msg.body = f"""
+========================================
+           EVENT REMINDER
+========================================
+
+Event: {event['event_name']}
+Date: {event['event_date']}
+Time: {event.get('event_time', 'All Day')}
+Venue: {event['venue']}
+
+Description:
+{event.get('description', 'No description provided')}
+
+========================================
+This reminder was scheduled for: {reminder_dt.strftime('%d %B %Y at %I:%M %p')} IST
+
+View all events: {request.url_root}jainevents
+
+========================================
+Jain University Portal - Office of Academics
+========================================
+                """
+                
+                mail.send(msg)
+                logger.info(f"✅ [REMINDER SENT] To: {user['email']} | Event: {event['event_name']}")
+                
+                db.event_reminders.update_one(
+                    {'_id': reminder_id},
+                    {'$set': {
+                        'sent': True,
+                        'sent_at': now_naive,
+                        'email_sent': True
+                    }}
+                )
+                
+                sent_count += 1
+                
+            except Exception as e:
+                logger.error(f"❌ [REMINDER ERROR] Failed to send reminder {reminder.get('_id')}: {str(e)}", exc_info=True)
+                
+                db.event_reminders.update_one(
+                    {'_id': reminder['_id']},
+                    {'$set': {
+                        'last_error': str(e),
+                        'last_attempt': now_naive,
+                        'attempt_count': (reminder.get('attempt_count', 0) + 1)
+                    }}
+                )
+                error_count += 1
+                continue
+        
+        logger.info(f"[REMINDER CHECK] Completed: {sent_count} sent, {error_count} errors")
+        logger.info("=" * 60)
+        
+    except Exception as e:
+        logger.error(f"❌ [REMINDER SYSTEM ERROR] {str(e)}", exc_info=True)
+
 # ===================== AUTHENTICATION ROUTES =====================
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -929,10 +965,8 @@ def login():
         user = db.users.find_one({'email': email})
         
         if user and check_password_hash(user['password'], password):
-            # Clear old session data
             session.clear()
             
-            # Store all user info in session
             session['email'] = email
             session['role'] = user['role']
             session['user_type'] = user.get('user_type', 'faculty')
@@ -941,7 +975,6 @@ def login():
             session['user_id'] = str(user['_id'])
             session.permanent = True
             
-            # Update online status
             db.users.update_one(
                 {'email': email},
                 {
@@ -952,7 +985,6 @@ def login():
                 }
             )
             
-            # Log activity
             db.activity_logs.insert_one({
                 'user_id': user['_id'],
                 'user_email': email,
@@ -962,16 +994,13 @@ def login():
                 'ip_address': request.remote_addr
             })
             
-            # Set appropriate flash message based on role and approval status
             if user['role'] == 'admin':
                 flash('✅ Admin login successful!', 'success')
                 return redirect(url_for('admin_dashboard'))
             else:
-                # ALL NON-ADMIN USERS GO TO HOME PAGE (leaders, core, faculty all go to home)
                 if not user.get('approved', False):
                     flash('⏳ Your account is pending admin approval. Limited access granted.', 'warning')
                 else:
-                    # Check user type for personalized message
                     if user.get('special_role') == 'leader':
                         flash('✅ Leader login successful! Welcome to your dashboard.', 'success')
                     elif user.get('user_type') == 'core' or user.get('special_role') == 'office_barrier':
@@ -979,7 +1008,6 @@ def login():
                     else:
                         flash('✅ Login successful! Full access granted.', 'success')
                 
-                # ALL USERS (leaders, core, faculty) GO TO HOME PAGE
                 return redirect(url_for('home'))
         else:
             flash('Invalid credentials', 'error')
@@ -987,6 +1015,27 @@ def login():
     
     return render_template('login.html')
 
+@app.route('/logout')
+def logout():
+    if 'email' in session:
+        db.users.update_one(
+            {'email': session['email']},
+            {
+                '$set': {
+                    'is_online': False,
+                    'last_seen': get_indian_time()
+                }
+            }
+        )
+    
+    session.clear()
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('index'))
+
+@app.route('/')
+def index():
+    """Landing page - shown to all visitors before login"""
+    return render_template('index.html')
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -1047,15 +1096,12 @@ def register():
                 flash('Please select your campus / location.', 'error')
                 return redirect(url_for('register'))
 
-            # Check if email is pre-assigned as leader or core
             email = session['email']
             
-            # Check if email is in pre-assigned lists
             assigned_leader = db.pre_assigned_leaders.find_one({'email': email})
             assigned_core = db.pre_assigned_core.find_one({'email': email})
             
             if assigned_leader:
-                # This is a pre-assigned leader
                 hashed_pw = generate_password_hash(password)
                 new_user_id = db.users.insert_one({
                     'email': email,
@@ -1063,7 +1109,7 @@ def register():
                     'role': 'user',
                     'user_type': 'faculty',
                     'special_role': 'leader',
-                    'approved': True,  # Auto-approve leaders
+                    'approved': True,
                     'is_online': True,
                     'last_seen': get_indian_time(),
                     'profile': {
@@ -1075,7 +1121,6 @@ def register():
                     'created_at': get_indian_time()
                 }).inserted_id
                 
-                # Remove from pre-assigned list
                 db.pre_assigned_leaders.delete_one({'email': email})
                 
                 session['role'] = 'user'
@@ -1085,10 +1130,9 @@ def register():
                 session['user_id'] = str(new_user_id)
                 
                 flash('✅ Registration complete! You are now a Leader. Please log in.', 'success')
-                return redirect(url_for('login'))  # Redirect to login, not dashboard
+                return redirect(url_for('login'))
                 
             elif assigned_core:
-                # This is a pre-assigned core member
                 hashed_pw = generate_password_hash(password)
                 new_user_id = db.users.insert_one({
                     'email': email,
@@ -1096,7 +1140,7 @@ def register():
                     'role': 'user',
                     'user_type': 'core',
                     'special_role': 'office_barrier',
-                    'approved': True,  # Auto-approve core members
+                    'approved': True,
                     'is_online': True,
                     'last_seen': get_indian_time(),
                     'profile': {
@@ -1108,7 +1152,6 @@ def register():
                     'created_at': get_indian_time()
                 }).inserted_id
                 
-                # Remove from pre-assigned list
                 db.pre_assigned_core.delete_one({'email': email})
                 
                 session['role'] = 'user'
@@ -1118,10 +1161,9 @@ def register():
                 session['user_id'] = str(new_user_id)
                 
                 flash('✅ Registration complete! You are now a Core Team member. Please log in.', 'success')
-                return redirect(url_for('login'))  # Redirect to login, not dashboard
+                return redirect(url_for('login'))
                 
             else:
-                # Regular faculty user
                 hashed_pw = generate_password_hash(password)
                 new_user_id = db.users.insert_one({
                     'email': email,
@@ -1148,41 +1190,302 @@ def register():
                 session['user_id'] = str(new_user_id)
                 
                 flash('✅ Registration complete! Waiting for admin approval. Please log in.', 'info')
-                return redirect(url_for('login'))  # Redirect to login
+                return redirect(url_for('login'))
     
     otp_sent = session.get('step', 1) >= 2
     otp_verified = session.get('step', 1) == 3
     return render_template('register.html', otp_sent=otp_sent, otp_verified=otp_verified)
 
-@app.route('/refresh_session')
-def refresh_session():
-    """Refresh user session data from database"""
-    if 'email' not in session:
-        return jsonify({'error': 'Not logged in'}), 401
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    """First step: User enters email to receive OTP"""
+    if request.method == 'POST':
+        email = request.form.get('email')
+        
+        if not email:
+            flash('Email is required', 'error')
+            return redirect(url_for('forgot_password'))
+        
+        user = db.users.find_one({'email': email})
+        if not user:
+            flash('Email not registered. Please check your email or register first.', 'error')
+            return redirect(url_for('forgot_password'))
+        
+        otp = str(random.randint(100000, 999999))
+        
+        now = get_indian_time_aware()
+        expiry = now + timedelta(minutes=10)
+        
+        expiry_naive = make_timezone_naive(expiry)
+        now_naive = make_timezone_naive(now)
+        
+        db.password_resets.update_one(
+            {'email': email},
+            {
+                '$set': {
+                    'otp': otp,
+                    'expiry': expiry_naive,
+                    'attempts': 0,
+                    'verified': False,
+                    'created_at': now_naive
+                }
+            },
+            upsert=True
+        )
+        
+        try:
+            msg = Message(
+                subject="🔐 Password Reset OTP - Jain University",
+                sender=app.config['MAIL_USERNAME'],
+                recipients=[email]
+            )
+            
+            msg.body = f"""
+========================================
+        PASSWORD RESET OTP
+========================================
+
+Your OTP for password reset is: {otp}
+
+This OTP is valid for 10 minutes only.
+
+If you did not request this, please ignore this email or contact the administrator.
+
+========================================
+Jain University Portal - Office of Academics
+========================================
+            """
+            
+            mail.send(msg)
+            logger.info(f"✅ Password reset OTP sent to {email}")
+            
+            session['reset_email'] = email
+            
+            flash('OTP sent to your email. Please check and enter it.', 'success')
+            return redirect(url_for('verify_reset_otp'))
+            
+        except Exception as e:
+            logger.error(f"❌ Error sending password reset OTP: {e}")
+            flash('Error sending OTP. Please try again.', 'error')
+            return redirect(url_for('forgot_password'))
+    
+    return render_template('forgot_password.html')
+
+@app.route('/verify-reset-otp', methods=['GET', 'POST'])
+def verify_reset_otp():
+    """Second step: Verify OTP"""
+    if 'reset_email' not in session:
+        flash('Please start the password reset process first.', 'error')
+        return redirect(url_for('forgot_password'))
+    
+    if request.method == 'POST':
+        otp = request.form.get('otp')
+        email = session.get('reset_email')
+        
+        if not otp or not email:
+            flash('OTP is required', 'error')
+            return redirect(url_for('verify_reset_otp'))
+        
+        reset_record = db.password_resets.find_one({'email': email})
+        
+        if not reset_record:
+            flash('No reset request found. Please request OTP again.', 'error')
+            return redirect(url_for('forgot_password'))
+        
+        attempts = reset_record.get('attempts', 0)
+        if attempts >= 3:
+            flash('Too many failed attempts. Please request a new OTP.', 'error')
+            db.password_resets.delete_one({'email': email})
+            session.pop('reset_email', None)
+            return redirect(url_for('forgot_password'))
+        
+        db.password_resets.update_one(
+            {'email': email},
+            {'$inc': {'attempts': 1}}
+        )
+        
+        expiry = reset_record.get('expiry')
+        now = get_indian_time_aware()
+        
+        if expiry:
+            if isinstance(expiry, datetime):
+                if expiry.tzinfo is None:
+                    expiry_aware = IST.localize(expiry)
+                else:
+                    expiry_aware = expiry
+                
+                logger.info(f"OTP Check - Now: {now}, Expiry: {expiry_aware}")
+                
+                if now > expiry_aware:
+                    flash('OTP has expired. Please request a new one.', 'error')
+                    db.password_resets.delete_one({'email': email})
+                    session.pop('reset_email', None)
+                    return redirect(url_for('forgot_password'))
+        
+        if reset_record.get('otp') == otp:
+            db.password_resets.update_one(
+                {'email': email},
+                {'$set': {'verified': True}}
+            )
+            session['reset_verified'] = True
+            flash('OTP verified successfully. Please set your new password.', 'success')
+            return redirect(url_for('reset_password'))
+        else:
+            remaining = 3 - (attempts + 1)
+            if remaining > 0:
+                flash(f'Invalid OTP. You have {remaining} attempt(s) left.', 'error')
+            else:
+                flash('Invalid OTP. No attempts left. Please request a new OTP.', 'error')
+            return redirect(url_for('verify_reset_otp'))
+    
+    return render_template('verify_otp.html')
+
+@app.route('/resend-reset-otp')
+def resend_reset_otp():
+    """Resend OTP for password reset"""
+    if 'reset_email' not in session:
+        flash('Please start the password reset process first.', 'error')
+        return redirect(url_for('forgot_password'))
+    
+    email = session.get('reset_email')
+    
+    user = db.users.find_one({'email': email})
+    if not user:
+        flash('Email not found.', 'error')
+        session.pop('reset_email', None)
+        return redirect(url_for('forgot_password'))
+    
+    otp = str(random.randint(100000, 999999))
+    now = get_indian_time_aware()
+    expiry = now + timedelta(minutes=10)
+    
+    expiry_naive = make_timezone_naive(expiry)
+    now_naive = make_timezone_naive(now)
+    
+    db.password_resets.update_one(
+        {'email': email},
+        {
+            '$set': {
+                'otp': otp,
+                'expiry': expiry_naive,
+                'attempts': 0,
+                'verified': False,
+                'created_at': now_naive
+            }
+        },
+        upsert=True
+    )
     
     try:
-        user = db.users.find_one({'email': session['email']})
-        if user:
-            # Update session with latest data
-            session['role'] = user['role']
-            session['user_type'] = user.get('user_type', 'faculty')
-            session['special_role'] = user.get('special_role', None)
-            session['approved'] = user.get('approved', False)
-            session['user_id'] = str(user['_id'])
-            
-            logger.info(f"Session refreshed for {session['email']} - Approved: {session['approved']}, Role: {session['special_role']}")
-            
-            return jsonify({
-                'success': True,
-                'message': 'Session refreshed',
-                'approved': session['approved'],
-                'special_role': session['special_role'],
-                'user_type': session['user_type']
-            })
-        return jsonify({'error': 'User not found'}), 404
+        msg = Message(
+            subject="🔐 New Password Reset OTP - Jain University",
+            sender=app.config['MAIL_USERNAME'],
+            recipients=[email]
+        )
+        
+        msg.body = f"""
+========================================
+        NEW PASSWORD RESET OTP
+========================================
+
+Your new OTP for password reset is: {otp}
+
+This OTP is valid for 10 minutes only.
+
+========================================
+Jain University Portal - Office of Academics
+========================================
+        """
+        
+        mail.send(msg)
+        logger.info(f"✅ New password reset OTP sent to {email}")
+        
+        flash('New OTP sent to your email.', 'success')
+        return redirect(url_for('verify_reset_otp'))
+        
     except Exception as e:
-        logger.error(f"Error refreshing session: {e}")
-        return jsonify({'error': str(e)}), 500
+        logger.error(f"❌ Error resending password reset OTP: {e}")
+        flash('Error sending OTP. Please try again.', 'error')
+        return redirect(url_for('verify_reset_otp'))
+
+@app.route('/reset-password', methods=['GET', 'POST'])
+def reset_password():
+    """Third step: Set new password"""
+    if 'reset_email' not in session or 'reset_verified' not in session:
+        flash('Please complete OTP verification first.', 'error')
+        return redirect(url_for('forgot_password'))
+    
+    email = session.get('reset_email')
+    
+    if request.method == 'POST':
+        new_password = request.form.get('new_password')
+        confirm_password = request.form.get('confirm_password')
+        
+        if not new_password or not confirm_password:
+            flash('Both password fields are required', 'error')
+            return redirect(url_for('reset_password'))
+        
+        if new_password != confirm_password:
+            flash('Passwords do not match', 'error')
+            return redirect(url_for('reset_password'))
+        
+        if len(new_password) < 8:
+            flash('Password must be at least 8 characters long', 'error')
+            return redirect(url_for('reset_password'))
+        
+        hashed_password = generate_password_hash(new_password)
+        
+        result = db.users.update_one(
+            {'email': email},
+            {'$set': {'password': hashed_password, 'updated_at': get_indian_time()}}
+        )
+        
+        if result.modified_count > 0:
+            user = db.users.find_one({'email': email})
+            db.activity_logs.insert_one({
+                'user_id': user['_id'] if user else None,
+                'user_email': email,
+                'action': 'password_reset',
+                'details': 'User reset password via forgot password',
+                'timestamp': get_indian_time(),
+                'ip_address': request.remote_addr
+            })
+            
+            db.password_resets.delete_one({'email': email})
+            
+            session.pop('reset_email', None)
+            session.pop('reset_verified', None)
+            
+            try:
+                msg = Message(
+                    subject="✅ Password Changed Successfully - Jain University",
+                    sender=app.config['MAIL_USERNAME'],
+                    recipients=[email]
+                )
+                msg.body = f"""
+========================================
+        PASSWORD CHANGED SUCCESSFULLY
+========================================
+
+Your password has been changed successfully.
+
+If you did not make this change, please contact the administrator immediately.
+
+========================================
+Jain University Portal - Office of Academics
+========================================
+                """
+                mail.send(msg)
+            except Exception as e:
+                logger.error(f"Error sending password change confirmation: {e}")
+            
+            flash('✅ Password changed successfully! Please login with your new password.', 'success')
+            return redirect(url_for('login'))
+        else:
+            flash('Error updating password. Please try again.', 'error')
+            return redirect(url_for('reset_password'))
+    
+    return render_template('reset_password.html')
 
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
@@ -1213,45 +1516,48 @@ def admin():
     
     return render_template('admin_register.html')
 
-@app.route('/logout')
-def logout():
-    if 'email' in session:
-        # Update online status
-        db.users.update_one(
-            {'email': session['email']},
-            {
-                '$set': {
-                    'is_online': False,
-                    'last_seen': get_indian_time()
-                }
-            }
-        )
+@app.route('/refresh_session')
+def refresh_session():
+    """Refresh user session data from database"""
+    if 'email' not in session:
+        return jsonify({'error': 'Not logged in'}), 401
     
-    session.clear()
-    flash('You have been logged out.', 'info')
-    return redirect(url_for('index'))
+    try:
+        user = db.users.find_one({'email': session['email']})
+        if user:
+            session['role'] = user['role']
+            session['user_type'] = user.get('user_type', 'faculty')
+            session['special_role'] = user.get('special_role', None)
+            session['approved'] = user.get('approved', False)
+            session['user_id'] = str(user['_id'])
+            
+            logger.info(f"Session refreshed for {session['email']} - Approved: {session['approved']}, Role: {session['special_role']}")
+            
+            return jsonify({
+                'success': True,
+                'message': 'Session refreshed',
+                'approved': session['approved'],
+                'special_role': session['special_role'],
+                'user_type': session['user_type']
+            })
+        return jsonify({'error': 'User not found'}), 404
+    except Exception as e:
+        logger.error(f"Error refreshing session: {e}")
+        return jsonify({'error': str(e)}), 500
 
-# ===================== MAIN PAGES =====================
-@app.route('/')
-def index():
-    """Landing page - shown to all visitors before login"""
-    return render_template('index.html')
-
+# ===================== MAIN USER ROUTES =====================
 @app.route("/home")
 @login_required
 def home():
     try:
         user = db.users.find_one({"email": session["email"]})
         
-        # Get today's date in IST
         today_str = get_today_ist_string()
         logger.info(f"[HOME] Today IST: {today_str}")
 
-        # Fetch all events
         all_events_raw = list(db.events.find({}).sort("event_date", 1))
         logger.info(f"[HOME] Total events in DB: {len(all_events_raw)}")
 
-        # Process events
         today_events = []
         upcoming_events = []
         all_upcoming = []
@@ -1265,7 +1571,6 @@ def home():
             if not event_date:
                 continue
 
-            # Multi-day event spanning today
             if end_date and event_date <= today_str <= end_date:
                 today_events.append(ev)
                 all_upcoming.append(ev)
@@ -1276,15 +1581,12 @@ def home():
                 upcoming_events.append(ev)
                 all_upcoming.append(ev)
 
-        # Get public files
         public_files = list(db.public_files.find().sort("uploaded_at", -1).limit(20))
         
-        # Get user type and permissions
         user_type = session.get("user_type", "faculty")
         special_role = session.get("special_role", None)
         approved = session.get("approved", False)
         
-        # Determine upload permissions
         can_upload = approved and special_role in ["core", "office_barrier", "leader"]
         is_fac = user_type == "faculty" and not special_role
 
@@ -1317,6 +1619,11 @@ def home():
 def about():
     return render_template('about.html')
 
+@app.route('/jainevents')
+def jainevents():
+    events = list(db.events.find().sort('event_date', 1))
+    return render_template('jainevents.html', events=events)
+
 @app.route('/monthlyengagement')
 def monthlyengagement():
     events = list(db.monthly_engagement.find().sort('uploaded_at', -1))
@@ -1346,824 +1653,6 @@ def base_user():
         logger.error(f"Error in base_user route: {e}")
         return render_template('base_user.html', notifications=[], user_navbar=[])
 
-@app.route('/jainevents')
-def jainevents():
-    events = list(db.events.find().sort('event_date', 1))
-    return render_template('jainevents.html', events=events)
-
-@app.route('/subscribe', methods=['POST'])
-def subscribe():
-    try:
-        data = request.get_json()
-        email = data.get('email')
-        school = data.get('school', '')
-
-        if not email:
-            return jsonify({"message": "Email is required"}), 400
-
-        db.subscribers.update_one(
-            {"email": email},
-            {"$set": {"school": school, "subscribed_at": datetime.now()}},
-            upsert=True
-        )
-
-        return jsonify({"message": "Subscribed successfully"}), 200
-    except Exception as e:
-        logger.error(f"Error in subscribe: {e}")
-        return jsonify({"message": "Subscription failed"}), 500
-
-# ===================== CORE DASHBOARD =====================
-@app.route('/core_dashboard')
-@approval_required
-def core_dashboard():
-    """Dashboard for core team members - REQUIRES APPROVAL"""
-    if not is_core_member():
-        flash('Access denied. Core team members only.', 'error')
-        return redirect(url_for('home'))
-    
-    try:
-        user = db.users.find_one({'email': session['email']})
-        
-        # Get core team members (APPROVED ONLY)
-        core_members = list(db.users.find({
-            '$or': [
-                {'user_type': 'core'},
-                {'special_role': 'office_barrier'}
-            ],
-            'approved': True
-        }))
-        
-        # Get all leaders (APPROVED ONLY)
-        leaders = list(db.users.find({
-            'special_role': 'leader',
-            'approved': True
-        }))
-        
-        # Get user's uploaded documents
-        my_documents = list(db.office_documents.find({
-            'user_email': session['email']
-        }).sort('submitted_at', -1))
-        
-        # Get recent document shares
-        recent_shares = list(db.document_shares.find({
-            'shared_by': user['_id']
-        }).sort('shared_at', -1).limit(10))
-        
-        # Enrich shares with leader names
-        for share in recent_shares:
-            share['shared_with_names'] = []
-            for leader_id in share.get('shared_with', []):
-                leader = db.users.find_one({'_id': leader_id})
-                if leader:
-                    share['shared_with_names'].append({
-                        'id': str(leader['_id']),
-                        'name': leader['email'].split('@')[0]
-                    })
-        
-        # Get chat messages for core team
-        chat_messages = list(db.chat_messages.find({
-            '$or': [
-                {'group_id': 'core_team'},
-                {'receiver_id': user['_id']},
-                {'sender_id': user['_id']}
-            ]
-        }).sort('timestamp', -1).limit(50))
-        
-        # Format chat messages
-        formatted_messages = []
-        for msg in reversed(chat_messages):
-            sender = db.users.find_one({'_id': msg['sender_id']})
-            formatted_messages.append({
-                'id': str(msg['_id']),
-                'sender_id': str(msg['sender_id']),
-                'sender_name': sender['email'].split('@')[0] if sender else 'Unknown',
-                'sender_email': sender['email'] if sender else '',
-                'content': msg.get('content', ''),
-                'file_url': msg.get('file_url'),
-                'document_id': str(msg['document_id']) if msg.get('document_id') else None,
-                'timestamp': msg['timestamp'].strftime('%I:%M %p'),
-                'is_me': msg['sender_id'] == user['_id']
-            })
-        
-        return render_template(
-            'core_dashboard.html',
-            core_members=core_members,
-            leaders=leaders,
-            my_documents=my_documents,
-            recent_shares=recent_shares,
-            chat_messages=formatted_messages
-        )
-        
-    except Exception as e:
-        logger.error(f"Error in core_dashboard: {e}", exc_info=True)
-        flash('Error loading dashboard', 'error')
-        return redirect(url_for('home'))
-
-@app.route('/upload_document', methods=['POST'])
-@approval_required
-def upload_document():
-    """Core team members upload documents for leader review"""
-    if not is_core_member():
-        return jsonify({'error': 'Access denied'}), 403
-    
-    try:
-        user = db.users.find_one({'email': session['email']})
-        
-        document_name = request.form.get('document_name')
-        description = request.form.get('description')
-        assigned_leaders = request.form.getlist('assigned_leaders')
-        notify_leaders = request.form.get('notify_leaders') == 'on'
-        file = request.files.get('file')
-        
-        # Upload file
-        file_url = None
-        file_id = None
-        
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            name_part, ext_part = os.path.splitext(filename)
-            unique_filename = f"{name_part}_{timestamp}{ext_part}"
-            
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
-            file.save(filepath)
-            file_url = '/' + filepath.replace('\\', '/')
-        
-        # If no leaders assigned, all leaders can see it
-        if not assigned_leaders or len(assigned_leaders) == 0:
-            assigned_leaders = [str(leader['_id']) for leader in db.users.find({'special_role': 'leader'})]
-        
-        # Create document record
-        doc = {
-            'user_id': user['_id'],
-            'user_email': session['email'],
-            'document_name': document_name,
-            'description': description,
-            'file_id': file_id,
-            'file_url': file_url,
-            'assigned_leaders': [ObjectId(lid) for lid in assigned_leaders],
-            'status': 'pending',
-            'submitted_at': get_indian_time(),
-            'reviewed_by': None,
-            'reviewed_at': None,
-            'comments': '',
-            'notified': False
-        }
-        
-        result = db.office_documents.insert_one(doc)
-        
-        # Log activity
-        db.activity_logs.insert_one({
-            'user_id': user['_id'],
-            'user_email': session['email'],
-            'action': 'document_upload',
-            'details': f'Submitted document: {document_name}',
-            'timestamp': get_indian_time(),
-            'ip_address': request.remote_addr
-        })
-        
-        # Send notifications to assigned leaders if requested
-        if notify_leaders and assigned_leaders:
-            for leader_id in assigned_leaders:
-                leader = db.users.find_one({'_id': ObjectId(leader_id)})
-                if leader and leader.get('email'):
-                    try:
-                        send_document_notification(
-                            user, 
-                            leader, 
-                            {
-                                'document_name': document_name,
-                                'description': description,
-                                '_id': result.inserted_id
-                            },
-                            description
-                        )
-                    except Exception as e:
-                        logger.error(f"Error sending notification to {leader.get('email')}: {e}")
-            
-            # Mark as notified
-            db.office_documents.update_one(
-                {'_id': result.inserted_id},
-                {'$set': {'notified': True}}
-            )
-        
-        flash('✅ Document submitted successfully', 'success')
-        return redirect(url_for('core_dashboard'))
-        
-    except Exception as e:
-        logger.error(f"Error submitting document: {e}")
-        flash(f'Error submitting document: {str(e)[:100]}', 'error')
-        return redirect(url_for('core_dashboard'))
-
-def send_document_notification(sender, receiver, document, message):
-    """Send email notification for uploaded document"""
-    try:
-        msg = Message(
-            subject=f"📄 New Document for Review: {document['document_name']}",
-            sender=app.config['MAIL_USERNAME'],
-            recipients=[receiver['email']]
-        )
-        msg.body = f"""
-========================================
-        NEW DOCUMENT FOR REVIEW
-========================================
-
-From: {sender['email']} ({sender['email'].split('@')[0]})
-Document: {document['document_name']}
-Description: {document.get('description', 'No description provided')}
-
-Message from sender:
-{message}
-
-Please log in to review this document:
-{request.url_root}leader_dashboard
-
-========================================
-Jain University - Office of Academics
-========================================
-        """
-        msg.html = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <style>
-                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
-                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-                .header {{ background: #04043a; color: #FFD700; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
-                .content {{ background: #f9f9f9; padding: 20px; border-radius: 0 0 10px 10px; }}
-                .document-details {{ background: white; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #FFD700; }}
-                .message-box {{ background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 15px 0; }}
-                .button {{ display: inline-block; background: #04043a; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; }}
-                .footer {{ text-align: center; margin-top: 20px; font-size: 12px; color: #666; }}
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <h1>📄 New Document for Review</h1>
-                </div>
-                <div class="content">
-                    <p><strong>From:</strong> {sender['email']}</p>
-                    
-                    <div class="document-details">
-                        <h3>{document['document_name']}</h3>
-                        <p><strong>Description:</strong> {document.get('description', 'No description provided')}</p>
-                    </div>
-                    
-                    <div class="message-box">
-                        <p><strong>Message from sender:</strong></p>
-                        <p>{message}</p>
-                    </div>
-                    
-                    <div style="text-align: center; margin: 30px 0;">
-                        <a href="{request.url_root}leader_dashboard" class="button">Review Document</a>
-                    </div>
-                </div>
-                <div class="footer">
-                    <p>Jain University - Office of Academics</p>
-                    <p>Sent at: {get_indian_time().strftime('%d %B %Y, %I:%M %p')} IST</p>
-                </div>
-            </div>
-        </body>
-        </html>
-        """
-        mail.send(msg)
-        logger.info(f"Document notification sent to {receiver['email']}")
-    except Exception as e:
-        logger.error(f"Error sending document notification: {e}")
-
-# ===================== LEADER DASHBOARD =====================
-@app.route('/leader_dashboard')
-@approval_required
-def leader_dashboard():
-    """Dashboard for leaders to review documents - REQUIRES APPROVAL"""
-    if not is_leader():
-        flash('Access denied. Leaders only.', 'error')
-        return redirect(url_for('home'))
-    
-    try:
-        user = db.users.find_one({'email': session['email']})
-        
-        # Get documents assigned to this leader
-        my_assigned_documents = list(db.office_documents.find({
-            'assigned_leaders': user['_id']
-        }).sort('submitted_at', -1))
-        
-        # Enrich with uploader info
-        for doc in my_assigned_documents:
-            uploader = db.users.find_one({'_id': doc['user_id']})
-            if uploader:
-                doc['uploader_name'] = uploader['email'].split('@')[0]
-                doc['uploader_email'] = uploader['email']
-        
-        # Get documents shared with this leader
-        shared_documents = list(db.document_shares.find({
-            'shared_with': user['_id']
-        }).sort('shared_at', -1))
-        
-        # Enrich shared documents
-        for share in shared_documents:
-            sender = db.users.find_one({'_id': share['shared_by']})
-            share['sender_name'] = sender['email'].split('@')[0] if sender else 'Unknown'
-            share['sender_email'] = sender['email'] if sender else ''
-            
-            doc = db.office_documents.find_one({'_id': share['document_id']})
-            share['file_url'] = doc.get('file_url') if doc else None
-        
-        # Get all core team members (APPROVED ONLY)
-        core_members = list(db.users.find({
-            '$or': [
-                {'user_type': 'core'},
-                {'special_role': 'office_barrier'}
-            ],
-            'approved': True
-        }))
-        
-        # Get online core members
-        five_minutes_ago = get_indian_time() - timedelta(minutes=5)
-        online_core = list(db.users.find({
-            '$or': [
-                {'user_type': 'core'},
-                {'special_role': 'office_barrier'}
-            ],
-            'approved': True,
-            '$or': [
-                {'is_online': True},
-                {'last_seen': {'$gte': five_minutes_ago}}
-            ]
-        }))
-        
-        return render_template(
-            'leader_dashboard.html',
-            my_assigned_documents=my_assigned_documents,
-            shared_documents=shared_documents,
-            core_members=core_members,
-            online_core=online_core
-        )
-        
-    except Exception as e:
-        logger.error(f"Error in leader_dashboard: {e}", exc_info=True)
-        flash('Error loading dashboard', 'error')
-        return redirect(url_for('home'))
-def get_today_ist_string():
-    """Get today date as YYYY-MM-DD string in IST, always correct."""
-    utc_now = datetime.utcnow().replace(tzinfo=pytz.utc)
-    ist_now = utc_now.astimezone(IST)
-    return ist_now.strftime("%Y-%m-%d")
-
-
-def normalize_date(date_str):
-    """Normalize any date string to YYYY-MM-DD format."""
-    if not date_str:
-        return ""
-    date_str = str(date_str).strip()
-    if len(date_str) == 10 and date_str[4] == "-":
-        return date_str
-    for fmt in ["%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y", "%m/%d/%Y", "%Y/%m/%d"]:
-        try:
-            return datetime.strptime(date_str, fmt).strftime("%Y-%m-%d")
-        except ValueError:
-            continue
-    return date_str
-@app.route('/review_document/<document_id>', methods=['POST'])
-@approval_required
-def review_document(document_id):
-    """Leader reviews a document and sends reply to core member"""
-    if not is_leader():
-        return jsonify({'error': 'Access denied'}), 403
-    
-    try:
-        user = db.users.find_one({'email': session['email']})
-        
-        status = request.form.get('status')
-        comments = request.form.get('comments', '')
-        send_reply = request.form.get('send_reply') == 'on'
-        
-        # Update document
-        db.office_documents.update_one(
-            {'_id': ObjectId(document_id)},
-            {
-                '$set': {
-                    'status': status,
-                    'reviewed_by': user['_id'],
-                    'reviewed_at': get_indian_time(),
-                    'comments': comments
-                }
-            }
-        )
-        
-        # Get document and send notification to uploader
-        doc = db.office_documents.find_one({'_id': ObjectId(document_id)})
-        uploader = db.users.find_one({'_id': doc['user_id']})
-        
-        if uploader and send_reply:
-            try:
-                send_review_reply(user, uploader, doc, comments, status)
-            except Exception as e:
-                logger.error(f"Error sending review reply: {e}")
-        
-        flash(f'✅ Document {status}', 'success')
-        return redirect(url_for('leader_dashboard'))
-        
-    except Exception as e:
-        logger.error(f"Error reviewing document: {e}")
-        flash(f'Error reviewing document: {str(e)[:100]}', 'error')
-        return redirect(url_for('leader_dashboard'))
-
-def send_review_reply(reviewer, recipient, document, comments, status):
-    """Send reply email to core member after review"""
-    try:
-        status_emoji = '✅' if status == 'approved' else '❌'
-        status_color = '#27ae60' if status == 'approved' else '#e74c3c'
-        
-        msg = Message(
-            subject=f"{status_emoji} Document Review Complete: {document['document_name']}",
-            sender=app.config['MAIL_USERNAME'],
-            recipients=[recipient['email']]
-        )
-        msg.body = f"""
-========================================
-        DOCUMENT REVIEW COMPLETE
-========================================
-
-Document: {document['document_name']}
-Status: {status.upper()}
-Reviewed by: {reviewer['email']}
-
-Reviewer's Comments:
-{comments}
-
-View in Dashboard: {request.url_root}core_dashboard
-
-========================================
-Jain University - Office of Academics
-========================================
-        """
-        msg.html = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <style>
-                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
-                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-                .header {{ background: #04043a; color: #FFD700; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
-                .content {{ background: #f9f9f9; padding: 20px; border-radius: 0 0 10px 10px; }}
-                .status-badge {{ display: inline-block; padding: 5px 15px; border-radius: 20px; font-weight: bold; margin: 10px 0; }}
-                .comments-box {{ background: white; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid {status_color}; }}
-                .button {{ display: inline-block; background: #04043a; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; }}
-                .footer {{ text-align: center; margin-top: 20px; font-size: 12px; color: #666; }}
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <h1>{status_emoji} Document Review Complete</h1>
-                </div>
-                <div class="content">
-                    <h2>{document['document_name']}</h2>
-                    
-                    <div class="status-badge" style="background: {status_color}; color: white;">
-                        {status.upper()}
-                    </div>
-                    
-                    <p><strong>Reviewed by:</strong> {reviewer['email']}</p>
-                    
-                    <div class="comments-box">
-                        <h3 style="margin-top: 0;">Reviewer's Comments:</h3>
-                        <p>{comments}</p>
-                    </div>
-                    
-                    <div style="text-align: center; margin: 30px 0;">
-                        <a href="{request.url_root}core_dashboard" class="button">View in Dashboard</a>
-                    </div>
-                </div>
-                <div class="footer">
-                    <p>Jain University - Office of Academics</p>
-                    <p>Sent at: {get_indian_time().strftime('%d %B %Y, %I:%M %p')} IST</p>
-                </div>
-            </div>
-        </body>
-        </html>
-        """
-        mail.send(msg)
-        logger.info(f"Review reply sent to {recipient['email']}")
-    except Exception as e:
-        logger.error(f"Error sending review reply: {e}")
-@app.route('/init_core_chat')
-def init_core_chat():
-    """Initialize core team chat group (run once)"""
-    if session.get('role') != 'admin':
-        return jsonify({'error': 'Access denied'}), 403
-    
-    try:
-        # Check if chat group already exists
-        existing = db.chat_groups.find_one({'group_type': 'core_team'})
-        if existing:
-            return jsonify({'message': 'Core team chat already exists'})
-        
-        # Create chat group
-        db.chat_groups.insert_one({
-            'name': 'Core Team Chat',
-            'group_type': 'core_team',
-            'description': 'Automatic chat group for all core team members',
-            'created_at': get_indian_time(),
-            'created_by': None,
-            'members': []
-        })
-        
-        logger.info("✅ Core team chat group created")
-        return jsonify({'success': True, 'message': 'Core team chat created'})
-        
-    except Exception as e:
-        logger.error(f"Error creating core chat: {e}")
-        return jsonify({'error': str(e)}), 500       
-# ===================== CHAT ROUTES =====================
-@app.route('/api/chat/messages')
-@login_required
-def get_chat_messages():
-    """Get chat messages for user"""
-    try:
-        user = db.users.find_one({'email': session['email']})
-        
-        # Get messages where user is sender or receiver
-        messages = list(db.chat_messages.find({
-            '$or': [
-                {'sender_id': user['_id']},
-                {'receiver_id': user['_id']},
-                {'group_id': 'core_team'}
-            ]
-        }).sort('timestamp', -1).limit(100))
-        
-        # Format messages
-        formatted_messages = []
-        for msg in reversed(messages):
-            sender = db.users.find_one({'_id': msg['sender_id']})
-            formatted_messages.append({
-                'id': str(msg['_id']),
-                'sender_id': str(msg['sender_id']),
-                'sender_name': sender['email'].split('@')[0] if sender else 'Unknown',
-                'sender_email': sender['email'] if sender else '',
-                'content': msg.get('content', ''),
-                'file_url': msg.get('file_url'),
-                'document_id': str(msg['document_id']) if msg.get('document_id') else None,
-                'timestamp': msg['timestamp'].strftime('%I:%M %p'),
-                'is_me': msg['sender_id'] == user['_id']
-            })
-        
-        return jsonify({
-            'success': True,
-            'messages': formatted_messages
-        })
-        
-    except Exception as e:
-        logger.error(f"Error getting chat messages: {e}")
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/chat/send', methods=['POST'])
-@login_required
-def send_chat_message():
-    """Send a chat message"""
-    try:
-        user = db.users.find_one({'email': session['email']})
-        
-        data = request.get_json()
-        content = data.get('content', '').strip()
-        receiver_id = data.get('receiver_id')
-        file_url = data.get('file_url')
-        document_id = data.get('document_id')
-        
-        if not content and not file_url and not document_id:
-            return jsonify({'error': 'Message content, file, or document required'}), 400
-        
-        # Create message
-        message = {
-            'sender_id': user['_id'],
-            'receiver_id': ObjectId(receiver_id) if receiver_id else None,
-            'group_id': 'core_team' if not receiver_id else None,
-            'content': content,
-            'file_url': file_url,
-            'document_id': ObjectId(document_id) if document_id else None,
-            'timestamp': get_indian_time(),
-            'read': False
-        }
-        
-        result = db.chat_messages.insert_one(message)
-        
-        # Send notification to receiver(s)
-        if receiver_id:
-            receiver = db.users.find_one({'_id': ObjectId(receiver_id)})
-            if receiver and receiver.get('email'):
-                send_chat_notification(user, receiver, content[:50])
-        else:
-            notify_group_chat(user, content[:50])
-        
-        return jsonify({
-            'success': True,
-            'message_id': str(result.inserted_id)
-        })
-        
-    except Exception as e:
-        logger.error(f"Error sending chat message: {e}")
-        return jsonify({'error': str(e)}), 500
-
-def send_chat_notification(sender, receiver, message_preview):
-    """Send email notification for new chat message"""
-    try:
-        msg = Message(
-            subject=f"💬 New message from {sender['email'].split('@')[0]}",
-            sender=app.config['MAIL_USERNAME'],
-            recipients=[receiver['email']]
-        )
-        msg.body = f"""
-New Message
-
-You have received a new message from {sender['email'].split('@')[0]}:
-
-"{message_preview}..."
-
-View Message: {request.url_root}core_dashboard
-        """
-        mail.send(msg)
-        logger.info(f"Chat notification sent to {receiver['email']}")
-    except Exception as e:
-        logger.error(f"Error sending chat notification: {e}")
-
-def notify_group_chat(sender, message_preview):
-    """Notify all online core members about group chat message"""
-    try:
-        # Get all online core members except sender
-        online_core = list(db.users.find({
-            'is_online': True,
-            '$or': [
-                {'user_type': 'core'},
-                {'special_role': 'office_barrier'}
-            ],
-            'email': {'$ne': sender['email']}
-        }))
-        
-        for member in online_core:
-            send_chat_notification(sender, member, message_preview)
-    except Exception as e:
-        logger.error(f"Error notifying group chat: {e}")
-
-# ===================== DOCUMENT SHARING ROUTES =====================
-@app.route('/share_document', methods=['POST'])
-@approval_required
-def share_document():
-    """Share a document with specific leaders"""
-    if not is_core_or_leader():
-        return jsonify({'error': 'Access denied'}), 403
-    
-    try:
-        user = db.users.find_one({'email': session['email']})
-        
-        document_id = request.form.get('document_id')
-        leader_ids = request.form.getlist('leaders')
-        message = request.form.get('message', '').strip()
-        
-        if not document_id or not leader_ids:
-            return jsonify({'error': 'Document and at least one leader required'}), 400
-        
-        # Get document
-        document = db.office_documents.find_one({'_id': ObjectId(document_id)})
-        if not document or document['user_email'] != session['email']:
-            return jsonify({'error': 'Document not found or unauthorized'}), 404
-        
-        # Create share record
-        share_data = {
-            'document_id': ObjectId(document_id),
-            'document_name': document['document_name'],
-            'shared_by': user['_id'],
-            'shared_by_email': session['email'],
-            'shared_with': [ObjectId(lid) for lid in leader_ids],
-            'message': message,
-            'shared_at': get_indian_time(),
-            'status': 'sent'
-        }
-        
-        result = db.document_shares.insert_one(share_data)
-        
-        # Send notifications to leaders
-        for leader_id in leader_ids:
-            leader = db.users.find_one({'_id': ObjectId(leader_id)})
-            if leader:
-                send_document_notification(user, leader, document, message)
-        
-        # Log activity
-        db.activity_logs.insert_one({
-            'user_id': user['_id'],
-            'user_email': session['email'],
-            'action': 'document_share',
-            'details': f'Shared document {document["document_name"]} with {len(leader_ids)} leaders',
-            'timestamp': get_indian_time(),
-            'ip_address': request.remote_addr
-        })
-        
-        flash('✅ Document shared successfully', 'success')
-        return redirect(url_for('core_dashboard'))
-        
-    except Exception as e:
-        logger.error(f"Error sharing document: {e}")
-        flash(f'Error sharing document: {str(e)[:100]}', 'error')
-        return redirect(url_for('core_dashboard'))
-
-def send_document_notification(sender, receiver, document, message):
-    """Send email notification for shared document"""
-    try:
-        msg = Message(
-            subject=f"📄 Document Shared: {document['document_name']}",
-            sender=app.config['MAIL_USERNAME'],
-            recipients=[receiver['email']]
-        )
-        msg.body = f"""
-New Document Shared
-
-{sender['email'].split('@')[0]} has shared a document with you:
-
-Document: {document['document_name']}
-Description: {document.get('description', 'No description')}
-Shared at: {get_indian_time().strftime('%d %B %Y, %I:%M %p')}
-
-{f'Message from sender: {message}' if message else ''}
-
-View Document: {request.url_root}leader_dashboard
-
-Jain University Portal - Office of Academics
-        """
-        mail.send(msg)
-        logger.info(f"Document notification sent to {receiver['email']}")
-    except Exception as e:
-        logger.error(f"Error sending document notification: {e}")
-
-# ===================== ACTIVITY STATUS ROUTES =====================
-@app.route('/api/activity/status')
-@login_required
-def get_activity_status():
-    """Get real-time activity status of core team and leaders"""
-    try:
-        # Update user's last activity
-        db.users.update_one(
-            {'email': session['email']},
-            {'$set': {'last_seen': get_indian_time()}}
-        )
-        
-        # Get active users (online in last 5 minutes)
-        five_minutes_ago = get_indian_time() - timedelta(minutes=5)
-        
-        active_core = list(db.users.find({
-            'approved': True,
-            '$or': [
-                {'user_type': 'core'},
-                {'special_role': 'office_barrier'}
-            ],
-            '$or': [
-                {'is_online': True},
-                {'last_seen': {'$gte': five_minutes_ago}}
-            ]
-        }, {'email': 1, 'user_type': 1, 'special_role': 1, 'last_seen': 1}))
-        
-        active_leaders = list(db.users.find({
-            'approved': True,
-            'special_role': 'leader',
-            '$or': [
-                {'is_online': True},
-                {'last_seen': {'$gte': five_minutes_ago}}
-            ]
-        }, {'email': 1, 'last_seen': 1}))
-        
-        # Format response
-        response = {
-            'core_team': [],
-            'leaders': [],
-            'total_active': len(active_core) + len(active_leaders)
-        }
-        
-        for user in active_core:
-            response['core_team'].append({
-                'email': user['email'],
-                'name': user['email'].split('@')[0],
-                'type': user.get('special_role', 'core').capitalize(),
-                'last_seen': user.get('last_seen', get_indian_time()).strftime('%I:%M %p'),
-                'is_online': user.get('is_online', False)
-            })
-        
-        for user in active_leaders:
-            response['leaders'].append({
-                'email': user['email'],
-                'name': user['email'].split('@')[0],
-                'last_seen': user.get('last_seen', get_indian_time()).strftime('%I:%M %p'),
-                'is_online': user.get('is_online', False)
-            })
-        
-        return jsonify(response)
-        
-    except Exception as e:
-        logger.error(f"Error getting activity status: {e}")
-        return jsonify({'error': str(e)}), 500
-
-# ===================== DASHBOARD ROUTES =====================
 @app.route('/user')
 @app.route('/user_dashboard')
 @login_required
@@ -2260,7 +1749,1666 @@ def user_dashboard():
             notifications=[]
         )
 
+# ===================== CORE DASHBOARD ROUTES =====================
+@app.route('/core_dashboard')
+@approval_required
+def core_dashboard():
+    """Dashboard for core team members - REQUIRES APPROVAL"""
+    if not is_core_member():
+        flash('Access denied. Core team members only.', 'error')
+        return redirect(url_for('home'))
+    
+    try:
+        user = db.users.find_one({'email': session['email']})
+        if not user:
+            flash('User not found', 'error')
+            return redirect(url_for('home'))
+        
+        # Get current date info
+        now = get_indian_time_aware()
+        now_naive = make_timezone_naive(now)
+        
+        # Calculate date ranges for analytics
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        today_start_naive = make_timezone_naive(today_start)
+        
+        week_start = now - timedelta(days=now.weekday())
+        week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
+        week_start_naive = make_timezone_naive(week_start)
+        
+        month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        month_start_naive = make_timezone_naive(month_start)
+        
+        # Get all core members
+        core_members = list(db.users.find({
+            '$or': [
+                {'user_type': 'core'},
+                {'special_role': 'office_barrier'}
+            ],
+            'approved': True
+        })) or []
+        
+        # Get all leaders
+        leaders = list(db.users.find({
+            'special_role': 'leader',
+            'approved': True
+        })) or []
+        
+        # Get current user's documents
+        my_documents = list(db.office_documents.find({
+            'user_id': user['_id']
+        }).sort('submitted_at', -1)) or []
+        
+        # Document statistics
+        total_docs = len(my_documents)
+        pending_count = len([d for d in my_documents if d.get('status') == 'pending'])
+        approved_count = len([d for d in my_documents if d.get('status') == 'approved'])
+        revision_count = len([d for d in my_documents if d.get('status') == 'revision'])
+        rejected_count = len([d for d in my_documents if d.get('status') == 'rejected'])
+        
+        # Time-based document stats
+        docs_today = db.office_documents.count_documents({
+            'user_id': user['_id'],
+            'submitted_at': {'$gte': today_start_naive}
+        })
+        docs_this_week = db.office_documents.count_documents({
+            'user_id': user['_id'],
+            'submitted_at': {'$gte': week_start_naive}
+        })
+        docs_this_month = db.office_documents.count_documents({
+            'user_id': user['_id'],
+            'submitted_at': {'$gte': month_start_naive}
+        })
+        
+        # Get tasks assigned to current user
+        my_tasks = list(db.tasks.find({
+            'assigned_to': user['_id']
+        }).sort('created_at', -1)) or []
+        
+        # Format tasks for display
+        for task in my_tasks:
+            assigner = db.users.find_one({'_id': task['assigned_by']})
+            task['assigned_by_name'] = assigner['email'].split('@')[0] if assigner else 'Unknown'
+            
+            # Set default values
+            task['progress'] = task.get('progress', 0)
+            task['priority'] = task.get('priority', 'medium')
+            task['status'] = task.get('status', 'pending')
+            
+            # Format due date
+            if task.get('due_date'):
+                if isinstance(task['due_date'], datetime):
+                    task['due_date_str'] = task['due_date'].strftime('%d %b %Y')
+                else:
+                    task['due_date_str'] = str(task['due_date'])
+            else:
+                task['due_date_str'] = 'No due date'
+        
+        # Task statistics
+        total_tasks = len(my_tasks)
+        pending_tasks = len([t for t in my_tasks if t.get('status') == 'pending'])
+        in_progress_tasks = len([t for t in my_tasks if t.get('status') == 'in_progress'])
+        completed_tasks = len([t for t in my_tasks if t.get('status') == 'completed'])
+        high_priority_tasks = len([t for t in my_tasks if t.get('priority') == 'high' and t.get('status') != 'completed'])
+        overdue_tasks = len([t for t in my_tasks 
+                           if t.get('due_date') and t.get('due_date') < now_naive 
+                           and t.get('status') != 'completed'])
+        
+        # Get online core members
+        five_minutes_ago = now - timedelta(minutes=5)
+        five_minutes_ago_naive = make_timezone_naive(five_minutes_ago)
+        
+        online_core = list(db.users.find({
+            '$or': [
+                {'user_type': 'core'},
+                {'special_role': 'office_barrier'}
+            ],
+            'approved': True,
+            '$or': [
+                {'is_online': True},
+                {'last_seen': {'$gte': five_minutes_ago_naive}}
+            ]
+        })) or []
+        
+        # Format last seen for members
+        for member in core_members:
+            if member.get('last_seen'):
+                last_seen = member['last_seen']
+                if isinstance(last_seen, datetime):
+                    if last_seen.tzinfo is None:
+                        last_seen = IST.localize(last_seen)
+                    diff = now - last_seen
+                    if diff.days > 0:
+                        member['last_seen_formatted'] = f"{diff.days}d ago"
+                    elif diff.seconds // 3600 > 0:
+                        member['last_seen_formatted'] = f"{diff.seconds // 3600}h ago"
+                    else:
+                        member['last_seen_formatted'] = f"{diff.seconds // 60}m ago"
+            else:
+                member['last_seen_formatted'] = 'Never'
+        
+        # Get recent document shares
+        recent_shares = []
+        try:
+            recent_shares = list(db.document_shares.find({
+                '$or': [
+                    {'shared_by': user['_id']},
+                    {'shared_with': user['_id']}
+                ]
+            }).sort('shared_at', -1).limit(10)) or []
+            
+            for share in recent_shares:
+                share['shared_with_names'] = []
+                sender = db.users.find_one({'_id': share['shared_by']})
+                share['sender_name'] = sender['email'].split('@')[0] if sender else 'Unknown'
+        except:
+            recent_shares = []
+        
+        # Get chat messages
+        chat_messages = []
+        try:
+            if 'chat_messages' in db.list_collection_names():
+                messages = list(db.chat_messages.find({
+                    '$or': [
+                        {'group_id': 'core_team'},
+                        {'receiver_id': user['_id']},
+                        {'sender_id': user['_id']}
+                    ]
+                }).sort('timestamp', -1).limit(50)) or []
+                
+                for msg in reversed(messages):
+                    sender = db.users.find_one({'_id': msg['sender_id']})
+                    timestamp = msg.get('timestamp')
+                    timestamp_str = timestamp.strftime('%I:%M %p') if timestamp else ''
+                    
+                    chat_messages.append({
+                        'sender_name': sender['email'].split('@')[0] if sender else 'Unknown',
+                        'content': msg.get('content', ''),
+                        'timestamp': timestamp_str,
+                        'is_me': msg['sender_id'] == user['_id']
+                    })
+        except:
+            chat_messages = []
+        
+        # Create recent activity feed
+        recent_activity = []
+        
+        # Add document activities
+        for doc in my_documents[:5]:
+            if doc.get('submitted_at'):
+                recent_activity.append({
+                    'type': 'document',
+                    'action': 'submitted',
+                    'title': doc['document_name'],
+                    'time': doc['submitted_at'].strftime('%d %b, %I:%M %p'),
+                    'status': doc.get('status', 'pending'),
+                    'icon': 'file-upload',
+                    'color': 'blue'
+                })
+            if doc.get('reviewed_at'):
+                recent_activity.append({
+                    'type': 'document',
+                    'action': 'reviewed',
+                    'title': doc['document_name'],
+                    'time': doc['reviewed_at'].strftime('%d %b, %I:%M %p'),
+                    'status': doc.get('status', ''),
+                    'icon': 'check-circle' if doc['status'] == 'approved' else 'times-circle',
+                    'color': 'green' if doc['status'] == 'approved' else 'red'
+                })
+        
+        # Add task activities
+        for task in my_tasks[:5]:
+            if task.get('created_at'):
+                recent_activity.append({
+                    'type': 'task',
+                    'action': 'assigned',
+                    'title': task['title'],
+                    'time': task['created_at'].strftime('%d %b, %I:%M %p'),
+                    'status': task.get('status', 'pending'),
+                    'icon': 'tasks',
+                    'color': 'purple'
+                })
+        
+        # Add share activities
+        for share in recent_shares[:5]:
+            if share.get('shared_at'):
+                recent_activity.append({
+                    'type': 'share',
+                    'action': 'shared',
+                    'title': share['document_name'],
+                    'time': share['shared_at'].strftime('%d %b, %I:%M %p'),
+                    'icon': 'share-alt',
+                    'color': 'green'
+                })
+        
+        # Sort by time (most recent first)
+        recent_activity.sort(key=lambda x: x['time'], reverse=True)
+        recent_activity = recent_activity[:15]
+        
+        # Prepare data for template with all variables defined
+        template_data = {
+            'user': user,
+            'core_members': core_members,
+            'leaders': leaders,
+            'my_documents': my_documents,
+            'my_tasks': my_tasks,
+            'pending_count': pending_count,
+            'approved_count': approved_count,
+            'revision_count': revision_count,
+            'rejected_count': rejected_count,
+            'total_docs': total_docs,
+            'docs_today': docs_today,
+            'docs_this_week': docs_this_week,
+            'docs_this_month': docs_this_month,
+            'total_tasks': total_tasks,
+            'pending_tasks': pending_tasks,
+            'in_progress_tasks': in_progress_tasks,
+            'completed_tasks': completed_tasks,
+            'high_priority_tasks': high_priority_tasks,
+            'overdue_tasks': overdue_tasks,
+            'recent_activity': recent_activity,
+            'online_core': online_core,
+            'recent_shares': recent_shares,
+            'chat_messages': chat_messages,
+            'now': get_indian_time()
+        }
+        
+        return render_template('core_dashboard.html', **template_data)
+        
+    except Exception as e:
+        logger.error(f"Error in core_dashboard: {e}", exc_info=True)
+        flash('Error loading dashboard. Please try again.', 'error')
+        
+        # Return template with safe default values
+        return render_template('core_dashboard.html',
+            user={'email': session.get('email', 'Unknown'), '_id': 'unknown'},
+            core_members=[],
+            leaders=[],
+            my_documents=[],
+            my_tasks=[],
+            pending_count=0,
+            approved_count=0,
+            revision_count=0,
+            rejected_count=0,
+            total_docs=0,
+            docs_today=0,
+            docs_this_week=0,
+            docs_this_month=0,
+            total_tasks=0,
+            pending_tasks=0,
+            in_progress_tasks=0,
+            completed_tasks=0,
+            high_priority_tasks=0,
+            overdue_tasks=0,
+            recent_activity=[],
+            online_core=[],
+            recent_shares=[],
+            chat_messages=[],
+            now=get_indian_time()
+        )
+@app.route('/upload_document', methods=['POST'])
+@approval_required
+def upload_document():
+    """Core team members upload documents for review by leaders and core members"""
+    if not is_core_member():
+        return jsonify({'error': 'Access denied'}), 403
+    
+    try:
+        user = db.users.find_one({'email': session['email']})
+        
+        document_name = request.form.get('document_name')
+        description = request.form.get('description')
+        assigned_users = request.form.getlist('assigned_users')
+        notify_users = request.form.get('notify_users') == 'on'
+        file = request.files.get('file')
+        
+        file_url = None
+        
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            name_part, ext_part = os.path.splitext(filename)
+            unique_filename = f"{name_part}_{timestamp}{ext_part}"
+            
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+            file.save(filepath)
+            file_url = '/' + filepath.replace('\\', '/')
+        
+        if not assigned_users or len(assigned_users) == 0:
+            leaders = list(db.users.find({'special_role': 'leader', 'approved': True}))
+            core_members = list(db.users.find({
+                '$or': [
+                    {'user_type': 'core'},
+                    {'special_role': 'office_barrier'}
+                ],
+                'approved': True
+            }))
+            all_users = leaders + core_members
+            assigned_users = [str(user['_id']) for user in all_users]
+        
+        doc = {
+            'user_id': user['_id'],
+            'user_email': session['email'],
+            'document_name': document_name,
+            'description': description,
+            'file_url': file_url,
+            'assigned_reviewers': [ObjectId(uid) for uid in assigned_users],
+            'status': 'pending',
+            'submitted_at': get_indian_time(),
+            'reviewed_by': None,
+            'reviewed_at': None,
+            'comments': '',
+            'notified': False
+        }
+        
+        result = db.office_documents.insert_one(doc)
+        
+        db.activity_logs.insert_one({
+            'user_id': user['_id'],
+            'user_email': session['email'],
+            'action': 'document_upload',
+            'details': f'Submitted document: {document_name}',
+            'timestamp': get_indian_time(),
+            'ip_address': request.remote_addr
+        })
+        
+        if notify_users and assigned_users:
+            for user_id in assigned_users:
+                reviewer = db.users.find_one({'_id': ObjectId(user_id)})
+                if reviewer and reviewer.get('email'):
+                    try:
+                        send_document_notification(
+                            user, 
+                            reviewer, 
+                            {
+                                'document_name': document_name,
+                                'description': description,
+                                '_id': result.inserted_id
+                            },
+                            description
+                        )
+                    except Exception as e:
+                        logger.error(f"Error sending notification to {reviewer.get('email')}: {e}")
+            
+            db.office_documents.update_one(
+                {'_id': result.inserted_id},
+                {'$set': {'notified': True}}
+            )
+        
+        flash('✅ Document submitted successfully', 'success')
+        return redirect(url_for('core_dashboard'))
+        
+    except Exception as e:
+        logger.error(f"Error submitting document: {e}")
+        flash(f'Error submitting document: {str(e)[:100]}', 'error')
+        return redirect(url_for('core_dashboard'))
+
+# ===================== LEADER DASHBOARD ROUTES =====================
+@app.route('/leader_dashboard')
+@approval_required
+def leader_dashboard():
+    """Dashboard for leaders to review documents - REQUIRES APPROVAL"""
+    if not is_leader():
+        flash('Access denied. Leaders only.', 'error')
+        return redirect(url_for('home'))
+    
+    try:
+        user = db.users.find_one({'email': session['email']})
+        if not user:
+            flash('User not found', 'error')
+            return redirect(url_for('home'))
+        
+        my_assigned_documents = list(db.office_documents.find({
+            'assigned_reviewers': user['_id']
+        }).sort('submitted_at', -1))
+        
+        now_aware = get_indian_time_aware()
+        for doc in my_assigned_documents:
+            if doc.get('status') == 'pending':
+                submitted_at = doc['submitted_at']
+                if submitted_at.tzinfo is None:
+                    submitted_at_aware = IST.localize(submitted_at)
+                else:
+                    submitted_at_aware = submitted_at
+                    
+                time_diff = now_aware - submitted_at_aware
+                days = time_diff.days
+                hours = time_diff.seconds // 3600
+                if days > 0:
+                    doc['time_in_queue'] = f"{days}d {hours}h"
+                else:
+                    doc['time_in_queue'] = f"{hours}h"
+            
+            uploader = db.users.find_one({'_id': doc['user_id']})
+            if uploader:
+                doc['uploader_name'] = uploader['email'].split('@')[0]
+                doc['uploader_email'] = uploader['email']
+        
+        shared_documents = []
+        try:
+            shared_documents = list(db.document_shares.find({
+                'shared_with': user['_id']
+            }).sort('shared_at', -1))
+            
+            for share in shared_documents:
+                sender = db.users.find_one({'_id': share['shared_by']})
+                share['sender_name'] = sender['email'].split('@')[0] if sender else 'Unknown'
+                share['sender_email'] = sender['email'] if sender else ''
+                
+                doc = db.office_documents.find_one({'_id': share['document_id']})
+                share['file_url'] = doc.get('file_url') if doc else None
+        except Exception as e:
+            logger.error(f"Error fetching shared documents: {e}")
+            shared_documents = []
+        
+        assigned_tasks = []
+        try:
+            assigned_tasks = list(db.tasks.find({
+                'assigned_by': user['_id']
+            }).sort('created_at', -1))
+            
+            for task in assigned_tasks:
+                assignee = db.users.find_one({'_id': task['assigned_to']})
+                if assignee:
+                    task['assigned_to_name'] = assignee['email'].split('@')[0]
+        except Exception as e:
+            logger.error(f"Error fetching assigned tasks: {e}")
+            assigned_tasks = []
+        
+        core_members = list(db.users.find({
+            '$or': [
+                {'user_type': 'core'},
+                {'special_role': 'office_barrier'}
+            ],
+            'approved': True
+        }))
+        
+        five_minutes_ago_aware = get_indian_time_aware() - timedelta(minutes=5)
+        five_minutes_ago_naive = make_timezone_naive(five_minutes_ago_aware)
+        
+        online_core = list(db.users.find({
+            '$or': [
+                {'user_type': 'core'},
+                {'special_role': 'office_barrier'}
+            ],
+            'approved': True,
+            '$or': [
+                {'is_online': True},
+                {'last_seen': {'$gte': five_minutes_ago_naive}}
+            ]
+        }))
+        
+        for member in core_members:
+            doc_count = db.office_documents.count_documents({
+                'user_id': member['_id']
+            })
+            member['doc_count'] = doc_count
+            
+            if member.get('last_seen'):
+                last_seen = member['last_seen']
+                if last_seen.tzinfo is None:
+                    last_seen_aware = IST.localize(last_seen)
+                else:
+                    last_seen_aware = last_seen
+                    
+                time_diff = now_aware - last_seen_aware
+                if time_diff.days > 0:
+                    member['last_seen_formatted'] = f"{time_diff.days}d ago"
+                elif time_diff.seconds // 3600 > 0:
+                    member['last_seen_formatted'] = f"{time_diff.seconds // 3600}h ago"
+                else:
+                    member['last_seen_formatted'] = f"{time_diff.seconds // 60}m ago"
+            else:
+                member['last_seen_formatted'] = "Never"
+        
+        leaders = list(db.users.find({
+            'special_role': 'leader',
+            'approved': True
+        }))
+        
+        today_start = get_indian_time_aware().replace(hour=0, minute=0, second=0, microsecond=0)
+        today_start_naive = make_timezone_naive(today_start)
+        today_shared_count = db.document_shares.count_documents({
+            'shared_with': user['_id'],
+            'shared_at': {'$gte': today_start_naive}
+        })
+        
+        pending_count = len([d for d in my_assigned_documents if d.get('status') == 'pending'])
+        
+        today_date = get_indian_time().strftime('%Y-%m-%d')
+        
+        return render_template(
+            'leader_dashboard.html',
+            user=user,
+            my_assigned_documents=my_assigned_documents,
+            shared_documents=shared_documents,
+            assigned_tasks=assigned_tasks,
+            core_members=core_members,
+            online_core=online_core,
+            leaders=leaders,
+            pending_count=pending_count,
+            today_shared_count=today_shared_count,
+            today_date=today_date
+        )
+        
+    except Exception as e:
+        logger.error(f"Error in leader_dashboard: {e}", exc_info=True)
+        flash(f'Error loading dashboard: {str(e)}', 'error')
+        return redirect(url_for('home'))
+
+@app.route('/review_document/<document_id>', methods=['POST'])
+@approval_required
+def review_document(document_id):
+    """Leader reviews a document and sends reply to core member"""
+    if not is_leader():
+        return jsonify({'error': 'Access denied'}), 403
+    
+    try:
+        user = db.users.find_one({'email': session['email']})
+        
+        status = request.form.get('status')
+        comments = request.form.get('comments', '')
+        send_reply = request.form.get('send_reply') == 'on'
+        
+        db.office_documents.update_one(
+            {'_id': ObjectId(document_id)},
+            {
+                '$set': {
+                    'status': status,
+                    'reviewed_by': user['_id'],
+                    'reviewed_at': get_indian_time(),
+                    'comments': comments
+                }
+            }
+        )
+        
+        doc = db.office_documents.find_one({'_id': ObjectId(document_id)})
+        uploader = db.users.find_one({'_id': doc['user_id']})
+        
+        if uploader and send_reply:
+            try:
+                send_review_reply(user, uploader, doc, comments, status)
+            except Exception as e:
+                logger.error(f"Error sending review reply: {e}")
+        
+        flash(f'✅ Document {status}', 'success')
+        return redirect(url_for('leader_dashboard'))
+        
+    except Exception as e:
+        logger.error(f"Error reviewing document: {e}")
+        flash(f'Error reviewing document: {str(e)[:100]}', 'error')
+        return redirect(url_for('leader_dashboard'))
+
+@app.route('/share_document_leader', methods=['POST'])
+@approval_required
+def share_document_leader():
+    """Leaders can share documents with other leaders and core members"""
+    if not is_leader():
+        return jsonify({'error': 'Access denied'}), 403
+    
+    try:
+        user = db.users.find_one({'email': session['email']})
+        
+        document_id = request.form.get('document_id')
+        leader_ids = request.form.getlist('leaders')
+        core_ids = request.form.getlist('core_members')
+        message = request.form.get('message', '').strip()
+        
+        recipient_ids = leader_ids + core_ids
+        
+        if not document_id or not recipient_ids:
+            flash('Please select a document and at least one recipient', 'error')
+            return redirect(url_for('leader_dashboard'))
+        
+        document = db.office_documents.find_one({'_id': ObjectId(document_id)})
+        if not document:
+            flash('Document not found', 'error')
+            return redirect(url_for('leader_dashboard'))
+        
+        share_data = {
+            'document_id': ObjectId(document_id),
+            'document_name': document['document_name'],
+            'shared_by': user['_id'],
+            'shared_by_email': session['email'],
+            'shared_with': [ObjectId(rid) for rid in recipient_ids],
+            'message': message,
+            'shared_at': get_indian_time(),
+            'status': 'sent'
+        }
+        
+        result = db.document_shares.insert_one(share_data)
+        
+        for recipient_id in recipient_ids:
+            recipient = db.users.find_one({'_id': ObjectId(recipient_id)})
+            if recipient:
+                send_document_notification(user, recipient, document, message)
+        
+        db.activity_logs.insert_one({
+            'user_id': user['_id'],
+            'user_email': session['email'],
+            'action': 'document_share',
+            'details': f'Shared document {document["document_name"]} with {len(recipient_ids)} users',
+            'timestamp': get_indian_time(),
+            'ip_address': request.remote_addr
+        })
+        
+        flash('✅ Document shared successfully', 'success')
+        return redirect(url_for('leader_dashboard'))
+        
+    except Exception as e:
+        logger.error(f"Error sharing document: {e}")
+        flash(f'Error sharing document: {str(e)[:100]}', 'error')
+        return redirect(url_for('leader_dashboard'))
+
+@app.route('/assign_task', methods=['POST'])
+@approval_required
+def assign_task():
+    """Assign task to core member with optional document"""
+    if not is_leader():
+        return jsonify({'error': 'Access denied'}), 403
+    
+    try:
+        user = db.users.find_one({'email': session['email']})
+        
+        task_title = request.form.get('task_title')
+        description = request.form.get('description')
+        due_date = request.form.get('due_date')
+        priority = request.form.get('priority', 'medium')
+        assigned_to = request.form.get('assigned_to')
+        
+        # Handle file upload
+        file = request.files.get('task_file')
+        file_url = None
+        file_name = None
+        
+        if file and file.filename and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            name_part, ext_part = os.path.splitext(filename)
+            unique_filename = f"task_{name_part}_{timestamp}{ext_part}"
+            
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+            file.save(filepath)
+            file_url = '/' + filepath.replace('\\', '/')
+            file_name = filename
+            
+            logger.info(f"✅ Task file uploaded: {filename}")
+        
+        due_datetime = datetime.strptime(due_date, '%Y-%m-%d')
+        due_datetime_aware = IST.localize(due_datetime)
+        due_datetime_naive = make_timezone_naive(due_datetime_aware)
+        
+        task = {
+            'assigned_by': user['_id'],
+            'assigned_by_email': session['email'],
+            'assigned_to': ObjectId(assigned_to),
+            'title': task_title,
+            'description': description,
+            'due_date': due_datetime_naive,
+            'priority': priority,
+            'status': 'pending',
+            'progress': 0,
+            'has_attachment': file_url is not None,
+            'attachment_url': file_url,
+            'attachment_name': file_name,
+            'created_at': get_indian_time(),
+            'updated_at': get_indian_time()
+        }
+        
+        result = db.tasks.insert_one(task)
+        
+        # Log activity
+        db.activity_logs.insert_one({
+            'user_id': user['_id'],
+            'user_email': session['email'],
+            'action': 'task_assigned',
+            'details': f'Assigned task: {task_title} to user',
+            'timestamp': get_indian_time(),
+            'ip_address': request.remote_addr
+        })
+        
+        assigned_user = db.users.find_one({'_id': ObjectId(assigned_to)})
+        if assigned_user:
+            attachment_msg = " with attachment" if file_url else ""
+            send_task_notification(user, assigned_user, task_title, due_date, attachment_msg)
+        
+        flash('✅ Task assigned successfully' + (' with attachment' if file_url else ''), 'success')
+        return redirect(url_for('leader_dashboard'))
+        
+    except Exception as e:
+        logger.error(f"Error assigning task: {e}")
+        flash(f'Error assigning task: {str(e)[:100]}', 'error')
+        return redirect(url_for('leader_dashboard'))
+
+@app.route('/api/core-member/analytics/<member_id>')
+@approval_required
+def core_member_analytics(member_id):
+    """Get analytics for a specific core member"""
+    if not is_leader():
+        return jsonify({'error': 'Access denied'}), 403
+    
+    try:
+        member = db.users.find_one({'_id': ObjectId(member_id)})
+        if not member:
+            return jsonify({'error': 'Member not found'}), 404
+        
+        documents = list(db.office_documents.find({
+            'user_id': member['_id']
+        }).sort('submitted_at', -1))
+        
+        total = len(documents)
+        pending = len([d for d in documents if d.get('status') == 'pending'])
+        approved = len([d for d in documents if d.get('status') == 'approved'])
+        revision = len([d for d in documents if d.get('status') == 'revision'])
+        rejected = len([d for d in documents if d.get('status') == 'rejected'])
+        
+        recent_activity = []
+        for doc in documents[:5]:
+            activity = {
+                'description': f'Document submitted: {doc["document_name"]}',
+                'time': doc['submitted_at'].strftime('%d %b %Y, %I:%M %p'),
+                'icon': 'file-alt',
+                'color': 'blue'
+            }
+            recent_activity.append(activity)
+        
+        reviewed_docs = [d for d in documents if d.get('reviewed_at')]
+        for doc in reviewed_docs[:3]:
+            activity = {
+                'description': f'Document {doc["status"]}: {doc["document_name"]}',
+                'time': doc['reviewed_at'].strftime('%d %b %Y, %I:%M %p'),
+                'icon': 'check-circle',
+                'color': 'green' if doc['status'] == 'approved' else 'red'
+            }
+            recent_activity.append(activity)
+        
+        recent_activity.sort(key=lambda x: x['time'], reverse=True)
+        
+        docs_list = []
+        for doc in documents:
+            reviewer = None
+            if doc.get('reviewed_by'):
+                rev = db.users.find_one({'_id': doc['reviewed_by']})
+                reviewer = rev['email'].split('@')[0] if rev else 'Unknown'
+            
+            docs_list.append({
+                'name': doc['document_name'],
+                'submitted': doc['submitted_at'].strftime('%d %b %Y'),
+                'status': doc['status'],
+                'reviewed_by': reviewer,
+                'file_url': doc.get('file_url', '#')
+            })
+        
+        last_seen = 'Never'
+        if member.get('last_seen'):
+            last_seen = member['last_seen'].strftime('%d %b %Y, %I:%M %p')
+        
+        response = {
+            'email': member['email'],
+            'name': member['email'].split('@')[0],
+            'is_online': member.get('is_online', False),
+            'last_seen': last_seen,
+            'total_documents': total,
+            'pending': pending,
+            'approved': approved,
+            'revision': revision,
+            'rejected': rejected,
+            'recent_activity': recent_activity[:10],
+            'documents': docs_list
+        }
+        
+        return jsonify(response)
+        
+    except Exception as e:
+        logger.error(f"Error getting member analytics: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/documents/by-date')
+@approval_required
+def documents_by_date():
+    """Get documents filtered by date"""
+    if not is_leader():
+        return jsonify({'error': 'Access denied'}), 403
+    
+    try:
+        date_str = request.args.get('date')
+        if not date_str:
+            return jsonify({'error': 'Date required'}), 400
+        
+        filter_date = datetime.strptime(date_str, '%Y-%m-%d')
+        filter_date_aware = IST.localize(filter_date)
+        filter_date_naive = make_timezone_naive(filter_date_aware)
+        next_day = filter_date_aware + timedelta(days=1)
+        next_day_naive = make_timezone_naive(next_day)
+        
+        documents = list(db.office_documents.find({
+            'submitted_at': {
+                '$gte': filter_date_naive,
+                '$lt': next_day_naive
+            }
+        }))
+        
+        stats = {
+            'total': len(documents),
+            'approved': len([d for d in documents if d.get('status') == 'approved']),
+            'pending': len([d for d in documents if d.get('status') == 'pending']),
+            'revision': len([d for d in documents if d.get('status') == 'revision']),
+            'rejected': len([d for d in documents if d.get('status') == 'rejected'])
+        }
+        
+        return jsonify(stats)
+        
+    except Exception as e:
+        logger.error(f"Error filtering documents by date: {e}")
+        return jsonify({'error': str(e)}), 500
+
+# ===================== OFFICE DOCUMENTS ROUTES =====================
+@app.route('/office_documents')
+def office_documents():
+    """Core and leaders can view all office barrier submissions"""
+    if not is_core_or_leader():
+        flash('Access denied', 'error')
+        return redirect(url_for('home'))
+    
+    try:
+        documents = list(db.office_documents.find().sort('submitted_at', -1))
+        
+        for doc in documents:
+            user = db.users.find_one({'_id': doc['user_id']})
+            if user:
+                doc['user_name'] = user['email'].split('@')[0]
+                doc['user_type'] = user.get('user_type', 'N/A')
+        
+        online_users = list(db.users.find({
+            'special_role': 'office_barrier',
+            'is_online': True
+        }))
+        
+        return render_template(
+            'office_documents.html', 
+            documents=documents,
+            online_users=online_users
+        )
+        
+    except Exception as e:
+        logger.error(f"Error loading office documents: {e}")
+        flash('Error loading documents', 'error')
+        return redirect(url_for('home'))
+
+@app.route('/activity_logs')
+def activity_logs():
+    """View activity logs of all users"""
+    if not is_core_or_leader():
+        flash('Access denied', 'error')
+        return redirect(url_for('home'))
+    
+    try:
+        logs = list(db.activity_logs.find().sort('timestamp', -1).limit(100))
+        
+        online_users = list(db.users.find({
+            'is_online': True
+        }, {'email': 1, 'user_type': 1, 'special_role': 1}))
+        
+        return render_template(
+            'activity_logs.html',
+            logs=logs,
+            online_users=online_users
+        )
+        
+    except Exception as e:
+        logger.error(f"Error loading activity logs: {e}")
+        flash('Error loading logs', 'error')
+        return redirect(url_for('home'))
+
+# ===================== CHAT ROUTES =====================
+@app.route('/api/chat/messages')
+@login_required
+def get_chat_messages():
+    """Get chat messages for user"""
+    try:
+        user = db.users.find_one({'email': session['email']})
+        
+        messages = list(db.chat_messages.find({
+            '$or': [
+                {'sender_id': user['_id']},
+                {'receiver_id': user['_id']},
+                {'group_id': 'core_team'}
+            ]
+        }).sort('timestamp', -1).limit(100))
+        
+        formatted_messages = []
+        for msg in reversed(messages):
+            sender = db.users.find_one({'_id': msg['sender_id']})
+            timestamp = msg.get('timestamp')
+            timestamp_str = ''
+            if timestamp:
+                if timestamp.tzinfo is None:
+                    timestamp_aware = IST.localize(timestamp)
+                else:
+                    timestamp_aware = timestamp
+                timestamp_str = timestamp_aware.strftime('%I:%M %p')
+            
+            formatted_messages.append({
+                'id': str(msg['_id']),
+                'sender_id': str(msg['sender_id']),
+                'sender_name': sender['email'].split('@')[0] if sender else 'Unknown',
+                'sender_email': sender['email'] if sender else '',
+                'content': msg.get('content', ''),
+                'file_url': msg.get('file_url'),
+                'document_id': str(msg['document_id']) if msg.get('document_id') else None,
+                'timestamp': timestamp_str,
+                'is_me': msg['sender_id'] == user['_id']
+            })
+        
+        return jsonify({
+            'success': True,
+            'messages': formatted_messages
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting chat messages: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/chat/send', methods=['POST'])
+@login_required
+def send_chat_message():
+    """Send a chat message"""
+    try:
+        user = db.users.find_one({'email': session['email']})
+        
+        data = request.get_json()
+        content = data.get('content', '').strip()
+        receiver_id = data.get('receiver_id')
+        file_url = data.get('file_url')
+        document_id = data.get('document_id')
+        
+        if not content and not file_url and not document_id:
+            return jsonify({'error': 'Message content, file, or document required'}), 400
+        
+        message = {
+            'sender_id': user['_id'],
+            'receiver_id': ObjectId(receiver_id) if receiver_id else None,
+            'group_id': 'core_team' if not receiver_id else None,
+            'content': content,
+            'file_url': file_url,
+            'document_id': ObjectId(document_id) if document_id else None,
+            'timestamp': get_indian_time(),
+            'read': False
+        }
+        
+        result = db.chat_messages.insert_one(message)
+        
+        if receiver_id:
+            receiver = db.users.find_one({'_id': ObjectId(receiver_id)})
+            if receiver and receiver.get('email'):
+                send_chat_notification(user, receiver, content[:50])
+        else:
+            notify_group_chat(user, content[:50])
+        
+        return jsonify({
+            'success': True,
+            'message_id': str(result.inserted_id)
+        })
+        
+    except Exception as e:
+        logger.error(f"Error sending chat message: {e}")
+        return jsonify({'error': str(e)}), 500
+
+# ===================== INITIALIZATION ROUTES =====================
+@app.route('/init_core_chat')
+@login_required
+def init_core_chat():
+    """Initialize core team chat group (run once)"""
+    if session.get('role') != 'admin':
+        return jsonify({'error': 'Access denied'}), 403
+    
+    try:
+        existing = db.chat_groups.find_one({'group_type': 'core_team'})
+        if existing:
+            return jsonify({'message': 'Core team chat already exists', 'group_id': str(existing['_id'])})
+        
+        group_id = db.chat_groups.insert_one({
+            'name': 'Core Team Chat',
+            'group_type': 'core_team',
+            'description': 'Automatic chat group for all core team members',
+            'created_at': get_indian_time(),
+            'created_by': None,
+            'members': []
+        }).inserted_id
+        
+        core_members = list(db.users.find({
+            '$or': [
+                {'user_type': 'core'},
+                {'special_role': 'office_barrier'}
+            ],
+            'approved': True
+        }))
+        
+        member_ids = [member['_id'] for member in core_members]
+        
+        db.chat_groups.update_one(
+            {'_id': group_id},
+            {'$set': {'members': member_ids}}
+        )
+        
+        logger.info(f"✅ Core team chat group created with {len(member_ids)} members")
+        return jsonify({
+            'success': True,
+            'message': 'Core team chat created',
+            'group_id': str(group_id),
+            'members_added': len(member_ids)
+        })
+        
+    except Exception as e:
+        logger.error(f"Error creating core chat: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/debug/init-core-chat')
+@login_required
+def debug_init_core_chat():
+    """Initialize core team chat group (debug version)"""
+    if session.get('role') != 'admin':
+        return jsonify({'error': 'Admin access required'}), 403
+    
+    try:
+        existing = db.chat_groups.find_one({'group_type': 'core_team'})
+        if existing:
+            return jsonify({'message': 'Core team chat already exists', 'group': str(existing['_id'])})
+        
+        result = db.chat_groups.insert_one({
+            'name': 'Core Team Chat',
+            'group_type': 'core_team',
+            'description': 'Automatic chat group for all core team members',
+            'created_at': get_indian_time(),
+            'created_by': None,
+            'members': []
+        })
+        
+        core_members = list(db.users.find({
+            '$or': [
+                {'user_type': 'core'},
+                {'special_role': 'office_barrier'}
+            ],
+            'approved': True
+        }))
+        
+        member_ids = [member['_id'] for member in core_members]
+        
+        db.chat_groups.update_one(
+            {'_id': result.inserted_id},
+            {'$set': {'members': member_ids}}
+        )
+        
+        return jsonify({
+            'success': True,
+            'message': 'Core team chat created',
+            'group_id': str(result.inserted_id),
+            'members_added': len(member_ids)
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/debug/create-collections')
+@login_required
+def debug_create_collections():
+    """Ensure all required collections exist"""
+    if session.get('role') != 'admin':
+        return jsonify({'error': 'Admin access required'}), 403
+    
+    try:
+        collections_needed = [
+            'office_documents',
+            'document_shares',
+            'chat_messages',
+            'chat_groups',
+            'tasks',
+            'activity_logs'
+        ]
+        
+        existing = db.list_collection_names()
+        created = []
+        
+        for coll in collections_needed:
+            if coll not in existing:
+                db.create_collection(coll)
+                created.append(coll)
+        
+        if 'office_documents' in db.list_collection_names():
+            db.office_documents.create_index([('user_id', 1)])
+            db.office_documents.create_index([('status', 1)])
+            db.office_documents.create_index([('submitted_at', -1)])
+        
+        if 'document_shares' in db.list_collection_names():
+            db.document_shares.create_index([('shared_by', 1)])
+            db.document_shares.create_index([('shared_with', 1)])
+            db.document_shares.create_index([('shared_at', -1)])
+        
+        if 'chat_messages' in db.list_collection_names():
+            db.chat_messages.create_index([('sender_id', 1)])
+            db.chat_messages.create_index([('receiver_id', 1)])
+            db.chat_messages.create_index([('group_id', 1)])
+            db.chat_messages.create_index([('timestamp', -1)])
+        
+        if 'chat_groups' in db.list_collection_names():
+            db.chat_groups.create_index([('group_type', 1)])
+        
+        if 'tasks' in db.list_collection_names():
+            db.tasks.create_index([('assigned_to', 1)])
+            db.tasks.create_index([('assigned_by', 1)])
+            db.tasks.create_index([('status', 1)])
+        
+        return jsonify({
+            'success': True,
+            'existing_collections': existing,
+            'created_collections': created,
+            'message': f'Created collections: {", ".join(created)}' if created else 'All collections already exist'
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# ===================== API ENDPOINTS =====================
+@app.route('/api/activity/status')
+@login_required
+def get_activity_status():
+    """Get real-time activity status for notifications"""
+    try:
+        user = db.users.find_one({'email': session['email']})
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        now = get_indian_time_aware()
+        five_minutes_ago = now - timedelta(minutes=5)
+        five_minutes_ago_naive = make_timezone_naive(five_minutes_ago)
+        
+        # Check for new tasks
+        new_tasks = db.tasks.count_documents({
+            'assigned_to': user['_id'],
+            'created_at': {'$gte': five_minutes_ago_naive},
+            'status': 'pending'
+        })
+        
+        # Check for new shared documents
+        new_documents = db.document_shares.count_documents({
+            'shared_with': user['_id'],
+            'shared_at': {'$gte': five_minutes_ago_naive}
+        })
+        
+        # Check for overdue tasks
+        overdue_tasks = db.tasks.count_documents({
+            'assigned_to': user['_id'],
+            'due_date': {'$lt': five_minutes_ago_naive},
+            'status': {'$ne': 'completed'}
+        })
+        
+        # Update user's last seen
+        db.users.update_one(
+            {'_id': user['_id']},
+            {'$set': {'last_seen': get_indian_time()}}
+        )
+        
+        return jsonify({
+            'success': True,
+            'new_tasks': new_tasks,
+            'new_documents': new_documents,
+            'overdue_tasks': overdue_tasks,
+            'timestamp': get_indian_time().strftime('%Y-%m-%d %H:%M:%S')
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting activity status: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/notifications')
+@login_required
+def api_notifications():
+    """Get user notifications as JSON"""
+    try:
+        notifications = get_user_notifications()
+        return jsonify({
+            'success': True,
+            'notifications': notifications,
+            'count': len(notifications)
+        })
+    except Exception as e:
+        logger.error(f"Error getting notifications: {e}")
+        return jsonify({'error': str(e)}), 400
+
+@app.route('/api/mark_notification_read/<notification_id>', methods=['POST'])
+@login_required
+def mark_notification_read(notification_id):
+    """Mark notification as read"""
+    try:
+        return jsonify({'success': True})
+    except Exception as e:
+        logger.error(f"Error marking notification as read: {e}")
+        return jsonify({'error': str(e)}), 400
+
+# ===================== GOOGLE OAUTH ROUTES =====================
+@app.route('/connect-drive')
+@login_required
+def connect_drive():
+    try:
+        session.pop('drive_creds', None)
+        session.pop('drive_state', None)
+
+        if request.url_root.startswith('https://'):
+            redirect_uri = 'https://office-academic.juooa.cloud/drive/callback'
+        else:
+            redirect_uri = 'http://localhost:5000/drive/callback'
+        
+        logger.info(f"🔍 Drive OAuth redirect URI: {redirect_uri}")
+
+        flow = Flow.from_client_secrets_file(
+            'client_secret.json',
+            scopes=DRIVE_SCOPES,
+            redirect_uri=redirect_uri
+        )
+
+        auth_url, state = flow.authorization_url(
+            access_type='offline',
+            include_granted_scopes='true',
+            prompt='consent'
+        )
+
+        session['drive_state'] = state
+        logger.info(f"✅ Starting Drive OAuth - State: {state[:10]}...")
+
+        return redirect(auth_url)
+
+    except Exception as e:
+        logger.error(f"❌ Drive connection error: {e}", exc_info=True)
+        flash('Error initiating Google Drive connection. Please try again.', 'error')
+        return redirect(url_for('user_dashboard'))
+
+@app.route('/drive/callback')
+def drive_callback():
+    try:
+        logger.info(f"📥 Drive callback received")
+        
+        if session.get('drive_state') != request.args.get('state'):
+            logger.error("❌ State mismatch in Drive callback")
+            flash('Authorization failed: State mismatch', 'error')
+            return redirect(url_for('user_dashboard'))
+
+        if request.url_root.startswith('https://'):
+            redirect_uri = 'https://office-academic.juooa.cloud/drive/callback'
+        else:
+            redirect_uri = 'http://localhost:5000/drive/callback'
+        
+        logger.info(f"🔍 Drive callback redirect URI: {redirect_uri}")
+
+        flow = Flow.from_client_secrets_file(
+            'client_secret.json',
+            scopes=DRIVE_SCOPES,
+            redirect_uri=redirect_uri,
+            state=session['drive_state']
+        )
+
+        flow.fetch_token(authorization_response=request.url)
+        creds = flow.credentials
+
+        session['drive_creds'] = {
+            'token': creds.token,
+            'refresh_token': creds.refresh_token,
+            'token_uri': creds.token_uri,
+            'client_id': creds.client_id,
+            'client_secret': creds.client_secret,
+            'scopes': DRIVE_SCOPES
+        }
+
+        session.pop('drive_state', None)
+
+        logger.info(f"✅ Google Drive connected successfully for {session.get('email')}")
+        flash('✅ Google Drive connected successfully!', 'success')
+        return redirect(url_for('user_dashboard'))
+
+    except Exception as e:
+        logger.error(f"❌ Drive callback error: {e}", exc_info=True)
+        flash('Error connecting to Google Drive. Please try again.', 'error')
+        return redirect(url_for('user_dashboard'))
+
+@app.route('/connect-gmail')
+@login_required
+def connect_gmail():
+    try:
+        session.pop('gmail_creds', None)
+        session.pop('gmail_state', None)
+        
+        if request.url_root.startswith('https://'):
+            redirect_uri = 'https://office-academic.juooa.cloud/gmail/callback'
+        else:
+            redirect_uri = 'http://localhost:5000/gmail/callback'
+        
+        logger.info(f"🔍 Gmail OAuth redirect URI: {redirect_uri}")
+        
+        flow = Flow.from_client_secrets_file(
+            'client_secret.json',
+            scopes=GMAIL_SCOPES,
+            redirect_uri=redirect_uri
+        )
+        auth_url, state = flow.authorization_url(
+            access_type='offline',
+            include_granted_scopes='false',
+            prompt='consent'
+        )
+        session['gmail_state'] = state
+        logger.info("✅ Starting Gmail OAuth")
+        return redirect(auth_url)
+    
+    except Exception as e:
+        logger.error(f"❌ Gmail connection error: {e}", exc_info=True)
+        flash('Error initiating Gmail connection', 'error')
+        return redirect(url_for('user_dashboard'))
+
+@app.route('/gmail/callback')
+def gmail_callback():
+    try:
+        logger.info(f"📥 Gmail callback received")
+        
+        if session.get('gmail_state') != request.args.get('state'):
+            logger.error("❌ State mismatch in Gmail callback")
+            flash('State mismatch. Authorization failed.', 'error')
+            return redirect(url_for('user_dashboard'))
+
+        if request.url_root.startswith('https://'):
+            redirect_uri = 'https://office-academic.juooa.cloud/gmail/callback'
+        else:
+            redirect_uri = 'http://localhost:5000/gmail/callback'
+        
+        logger.info(f"🔍 Gmail callback redirect URI: {redirect_uri}")
+
+        flow = Flow.from_client_secrets_file(
+            'client_secret.json',
+            scopes=GMAIL_SCOPES,
+            redirect_uri=redirect_uri
+        )
+        flow.fetch_token(authorization_response=request.url)
+        creds = flow.credentials
+
+        session['gmail_creds'] = {
+            'token': creds.token,
+            'refresh_token': creds.refresh_token,
+            'token_uri': creds.token_uri,
+            'client_id': creds.client_id,
+            'client_secret': creds.client_secret,
+            'scopes': GMAIL_SCOPES
+        }
+        
+        session.pop('gmail_state', None)
+
+        logger.info("✅ Gmail connected successfully")
+        flash('✅ Gmail connected successfully!', 'success')
+        return redirect(url_for('user_dashboard'))
+
+    except Exception as e:
+        logger.error(f"❌ Gmail callback error: {e}", exc_info=True)
+        flash('Error connecting to Gmail', 'error')
+        return redirect(url_for('user_dashboard'))
+
+# ===================== DRIVE OPERATIONS ROUTES =====================
+@app.route('/drive/files')
+@login_required
+def drive_files():
+    if 'drive_creds' not in session:
+        flash('Please connect your Google Drive first.', 'error')
+        return redirect(url_for('connect_drive'))
+
+    try:
+        notifications = get_user_notifications()
+        service = get_drive_service()
+        
+        if not service:
+            flash('Error connecting to Drive. Please reconnect.', 'error')
+            return redirect(url_for('connect_drive'))
+        
+        results = service.files().list(
+            q="trashed=false and mimeType='application/vnd.google-apps.folder'",
+            pageSize=100,
+            fields="files(id, name, mimeType, createdTime, webViewLink, iconLink)",
+            orderBy="name"
+        ).execute()
+
+        folders = results.get('files', [])
+
+        user_folders = db.user_navbars.find_one({'user_email': session['email']})
+        saved_folder_ids = [item['ref_id'] for item in user_folders['items']] if user_folders and 'items' in user_folders else []
+
+        for folder in folders:
+            if 'webViewLink' not in folder:
+                folder['webViewLink'] = f"https://drive.google.com/drive/folders/{folder['id']}"
+
+        logger.info(f"✅ Retrieved {len(folders)} Drive folders")
+
+        return render_template('drive_files.html',
+                            folders=folders,
+                            saved_folder_ids=saved_folder_ids,
+                            total_folders=len(folders),
+                            notifications=notifications)
+
+    except Exception as e:
+        logger.error(f"❌ Error fetching Drive folders: {str(e)}", exc_info=True)
+        flash('Error connecting to Google Drive', 'error')
+        return redirect(url_for('user_dashboard'))
+
+@app.route('/api/drive/folder/<folder_id>')
+@login_required
+def get_drive_folder_contents(folder_id):
+    if 'drive_creds' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+
+    try:
+        service = get_drive_service()
+        
+        if not service:
+            return jsonify({'error': 'Drive service unavailable'}), 500
+        
+        results = service.files().list(
+            q=f"'{folder_id}' in parents and trashed=false",
+            pageSize=100,
+            fields="files(id, name, mimeType, size, createdTime, webViewLink)"
+        ).execute()
+
+        files = results.get('files', [])
+        return jsonify(files)
+
+    except Exception as e:
+        logger.error(f"Error fetching folder contents: {e}", exc_info=True)
+        return jsonify({'error': str(e)}), 400
+
+@app.route('/api/drive/search')
+@login_required
+def search_drive_files():
+    if 'drive_creds' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+
+    try:
+        query = request.args.get('q', '')
+        if not query:
+            return jsonify([])
+
+        service = get_drive_service()
+        
+        if not service:
+            return jsonify({'error': 'Drive service unavailable'}), 500
+        
+        results = service.files().list(
+            q=f"name contains '{query}' and trashed=false",
+            pageSize=20,
+            fields="files(id, name, mimeType, webViewLink, iconLink)"
+        ).execute()
+
+        files = results.get('files', [])
+        return jsonify(files)
+
+    except Exception as e:
+        logger.error(f"Error searching Drive: {e}")
+        return jsonify({'error': str(e)}), 400
+
+@app.route('/drive/upload', methods=['POST'])
+@login_required
+def drive_upload():
+    if 'drive_creds' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    try:
+        file = request.files.get('file')
+        folder_id = request.form.get('folder_id', 'root')
+        make_public = request.form.get('make_public', 'false') == 'true'
+        
+        if not file:
+            return jsonify({'error': 'No file provided'}), 400
+        
+        service = get_drive_service()
+        
+        if not service:
+            return jsonify({'error': 'Drive service unavailable'}), 500
+        
+        file_metadata = {
+            'name': secure_filename(file.filename),
+            'parents': [folder_id]
+        }
+        
+        file_content = file.read()
+        media = MediaIoBaseUpload(
+            BytesIO(file_content),
+            mimetype=file.mimetype or 'application/octet-stream',
+            resumable=True
+        )
+        
+        file_obj = service.files().create(
+            body=file_metadata,
+            media_body=media,
+            fields='id, name, webViewLink'
+        ).execute()
+        
+        result = {
+            'file_id': file_obj['id'],
+            'file_name': file_obj['name'],
+            'web_link': file_obj.get('webViewLink', f"https://drive.google.com/file/d/{file_obj['id']}/view")
+        }
+        
+        if make_public:
+            if make_file_public(service, file_obj['id']):
+                result['public_link'] = f"https://drive.google.com/file/d/{file_obj['id']}/view"
+                
+                db.public_files.insert_one({
+                    'file_id': file_obj['id'],
+                    'name': file_obj['name'],
+                    'uploader_email': session['email'],
+                    'web_link': result['public_link'],
+                    'uploaded_at': get_indian_time()
+                })
+        
+        db.user_files.insert_one({
+            'user_email': session['email'],
+            'file_name': file_obj['name'],
+            'original_filename': file_obj['name'],
+            'drive_file_id': file_obj['id'],
+            'drive_link': result['web_link'],
+            'is_public': make_public,
+            'source': 'drive',
+            'uploaded_at': get_indian_time()
+        })
+        
+        logger.info(f"✅ File uploaded to Drive: {file_obj['name']}")
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"Error uploading to Drive: {e}", exc_info=True)
+        return jsonify({'error': str(e)}), 400
+
+@app.route('/drive/create-folder', methods=['POST'])
+@login_required
+def drive_create_folder():
+    if 'drive_creds' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    try:
+        data = request.get_json()
+        folder_name = data.get('folder_name')
+        parent_id = data.get('parent_id', 'root')
+        
+        if not folder_name:
+            return jsonify({'error': 'Folder name required'}), 400
+        
+        service = get_drive_service()
+        
+        if not service:
+            return jsonify({'error': 'Drive service unavailable'}), 500
+        
+        file_metadata = {
+            'name': folder_name,
+            'mimeType': 'application/vnd.google-apps.folder',
+            'parents': [parent_id]
+        }
+        
+        folder = service.files().create(
+            body=file_metadata,
+            fields='id, name'
+        ).execute()
+        
+        logger.info(f"✅ Folder created in Drive: {folder_name}")
+        
+        return jsonify({
+            'folder_id': folder['id'],
+            'folder_name': folder['name']
+        })
+        
+    except Exception as e:
+        logger.error(f"Error creating folder: {e}", exc_info=True)
+        return jsonify({'error': str(e)}), 400
+
 # ===================== FILE MANAGEMENT ROUTES =====================
+@app.route('/my_files')
+@approval_required
+def my_files():
+    """User's file management page - REQUIRES APPROVAL"""
+    try:
+        notifications = get_user_notifications()
+        
+        local_files = list(db.user_files.find({
+            'user_email': session['email']
+        }).sort('uploaded_at', -1))
+        
+        drive_files = []
+        drive_connected = 'drive_creds' in session
+        if drive_connected:
+            try:
+                service = get_drive_service()
+                if service:
+                    results = service.files().list(
+                        q="trashed=false",
+                        pageSize=100,
+                        orderBy="modifiedTime desc",
+                        fields="files(id, name, mimeType, size, createdTime, modifiedTime, webViewLink)"
+                    ).execute()
+                    drive_files = results.get('files', [])
+                    logger.info(f"✅ Retrieved {len(drive_files)} Drive files")
+            except Exception as e:
+                logger.error(f"❌ Error fetching drive files: {e}")
+                drive_connected = False
+        
+        return render_template(
+            'my_files.html',
+            local_files=local_files,
+            drive_files=drive_files,
+            drive_connected=drive_connected,
+            notifications=notifications
+        )
+    except Exception as e:
+        logger.error(f"Error in my_files: {e}")
+        flash('Error loading files', 'error')
+        return render_template(
+            'my_files.html',
+            local_files=[],
+            drive_files=[],
+            drive_connected=False,
+            notifications=[]
+        )
+
 @app.route('/upload_file', methods=['POST'])
 @login_required
 def upload_file():
@@ -2311,53 +3459,6 @@ def upload_file():
     except Exception as e:
         logger.error(f"❌ Error uploading file: {e}", exc_info=True)
         return jsonify({'error': str(e), 'success': False}), 400
-
-@app.route('/my_files')
-@approval_required
-def my_files():
-    """User's file management page - REQUIRES APPROVAL"""
-    try:
-        notifications = get_user_notifications()
-        
-        local_files = list(db.user_files.find({
-            'user_email': session['email']
-        }).sort('uploaded_at', -1))
-        
-        drive_files = []
-        drive_connected = 'drive_creds' in session
-        if drive_connected:
-            try:
-                service = get_drive_service()
-                if service:
-                    results = service.files().list(
-                        q="trashed=false",
-                        pageSize=100,
-                        orderBy="modifiedTime desc",
-                        fields="files(id, name, mimeType, size, createdTime, modifiedTime, webViewLink)"
-                    ).execute()
-                    drive_files = results.get('files', [])
-                    logger.info(f"✅ Retrieved {len(drive_files)} Drive files")
-            except Exception as e:
-                logger.error(f"❌ Error fetching drive files: {e}")
-                drive_connected = False
-        
-        return render_template(
-            'my_files.html',
-            local_files=local_files,
-            drive_files=drive_files,
-            drive_connected=drive_connected,
-            notifications=notifications
-        )
-    except Exception as e:
-        logger.error(f"Error in my_files: {e}")
-        flash('Error loading files', 'error')
-        return render_template(
-            'my_files.html',
-            local_files=[],
-            drive_files=[],
-            drive_connected=False,
-            notifications=[]
-        )
 
 @app.route('/edit_file/<file_id>', methods=['POST'])
 @login_required
@@ -2619,420 +3720,17 @@ def delete_public_file(file_id):
         logger.error(f"Error deleting public file: {e}")
         return jsonify({'error': str(e)}), 400
 
-# ===================== NOTIFICATIONS API =====================
-@app.route('/api/notifications')
-@login_required
-def api_notifications():
-    """Get user notifications as JSON"""
-    try:
-        notifications = get_user_notifications()
-        return jsonify({
-            'success': True,
-            'notifications': notifications,
-            'count': len(notifications)
-        })
-    except Exception as e:
-        logger.error(f"Error getting notifications: {e}")
-        return jsonify({'error': str(e)}), 400
-
-@app.route('/api/mark_notification_read/<notification_id>', methods=['POST'])
-@login_required
-def mark_notification_read(notification_id):
-    """Mark notification as read"""
-    try:
-        return jsonify({'success': True})
-    except Exception as e:
-        logger.error(f"Error marking notification as read: {e}")
-        return jsonify({'error': str(e)}), 400
-
-# ===================== GOOGLE OAUTH ROUTES =====================
-@app.route('/connect-drive')
-@login_required
-def connect_drive():
-    try:
-        session.pop('drive_creds', None)
-        session.pop('drive_state', None)
-
-        if request.url_root.startswith('https://'):
-            redirect_uri = 'https://office-academic.juooa.cloud/drive/callback'
-        else:
-            redirect_uri = 'http://localhost:5000/drive/callback'
-        
-        logger.info(f"🔍 Drive OAuth redirect URI: {redirect_uri}")
-
-        flow = Flow.from_client_secrets_file(
-            'client_secret.json',
-            scopes=DRIVE_SCOPES,
-            redirect_uri=redirect_uri
-        )
-
-        auth_url, state = flow.authorization_url(
-            access_type='offline',
-            include_granted_scopes='true',
-            prompt='consent'
-        )
-
-        session['drive_state'] = state
-        logger.info(f"✅ Starting Drive OAuth - State: {state[:10]}...")
-
-        return redirect(auth_url)
-
-    except Exception as e:
-        logger.error(f"❌ Drive connection error: {e}", exc_info=True)
-        flash('Error initiating Google Drive connection. Please try again.', 'error')
-        return redirect(url_for('user_dashboard'))
-
-@app.route('/drive/callback')
-def drive_callback():
-    try:
-        logger.info(f"📥 Drive callback received")
-        
-        if session.get('drive_state') != request.args.get('state'):
-            logger.error("❌ State mismatch in Drive callback")
-            flash('Authorization failed: State mismatch', 'error')
-            return redirect(url_for('user_dashboard'))
-
-        if request.url_root.startswith('https://'):
-            redirect_uri = 'https://office-academic.juooa.cloud/drive/callback'
-        else:
-            redirect_uri = 'http://localhost:5000/drive/callback'
-        
-        logger.info(f"🔍 Drive callback redirect URI: {redirect_uri}")
-
-        flow = Flow.from_client_secrets_file(
-            'client_secret.json',
-            scopes=DRIVE_SCOPES,
-            redirect_uri=redirect_uri,
-            state=session['drive_state']
-        )
-
-        flow.fetch_token(authorization_response=request.url)
-        creds = flow.credentials
-
-        session['drive_creds'] = {
-            'token': creds.token,
-            'refresh_token': creds.refresh_token,
-            'token_uri': creds.token_uri,
-            'client_id': creds.client_id,
-            'client_secret': creds.client_secret,
-            'scopes': DRIVE_SCOPES
-        }
-
-        session.pop('drive_state', None)
-
-        logger.info(f"✅ Google Drive connected successfully for {session.get('email')}")
-        flash('✅ Google Drive connected successfully!', 'success')
-        return redirect(url_for('user_dashboard'))
-
-    except Exception as e:
-        logger.error(f"❌ Drive callback error: {e}", exc_info=True)
-        flash('Error connecting to Google Drive. Please try again.', 'error')
-        return redirect(url_for('user_dashboard'))
-
-@app.route('/connect-gmail')
-@login_required
-def connect_gmail():
-    try:
-        session.pop('gmail_creds', None)
-        session.pop('gmail_state', None)
-        
-        if request.url_root.startswith('https://'):
-            redirect_uri = 'https://office-academic.juooa.cloud/gmail/callback'
-        else:
-            redirect_uri = 'http://localhost:5000/gmail/callback'
-        
-        logger.info(f"🔍 Gmail OAuth redirect URI: {redirect_uri}")
-        
-        flow = Flow.from_client_secrets_file(
-            'client_secret.json',
-            scopes=GMAIL_SCOPES,
-            redirect_uri=redirect_uri
-        )
-        auth_url, state = flow.authorization_url(
-            access_type='offline',
-            include_granted_scopes='false',
-            prompt='consent'
-        )
-        session['gmail_state'] = state
-        logger.info("✅ Starting Gmail OAuth")
-        return redirect(auth_url)
-    
-    except Exception as e:
-        logger.error(f"❌ Gmail connection error: {e}", exc_info=True)
-        flash('Error initiating Gmail connection', 'error')
-        return redirect(url_for('user_dashboard'))
-
-@app.route('/gmail/callback')
-def gmail_callback():
-    try:
-        logger.info(f"📥 Gmail callback received")
-        
-        if session.get('gmail_state') != request.args.get('state'):
-            logger.error("❌ State mismatch in Gmail callback")
-            flash('State mismatch. Authorization failed.', 'error')
-            return redirect(url_for('user_dashboard'))
-
-        if request.url_root.startswith('https://'):
-            redirect_uri = 'https://office-academic.juooa.cloud/gmail/callback'
-        else:
-            redirect_uri = 'http://localhost:5000/gmail/callback'
-        
-        logger.info(f"🔍 Gmail callback redirect URI: {redirect_uri}")
-
-        flow = Flow.from_client_secrets_file(
-            'client_secret.json',
-            scopes=GMAIL_SCOPES,
-            redirect_uri=redirect_uri
-        )
-        flow.fetch_token(authorization_response=request.url)
-        creds = flow.credentials
-
-        session['gmail_creds'] = {
-            'token': creds.token,
-            'refresh_token': creds.refresh_token,
-            'token_uri': creds.token_uri,
-            'client_id': creds.client_id,
-            'client_secret': creds.client_secret,
-            'scopes': GMAIL_SCOPES
-        }
-        
-        session.pop('gmail_state', None)
-
-        logger.info("✅ Gmail connected successfully")
-        flash('✅ Gmail connected successfully!', 'success')
-        return redirect(url_for('user_dashboard'))
-
-    except Exception as e:
-        logger.error(f"❌ Gmail callback error: {e}", exc_info=True)
-        flash('Error connecting to Gmail', 'error')
-        return redirect(url_for('user_dashboard'))
-
-# ===================== DRIVE OPERATIONS =====================
-@app.route('/drive/files')
-@login_required
-def drive_files():
-    if 'drive_creds' not in session:
-        flash('Please connect your Google Drive first.', 'error')
-        return redirect(url_for('connect_drive'))
-
-    try:
-        notifications = get_user_notifications()
-        service = get_drive_service()
-        
-        if not service:
-            flash('Error connecting to Drive. Please reconnect.', 'error')
-            return redirect(url_for('connect_drive'))
-        
-        results = service.files().list(
-            q="trashed=false and mimeType='application/vnd.google-apps.folder'",
-            pageSize=100,
-            fields="files(id, name, mimeType, createdTime, webViewLink, iconLink)",
-            orderBy="name"
-        ).execute()
-
-        folders = results.get('files', [])
-
-        user_folders = db.user_navbars.find_one({'user_email': session['email']})
-        saved_folder_ids = [item['ref_id'] for item in user_folders['items']] if user_folders and 'items' in user_folders else []
-
-        for folder in folders:
-            if 'webViewLink' not in folder:
-                folder['webViewLink'] = f"https://drive.google.com/drive/folders/{folder['id']}"
-
-        logger.info(f"✅ Retrieved {len(folders)} Drive folders")
-
-        return render_template('drive_files.html',
-                            folders=folders,
-                            saved_folder_ids=saved_folder_ids,
-                            total_folders=len(folders),
-                            notifications=notifications)
-
-    except Exception as e:
-        logger.error(f"❌ Error fetching Drive folders: {str(e)}", exc_info=True)
-        flash('Error connecting to Google Drive', 'error')
-        return redirect(url_for('user_dashboard'))
-
-@app.route('/api/drive/folder/<folder_id>')
-@login_required
-def get_drive_folder_contents(folder_id):
-    if 'drive_creds' not in session:
-        return jsonify({'error': 'Not authenticated'}), 401
-
-    try:
-        service = get_drive_service()
-        
-        if not service:
-            return jsonify({'error': 'Drive service unavailable'}), 500
-        
-        results = service.files().list(
-            q=f"'{folder_id}' in parents and trashed=false",
-            pageSize=100,
-            fields="files(id, name, mimeType, size, createdTime, webViewLink)"
-        ).execute()
-
-        files = results.get('files', [])
-        return jsonify(files)
-
-    except Exception as e:
-        logger.error(f"Error fetching folder contents: {e}", exc_info=True)
-        return jsonify({'error': str(e)}), 400
-
-@app.route('/api/drive/search')
-@login_required
-def search_drive_files():
-    if 'drive_creds' not in session:
-        return jsonify({'error': 'Not authenticated'}), 401
-
-    try:
-        query = request.args.get('q', '')
-        if not query:
-            return jsonify([])
-
-        service = get_drive_service()
-        
-        if not service:
-            return jsonify({'error': 'Drive service unavailable'}), 500
-        
-        results = service.files().list(
-            q=f"name contains '{query}' and trashed=false",
-            pageSize=20,
-            fields="files(id, name, mimeType, webViewLink, iconLink)"
-        ).execute()
-
-        files = results.get('files', [])
-        return jsonify(files)
-
-    except Exception as e:
-        logger.error(f"Error searching Drive: {e}")
-        return jsonify({'error': str(e)}), 400
-
-@app.route('/drive/upload', methods=['POST'])
-@login_required
-def drive_upload():
-    if 'drive_creds' not in session:
-        return jsonify({'error': 'Not authenticated'}), 401
-    
-    try:
-        file = request.files.get('file')
-        folder_id = request.form.get('folder_id', 'root')
-        make_public = request.form.get('make_public', 'false') == 'true'
-        
-        if not file:
-            return jsonify({'error': 'No file provided'}), 400
-        
-        service = get_drive_service()
-        
-        if not service:
-            return jsonify({'error': 'Drive service unavailable'}), 500
-        
-        file_metadata = {
-            'name': secure_filename(file.filename),
-            'parents': [folder_id]
-        }
-        
-        file_content = file.read()
-        media = MediaIoBaseUpload(
-            BytesIO(file_content),
-            mimetype=file.mimetype or 'application/octet-stream',
-            resumable=True
-        )
-        
-        file_obj = service.files().create(
-            body=file_metadata,
-            media_body=media,
-            fields='id, name, webViewLink'
-        ).execute()
-        
-        result = {
-            'file_id': file_obj['id'],
-            'file_name': file_obj['name'],
-            'web_link': file_obj.get('webViewLink', f"https://drive.google.com/file/d/{file_obj['id']}/view")
-        }
-        
-        if make_public:
-            if make_file_public(service, file_obj['id']):
-                result['public_link'] = f"https://drive.google.com/file/d/{file_obj['id']}/view"
-                
-                db.public_files.insert_one({
-                    'file_id': file_obj['id'],
-                    'name': file_obj['name'],
-                    'uploader_email': session['email'],
-                    'web_link': result['public_link'],
-                    'uploaded_at': get_indian_time()
-                })
-        
-        db.user_files.insert_one({
-            'user_email': session['email'],
-            'file_name': file_obj['name'],
-            'original_filename': file_obj['name'],
-            'drive_file_id': file_obj['id'],
-            'drive_link': result['web_link'],
-            'is_public': make_public,
-            'source': 'drive',
-            'uploaded_at': get_indian_time()
-        })
-        
-        logger.info(f"✅ File uploaded to Drive: {file_obj['name']}")
-        
-        return jsonify(result)
-        
-    except Exception as e:
-        logger.error(f"Error uploading to Drive: {e}", exc_info=True)
-        return jsonify({'error': str(e)}), 400
-
-@app.route('/drive/create-folder', methods=['POST'])
-@login_required
-def drive_create_folder():
-    if 'drive_creds' not in session:
-        return jsonify({'error': 'Not authenticated'}), 401
-    
-    try:
-        data = request.get_json()
-        folder_name = data.get('folder_name')
-        parent_id = data.get('parent_id', 'root')
-        
-        if not folder_name:
-            return jsonify({'error': 'Folder name required'}), 400
-        
-        service = get_drive_service()
-        
-        if not service:
-            return jsonify({'error': 'Drive service unavailable'}), 500
-        
-        file_metadata = {
-            'name': folder_name,
-            'mimeType': 'application/vnd.google-apps.folder',
-            'parents': [parent_id]
-        }
-        
-        folder = service.files().create(
-            body=file_metadata,
-            fields='id, name'
-        ).execute()
-        
-        logger.info(f"✅ Folder created in Drive: {folder_name}")
-        
-        return jsonify({
-            'folder_id': folder['id'],
-            'folder_name': folder['name']
-        })
-        
-    except Exception as e:
-        logger.error(f"Error creating folder: {e}", exc_info=True)
-        return jsonify({'error': str(e)}), 400
-
-# ===================== EVENT REMINDER & SUBSCRIPTION ROUTES - FIXED =====================
+# ===================== EVENT REMINDER & SUBSCRIPTION ROUTES =====================
 @app.route('/set_reminder', methods=['POST'])
 @login_required
 def set_reminder():
-    """Set a reminder for an event - FIXED VERSION"""
+    """Set a reminder for an event"""
     try:
         data = request.get_json()
         event_id = data.get('event_id')
         reminder_date = data.get('reminder_date')
         reminder_time = data.get('reminder_time')
         
-        # Log incoming request for debugging
         logger.info(f"Set reminder request - event_id: {event_id}, date: {reminder_date}, time: {reminder_time}")
         
         if not all([event_id, reminder_date, reminder_time]):
@@ -3041,7 +3739,6 @@ def set_reminder():
                 'success': False
             }), 400
         
-        # Validate event ID
         try:
             event = db.events.find_one({'_id': ObjectId(event_id)})
         except Exception as e:
@@ -3052,56 +3749,47 @@ def set_reminder():
             logger.error(f"Event not found: {event_id}")
             return jsonify({'error': 'Event not found', 'success': False}), 404
         
-        # Get user
         user = db.users.find_one({'email': session['email']})
         if not user:
             logger.error(f"User not found: {session['email']}")
             return jsonify({'error': 'User not found', 'success': False}), 404
         
-        # Parse reminder datetime
         try:
-            # Handle DD-MM-YYYY format if needed
             if '-' in reminder_date and len(reminder_date.split('-')[0]) == 2:
-                # Convert DD-MM-YYYY to YYYY-MM-DD
                 day, month, year = reminder_date.split('-')
                 if len(year) == 4 and len(month) == 2 and len(day) == 2:
                     reminder_date = f"{year}-{month}-{day}"
             
-            # Ensure time has seconds
             if len(reminder_time.split(':')) == 2:
                 reminder_time = f"{reminder_time}:00"
             
             reminder_datetime_str = f"{reminder_date} {reminder_time}"
             reminder_datetime = datetime.strptime(reminder_datetime_str, '%Y-%m-%d %H:%M:%S')
             
-            # Localize to IST
             reminder_datetime = IST.localize(reminder_datetime)
+            reminder_datetime_naive = make_timezone_naive(reminder_datetime)
             
         except Exception as e:
             logger.error(f"Date parsing error: {e}")
             return jsonify({'error': f'Invalid date/time format. Use YYYY-MM-DD and HH:MM: {str(e)}', 'success': False}), 400
         
-        # Check if reminder is in the future
-        now = get_indian_time()
+        now = get_indian_time_aware()
         if reminder_datetime <= now:
             return jsonify({'error': 'Reminder time must be in the future', 'success': False}), 400
         
-        # Check for existing reminder
         existing = db.event_reminders.find_one({
             'user_id': user['_id'],
             'event_id': event['_id']
         })
         
-        # Save reminder to database
         if existing:
-            # Update existing reminder
             db.event_reminders.update_one(
                 {'_id': existing['_id']},
                 {
                     '$set': {
-                        'reminder_datetime': reminder_datetime,
+                        'reminder_datetime': reminder_datetime_naive,
                         'sent': False,
-                        'updated_at': now
+                        'updated_at': get_indian_time()
                     }
                 }
             )
@@ -3109,20 +3797,18 @@ def set_reminder():
             action = 'updated'
             logger.info(f"Updated reminder for user {session['email']} - Event: {event['event_name']}")
         else:
-            # Create new reminder
             result = db.event_reminders.insert_one({
                 'user_id': user['_id'],
                 'event_id': event['_id'],
-                'reminder_datetime': reminder_datetime,
+                'reminder_datetime': reminder_datetime_naive,
                 'sent': False,
-                'created_at': now,
+                'created_at': get_indian_time(),
                 'attempt_count': 0
             })
             message = 'Reminder set successfully'
             action = 'set'
             logger.info(f"Created new reminder for user {session['email']} - Event: {event['event_name']}")
         
-        # Send confirmation email
         try:
             msg = Message(
                 subject=f"✅ Reminder {action.capitalize()}: {event['event_name']}",
@@ -3130,7 +3816,6 @@ def set_reminder():
                 recipients=[user['email']]
             )
             
-            # Simple plain text version for reliability
             msg.body = f"""
 ========================================
         REMINDER CONFIRMATION
@@ -3152,67 +3837,11 @@ Jain University Portal - Office of Academics
 ========================================
             """
             
-            # HTML version
-            msg.html = f"""
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
-                    .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-                    .header {{ background: #04043a; color: #FFD700; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
-                    .content {{ background: #f9f9f9; padding: 20px; border-radius: 0 0 10px 10px; }}
-                    .event-details {{ background: white; padding: 15px; border-radius: 8px; margin: 15px 0; }}
-                    .reminder-box {{ background: #e8f4fd; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #0056b3; }}
-                    .footer {{ text-align: center; margin-top: 20px; font-size: 12px; color: #666; }}
-                    .button {{ display: inline-block; background: #04043a; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; }}
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>✅ Reminder {action.capitalize()}</h1>
-                    </div>
-                    <div class="content">
-                        <h2 style="color: #04043a;">{event['event_name']}</h2>
-                        
-                        <div class="event-details">
-                            <p><strong>📅 Event Date:</strong> {event['event_date']}</p>
-                            <p><strong>⏰ Event Time:</strong> {event.get('event_time', 'All Day')}</p>
-                            <p><strong>📍 Venue:</strong> {event['venue']}</p>
-                            <p><strong>🏢 Department:</strong> {event.get('department', 'N/A')}</p>
-                            <p><strong>🏫 School:</strong> {event.get('school', 'N/A')}</p>
-                        </div>
-                        
-                        <div class="reminder-box">
-                            <p style="margin: 0; color: #0056b3;">
-                                <strong>⏰ Your reminder is set for:</strong><br>
-                                <span style="font-size: 18px; font-weight: bold;">{reminder_datetime.strftime('%d %B %Y at %I:%M %p')} IST</span>
-                            </p>
-                        </div>
-                        
-                        <p>We'll send you a reminder email at the scheduled time.</p>
-                        
-                        <div style="text-align: center; margin: 30px 0;">
-                            <a href="{request.url_root}jainevents" class="button">View All Events</a>
-                        </div>
-                    </div>
-                    <div class="footer">
-                        <p>Jain University Portal - Office of Academics</p>
-                        <p>Confirmation sent at: {now.strftime('%Y-%m-%d %I:%M %p')} IST</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """
-            
             mail.send(msg)
             logger.info(f"✅ Confirmation email sent to {user['email']}")
             
         except Exception as email_error:
             logger.error(f"❌ Error sending confirmation email: {email_error}")
-            # Don't fail the request if email fails - reminder is still saved
         
         return jsonify({
             'success': True,
@@ -3358,6 +3987,27 @@ def delete_reminder(reminder_id):
         logger.error(f"Error deleting reminder: {e}")
         return jsonify({'error': str(e)}), 400
 
+@app.route('/subscribe', methods=['POST'])
+def subscribe():
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        school = data.get('school', '')
+
+        if not email:
+            return jsonify({"message": "Email is required"}), 400
+
+        db.subscribers.update_one(
+            {"email": email},
+            {"$set": {"school": school, "subscribed_at": datetime.now()}},
+            upsert=True
+        )
+
+        return jsonify({"message": "Subscribed successfully"}), 200
+    except Exception as e:
+        logger.error(f"Error in subscribe: {e}")
+        return jsonify({"message": "Subscription failed"}), 500
+
 # ===================== USER PREFERENCES ROUTES =====================
 @app.route('/user_preferences', methods=['GET', 'POST'])
 @login_required
@@ -3413,134 +4063,7 @@ def user_preferences():
         flash('Error loading preferences', 'error')
         return redirect(url_for('user_dashboard'))
 
-# ===================== ADMIN USER CONTROLS =====================
-@app.route('/admin/users')
-def view_users():
-    if session.get('role') != 'admin':
-        flash('Access denied.', 'error')
-        return redirect(url_for('login'))
-
-    try:
-        users = list(db.users.find())
-        return render_template('admin_view_users.html', users=users)
-    except Exception as e:
-        logger.error(f"Error viewing users: {e}")
-        flash('Error loading users', 'error')
-        return render_template('admin_view_users.html', users=[])
-
-@app.route('/submit_document', methods=['POST'])
-@approval_required
-def submit_document():
-    """Office barriers submit documents for review"""
-    if not is_office_barrier():
-        return jsonify({'error': 'Access denied'}), 403
-    
-    try:
-        user = db.users.find_one({'email': session['email']})
-        
-        document_name = request.form.get('document_name')
-        description = request.form.get('description')
-        file = request.files.get('file')
-        
-        file_url = None
-        file_id = None
-        
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(filepath)
-            file_url = '/' + filepath.replace('\\', '/')
-        
-        doc = {
-            'user_id': user['_id'],
-            'user_email': session['email'],
-            'document_name': document_name,
-            'description': description,
-            'file_id': file_id,
-            'file_url': file_url,
-            'status': 'pending',
-            'submitted_at': get_indian_time(),
-            'reviewed_by': None,
-            'reviewed_at': None,
-            'comments': ''
-        }
-        
-        result = db.office_documents.insert_one(doc)
-        
-        db.activity_logs.insert_one({
-            'user_id': user['_id'],
-            'user_email': session['email'],
-            'action': 'document_upload',
-            'details': f'Submitted document: {document_name}',
-            'timestamp': get_indian_time(),
-            'ip_address': request.remote_addr
-        })
-        
-        flash('✅ Document submitted successfully', 'success')
-        return redirect(url_for('core_dashboard'))
-        
-    except Exception as e:
-        logger.error(f"Error submitting document: {e}")
-        return jsonify({'error': str(e)}), 400
-
-@app.route('/office_documents')
-def office_documents():
-    """Core and leaders can view all office barrier submissions"""
-    if not is_core_or_leader():
-        flash('Access denied', 'error')
-        return redirect(url_for('home'))
-    
-    try:
-        documents = list(db.office_documents.find().sort('submitted_at', -1))
-        
-        for doc in documents:
-            user = db.users.find_one({'_id': doc['user_id']})
-            if user:
-                doc['user_name'] = user['email'].split('@')[0]
-                doc['user_type'] = user.get('user_type', 'N/A')
-        
-        online_users = list(db.users.find({
-            'special_role': 'office_barrier',
-            'is_online': True
-        }))
-        
-        return render_template(
-            'office_documents.html', 
-            documents=documents,
-            online_users=online_users
-        )
-        
-    except Exception as e:
-        logger.error(f"Error loading office documents: {e}")
-        flash('Error loading documents', 'error')
-        return redirect(url_for('home'))
-
-@app.route('/activity_logs')
-def activity_logs():
-    """View activity logs of all users"""
-    if not is_core_or_leader():
-        flash('Access denied', 'error')
-        return redirect(url_for('home'))
-    
-    try:
-        logs = list(db.activity_logs.find().sort('timestamp', -1).limit(100))
-        
-        online_users = list(db.users.find({
-            'is_online': True
-        }, {'email': 1, 'user_type': 1, 'special_role': 1}))
-        
-        return render_template(
-            'activity_logs.html',
-            logs=logs,
-            online_users=online_users
-        )
-        
-    except Exception as e:
-        logger.error(f"Error loading activity logs: {e}")
-        flash('Error loading logs', 'error')
-        return redirect(url_for('home'))
-
-# ===================== ADMIN DASHBOARD =====================
+# ===================== ADMIN DASHBOARD ROUTES =====================
 @app.route('/admin_dashboard')
 def admin_dashboard():
     if session.get('role') != 'admin':
@@ -3550,7 +4073,6 @@ def admin_dashboard():
     try:
         logger.info(f"Admin {session.get('email')} accessing dashboard")
         
-        # Get search and filter parameters
         search_query = request.args.get('search', '')
         type_filter = request.args.get('type_filter', '')
         role_filter = request.args.get('role_filter', '')
@@ -3582,19 +4104,15 @@ def admin_dashboard():
             else:
                 query['special_role'] = role_filter
         
-        # Get all users
         users = list(db.users.find(query).sort('created_at', -1))
         
-        # Get pre-assigned lists
         pre_assigned_leaders = list(db.pre_assigned_leaders.find())
         pre_assigned_core = list(db.pre_assigned_core.find())
         
-        # Calculate stats
         total_users = len(users)
         pending_users = len([u for u in users if not u.get('approved', False)])
         approved_users = len([u for u in users if u.get('approved', False)])
         
-        # Process users for display
         for user in users:
             user.setdefault('approved', False)
             user.setdefault('user_type', 'faculty')
@@ -3632,162 +4150,20 @@ def admin_dashboard():
             pending_users=0,
             approved_users=0
         )
-        # ===================== PRE-ASSIGNED ROUTES =====================
-@app.route('/pre_assign_leader', methods=['POST'])
-def pre_assign_leader():
-    """Pre-assign an email as leader (before registration)"""
+
+@app.route('/admin/users')
+def view_users():
     if session.get('role') != 'admin':
-        return jsonify({'error': 'Access denied'}), 403
-    
+        flash('Access denied.', 'error')
+        return redirect(url_for('login'))
+
     try:
-        data = request.get_json()
-        email = data.get('email')
-        school = data.get('school', '')
-        
-        if not email:
-            return jsonify({'error': 'Email is required'}), 400
-        
-        if not email.endswith('@jainuniversity.ac.in'):
-            return jsonify({'error': 'Email must be @jainuniversity.ac.in'}), 400
-        
-        # Check if user already exists
-        existing_user = db.users.find_one({'email': email})
-        if existing_user:
-            return jsonify({'error': 'User already registered'}), 400
-        
-        # Check if already pre-assigned
-        existing = db.pre_assigned_leaders.find_one({'email': email})
-        if existing:
-            return jsonify({'message': 'Already pre-assigned as leader'}), 200
-        
-        # Add to pre-assigned leaders
-        db.pre_assigned_leaders.insert_one({
-            'email': email,
-            'school': school,
-            'assigned_by': session['email'],
-            'assigned_at': get_indian_time()
-        })
-        
-        # Send invitation email
-        try:
-            msg = Message(
-                subject="🎓 You've been assigned as a Leader at Jain University",
-                sender=app.config['MAIL_USERNAME'],
-                recipients=[email]
-            )
-            msg.body = f"""
-Dear User,
-
-You have been assigned as a LEADER at Jain University - Office of Academics.
-
-Please complete your registration using the link below:
-{request.url_root}register
-
-Use your email: {email}
-You will be automatically granted leader access upon registration.
-
-Best regards,
-Office of Academics
-Jain University
-            """
-            mail.send(msg)
-            logger.info(f"Leader invitation sent to {email}")
-        except Exception as e:
-            logger.error(f"Error sending invitation: {e}")
-        
-        return jsonify({'success': True, 'message': 'Leader assigned successfully'})
-        
+        users = list(db.users.find())
+        return render_template('admin_view_users.html', users=users)
     except Exception as e:
-        logger.error(f"Error pre-assigning leader: {e}")
-        return jsonify({'error': str(e)}), 400
-
-@app.route('/pre_assign_core', methods=['POST'])
-def pre_assign_core():
-    """Pre-assign an email as core member (before registration)"""
-    if session.get('role') != 'admin':
-        return jsonify({'error': 'Access denied'}), 403
-    
-    try:
-        data = request.get_json()
-        email = data.get('email')
-        department = data.get('department', '')
-        
-        if not email:
-            return jsonify({'error': 'Email is required'}), 400
-        
-        if not email.endswith('@jainuniversity.ac.in'):
-            return jsonify({'error': 'Email must be @jainuniversity.ac.in'}), 400
-        
-        # Check if user already exists
-        existing_user = db.users.find_one({'email': email})
-        if existing_user:
-            return jsonify({'error': 'User already registered'}), 400
-        
-        # Check if already pre-assigned
-        existing = db.pre_assigned_core.find_one({'email': email})
-        if existing:
-            return jsonify({'message': 'Already pre-assigned as core member'}), 200
-        
-        # Add to pre-assigned core
-        db.pre_assigned_core.insert_one({
-            'email': email,
-            'department': department,
-            'assigned_by': session['email'],
-            'assigned_at': get_indian_time()
-        })
-        
-        # Send invitation email
-        try:
-            msg = Message(
-                subject="🔷 You've been assigned as a Core Team Member at Jain University",
-                sender=app.config['MAIL_USERNAME'],
-                recipients=[email]
-            )
-            msg.body = f"""
-Dear User,
-
-You have been assigned as a CORE TEAM MEMBER at Jain University - Office of Academics.
-
-Please complete your registration using the link below:
-{request.url_root}register
-
-Use your email: {email}
-You will be automatically granted core team access upon registration.
-
-Best regards,
-Office of Academics
-Jain University
-            """
-            mail.send(msg)
-            logger.info(f"Core invitation sent to {email}")
-        except Exception as e:
-            logger.error(f"Error sending invitation: {e}")
-        
-        return jsonify({'success': True, 'message': 'Core member assigned successfully'})
-        
-    except Exception as e:
-        logger.error(f"Error pre-assigning core: {e}")
-        return jsonify({'error': str(e)}), 400
-
-@app.route('/remove_pre_assigned/<type>/<email>', methods=['DELETE'])
-def remove_pre_assigned(type, email):
-    """Remove a pre-assigned email"""
-    if session.get('role') != 'admin':
-        return jsonify({'error': 'Access denied'}), 403
-    
-    try:
-        if type == 'leader':
-            db.pre_assigned_leaders.delete_one({'email': email})
-        elif type == 'core':
-            db.pre_assigned_core.delete_one({'email': email})
-        else:
-            return jsonify({'error': 'Invalid type'}), 400
-        
-        return jsonify({'success': True, 'message': 'Removed successfully'})
-        
-    except Exception as e:
-        logger.error(f"Error removing pre-assigned: {e}")
-        return jsonify({'error': str(e)}), 400
+        logger.error(f"Error viewing users: {e}")
+        flash('Error loading users', 'error')
+        return render_template('admin_view_users.html', users=[])
 
 @app.route('/update_user/<user_id>', methods=['POST'])
 def update_user(user_id):
@@ -3858,7 +4234,7 @@ def update_user(user_id):
                 logger.info(f"Added user {user_id} to core team chat")
             else:
                 db.chat_groups.insert_one({
-                    'name': 'Office of Academic Barriers - Core Team',
+                    'name': 'Core Team Chat',
                     'group_type': 'core_team',
                     'description': 'Automatic group for all core team members',
                     'created_at': get_indian_time(),
@@ -3878,7 +4254,7 @@ def update_user(user_id):
             try:
                 role_msg = ""
                 if special_role == 'office_barrier':
-                    role_msg = "You have been assigned to the Office of Academic Barriers (Core Team)."
+                    role_msg = "You have been assigned to the Core Team."
                 elif special_role == 'leader':
                     role_msg = "You have been assigned as a Leader."
                 else:
@@ -3963,7 +4339,296 @@ def delete_user(user_id):
     
     return redirect(url_for('admin_dashboard'))
 
-# ===================== UGC UPLOAD =====================
+@app.route('/pre_assign_leader', methods=['POST'])
+def pre_assign_leader():
+    """Pre-assign an email as leader (before registration)"""
+    if session.get('role') != 'admin':
+        return jsonify({'error': 'Access denied'}), 403
+    
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        school = data.get('school', '')
+        
+        if not email:
+            return jsonify({'error': 'Email is required'}), 400
+        
+        if not email.endswith('@jainuniversity.ac.in'):
+            return jsonify({'error': 'Email must be @jainuniversity.ac.in'}), 400
+        
+        existing_user = db.users.find_one({'email': email})
+        if existing_user:
+            return jsonify({'error': 'User already registered'}), 400
+        
+        existing = db.pre_assigned_leaders.find_one({'email': email})
+        if existing:
+            return jsonify({'message': 'Already pre-assigned as leader'}), 200
+        
+        db.pre_assigned_leaders.insert_one({
+            'email': email,
+            'school': school,
+            'assigned_by': session['email'],
+            'assigned_at': get_indian_time()
+        })
+        
+        try:
+            msg = Message(
+                subject="🎓 You've been assigned as a Leader at Jain University",
+                sender=app.config['MAIL_USERNAME'],
+                recipients=[email]
+            )
+            msg.body = f"""
+Dear User,
+
+You have been assigned as a LEADER at Jain University - Office of Academics.
+
+Please complete your registration using the link below:
+{request.url_root}register
+
+Use your email: {email}
+You will be automatically granted leader access upon registration.
+
+Best regards,
+Office of Academics
+Jain University
+            """
+            mail.send(msg)
+            logger.info(f"Leader invitation sent to {email}")
+        except Exception as e:
+            logger.error(f"Error sending invitation: {e}")
+        
+        return jsonify({'success': True, 'message': 'Leader assigned successfully'})
+        
+    except Exception as e:
+        logger.error(f"Error pre-assigning leader: {e}")
+        return jsonify({'error': str(e)}), 400
+
+@app.route('/pre_assign_core', methods=['POST'])
+def pre_assign_core():
+    """Pre-assign an email as core member (before registration)"""
+    if session.get('role') != 'admin':
+        return jsonify({'error': 'Access denied'}), 403
+    
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        department = data.get('department', '')
+        
+        if not email:
+            return jsonify({'error': 'Email is required'}), 400
+        
+        if not email.endswith('@jainuniversity.ac.in'):
+            return jsonify({'error': 'Email must be @jainuniversity.ac.in'}), 400
+        
+        existing_user = db.users.find_one({'email': email})
+        if existing_user:
+            return jsonify({'error': 'User already registered'}), 400
+        
+        existing = db.pre_assigned_core.find_one({'email': email})
+        if existing:
+            return jsonify({'message': 'Already pre-assigned as core member'}), 200
+        
+        db.pre_assigned_core.insert_one({
+            'email': email,
+            'department': department,
+            'assigned_by': session['email'],
+            'assigned_at': get_indian_time()
+        })
+        
+        try:
+            msg = Message(
+                subject="🔷 You've been assigned as a Core Team Member at Jain University",
+                sender=app.config['MAIL_USERNAME'],
+                recipients=[email]
+            )
+            msg.body = f"""
+Dear User,
+
+You have been assigned as a CORE TEAM MEMBER at Jain University - Office of Academics.
+
+Please complete your registration using the link below:
+{request.url_root}register
+
+Use your email: {email}
+You will be automatically granted core team access upon registration.
+
+Best regards,
+Office of Academics
+Jain University
+            """
+            mail.send(msg)
+            logger.info(f"Core invitation sent to {email}")
+        except Exception as e:
+            logger.error(f"Error sending invitation: {e}")
+        
+        return jsonify({'success': True, 'message': 'Core member assigned successfully'})
+        
+    except Exception as e:
+        logger.error(f"Error pre-assigning core: {e}")
+        return jsonify({'error': str(e)}), 400
+
+@app.route('/remove_pre_assigned/<type>/<email>', methods=['DELETE'])
+def remove_pre_assigned(type, email):
+    """Remove a pre-assigned email"""
+    if session.get('role') != 'admin':
+        return jsonify({'error': 'Access denied'}), 403
+    
+    try:
+        if type == 'leader':
+            db.pre_assigned_leaders.delete_one({'email': email})
+        elif type == 'core':
+            db.pre_assigned_core.delete_one({'email': email})
+        else:
+            return jsonify({'error': 'Invalid type'}), 400
+        
+        return jsonify({'success': True, 'message': 'Removed successfully'})
+        
+    except Exception as e:
+        logger.error(f"Error removing pre-assigned: {e}")
+        return jsonify({'error': str(e)}), 400
+
+# ===================== EVENTS MANAGEMENT ROUTES =====================
+@app.route("/admin/events")
+def admin_events():
+    if session.get('role') != 'admin':
+        return redirect(url_for('login'))
+
+    try:
+        events = list(db.events.find().sort('event_date', -1))
+        for e in events:
+            e["_id"] = str(e["_id"])
+        return render_template("admin_events.html", events=events)
+    except Exception as e:
+        logger.error(f"Error in admin_events: {e}")
+        return render_template("admin_events.html", events=[])
+
+@app.route("/add_event", methods=["POST"])
+def add_event():
+    if session.get('role') != 'admin':
+        return redirect(url_for('login'))
+
+    try:
+        data = request.form.to_dict()
+        image_file = request.files.get("image")
+        pdf_file = request.files.get("pdf")
+
+        image_path = None
+        pdf_path = None
+
+        if image_file and image_file.filename:
+            filename = secure_filename(image_file.filename)
+            image_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+            image_file.save(image_path)
+            image_path = "/" + image_path.replace("\\", "/")
+
+        if pdf_file and pdf_file.filename:
+            filename = secure_filename(pdf_file.filename)
+            pdf_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+            pdf_file.save(pdf_path)
+            pdf_path = "/" + pdf_path.replace("\\", "/")
+
+        event = {
+            "event_name": data.get("event_name"),
+            "description": data.get("description"),
+            "school": data.get("school"),
+            "department": data.get("department"),
+            "event_action": data.get("event_action"),
+            "event_type": data.get("event_type"),
+            "venue": data.get("venue"),
+            "event_date": data.get("event_date"),
+            "end_date": data.get("end_date"),
+            "event_time": data.get("event_time", "All Day"),
+            "image": image_path,
+            "pdf": pdf_path,
+            "created_at": get_indian_time()
+        }
+
+        db.events.insert_one(event)
+        logger.info(f"✅ Event added: {event['event_name']}")
+        flash('✅ Event added successfully!', 'success')
+    except Exception as e:
+        logger.error(f"Error adding event: {e}")
+        flash('Error adding event', 'error')
+    
+    return redirect(url_for('admin_events'))
+
+@app.route("/delete_event/<event_id>")
+def delete_event(event_id):
+    if session.get('role') != 'admin':
+        return redirect(url_for('login'))
+
+    try:
+        db.events.delete_one({"_id": ObjectId(event_id)})
+        flash('✅ Event deleted successfully!', 'success')
+    except Exception as e:
+        logger.error(f"Error deleting event: {e}")
+        flash('Error deleting event', 'error')
+    
+    return redirect(url_for('admin_events'))
+
+@app.route("/edit_event/<event_id>", methods=["GET"])
+def edit_event(event_id):
+    if session.get('role') != 'admin':
+        return redirect(url_for('login'))
+
+    try:
+        event = db.events.find_one({"_id": ObjectId(event_id)})
+        if not event:
+            flash('Event not found.', 'error')
+            return redirect(url_for('admin_events'))
+
+        event["_id"] = str(event["_id"])
+        return render_template("edit_event.html", event=event)
+    except Exception as e:
+        logger.error(f"Error in edit_event: {e}")
+        flash('Error loading event', 'error')
+        return redirect(url_for('admin_events'))
+
+@app.route("/update_event/<event_id>", methods=["POST"])
+def update_event(event_id):
+    if session.get('role') != 'admin':
+        return redirect(url_for('login'))
+
+    try:
+        data = request.form.to_dict()
+        image_file = request.files.get("image")
+        pdf_file = request.files.get("pdf")
+
+        update_data = {
+            "event_name": data.get("event_name"),
+            "description": data.get("description"),
+            "school": data.get("school"),
+            "department": data.get("department"),
+            "event_action": data.get("event_action"),
+            "event_type": data.get("event_type"),
+            "venue": data.get("venue"),
+            "event_date": data.get("event_date"),
+            "end_date": data.get("end_date"),
+            "event_time": data.get("event_time", "All Day"),
+            "updated_at": get_indian_time()
+        }
+
+        if image_file and image_file.filename:
+            filename = secure_filename(image_file.filename)
+            image_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+            image_file.save(image_path)
+            update_data["image"] = "/" + image_path.replace("\\", "/")
+
+        if pdf_file and pdf_file.filename:
+            filename = secure_filename(pdf_file.filename)
+            pdf_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+            pdf_file.save(pdf_path)
+            update_data["pdf"] = "/" + pdf_path.replace("\\", "/")
+
+        db.events.update_one({"_id": ObjectId(event_id)}, {"$set": update_data})
+        flash('✅ Event updated successfully!', 'success')
+    except Exception as e:
+        logger.error(f"Error updating event: {e}")
+        flash('Error updating event', 'error')
+    
+    return redirect(url_for('admin_events'))
+
+# ===================== UGC UPLOAD ROUTES =====================
 @app.route('/edit_ugc', methods=['GET', 'POST'])
 def edit_ugc():
     if session.get('role') != 'admin':
@@ -4066,7 +4731,7 @@ def delete_ugc(record_id):
     
     return redirect(url_for('edit_ugc'))
 
-# ===================== MONTHLY ENGAGEMENT =====================
+# ===================== MONTHLY ENGAGEMENT ROUTES =====================
 @app.route('/edit_monthly', methods=['GET', 'POST'])
 def edit_monthly():
     if session.get('role') != 'admin':
@@ -4178,7 +4843,7 @@ def delete_record(record_id):
     
     return redirect(url_for('edit_monthly'))
 
-# ===================== NEWSLETTER =====================
+# ===================== NEWSLETTER ROUTES =====================
 @app.route('/usernewsletters')
 def usernewsletters():
     try:
@@ -4370,148 +5035,84 @@ This is an automated message from Jain University Newsletter system.
         flash('Error processing subscription', 'error')
         return redirect(request.referrer or url_for('jainevents'))
 
-# ===================== EVENTS MANAGEMENT =====================
-@app.route("/admin/events")
-def admin_events():
-    if session.get('role') != 'admin':
-        return redirect(url_for('login'))
-
+@app.route('/newsletter_view/<newsletter_id>')
+def newsletter_view(newsletter_id):
+    """
+    View a single newsletter article - PUBLIC ACCESS (no login required)
+    """
     try:
-        events = list(db.events.find().sort('event_date', -1))
-        for e in events:
-            e["_id"] = str(e["_id"])
-        return render_template("admin_events.html", events=events)
+        news = db.newsletters.find_one({'_id': ObjectId(newsletter_id)})
+        
+        if not news:
+            flash('Newsletter not found', 'error')
+            return redirect(url_for('newsletter_page'))
+        
+        news['_id'] = str(news['_id'])
+        
+        if news.get('uploaded_at'):
+            if isinstance(news['uploaded_at'], datetime):
+                news['formatted_date'] = news['uploaded_at'].strftime('%B %d, %Y')
+            else:
+                news['formatted_date'] = str(news['uploaded_at'])
+        
+        user_email = session.get('email')
+        user_navbar = []
+        if user_email:
+            user_navbar = get_user_navbar(user_email)
+        
+        return render_template(
+            'newsletter_detail.html',
+            news=news,
+            user_logged_in='email' in session,
+            user_email=user_email,
+            user_navbar=user_navbar
+        )
+        
     except Exception as e:
-        logger.error(f"Error in admin_events: {e}")
-        return render_template("admin_events.html", events=[])
+        logger.error(f"Error viewing newsletter: {e}", exc_info=True)
+        flash('Error loading newsletter', 'error')
+        return redirect(url_for('newsletter_page'))
 
-@app.route("/add_event", methods=["POST"])
-def add_event():
-    if session.get('role') != 'admin':
-        return redirect(url_for('login'))
-
+@app.route('/newsletters')
+def newsletter_page():
+    """
+    Newsletter listing page - PUBLIC ACCESS (no login required)
+    """
     try:
-        data = request.form.to_dict()
-        image_file = request.files.get("image")
-        pdf_file = request.files.get("pdf")
-
-        image_path = None
-        pdf_path = None
-
-        if image_file and image_file.filename:
-            filename = secure_filename(image_file.filename)
-            image_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-            image_file.save(image_path)
-            image_path = "/" + image_path.replace("\\", "/")
-
-        if pdf_file and pdf_file.filename:
-            filename = secure_filename(pdf_file.filename)
-            pdf_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-            pdf_file.save(pdf_path)
-            pdf_path = "/" + pdf_path.replace("\\", "/")
-
-        event = {
-            "event_name": data.get("event_name"),
-            "description": data.get("description"),
-            "school": data.get("school"),
-            "department": data.get("department"),
-            "event_action": data.get("event_action"),
-            "event_type": data.get("event_type"),
-            "venue": data.get("venue"),
-            "event_date": data.get("event_date"),
-            "end_date": data.get("end_date"),
-            "event_time": data.get("event_time", "All Day"),
-            "image": image_path,
-            "pdf": pdf_path,
-            "created_at": get_indian_time()
-        }
-
-        db.events.insert_one(event)
-        logger.info(f"✅ Event added: {event['event_name']}")
-        flash('✅ Event added successfully!', 'success')
+        records = list(db.newsletters.find().sort('uploaded_at', -1))
+        
+        for article in records:
+            article['_id'] = str(article['_id'])
+            if article.get('uploaded_at'):
+                if isinstance(article['uploaded_at'], datetime):
+                    article['formatted_date'] = article['uploaded_at'].strftime('%B %d, %Y')
+                else:
+                    article['formatted_date'] = str(article['uploaded_at'])
+        
+        user_email = session.get('email')
+        user_navbar = []
+        if user_email:
+            user_navbar = get_user_navbar(user_email)
+        
+        return render_template(
+            'newsletter_page.html',
+            records=records,
+            user_logged_in='email' in session,
+            user_email=user_email,
+            user_navbar=user_navbar
+        )
+        
     except Exception as e:
-        logger.error(f"Error adding event: {e}")
-        flash('Error adding event', 'error')
-    
-    return redirect(url_for('admin_events'))
+        logger.error(f"Error in newsletter_page: {e}", exc_info=True)
+        flash('Error loading newsletters', 'error')
+        return render_template(
+            'newsletter_page.html',
+            records=[],
+            user_logged_in='email' in session,
+            user_email=session.get('email')
+        )
 
-@app.route("/delete_event/<event_id>")
-def delete_event(event_id):
-    if session.get('role') != 'admin':
-        return redirect(url_for('login'))
-
-    try:
-        db.events.delete_one({"_id": ObjectId(event_id)})
-        flash('✅ Event deleted successfully!', 'success')
-    except Exception as e:
-        logger.error(f"Error deleting event: {e}")
-        flash('Error deleting event', 'error')
-    
-    return redirect(url_for('admin_events'))
-
-@app.route("/edit_event/<event_id>", methods=["GET"])
-def edit_event(event_id):
-    if session.get('role') != 'admin':
-        return redirect(url_for('login'))
-
-    try:
-        event = db.events.find_one({"_id": ObjectId(event_id)})
-        if not event:
-            flash('Event not found.', 'error')
-            return redirect(url_for('admin_events'))
-
-        event["_id"] = str(event["_id"])
-        return render_template("edit_event.html", event=event)
-    except Exception as e:
-        logger.error(f"Error in edit_event: {e}")
-        flash('Error loading event', 'error')
-        return redirect(url_for('admin_events'))
-
-@app.route("/update_event/<event_id>", methods=["POST"])
-def update_event(event_id):
-    if session.get('role') != 'admin':
-        return redirect(url_for('login'))
-
-    try:
-        data = request.form.to_dict()
-        image_file = request.files.get("image")
-        pdf_file = request.files.get("pdf")
-
-        update_data = {
-            "event_name": data.get("event_name"),
-            "description": data.get("description"),
-            "school": data.get("school"),
-            "department": data.get("department"),
-            "event_action": data.get("event_action"),
-            "event_type": data.get("event_type"),
-            "venue": data.get("venue"),
-            "event_date": data.get("event_date"),
-            "end_date": data.get("end_date"),
-            "event_time": data.get("event_time", "All Day"),
-            "updated_at": get_indian_time()
-        }
-
-        if image_file and image_file.filename:
-            filename = secure_filename(image_file.filename)
-            image_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-            image_file.save(image_path)
-            update_data["image"] = "/" + image_path.replace("\\", "/")
-
-        if pdf_file and pdf_file.filename:
-            filename = secure_filename(pdf_file.filename)
-            pdf_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-            pdf_file.save(pdf_path)
-            update_data["pdf"] = "/" + pdf_path.replace("\\", "/")
-
-        db.events.update_one({"_id": ObjectId(event_id)}, {"$set": update_data})
-        flash('✅ Event updated successfully!', 'success')
-    except Exception as e:
-        logger.error(f"Error updating event: {e}")
-        flash('Error updating event', 'error')
-    
-    return redirect(url_for('admin_events'))
-
-# ===================== API ENDPOINTS =====================
+# ===================== API ENDPOINTS FOR EVENTS =====================
 @app.route('/api/events')
 def get_events():
     try:
@@ -4592,35 +5193,7 @@ def get_today_events():
     except Exception as e:
         logger.error(f"Error fetching today events: {e}")
         return jsonify([])
-@app.route("/debug/events")
-def debug_events():
-    try:
-        today_str = get_today_ist_string()
-        utc_now = datetime.utcnow()
-        ist_now = datetime.utcnow().replace(tzinfo=pytz.utc).astimezone(IST)
-        events = list(db.events.find({}).limit(15))
-        samples = []
-        for ev in events:
-            raw = ev.get("event_date", "NO_DATE")
-            norm = normalize_date(str(raw))
-            samples.append({
-                "name": ev.get("event_name", ""),
-                "raw_date": str(raw),
-                "normalized": norm,
-                "is_today": norm == today_str,
-                "is_future": norm > today_str if norm else False,
-            })
-        return jsonify({
-            "server_utc_time": utc_now.strftime("%Y-%m-%d %H:%M:%S"),
-            "server_ist_time": ist_now.strftime("%Y-%m-%d %H:%M:%S"),
-            "today_ist": today_str,
-            "total_events": db.events.count_documents({}),
-            "events_today": sum(1 for s in samples if s["is_today"]),
-            "events_future": sum(1 for s in samples if s["is_future"]),
-            "event_samples": samples,
-        })
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/events/filter')
 def filter_events():
     """Filter events by department, date range, etc."""
@@ -4694,104 +5267,86 @@ def get_schools():
         logger.error(f"Error getting schools: {e}")
         return jsonify([])
 
-# ===================== FILE SERVING =====================
-@app.route('/uploads/<filename>')
-def uploaded_file(filename):
-    try:
-        return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
-    except Exception as e:
-        logger.error(f"Error serving file {filename}: {e}")
-        return "File not found", 404
-
-# ===================== NEWSLETTER VIEW ROUTE =====================
-@app.route('/newsletter_view/<newsletter_id>')
-def newsletter_view(newsletter_id):
-    """
-    View a single newsletter article - PUBLIC ACCESS (no login required)
-    This allows users to view newsletters even if not logged in
-    """
-    try:
-        # Get newsletter from database
-        news = db.newsletters.find_one({'_id': ObjectId(newsletter_id)})
-        
-        if not news:
-            flash('Newsletter not found', 'error')
-            return redirect(url_for('newsletter_page'))
-        
-        # Convert ObjectId to string for template
-        news['_id'] = str(news['_id'])
-        
-        # Format date for display
-        if news.get('uploaded_at'):
-            if isinstance(news['uploaded_at'], datetime):
-                news['formatted_date'] = news['uploaded_at'].strftime('%B %d, %Y')
-            else:
-                news['formatted_date'] = str(news['uploaded_at'])
-        
-        # Get user info if logged in (for navbar display)
-        user_email = session.get('email')
-        user_navbar = []
-        if user_email:
-            user_navbar = get_user_navbar(user_email)
-        
-        # Render the newsletter detail template
-        return render_template(
-            'newsletter_detail.html',
-            news=news,
-            user_logged_in='email' in session,
-            user_email=user_email,
-            user_navbar=user_navbar
-        )
-        
-    except Exception as e:
-        logger.error(f"Error viewing newsletter: {e}", exc_info=True)
-        flash('Error loading newsletter', 'error')
-        return redirect(url_for('newsletter_page'))
-
-@app.route('/newsletters')
-def newsletter_page():
-    """
-    Newsletter listing page - PUBLIC ACCESS (no login required)
-    Shows all newsletters in a grid format
-    """
-    try:
-        # Get all newsletters, sorted by date (newest first)
-        records = list(db.newsletters.find().sort('uploaded_at', -1))
-        
-        # Format dates for display
-        for article in records:
-            article['_id'] = str(article['_id'])
-            if article.get('uploaded_at'):
-                if isinstance(article['uploaded_at'], datetime):
-                    article['formatted_date'] = article['uploaded_at'].strftime('%B %d, %Y')
-                else:
-                    article['formatted_date'] = str(article['uploaded_at'])
-        
-        # Get user info if logged in
-        user_email = session.get('email')
-        user_navbar = []
-        if user_email:
-            user_navbar = get_user_navbar(user_email)
-        
-        return render_template(
-            'newsletter_page.html',
-            records=records,
-            user_logged_in='email' in session,
-            user_email=user_email,
-            user_navbar=user_navbar
-        )
-        
-    except Exception as e:
-        logger.error(f"Error in newsletter_page: {e}", exc_info=True)
-        flash('Error loading newsletters', 'error')
-        return render_template(
-            'newsletter_page.html',
-            records=[],
-            user_logged_in='email' in session,
-            user_email=session.get('email')
-        )
-
 # ===================== DEBUG ROUTES =====================
+@app.route('/debug/my-session')
+@login_required
+def debug_my_session():
+    """Debug route to check current user's session and database record"""
+    try:
+        user = db.users.find_one({'email': session['email']})
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        user_data = {
+            'email': user.get('email'),
+            'role': user.get('role'),
+            'user_type': user.get('user_type'),
+            'special_role': user.get('special_role'),
+            'approved': user.get('approved', False),
+            'is_online': user.get('is_online', False),
+            '_id': str(user.get('_id'))
+        }
+        
+        session_data = {
+            'email': session.get('email'),
+            'role': session.get('role'),
+            'user_type': session.get('user_type'),
+            'special_role': session.get('special_role'),
+            'approved': session.get('approved'),
+            'user_id': session.get('user_id')
+        }
+        
+        return jsonify({
+            'session': session_data,
+            'database': user_data,
+            'is_leader': is_leader(),
+            'is_core_member': is_core_member(),
+            'can_access_leader_dashboard': is_leader() and session.get('approved', False),
+            'can_access_core_dashboard': is_core_member() and session.get('approved', False)
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/debug/check-collections')
+@login_required
+def debug_check_collections():
+    """Check if required collections and data exist"""
+    try:
+        result = {
+            'chat_groups_exists': 'chat_groups' in db.list_collection_names(),
+            'chat_groups_count': db.chat_groups.count_documents({}),
+            'core_team_group': None,
+            'office_documents_exists': 'office_documents' in db.list_collection_names(),
+            'office_documents_count': db.office_documents.count_documents({}),
+            'document_shares_exists': 'document_shares' in db.list_collection_names(),
+            'document_shares_count': db.document_shares.count_documents({}),
+            'chat_messages_exists': 'chat_messages' in db.list_collection_names(),
+            'chat_messages_count': db.chat_messages.count_documents({}),
+            'tasks_exists': 'tasks' in db.list_collection_names(),
+            'tasks_count': db.tasks.count_documents({}),
+            'users_count': db.users.count_documents({}),
+            'leaders_count': db.users.count_documents({'special_role': 'leader'}),
+            'core_members_count': db.users.count_documents({
+                '$or': [
+                    {'user_type': 'core'},
+                    {'special_role': 'office_barrier'}
+                ]
+            })
+        }
+        
+        if 'chat_groups' in db.list_collection_names():
+            core_group = db.chat_groups.find_one({'group_type': 'core_team'})
+            if core_group:
+                result['core_team_group'] = {
+                    'id': str(core_group['_id']),
+                    'name': core_group.get('name'),
+                    'members_count': len(core_group.get('members', []))
+                }
+        
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/debug/users')
 def debug_users():
     """Debug route to check user data"""
@@ -4933,6 +5488,79 @@ def setup_admin():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route("/debug/events")
+def debug_events():
+    try:
+        today_str = get_today_ist_string()
+        utc_now = datetime.utcnow()
+        ist_now = datetime.utcnow().replace(tzinfo=pytz.utc).astimezone(IST)
+        events = list(db.events.find({}).limit(15))
+        samples = []
+        for ev in events:
+            raw = ev.get("event_date", "NO_DATE")
+            norm = normalize_date(str(raw))
+            samples.append({
+                "name": ev.get("event_name", ""),
+                "raw_date": str(raw),
+                "normalized": norm,
+                "is_today": norm == today_str,
+                "is_future": norm > today_str if norm else False,
+            })
+        return jsonify({
+            "server_utc_time": utc_now.strftime("%Y-%m-%d %H:%M:%S"),
+            "server_ist_time": ist_now.strftime("%Y-%m-%d %H:%M:%S"),
+            "today_ist": today_str,
+            "total_events": db.events.count_documents({}),
+            "events_today": sum(1 for s in samples if s["is_today"]),
+            "events_future": sum(1 for s in samples if s["is_future"]),
+            "event_samples": samples,
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# ===================== FILE SERVING =====================
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    try:
+        return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    except Exception as e:
+        logger.error(f"Error serving file {filename}: {e}")
+        return "File not found", 404
+
+# ===================== TEST EMAIL ROUTE =====================
+@app.route('/test-email')
+def test_email():
+    """Test route to verify email configuration"""
+    try:
+        msg = Message(
+            subject="Test Email from Reminder System",
+            sender=app.config['MAIL_USERNAME'],
+            recipients=[app.config['MAIL_USERNAME']]  # Send to yourself
+        )
+        msg.body = "This is a test email to verify the reminder system is working correctly."
+        mail.send(msg)
+        return jsonify({"success": True, "message": "Test email sent successfully"})
+    except Exception as e:
+        logger.error(f"Test email failed: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+# ===================== CRON ENDPOINTS (for production) =====================
+@app.route('/cron/send-reminders')
+def cron_send_reminders():
+    """Endpoint for cron jobs to trigger reminder sending"""
+    # Simple API key check for security
+    api_key = request.args.get('key')
+    if api_key != os.environ.get('CRON_API_KEY', 'your-secret-key-here'):
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    try:
+        with app.app_context():
+            send_event_reminders()
+        return jsonify({'success': True, 'message': 'Reminders sent'})
+    except Exception as e:
+        logger.error(f"Cron reminder error: {e}")
+        return jsonify({'error': str(e)}), 500
+
 # ===================== ERROR HANDLERS =====================
 @app.errorhandler(404)
 def not_found_error(error):
@@ -4948,30 +5576,12 @@ def request_entity_too_large(error):
     flash('File too large. Maximum size is 50MB.', 'error')
     return redirect(request.referrer or url_for('home'))
 
-# ===================== TEST EMAIL ROUTE =====================
-@app.route('/test-email')
-def test_email():
-    """Test route to verify email configuration"""
-    try:
-        msg = Message(
-            subject="Test Email from Reminder System",
-            sender=app.config['MAIL_USERNAME'],
-            recipients=[app.config['MAIL_USERNAME']]  # Send to yourself
-        )
-        msg.body = "This is a test email to verify the reminder system is working correctly."
-        msg.html = "<h1>Test Email</h1><p>This is a test email to verify the reminder system is working correctly.</p>"
-        mail.send(msg)
-        return jsonify({"success": True, "message": "Test email sent successfully"})
-    except Exception as e:
-        logger.error(f"Test email failed: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
-
 # ===================== RUN APP =====================
 if __name__ == '__main__':
     # Create database indexes
     create_indexes()
     
-    # ✅ Only use APScheduler in LOCAL development, NOT on Hostinger
+    # Only use APScheduler in LOCAL development, not on production
     import platform
     is_local = os.environ.get('FLASK_ENV', 'production') == 'development'
     
@@ -4985,14 +5595,6 @@ if __name__ == '__main__':
             with app.app_context():
                 try:
                     send_event_reminders()
-                except Exception as e:
-                    logger.error(f"[SCHEDULER ERROR] {e}")
-
-        @scheduler.scheduled_job('cron', hour=7, minute=0, id='daily_digest')
-        def scheduled_send_daily_event_emails():
-            with app.app_context():
-                try:
-                    send_daily_event_emails()
                 except Exception as e:
                     logger.error(f"[SCHEDULER ERROR] {e}")
 
