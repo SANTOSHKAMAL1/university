@@ -1,640 +1,743 @@
 {% extends 'base_user.html' %}
 
 {% block title %}Leader Dashboard - Jain University{% endblock %}
-{% block page_title %}Leadership Command Center{% endblock %}
+{% block page_title %}OOA-Leadership Board{% endblock %}
 {% block page_subtitle %}Review documents, assign tasks, track analytics, and collaborate with core team{% endblock %}
 
 {% block content %}
 <div class="min-h-screen bg-gray-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         
-        <!-- Header with Jain Colors -->
-        <div class="bg-gradient-to-r from-[#04043a] to-[#1e3c72] rounded-2xl shadow-xl p-8 mb-8 text-white relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-64 h-64 bg-yellow-500 opacity-10 rounded-full transform translate-x-32 -translate-y-32"></div>
-            <div class="absolute bottom-0 left-0 w-48 h-48 bg-yellow-500 opacity-10 rounded-full transform -translate-x-24 translate-y-24"></div>
-            
-            <div class="relative z-10">
-                <div class="flex items-center gap-4 mb-4">
-                    <div class="w-16 h-16 bg-yellow-400 rounded-2xl flex items-center justify-center">
-                        <i class="fas fa-crown text-3xl text-[#04043a]"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-3xl font-bold mb-2">Leadership Command Center</h1>
-                        <p class="text-yellow-300 text-lg">Review documents, assign tasks, track core team analytics, and collaborate</p>
-                    </div>
-                </div>
-                
-                <!-- Quick Info Badges -->
-                <div class="flex flex-wrap gap-3 mt-4">
-                    <span class="bg-yellow-400 text-[#04043a] px-4 py-2 rounded-full text-sm font-semibold">
-                        <i class="fas fa-crown mr-2"></i>Leader Access
-                    </span>
-                    <span class="bg-white bg-opacity-20 text-white px-4 py-2 rounded-full text-sm">
-                        <i class="fas fa-clock mr-2"></i>{{ now.strftime('%d %B %Y') if now else 'Today' }}
-                    </span>
-                </div>
-            </div>
-        </div>
+        
 
         <!-- Quick Stats Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-[#04043a] hover:shadow-xl transition-all">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-[#04043a] hover:shadow-md transition-all">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-gray-500 text-sm font-medium">Assigned Documents</p>
-                        <p class="text-3xl font-bold text-[#04043a]">{{ my_assigned_documents|length }}</p>
+                        <p class="text-gray-500 text-xs font-medium">Assigned Documents</p>
+                        <p class="text-2xl font-bold text-[#04043a]">{{ my_assigned_documents|length }}</p>
                     </div>
-                    <div class="bg-[#04043a] bg-opacity-10 rounded-full p-3">
-                        <i class="fas fa-file-alt text-2xl text-[#04043a]"></i>
+                    <div class="bg-[#04043a] bg-opacity-10 rounded-full p-2">
+                        <i class="fas fa-file-alt text-lg text-[#04043a]"></i>
                     </div>
                 </div>
-                <div class="mt-2 text-xs text-gray-500">Total documents to review</div>
             </div>
 
-            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-yellow-500 hover:shadow-xl transition-all">
+            <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-yellow-500 hover:shadow-md transition-all">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-gray-500 text-sm font-medium">Pending Reviews</p>
-                        <p class="text-3xl font-bold text-[#04043a]">{{ pending_count }}</p>
+                        <p class="text-gray-500 text-xs font-medium">Pending Reviews</p>
+                        <p class="text-2xl font-bold text-[#04043a]">{{ pending_count }}</p>
                     </div>
-                    <div class="bg-yellow-500 bg-opacity-10 rounded-full p-3">
-                        <i class="fas fa-clock text-2xl text-yellow-600"></i>
+                    <div class="bg-yellow-500 bg-opacity-10 rounded-full p-2">
+                        <i class="fas fa-clock text-lg text-yellow-600"></i>
                     </div>
                 </div>
-                <div class="mt-2 text-xs text-gray-500">Awaiting your decision</div>
             </div>
 
-            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-600 hover:shadow-xl transition-all">
+            <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-green-600 hover:shadow-md transition-all">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-gray-500 text-sm font-medium">Core Team</p>
-                        <p class="text-3xl font-bold text-[#04043a]">{{ core_members|length }}</p>
+                        <p class="text-gray-500 text-xs font-medium">Core Team</p>
+                        <p class="text-2xl font-bold text-[#04043a]">{{ core_members|length }}</p>
                     </div>
-                    <div class="bg-green-600 bg-opacity-10 rounded-full p-3">
-                        <i class="fas fa-users text-2xl text-green-600"></i>
+                    <div class="bg-green-600 bg-opacity-10 rounded-full p-2">
+                        <i class="fas fa-users text-lg text-green-600"></i>
                     </div>
                 </div>
-                <div class="mt-2 text-xs text-gray-500">
+                <div class="mt-1 text-xs text-gray-500">
                     <span class="text-green-600 font-semibold">{{ online_core|length }}</span> online now
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-600 hover:shadow-xl transition-all">
+            <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-purple-600 hover:shadow-md transition-all">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-gray-500 text-sm font-medium">Shared Today</p>
-                        <p class="text-3xl font-bold text-[#04043a]">{{ today_shared_count }}</p>
+                        <p class="text-gray-500 text-xs font-medium">Shared Today</p>
+                        <p class="text-2xl font-bold text-[#04043a]">{{ today_shared_count }}</p>
                     </div>
-                    <div class="bg-purple-600 bg-opacity-10 rounded-full p-3">
-                        <i class="fas fa-share-alt text-2xl text-purple-600"></i>
+                    <div class="bg-purple-600 bg-opacity-10 rounded-full p-2">
+                        <i class="fas fa-share-alt text-lg text-purple-600"></i>
                     </div>
                 </div>
-                <div class="mt-2 text-xs text-gray-500">Documents shared with you today</div>
             </div>
         </div>
 
-        <!-- Quick Actions Row -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <!-- Share Document with Team -->
-            <div class="bg-white rounded-2xl shadow-xl p-6">
-                <h3 class="text-lg font-bold text-[#04043a] mb-4 flex items-center gap-2">
-                    <i class="fas fa-share-alt text-yellow-500"></i>
-                    Share Document with Team
-                </h3>
-                <form action="{{ url_for('share_document_leader') }}" method="POST" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Select Document</label>
-                        <select name="document_id" required class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-yellow-500">
-                            <option value="">Choose a document...</option>
-                            {% for doc in my_assigned_documents %}
-                            <option value="{{ doc._id }}">{{ doc.document_name }} ({{ doc.submitted_at.strftime('%d %b') }})</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Share With</label>
-                        <div class="max-h-40 overflow-y-auto border border-gray-200 rounded-xl p-3">
-                            <div class="mb-3">
-                                <h4 class="text-xs font-semibold text-yellow-600 mb-2">Leaders</h4>
-                                {% for leader in leaders %}
-                                <label class="flex items-center gap-2 p-2 hover:bg-yellow-50 rounded">
-                                    <input type="checkbox" name="leaders" value="{{ leader._id }}" class="text-yellow-500 rounded">
-                                    <span class="text-sm">{{ leader.email.split('@')[0] }}</span>
-                                </label>
-                                {% endfor %}
-                            </div>
-                            <div>
-                                <h4 class="text-xs font-semibold text-blue-600 mb-2">Core Team</h4>
-                                {% for member in core_members %}
-                                <label class="flex items-center gap-2 p-2 hover:bg-blue-50 rounded">
-                                    <input type="checkbox" name="core_members" value="{{ member._id }}" class="text-blue-500 rounded">
-                                    <span class="text-sm">{{ member.email.split('@')[0] }}</span>
-                                </label>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Message (Optional)</label>
-                        <textarea name="message" rows="2" class="w-full px-4 py-2 border border-gray-300 rounded-xl" placeholder="Add a note..."></textarea>
-                    </div>
-                    
-                    <button type="submit" class="w-full bg-[#04043a] text-white px-4 py-2 rounded-xl hover:bg-[#1e3c72] transition flex items-center justify-center gap-2">
-                        <i class="fas fa-paper-plane"></i>Share Document
+        <!-- Tab Navigation -->
+        <div class="bg-white rounded-xl shadow-sm mb-6 overflow-hidden border border-gray-200">
+            <div class="border-b border-gray-200">
+                <nav class="flex -mb-px overflow-x-auto" id="tabNav">
+                    <button onclick="switchTab('share')" class="tab-button active px-4 py-3 text-sm font-medium border-b-2 border-yellow-500 text-[#04043a] whitespace-nowrap" data-tab="share">
+                        <i class="fas fa-share-alt mr-1 text-yellow-500"></i>Share
                     </button>
-                </form>
+                    <button onclick="switchTab('assign')" class="tab-button px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap" data-tab="assign">
+                        <i class="fas fa-tasks mr-1 text-green-500"></i>Assign
+                    </button>
+                    <button onclick="switchTab('pending')" class="tab-button px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap" data-tab="pending">
+                        <i class="fas fa-clock mr-1 text-yellow-500"></i>Pending
+                        {% if pending_count > 0 %}<span class="ml-1 bg-yellow-500 text-white px-1.5 py-0.5 rounded-full text-xs">{{ pending_count }}</span>{% endif %}
+                    </button>
+                    <button onclick="switchTab('analytics')" class="tab-button px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap" data-tab="analytics">
+                        <i class="fas fa-chart-line mr-1 text-purple-500"></i>Analytics
+                    </button>
+                    <button onclick="switchTab('shared')" class="tab-button px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap" data-tab="shared">
+                        <i class="fas fa-share-alt mr-1 text-blue-500"></i>Shared
+                    </button>
+                    <button onclick="switchTab('assigned')" class="tab-button px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap" data-tab="assigned">
+                        <i class="fas fa-tasks mr-1 text-green-500"></i>Tasks
+                    </button>
+                    <button onclick="switchTab('members')" class="tab-button px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap" data-tab="members">
+                        <i class="fas fa-users mr-1 text-indigo-500"></i>Members
+                    </button>
+                </nav>
             </div>
+        </div>
 
-            <!-- Assign Task to Core Member with Document Upload -->
-            <div class="bg-white rounded-2xl shadow-xl p-6">
-                <h3 class="text-lg font-bold text-[#04043a] mb-4 flex items-center gap-2">
-                    <i class="fas fa-tasks text-green-500"></i>
-                    Assign Task to Core Member
-                </h3>
-                <form action="{{ url_for('assign_task') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Task Title *</label>
-                        <input type="text" name="task_title" required 
-                               class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500"
-                               placeholder="Enter task title">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Description *</label>
-                        <textarea name="description" rows="3" required 
-                                  class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500"
-                                  placeholder="Task details..."></textarea>
-                    </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Tab Content -->
+        <div class="space-y-6">
+            <!-- Share Document Tab -->
+            <div id="share-tab" class="tab-content active">
+                <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-200">
+                    <h3 class="text-base font-bold text-[#04043a] mb-3 flex items-center gap-2">
+                        <i class="fas fa-share-alt text-yellow-500"></i>
+                        Share Document with Team
+                    </h3>
+                    <form action="{{ url_for('share_document_leader') }}" method="POST" enctype="multipart/form-data" class="space-y-3">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Due Date *</label>
-                            <input type="date" name="due_date" required 
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Priority</label>
-                            <select name="priority" class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500">
-                                <option value="high">🔴 High</option>
-                                <option value="medium" selected>🟡 Medium</option>
-                                <option value="low">🟢 Low</option>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Select Document (Optional)</label>
+                            <select name="document_id" class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500">
+                                <option value="">Choose a document (optional)...</option>
+                                {% for doc in my_assigned_documents %}
+                                <option value="{{ doc._id }}">{{ doc.document_name }} ({{ doc.submitted_at.strftime('%d %b') }})</option>
+                                {% endfor %}
                             </select>
                         </div>
+                        
+                        <!-- File Upload Section -->
+                        <div class="border-t border-gray-200 pt-3">
+                            <label class="block text-xs font-medium text-gray-700 mb-1 flex items-center gap-1">
+                                <i class="fas fa-paperclip text-gray-500"></i>
+                                Attach Document (Optional)
+                            </label>
+                            <div class="flex items-center gap-2">
+                                <input type="file" name="share_file" id="share_file" class="hidden" accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.xlsx,.csv">
+                                <button type="button" onclick="document.getElementById('share_file').click()" 
+                                        class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition flex items-center gap-1">
+                                    <i class="fas fa-upload text-gray-500 text-xs"></i>
+                                    Choose File
+                                </button>
+                                <span id="share_file_name" class="text-xs text-gray-500">No file chosen</span>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Share With</label>
+                            <div class="max-h-32 overflow-y-auto border border-gray-200 rounded-lg p-2 text-sm">
+                                <div class="mb-2">
+                                    <h4 class="text-xs font-semibold text-yellow-600 mb-1">Leaders</h4>
+                                    {% for leader in leaders %}
+                                    <label class="flex items-center gap-2 p-1 hover:bg-yellow-50 rounded">
+                                        <input type="checkbox" name="leaders" value="{{ leader._id }}" class="text-yellow-500 rounded text-xs">
+                                        <span class="text-xs">{{ leader.email.split('@')[0] }}</span>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-semibold text-blue-600 mb-1">Core Team</h4>
+                                    {% for member in core_members %}
+                                    <label class="flex items-center gap-2 p-1 hover:bg-blue-50 rounded">
+                                        <input type="checkbox" name="core_members" value="{{ member._id }}" class="text-blue-500 rounded text-xs">
+                                        <span class="text-xs">{{ member.email.split('@')[0] }}</span>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Message (Optional)</label>
+                            <textarea name="message" rows="2" class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg" placeholder="Add a note..."></textarea>
+                        </div>
+                        
+                        <button type="submit" class="w-full bg-[#04043a] text-white px-3 py-2 text-sm rounded-lg hover:bg-[#1e3c72] transition flex items-center justify-center gap-1">
+                            <i class="fas fa-paper-plane text-xs"></i>Share Document
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Assign Task Tab -->
+            <div id="assign-tab" class="tab-content hidden">
+                <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-200">
+                    <h3 class="text-base font-bold text-[#04043a] mb-3 flex items-center gap-2">
+                        <i class="fas fa-tasks text-green-500"></i>
+                        Assign Task to Core Member
+                    </h3>
+                    <form action="{{ url_for('assign_task') }}" method="POST" enctype="multipart/form-data" class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Task Title *</label>
+                            <input type="text" name="task_title" required 
+                                   class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                                   placeholder="Enter task title">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Description *</label>
+                            <textarea name="description" rows="2" required 
+                                      class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                                      placeholder="Task details..."></textarea>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Due Date *</label>
+                                <input type="date" name="due_date" required 
+                                       class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Priority</label>
+                                <select name="priority" class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                                    <option value="high">🔴 High</option>
+                                    <option value="medium" selected>🟡 Medium</option>
+                                    <option value="low">🟢 Low</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Assign to Core Member *</label>
+                            <select name="assigned_to" required class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                                <option value="">Select member...</option>
+                                {% for member in core_members %}
+                                <option value="{{ member._id }}">{{ member.email.split('@')[0] }} ({{ member.email }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- File Upload Section -->
+                        <div class="border-t border-gray-200 pt-3">
+                            <label class="block text-xs font-medium text-gray-700 mb-1 flex items-center gap-1">
+                                <i class="fas fa-paperclip text-gray-500"></i>
+                                Attach Document (Optional)
+                            </label>
+                            <div class="flex items-center gap-2">
+                                <input type="file" name="task_file" id="task_file" class="hidden" accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.xlsx,.csv">
+                                <button type="button" onclick="document.getElementById('task_file').click()" 
+                                        class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition flex items-center gap-1">
+                                    <i class="fas fa-upload text-gray-500 text-xs"></i>
+                                    Choose File
+                                </button>
+                                <span id="task_file_name" class="text-xs text-gray-500">No file chosen</span>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="w-full bg-gradient-to-r from-green-600 to-green-700 text-white px-3 py-2 text-sm rounded-lg font-semibold hover:from-green-700 hover:to-green-800 transition flex items-center justify-center gap-1">
+                            <i class="fas fa-plus-circle text-xs"></i>Assign Task
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Pending Reviews Tab -->
+            <div id="pending-tab" class="tab-content hidden">
+                <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-200">
+                    <h2 class="text-lg font-bold text-[#04043a] mb-4 flex items-center gap-2">
+                        <div class="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-clock text-white text-sm"></i>
+                        </div>
+                        Pending Reviews
+                        {% if pending_count > 0 %}
+                        <span class="bg-yellow-500 text-white px-2 py-0.5 rounded-full text-xs">{{ pending_count }}</span>
+                        {% endif %}
+                    </h2>
+
+                    {% set pending_docs = my_assigned_documents|selectattr('status', 'equalto', 'pending')|list %}
+                    {% if pending_docs %}
+                    <div class="space-y-4">
+                        {% for doc in pending_docs %}
+                        <div class="border-l-4 border-yellow-500 bg-yellow-50 rounded-lg p-4 hover:shadow-sm transition" id="doc-{{ doc._id }}">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <div class="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center">
+                                            <i class="fas fa-file-alt text-white text-sm"></i>
+                                        </div>
+                                        <h3 class="text-base font-bold text-gray-900">{{ doc.document_name }}</h3>
+                                    </div>
+                                    <p class="text-xs text-gray-600 mb-3">{{ doc.description }}</p>
+                                    
+                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs bg-white p-3 rounded-lg">
+                                        <div>
+                                            <span class="font-semibold text-gray-700">Submitted by:</span>
+                                            <div class="mt-1">
+                                                <p class="text-gray-900 font-medium">{{ doc.uploader_name }}</p>
+                                                <p class="text-xs text-gray-500">{{ doc.uploader_email }}</p>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <span class="font-semibold text-gray-700">Date:</span>
+                                            <div class="mt-1">
+                                                <p class="text-gray-900">{{ doc.submitted_at.strftime('%d %b %Y') }}</p>
+                                                <p class="text-xs text-gray-500">{{ doc.submitted_at.strftime('%I:%M %p') }}</p>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <span class="font-semibold text-gray-700">Time in Queue:</span>
+                                            <div class="mt-1">
+                                                <p class="text-gray-900">{{ doc.time_in_queue }}</p>
+                                            </div>
+                                        </div>
+                                        {% if doc.file_url %}
+                                        <div class="flex items-end">
+                                            <a href="{{ doc.file_url }}" target="_blank" download
+                                               class="inline-flex items-center gap-1 px-3 py-1 bg-[#04043a] text-white rounded-lg hover:bg-[#1e3c72] transition text-xs">
+                                                <i class="fas fa-download text-xs"></i>
+                                                <span>Download</span>
+                                            </a>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Enhanced Review Form -->
+                            <form action="{{ url_for('review_document', document_id=doc._id) }}" method="POST" class="border-t pt-4">
+                                <div class="mb-3">
+                                    <label class="block text-xs font-semibold text-gray-700 mb-1">
+                                        <i class="fas fa-comment text-yellow-600 mr-1"></i>Your Feedback / Revision Instructions:
+                                    </label>
+                                    <textarea name="comments" rows="3" required
+                                              class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
+                                              placeholder="Provide detailed feedback or revision instructions..."></textarea>
+                                </div>
+
+                                <div class="flex items-center gap-2 mb-3 p-2 bg-blue-50 rounded-lg border border-blue-200">
+                                    <input type="checkbox" name="send_reply" id="send_reply_{{ loop.index }}" checked 
+                                           class="h-4 w-4 text-yellow-500 rounded">
+                                    <label for="send_reply_{{ loop.index }}" class="text-xs font-medium text-gray-700">
+                                        <i class="fas fa-envelope mr-1 text-blue-600"></i>
+                                        Send email reply
+                                    </label>
+                                </div>
+
+                                <div class="flex gap-2">
+                                    <button type="submit" name="status" value="approved"
+                                            class="flex-1 bg-green-600 text-white px-4 py-2 text-sm rounded-lg font-bold hover:bg-green-700 transition flex items-center justify-center gap-1">
+                                        <i class="fas fa-check-circle text-xs"></i>
+                                        Approve
+                                    </button>
+                                    <button type="submit" name="status" value="revision"
+                                            class="flex-1 bg-orange-500 text-white px-4 py-2 text-sm rounded-lg font-bold hover:bg-orange-600 transition flex items-center justify-center gap-1">
+                                        <i class="fas fa-edit text-xs"></i>
+                                        Revision
+                                    </button>
+                                    <button type="submit" name="status" value="rejected"
+                                            class="flex-1 bg-red-600 text-white px-4 py-2 text-sm rounded-lg font-bold hover:bg-red-700 transition flex items-center justify-center gap-1">
+                                        <i class="fas fa-times-circle text-xs"></i>
+                                        Reject
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                        {% endfor %}
                     </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Assign to Core Member *</label>
-                        <select name="assigned_to" required class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500">
-                            <option value="">Select member...</option>
+                    {% else %}
+                    <div class="text-center py-10 bg-gray-50 rounded-lg">
+                        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-check-double text-2xl text-green-600"></i>
+                        </div>
+                        <p class="text-sm text-gray-600">No pending documents to review</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Core Team Analytics Tab -->
+            <div id="analytics-tab" class="tab-content hidden">
+                <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-200">
+                    <h2 class="text-lg font-bold text-[#04043a] mb-4 flex items-center gap-2">
+                        <div class="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-chart-line text-white text-sm"></i>
+                        </div>
+                        Core Team Analytics
+                    </h2>
+
+                    <!-- Member Selector -->
+                    <div class="mb-4">
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Select Core Member</label>
+                        <select id="memberSelector" class="w-full md:w-96 px-3 py-1.5 text-sm border border-gray-300 rounded-lg" onchange="loadMemberAnalytics(this.value)">
+                            <option value="">Choose a member...</option>
                             {% for member in core_members %}
                             <option value="{{ member._id }}">{{ member.email.split('@')[0] }} ({{ member.email }})</option>
                             {% endfor %}
                         </select>
                     </div>
-                    
-                    <!-- File Upload Section -->
-                    <div class="border-t border-gray-200 pt-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                            <i class="fas fa-paperclip text-gray-500"></i>
-                            Attach Document (Optional)
-                        </label>
-                        <div class="flex items-center gap-3">
-                            <input type="file" name="task_file" id="task_file" class="hidden" accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.xlsx,.csv">
-                            <button type="button" onclick="document.getElementById('task_file').click()" 
-                                    class="px-4 py-2 border border-gray-300 rounded-xl hover:bg-gray-50 transition flex items-center gap-2">
-                                <i class="fas fa-upload text-gray-500"></i>
-                                Choose File
-                            </button>
-                            <span id="file_name" class="text-sm text-gray-500">No file chosen</span>
-                        </div>
-                        <p class="text-xs text-gray-500 mt-1">Supported: PDF, DOCX, TXT, Images, Excel (Max 50MB)</p>
-                    </div>
-                    
-                    <button type="submit" class="w-full bg-gradient-to-r from-green-600 to-green-700 text-white px-4 py-3 rounded-xl font-semibold hover:from-green-700 hover:to-green-800 transition flex items-center justify-center gap-2">
-                        <i class="fas fa-plus-circle"></i>
-                        Assign Task
-                    </button>
-                </form>
-            </div>
-        </div>
 
-        <!-- Pending Documents with Revision Option -->
-        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
-            <h2 class="text-2xl font-bold text-[#04043a] mb-6 flex items-center gap-3">
-                <div class="w-10 h-10 bg-yellow-500 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-clock text-white"></i>
-                </div>
-                Pending Reviews
-                {% if pending_count > 0 %}
-                <span class="bg-yellow-500 text-white px-3 py-1 rounded-full text-sm">{{ pending_count }}</span>
-                {% endif %}
-            </h2>
-
-            {% set pending_docs = my_assigned_documents|selectattr('status', 'equalto', 'pending')|list %}
-            {% if pending_docs %}
-            <div class="space-y-6">
-                {% for doc in pending_docs %}
-                <div class="border-l-4 border-yellow-500 bg-yellow-50 rounded-xl p-6 hover:shadow-lg transition" id="doc-{{ doc._id }}">
-                    <div class="flex items-start justify-between mb-4">
-                        <div class="flex-1">
-                            <div class="flex items-center gap-3 mb-3">
-                                <div class="w-10 h-10 bg-yellow-500 rounded-lg flex items-center justify-center">
-                                    <i class="fas fa-file-alt text-white"></i>
-                                </div>
-                                <h3 class="text-xl font-bold text-gray-900">{{ doc.document_name }}</h3>
-                            </div>
-                            <p class="text-sm text-gray-600 mb-4 ml-13">{{ doc.description }}</p>
-                            
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm bg-white p-4 rounded-xl">
-                                <div>
-                                    <span class="font-semibold text-gray-700">Submitted by:</span>
-                                    <div class="mt-1">
-                                        <p class="text-gray-900 font-medium">{{ doc.uploader_name }}</p>
-                                        <p class="text-xs text-gray-500">{{ doc.uploader_email }}</p>
-                                    </div>
+                    <!-- Analytics Display -->
+                    <div id="memberAnalytics" class="hidden">
+                        <!-- Member Info Header -->
+                        <div class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4 mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-12 h-12 bg-[#04043a] rounded-full flex items-center justify-center text-white text-lg font-bold">
+                                    <span id="memberInitial"></span>
                                 </div>
                                 <div>
-                                    <span class="font-semibold text-gray-700">Date:</span>
-                                    <div class="mt-1">
-                                        <p class="text-gray-900">{{ doc.submitted_at.strftime('%d %b %Y') }}</p>
-                                        <p class="text-xs text-gray-500">{{ doc.submitted_at.strftime('%I:%M %p') }}</p>
+                                    <h3 class="text-base font-bold text-[#04043a]" id="memberName"></h3>
+                                    <p class="text-xs text-gray-600" id="memberEmail"></p>
+                                    <div class="flex gap-3 mt-1">
+                                        <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 px-2 py-0.5 rounded-full text-xs" id="memberStatus">
+                                            <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                                            Online
+                                        </span>
+                                        <span class="text-xs text-gray-500" id="lastSeen"></span>
                                     </div>
                                 </div>
-                                <div>
-                                    <span class="font-semibold text-gray-700">Time in Queue:</span>
-                                    <div class="mt-1">
-                                        <p class="text-gray-900">{{ doc.time_in_queue }}</p>
-                                    </div>
-                                </div>
-                                {% if doc.file_url %}
-                                <div class="flex items-end">
-                                    <a href="{{ doc.file_url }}" target="_blank" download
-                                       class="inline-flex items-center gap-2 px-4 py-2 bg-[#04043a] text-white rounded-lg hover:bg-[#1e3c72] transition">
-                                        <i class="fas fa-download"></i>
-                                        <span>Download</span>
-                                    </a>
-                                </div>
-                                {% endif %}
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Enhanced Review Form -->
-                    <form action="{{ url_for('review_document', document_id=doc._id) }}" method="POST" class="border-t pt-6">
+                        <!-- Analytics Grid -->
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+                            <div class="bg-gray-50 rounded-lg p-3 text-center">
+                                <p class="text-xl font-bold text-[#04043a]" id="totalDocs">0</p>
+                                <p class="text-xs text-gray-600">Total</p>
+                            </div>
+                            <div class="bg-gray-50 rounded-lg p-3 text-center">
+                                <p class="text-xl font-bold text-yellow-600" id="pendingDocs">0</p>
+                                <p class="text-xs text-gray-600">Pending</p>
+                            </div>
+                            <div class="bg-gray-50 rounded-lg p-3 text-center">
+                                <p class="text-xl font-bold text-green-600" id="approvedDocs">0</p>
+                                <p class="text-xs text-gray-600">Approved</p>
+                            </div>
+                            <div class="bg-gray-50 rounded-lg p-3 text-center">
+                                <p class="text-xl font-bold text-orange-600" id="revisionDocs">0</p>
+                                <p class="text-xs text-gray-600">Revision</p>
+                            </div>
+                        </div>
+
+                        <!-- Activity Timeline -->
                         <div class="mb-4">
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">
-                                <i class="fas fa-comment text-yellow-600 mr-2"></i>Your Feedback / Revision Instructions:
-                            </label>
-                            <textarea name="comments" rows="4" required
-                                      class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition"
-                                      placeholder="Provide detailed feedback or revision instructions..."></textarea>
+                            <h4 class="font-semibold text-gray-900 text-sm mb-2">Recent Activity</h4>
+                            <div class="space-y-2" id="activityTimeline"></div>
                         </div>
 
-                        <div class="flex items-center space-x-3 mb-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
-                            <input type="checkbox" name="send_reply" id="send_reply_{{ loop.index }}" checked 
-                                   class="h-5 w-5 text-yellow-500 rounded">
-                            <label for="send_reply_{{ loop.index }}" class="text-sm font-medium text-gray-700">
-                                <i class="fas fa-envelope mr-2 text-blue-600"></i>
-                                Send email reply to core member with my feedback
-                            </label>
-                        </div>
-
-                        <div class="flex gap-3">
-                            <button type="submit" name="status" value="approved"
-                                    class="flex-1 bg-green-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-green-700 transition flex items-center justify-center gap-2">
-                                <i class="fas fa-check-circle"></i>
-                                Approve
-                            </button>
-                            <button type="submit" name="status" value="revision"
-                                    class="flex-1 bg-orange-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-orange-600 transition flex items-center justify-center gap-2">
-                                <i class="fas fa-edit"></i>
-                                Needs Revision
-                            </button>
-                            <button type="submit" name="status" value="rejected"
-                                    class="flex-1 bg-red-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-red-700 transition flex items-center justify-center gap-2">
-                                <i class="fas fa-times-circle"></i>
-                                Reject
-                            </button>
-                        </div>
-                    </form>
-                </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <div class="text-center py-16 bg-gray-50 rounded-xl">
-                <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-check-double text-4xl text-green-600"></i>
-                </div>
-                <p class="text-lg text-gray-600">No pending documents to review</p>
-                <p class="text-sm text-gray-500 mt-2">All documents have been reviewed</p>
-            </div>
-            {% endif %}
-        </div>
-
-        <!-- Core Team Analytics Section -->
-        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
-            <h2 class="text-2xl font-bold text-[#04043a] mb-6 flex items-center gap-3">
-                <div class="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-chart-line text-white"></i>
-                </div>
-                Core Team Analytics
-            </h2>
-
-            <!-- Member Selector -->
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Select Core Member to View Analytics</label>
-                <select id="memberSelector" class="w-full md:w-96 px-4 py-2 border border-gray-300 rounded-xl" onchange="loadMemberAnalytics(this.value)">
-                    <option value="">Choose a member...</option>
-                    {% for member in core_members %}
-                    <option value="{{ member._id }}">{{ member.email.split('@')[0] }} ({{ member.email }})</option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <!-- Analytics Display -->
-            <div id="memberAnalytics" class="hidden">
-                <!-- Member Info Header -->
-                <div class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-6 mb-6">
-                    <div class="flex items-center gap-4">
-                        <div class="w-16 h-16 bg-[#04043a] rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                            <span id="memberInitial"></span>
-                        </div>
+                        <!-- Documents Table -->
                         <div>
-                            <h3 class="text-xl font-bold text-[#04043a]" id="memberName"></h3>
-                            <p class="text-gray-600" id="memberEmail"></p>
-                            <div class="flex gap-4 mt-2">
-                                <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs" id="memberStatus">
-                                    <span class="w-2 h-2 bg-green-500 rounded-full"></span>
-                                    Online
-                                </span>
-                                <span class="text-sm text-gray-500" id="lastSeen"></span>
+                            <h4 class="font-semibold text-gray-900 text-sm mb-2">Documents</h4>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full bg-white border border-gray-200 rounded-lg text-xs">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Document</th>
+                                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Submitted</th>
+                                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Status</th>
+                                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="documentsTable" class="divide-y divide-gray-200"></tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                <!-- Analytics Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                    <div class="bg-gray-50 rounded-xl p-4 text-center">
-                        <p class="text-2xl font-bold text-[#04043a]" id="totalDocs">0</p>
-                        <p class="text-xs text-gray-600">Total Documents</p>
-                    </div>
-                    <div class="bg-gray-50 rounded-xl p-4 text-center">
-                        <p class="text-2xl font-bold text-yellow-600" id="pendingDocs">0</p>
-                        <p class="text-xs text-gray-600">Pending</p>
-                    </div>
-                    <div class="bg-gray-50 rounded-xl p-4 text-center">
-                        <p class="text-2xl font-bold text-green-600" id="approvedDocs">0</p>
-                        <p class="text-xs text-gray-600">Approved</p>
-                    </div>
-                    <div class="bg-gray-50 rounded-xl p-4 text-center">
-                        <p class="text-2xl font-bold text-orange-600" id="revisionDocs">0</p>
-                        <p class="text-xs text-gray-600">In Revision</p>
-                    </div>
-                </div>
-
-                <!-- Activity Timeline -->
-                <div class="mb-6">
-                    <h4 class="font-semibold text-gray-900 mb-3">Recent Activity</h4>
-                    <div class="space-y-3" id="activityTimeline">
-                        <!-- Will be populated by JavaScript -->
-                    </div>
-                </div>
-
-                <!-- Documents Table -->
-                <div>
-                    <h4 class="font-semibold text-gray-900 mb-3">Documents</h4>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full bg-white border border-gray-200 rounded-xl">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Document</th>
-                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Submitted</th>
-                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Status</th>
-                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Reviewed By</th>
-                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="documentsTable" class="divide-y divide-gray-200">
-                                <!-- Will be populated by JavaScript -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
             </div>
-        </div>
 
-        <!-- Shared Documents with Analytics -->
-        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
-            <h2 class="text-2xl font-bold text-[#04043a] mb-6 flex items-center gap-3">
-                <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-share-alt text-white"></i>
-                </div>
-                Documents Shared With Me
-            </h2>
-
-            {% if shared_documents %}
-            <div class="space-y-4">
-                {% for share in shared_documents %}
-                <div class="border border-gray-200 rounded-xl p-4 hover:shadow-lg transition">
-                    <div class="flex items-start justify-between">
-                        <div class="flex-1">
-                            <div class="flex items-center gap-3 mb-2">
-                                <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                                    <i class="fas fa-file-alt text-blue-600"></i>
-                                </div>
-                                <h4 class="font-semibold text-gray-900">{{ share.document_name }}</h4>
-                                <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">Shared</span>
-                            </div>
-                            <p class="text-sm text-gray-600 ml-11">{{ share.message }}</p>
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3 text-sm">
-                                <div>
-                                    <span class="text-xs text-gray-500">Shared by:</span>
-                                    <p class="font-medium">{{ share.sender_name }}</p>
-                                </div>
-                                <div>
-                                    <span class="text-xs text-gray-500">Date:</span>
-                                    <p class="font-medium">{{ share.shared_at.strftime('%d %b %Y, %I:%M %p') }}</p>
-                                </div>
-                                {% if share.file_url %}
-                                <div>
-                                    <a href="{{ share.file_url }}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm">
-                                        <i class="fas fa-download mr-1"></i>Download
-                                    </a>
-                                </div>
-                                {% endif %}
-                            </div>
+            <!-- Documents Shared With Me Tab - With PDF Viewer -->
+            <div id="shared-tab" class="tab-content hidden">
+                <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-200">
+                    <h2 class="text-lg font-bold text-[#04043a] mb-4 flex items-center gap-2">
+                        <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-share-alt text-white text-sm"></i>
                         </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <div class="text-center py-12 bg-gray-50 rounded-xl">
-                <div class="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <i class="fas fa-share-alt text-3xl text-gray-400"></i>
-                </div>
-                <p class="text-gray-600">No documents shared with you yet</p>
-            </div>
-            {% endif %}
-        </div>
+                        Documents Shared With Me
+                    </h2>
 
-        <!-- Task Assignments -->
-        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
-            <h2 class="text-2xl font-bold text-[#04043a] mb-6 flex items-center gap-3">
-                <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-tasks text-white"></i>
-                </div>
-                Assigned Tasks to Core Team
-            </h2>
-
-            {% if assigned_tasks %}
-            <div class="space-y-4">
-                {% for task in assigned_tasks %}
-                <div class="border-l-4 
-                    {% if task.priority == 'high' %}border-red-500
-                    {% elif task.priority == 'medium' %}border-yellow-500
-                    {% else %}border-green-500{% endif %}
-                    bg-gray-50 rounded-xl p-4">
-                    <div class="flex items-start justify-between">
-                        <div class="flex-1">
-                            <div class="flex items-center gap-3 mb-2">
-                                <h4 class="font-semibold text-gray-900">{{ task.title }}</h4>
-                                <span class="text-xs px-2 py-1 rounded-full 
-                                    {% if task.status == 'pending' %}bg-yellow-100 text-yellow-800
-                                    {% elif task.status == 'in_progress' %}bg-blue-100 text-blue-800
-                                    {% elif task.status == 'completed' %}bg-green-100 text-green-800
-                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
-                                    {{ task.status|replace('_', ' ')|title }}
-                                </span>
-                            </div>
-                            <p class="text-sm text-gray-600 mb-2">{{ task.description }}</p>
-                            
-                            <!-- Attachment Display -->
-                            {% if task.has_attachment %}
-                            <div class="mb-3 p-2 bg-blue-50 rounded-lg inline-block">
-                                <a href="{{ task.attachment_url }}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-2">
-                                    <i class="fas fa-paperclip"></i>
-                                    {{ task.attachment_name or 'Attachment' }}
-                                </a>
-                            </div>
-                            {% endif %}
-                            
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                                <div>
-                                    <span class="text-xs text-gray-500">Assigned to:</span>
-                                    <p class="font-medium">{{ task.assigned_to_name }}</p>
-                                </div>
-                                <div>
-                                    <span class="text-xs text-gray-500">Due Date:</span>
-                                    <p class="font-medium">{{ task.due_date.strftime('%d %b %Y') }}</p>
-                                </div>
-                                <div>
-                                    <span class="text-xs text-gray-500">Priority:</span>
-                                    <p class="font-medium capitalize">{{ task.priority }}</p>
-                                </div>
-                                <div>
-                                    <span class="text-xs text-gray-500">Progress:</span>
-                                    <div class="w-full bg-gray-200 rounded-full h-2 mt-1">
-                                        <div class="bg-[#04043a] rounded-full h-2" style="width: {{ task.progress }}%"></div>
+                    {% if shared_documents %}
+                    <div class="space-y-3">
+                        {% for share in shared_documents %}
+                        <div class="border border-gray-200 rounded-lg p-3 hover:shadow-sm transition">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <div class="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center">
+                                            <i class="fas fa-file-alt text-blue-600 text-xs"></i>
+                                        </div>
+                                        <h4 class="font-semibold text-gray-900 text-sm">{{ share.document_name }}</h4>
+                                        <span class="text-xs bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded-full">Shared</span>
+                                    </div>
+                                    <p class="text-xs text-gray-600 ml-8">{{ share.message }}</p>
+                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2 text-xs">
+                                        <div>
+                                            <span class="text-xs text-gray-500">Shared by:</span>
+                                            <p class="font-medium text-xs">{{ share.sender_name }}</p>
+                                        </div>
+                                        <div>
+                                            <span class="text-xs text-gray-500">Date:</span>
+                                            <p class="font-medium text-xs">{{ share.shared_at.strftime('%d %b %Y, %I:%M %p') }}</p>
+                                        </div>
+                                        {% if share.file_url %}
+                                        <div class="flex gap-2">
+                                            {% if share.file_url.endswith('.pdf') %}
+                                            <button onclick="viewPDF('{{ share.file_url }}', '{{ share.document_name }}')" 
+                                                    class="text-blue-600 hover:text-blue-800 text-xs flex items-center gap-1">
+                                                <i class="fas fa-eye"></i> View PDF
+                                            </button>
+                                            {% endif %}
+                                            <a href="{{ share.file_url }}" target="_blank" download 
+                                               class="text-blue-600 hover:text-blue-800 text-xs flex items-center gap-1">
+                                                <i class="fas fa-download"></i> Download
+                                            </a>
+                                        </div>
+                                        {% endif %}
                                     </div>
                                 </div>
                             </div>
                         </div>
+                        {% endfor %}
                     </div>
-                </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <div class="text-center py-12 bg-gray-50 rounded-xl">
-                <div class="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <i class="fas fa-tasks text-3xl text-gray-400"></i>
-                </div>
-                <p class="text-gray-600">No tasks assigned yet</p>
-            </div>
-            {% endif %}
-        </div>
-
-        <!-- Core Team Members Grid -->
-        <div class="bg-white rounded-2xl shadow-xl p-8">
-            <h2 class="text-2xl font-bold text-[#04043a] mb-6 flex items-center gap-3">
-                <div class="w-10 h-10 bg-indigo-500 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-users text-white"></i>
-                </div>
-                Core Team Members ({{ core_members|length }})
-            </h2>
-
-            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {% for member in core_members %}
-                <div class="border border-gray-200 rounded-xl p-4 text-center hover:shadow-lg transition hover:border-yellow-500 cursor-pointer" onclick="loadMemberAnalytics('{{ member._id }}')">
-                    <div class="relative inline-block">
-                        <div class="w-16 h-16 bg-gradient-to-r from-[#04043a] to-[#1e3c72] rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-3">
-                            {{ member.email[0]|upper }}
-                        </div>
-                        {% if member.is_online %}
-                        <span class="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></span>
-                        {% endif %}
-                    </div>
-                    <p class="font-semibold text-gray-900 text-sm">{{ member.email.split('@')[0] }}</p>
-                    <p class="text-xs text-gray-500 mb-2">{{ member.email }}</p>
-                    <div class="flex justify-center gap-1 mb-2">
-                        <span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
-                            {{ member.doc_count|default(0) }} docs
-                        </span>
-                    </div>
-                    {% if member.is_online %}
-                    <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
-                        <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
-                        Online
-                    </span>
                     {% else %}
-                    <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">
-                        <span class="w-1.5 h-1.5 bg-gray-400 rounded-full"></span>
-                        Last seen {{ member.last_seen_formatted }}
-                    </span>
+                    <div class="text-center py-10 bg-gray-50 rounded-lg">
+                        <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-2">
+                            <i class="fas fa-share-alt text-2xl text-gray-400"></i>
+                        </div>
+                        <p class="text-sm text-gray-600">No documents shared with you yet</p>
+                    </div>
                     {% endif %}
                 </div>
-                {% endfor %}
+            </div>
+
+            <!-- Assigned Tasks Tab - With Progress Updates -->
+            <div id="assigned-tab" class="tab-content hidden">
+                <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-200">
+                    <h2 class="text-lg font-bold text-[#04043a] mb-4 flex items-center gap-2">
+                        <div class="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-tasks text-white text-sm"></i>
+                        </div>
+                        Assigned Tasks to Core Team
+                    </h2>
+
+                    {% if assigned_tasks %}
+                    <div class="space-y-3">
+                        {% for task in assigned_tasks %}
+                        <div class="border-l-4 
+                            {% if task.priority == 'high' %}border-red-500
+                            {% elif task.priority == 'medium' %}border-yellow-500
+                            {% else %}border-green-500{% endif %}
+                            bg-gray-50 rounded-lg p-4 hover:shadow-sm transition">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <h4 class="text-sm font-bold text-gray-900">{{ task.title }}</h4>
+                                        <span class="text-xs px-1.5 py-0.5 rounded-full 
+                                            {% if task.status == 'pending' %}bg-yellow-100 text-yellow-800
+                                            {% elif task.status == 'in_progress' %}bg-blue-100 text-blue-800
+                                            {% elif task.status == 'completed' %}bg-green-100 text-green-800
+                                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                            {{ task.status|replace('_', ' ')|title }}
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-gray-600 mb-2">{{ task.description }}</p>
+                                    
+                                    <!-- Attachment Display -->
+                                    {% if task.has_attachment %}
+                                    <div class="mb-2">
+                                        <a href="{{ task.attachment_url }}" target="_blank" class="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-600 rounded-lg text-xs hover:bg-blue-100">
+                                            <i class="fas fa-paperclip"></i>
+                                            {{ task.attachment_name or 'Attachment' }}
+                                        </a>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs bg-white p-3 rounded-lg">
+                                        <div>
+                                            <span class="font-semibold text-gray-700">Assigned to:</span>
+                                            <p class="font-medium text-xs mt-0.5">{{ task.assigned_to_name }}</p>
+                                        </div>
+                                        <div>
+                                            <span class="font-semibold text-gray-700">Due Date:</span>
+                                            <p class="font-medium text-xs mt-0.5">{{ task.due_date.strftime('%d %b %Y') }}</p>
+                                        </div>
+                                        <div>
+                                            <span class="font-semibold text-gray-700">Priority:</span>
+                                            <p class="mt-0.5">
+                                                <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium
+                                                    {% if task.priority == 'high' %}bg-red-100 text-red-800
+                                                    {% elif task.priority == 'medium' %}bg-yellow-100 text-yellow-800
+                                                    {% else %}bg-green-100 text-green-800{% endif %}">
+                                                    {{ task.priority|upper }}
+                                                </span>
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <span class="font-semibold text-gray-700">Progress:</span>
+                                            <div class="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                                                <div class="bg-[#04043a] rounded-full h-1.5" style="width: {{ task.progress }}%"></div>
+                                            </div>
+                                            <p class="text-xs text-gray-500 mt-0.5 text-right">{{ task.progress }}%</p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Update History -->
+                                    {% if task.updates and task.updates|length > 0 %}
+                                    <div class="mt-3 border-t pt-2">
+                                        <p class="text-xs font-semibold text-gray-700 mb-1">Update History:</p>
+                                        {% for update in task.updates[-3:] %}
+                                        <div class="text-xs text-gray-600 flex items-start gap-1 mb-1">
+                                            <i class="fas fa-history text-gray-400 mt-0.5"></i>
+                                            <div>
+                                                <span class="font-medium">{{ update.status|title }}</span> - {{ update.progress }}%
+                                                {% if update.comment %}: "{{ update.comment }}"{% endif %}
+                                                <span class="text-gray-400 text-[10px] block">{{ update.timestamp.strftime('%d %b %I:%M %p') }}</span>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-10 bg-gray-50 rounded-lg">
+                        <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-2">
+                            <i class="fas fa-tasks text-2xl text-gray-400"></i>
+                        </div>
+                        <p class="text-sm text-gray-600">No tasks assigned yet</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Core Team Members Tab -->
+            <div id="members-tab" class="tab-content hidden">
+                <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-200">
+                    <h2 class="text-lg font-bold text-[#04043a] mb-4 flex items-center gap-2">
+                        <div class="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-users text-white text-sm"></i>
+                        </div>
+                        Core Team Members ({{ core_members|length }})
+                    </h2>
+
+                    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                        {% for member in core_members %}
+                        <div class="border border-gray-200 rounded-lg p-3 text-center hover:shadow-sm transition hover:border-yellow-500 cursor-pointer" onclick="switchTab('analytics'); loadMemberAnalytics('{{ member._id }}')">
+                            <div class="relative inline-block">
+                                <div class="w-12 h-12 bg-gradient-to-r from-[#04043a] to-[#1e3c72] rounded-full flex items-center justify-center text-white text-lg font-bold mx-auto mb-2">
+                                    {{ member.email[0]|upper }}
+                                </div>
+                                {% if member.is_online %}
+                                <span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
+                                {% endif %}
+                            </div>
+                            <p class="font-semibold text-gray-900 text-xs">{{ member.email.split('@')[0] }}</p>
+                            <p class="text-xs text-gray-500 mb-1 truncate">{{ member.email }}</p>
+                            <div class="flex justify-center gap-1 mb-1">
+                                <span class="text-xs bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded-full">
+                                    {{ member.doc_count|default(0) }} docs
+                                </span>
+                            </div>
+                            {% if member.is_online %}
+                            <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 px-1.5 py-0.5 rounded-full text-xs">
+                                <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                                Online
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full text-xs">
+                                <span class="w-1.5 h-1.5 bg-gray-400 rounded-full"></span>
+                                Last seen {{ member.last_seen_formatted }}
+                            </span>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
+<!-- PDF Viewer Modal -->
+<div id="pdfModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+        <div class="flex items-center justify-between p-4 border-b border-gray-200">
+            <h3 class="text-lg font-bold text-[#04043a]" id="pdfModalTitle">PDF Viewer</h3>
+            <button onclick="closePDFModal()" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <div class="flex-1 overflow-hidden p-4">
+            <iframe id="pdfViewer" class="w-full h-full border-0 rounded-lg" src=""></iframe>
+        </div>
+        <div class="p-4 border-t border-gray-200 flex justify-end gap-2">
+            <a id="pdfDownloadLink" href="#" download class="px-4 py-2 bg-[#04043a] text-white rounded-lg hover:bg-[#1e3c72] transition text-sm flex items-center gap-1">
+                <i class="fas fa-download text-xs"></i> Download PDF
+            </a>
+            <button onclick="closePDFModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
-    // Show selected filename
-    document.getElementById('task_file')?.addEventListener('change', function(e) {
+    // Tab switching functionality
+    function switchTab(tabName) {
+        // Hide all tab contents
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.add('hidden');
+            content.classList.remove('active');
+        });
+        
+        // Show selected tab content
+        const selectedTab = document.getElementById(tabName + '-tab');
+        if (selectedTab) {
+            selectedTab.classList.remove('hidden');
+            selectedTab.classList.add('active');
+        }
+        
+        // Update tab buttons
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.classList.remove('active', 'border-yellow-500', 'text-[#04043a]');
+            button.classList.add('border-transparent', 'text-gray-500');
+        });
+        
+        // Activate clicked tab button
+        const activeButton = document.querySelector(`.tab-button[onclick*="${tabName}"]`);
+        if (activeButton) {
+            activeButton.classList.add('active', 'border-yellow-500', 'text-[#04043a]');
+            activeButton.classList.remove('border-transparent', 'text-gray-500');
+        }
+        
+        // Save active tab to localStorage
+        localStorage.setItem('activeLeaderTab', tabName);
+    }
+
+    // PDF Viewer Functions
+    function viewPDF(pdfUrl, documentName) {
+        document.getElementById('pdfModalTitle').textContent = documentName || 'PDF Viewer';
+        document.getElementById('pdfViewer').src = pdfUrl;
+        document.getElementById('pdfDownloadLink').href = pdfUrl;
+        document.getElementById('pdfModal').classList.remove('hidden');
+    }
+
+    function closePDFModal() {
+        document.getElementById('pdfModal').classList.add('hidden');
+        document.getElementById('pdfViewer').src = '';
+    }
+
+    // Show selected filename for share document
+    document.getElementById('share_file')?.addEventListener('change', function(e) {
         const fileName = e.target.files[0] ? e.target.files[0].name : 'No file chosen';
-        document.getElementById('file_name').textContent = fileName;
+        document.getElementById('share_file_name').textContent = fileName;
     });
 
-    // Filter documents by date
-    function filterByDate() {
-        const selectedDate = document.getElementById('filterDate').value;
-        if (!selectedDate) return;
-        
-        fetch(`/api/documents/by-date?date=${selectedDate}`)
-            .then(response => response.json())
-            .then(data => {
-                const statsDiv = document.getElementById('dateStats');
-                statsDiv.classList.remove('hidden');
-                statsDiv.innerHTML = `
-                    <div class="bg-blue-50 rounded-lg p-4">
-                        <p class="text-sm text-gray-600">Documents on ${selectedDate}</p>
-                        <p class="text-2xl font-bold text-[#04043a]">${data.total}</p>
-                    </div>
-                    <div class="bg-green-50 rounded-lg p-4">
-                        <p class="text-sm text-gray-600">Approved</p>
-                        <p class="text-2xl font-bold text-green-600">${data.approved}</p>
-                    </div>
-                    <div class="bg-yellow-50 rounded-lg p-4">
-                        <p class="text-sm text-gray-600">Pending</p>
-                        <p class="text-2xl font-bold text-yellow-600">${data.pending}</p>
-                    </div>
-                `;
-            });
-    }
+    // Show selected filename for task assignment
+    document.getElementById('task_file')?.addEventListener('change', function(e) {
+        const fileName = e.target.files[0] ? e.target.files[0].name : 'No file chosen';
+        document.getElementById('task_file_name').textContent = fileName;
+    });
 
     // Load member analytics
     function loadMemberAnalytics(memberId) {
@@ -650,8 +753,8 @@
                 document.getElementById('memberName').textContent = data.name;
                 document.getElementById('memberEmail').textContent = data.email;
                 document.getElementById('memberStatus').innerHTML = data.is_online ? 
-                    '<span class="w-2 h-2 bg-green-500 rounded-full"></span> Online' : 
-                    '<span class="w-2 h-2 bg-gray-500 rounded-full"></span> Offline';
+                    '<span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> Online' : 
+                    '<span class="w-1.5 h-1.5 bg-gray-500 rounded-full"></span> Offline';
                 document.getElementById('lastSeen').textContent = data.last_seen;
                 
                 // Update stats
@@ -665,12 +768,12 @@
                 timeline.innerHTML = '';
                 data.recent_activity.forEach(activity => {
                     timeline.innerHTML += `
-                        <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                            <div class="w-8 h-8 bg-${activity.color}-100 rounded-full flex items-center justify-center">
-                                <i class="fas fa-${activity.icon} text-${activity.color}-600"></i>
+                        <div class="flex items-start gap-2 p-2 bg-gray-50 rounded-lg">
+                            <div class="w-6 h-6 bg-${activity.color}-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-${activity.icon} text-${activity.color}-600 text-xs"></i>
                             </div>
                             <div>
-                                <p class="text-sm font-medium">${activity.description}</p>
+                                <p class="text-xs font-medium">${activity.description}</p>
                                 <p class="text-xs text-gray-500">${activity.time}</p>
                             </div>
                         </div>
@@ -681,12 +784,34 @@
                 const table = document.getElementById('documentsTable');
                 table.innerHTML = '';
                 data.documents.forEach(doc => {
+                    let actionButtons = '';
+                    if (doc.file_url) {
+                        if (doc.file_url.endsWith('.pdf')) {
+                            actionButtons = `
+                                <div class="flex gap-2">
+                                    <button onclick="viewPDF('${doc.file_url}', '${doc.name}')" class="text-blue-600 hover:text-blue-800">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <a href="${doc.file_url}" target="_blank" download class="text-blue-600 hover:text-blue-800">
+                                        <i class="fas fa-download"></i>
+                                    </a>
+                                </div>
+                            `;
+                        } else {
+                            actionButtons = `
+                                <a href="${doc.file_url}" target="_blank" download class="text-blue-600 hover:text-blue-800">
+                                    <i class="fas fa-download"></i>
+                                </a>
+                            `;
+                        }
+                    }
+                    
                     table.innerHTML += `
                         <tr>
-                            <td class="px-4 py-3 text-sm">${doc.name}</td>
-                            <td class="px-4 py-3 text-sm">${doc.submitted}</td>
-                            <td class="px-4 py-3">
-                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                            <td class="px-3 py-2 text-xs">${doc.name}</td>
+                            <td class="px-3 py-2 text-xs">${doc.submitted}</td>
+                            <td class="px-3 py-2">
+                                <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium
                                     ${doc.status === 'approved' ? 'bg-green-100 text-green-800' : 
                                       doc.status === 'revision' ? 'bg-orange-100 text-orange-800' : 
                                       doc.status === 'rejected' ? 'bg-red-100 text-red-800' : 
@@ -694,30 +819,53 @@
                                     ${doc.status}
                                 </span>
                             </td>
-                            <td class="px-4 py-3 text-sm">${doc.reviewed_by || 'Not reviewed'}</td>
-                            <td class="px-4 py-3">
-                                <a href="${doc.file_url}" target="_blank" class="text-blue-600 hover:text-blue-800">
-                                    <i class="fas fa-download"></i>
-                                </a>
-                            </td>
+                            <td class="px-3 py-2 text-xs">${actionButtons}</td>
                         </tr>
                     `;
                 });
             });
     }
 
+    // Initialize active tab from localStorage or default to 'share'
+    document.addEventListener('DOMContentLoaded', function() {
+        const activeTab = localStorage.getItem('activeLeaderTab') || 'share';
+        switchTab(activeTab);
+        
+        // Close modal on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closePDFModal();
+            }
+        });
+        
+        // Close modal when clicking outside
+        document.getElementById('pdfModal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePDFModal();
+            }
+        });
+    });
+
     // Auto-refresh online status every 30 seconds
     setInterval(() => {
         fetch('/api/activity/status')
             .then(response => response.json())
             .then(data => {
-                // Update online indicators if needed
-                console.log('Active users:', data.total_active);
+                if (data.updated_tasks > 0) {
+                    window.showNotification('Task Updates', `${data.updated_tasks} task${data.updated_tasks > 1 ? 's' : ''} have been updated`, 'info');
+                }
             });
     }, 30000);
 </script>
 
 <style>
+    .tab-button {
+        transition: all 0.2s ease;
+    }
+    .tab-button.active {
+        color: #04043a;
+        border-bottom-color: #eab308;
+    }
     .form-checkbox {
         border-radius: 0.25rem;
         border-width: 2px;
@@ -729,6 +877,12 @@
     }
     .transition-all {
         transition: all 0.3s ease;
+    }
+    #pdfModal {
+        backdrop-filter: blur(4px);
+    }
+    #pdfViewer {
+        background: #f1f5f9;
     }
 </style>
 {% endblock %}

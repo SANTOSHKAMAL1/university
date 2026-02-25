@@ -610,7 +610,7 @@ Jain University - Office of Academics
     except Exception as e:
         logger.error(f"Error sending document notification: {e}")
 
-def send_task_notification(sender, receiver, task_title, due_date, attachment_msg=""):
+def send_task_notification(sender, receiver, task_title, due_date, attachment_msg="", priority="medium", description=""):
     """Send email notification for assigned task"""
     try:
         msg = Message(
@@ -627,11 +627,11 @@ def send_task_notification(sender, receiver, task_title, due_date, attachment_ms
 
 Task: {task_title}
 Due Date: {due_date}
-Priority: {task.get('priority', 'medium')}
+Priority: {priority}
 {attachment_msg}
 
 Description:
-{task.get('description', 'No description provided')}
+{description}
 
 Please log in to view and manage your tasks:
 {request.url_root}core_dashboard
@@ -640,49 +640,6 @@ Please log in to view and manage your tasks:
 Jain University Portal - Office of Academics
 ========================================
         """
-        
-        # Add HTML version
-        msg.html = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <style>
-                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
-                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-                .header {{ background: #04043a; color: #FFD700; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
-                .content {{ background: #f9f9f9; padding: 20px; border-radius: 0 0 10px 10px; }}
-                .task-detail {{ background: white; padding: 15px; border-left: 4px solid #28a745; margin: 15px 0; }}
-                .button {{ background: #04043a; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 15px; }}
-                .footer {{ text-align: center; margin-top: 20px; font-size: 12px; color: #666; }}
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <h1>📋 New Task Assigned</h1>
-                </div>
-                <div class="content">
-                    <p><strong>{sender['email'].split('@')[0]}</strong> has assigned a new task to you:</p>
-                    
-                    <div class="task-detail">
-                        <h2 style="margin-top: 0;">{task_title}</h2>
-                        <p><strong>Due Date:</strong> {due_date}</p>
-                        <p><strong>Priority:</strong> <span style="color: {'#dc3545' if priority == 'high' else '#ffc107' if priority == 'medium' else '#28a745'};">{priority.upper()}</span></p>
-                        {attachment_msg}
-                        <p><strong>Description:</strong></p>
-                        <p>{description}</p>
-                    </div>
-                    
-                    <a href="{request.url_root}core_dashboard" class="button">View Task Dashboard</a>
-                </div>
-                <div class="footer">
-                    <p>Jain University - Office of Academics</p>
-                </div>
-            </div>
-        </body>
-        </html>
-        """
-        
         mail.send(msg)
         logger.info(f"Task notification sent to {receiver['email']}")
     except Exception as e:
@@ -1834,6 +1791,7 @@ def core_dashboard():
             task['progress'] = task.get('progress', 0)
             task['priority'] = task.get('priority', 'medium')
             task['status'] = task.get('status', 'pending')
+            task['updates'] = task.get('updates', [])
             
             # Format due date
             if task.get('due_date'):
@@ -1968,6 +1926,19 @@ def core_dashboard():
                     'icon': 'tasks',
                     'color': 'purple'
                 })
+            
+            # Add task updates
+            if task.get('updates'):
+                for update in task['updates'][-2:]:  # Last 2 updates
+                    recent_activity.append({
+                        'type': 'task_update',
+                        'action': 'updated',
+                        'title': f"{task['title']} - {update['status']}",
+                        'time': update['timestamp'].strftime('%d %b, %I:%M %p') if isinstance(update['timestamp'], datetime) else '',
+                        'status': update['status'],
+                        'icon': 'history',
+                        'color': 'green' if update['status'] == 'completed' else 'orange'
+                    })
         
         # Add share activities
         for share in recent_shares[:5]:
@@ -2211,6 +2182,15 @@ def leader_dashboard():
                 assignee = db.users.find_one({'_id': task['assigned_to']})
                 if assignee:
                     task['assigned_to_name'] = assignee['email'].split('@')[0]
+                
+                # Format due date
+                if task.get('due_date'):
+                    if isinstance(task['due_date'], datetime):
+                        task['due_date_str'] = task['due_date'].strftime('%d %b %Y')
+                    else:
+                        task['due_date_str'] = str(task['due_date'])
+                else:
+                    task['due_date_str'] = 'No due date'
         except Exception as e:
             logger.error(f"Error fetching assigned tasks: {e}")
             assigned_tasks = []
@@ -2288,7 +2268,8 @@ def leader_dashboard():
             leaders=leaders,
             pending_count=pending_count,
             today_shared_count=today_shared_count,
-            today_date=today_date
+            today_date=today_date,
+            now=get_indian_time()
         )
         
     except Exception as e:
@@ -2342,7 +2323,7 @@ def review_document(document_id):
 @app.route('/share_document_leader', methods=['POST'])
 @approval_required
 def share_document_leader():
-    """Leaders can share documents with other leaders and core members"""
+    """Leaders can share documents with other leaders and core members - with optional file upload"""
     if not is_leader():
         return jsonify({'error': 'Access denied'}), 403
     
@@ -2354,52 +2335,153 @@ def share_document_leader():
         core_ids = request.form.getlist('core_members')
         message = request.form.get('message', '').strip()
         
+        # Handle file upload
+        file = request.files.get('share_file')
+        file_url = None
+        file_name = None
+        
+        if file and file.filename and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            name_part, ext_part = os.path.splitext(filename)
+            unique_filename = f"share_{name_part}_{timestamp}{ext_part}"
+            
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+            file.save(filepath)
+            file_url = '/' + filepath.replace('\\', '/')
+            file_name = filename
+            
+            logger.info(f"✅ Share file uploaded: {filename}")
+        
         recipient_ids = leader_ids + core_ids
         
-        if not document_id or not recipient_ids:
-            flash('Please select a document and at least one recipient', 'error')
+        if not recipient_ids:
+            flash('Please select at least one recipient', 'error')
             return redirect(url_for('leader_dashboard'))
         
-        document = db.office_documents.find_one({'_id': ObjectId(document_id)})
-        if not document:
-            flash('Document not found', 'error')
+        # Prepare document data
+        document_name = "Shared File"
+        document_description = message
+        
+        # If document_id is provided, use that document
+        if document_id:
+            document = db.office_documents.find_one({'_id': ObjectId(document_id)})
+            if document:
+                document_name = document['document_name']
+                document_description = document.get('description', '')
+                file_url = document.get('file_url')  # Use existing document's file if no new file uploaded
+        
+        # If no document_id and no file uploaded, show error
+        if not document_id and not file_url:
+            flash('Please either select a document or upload a file', 'error')
             return redirect(url_for('leader_dashboard'))
         
         share_data = {
-            'document_id': ObjectId(document_id),
-            'document_name': document['document_name'],
+            'document_id': ObjectId(document_id) if document_id else None,
+            'document_name': document_name,
             'shared_by': user['_id'],
             'shared_by_email': session['email'],
             'shared_with': [ObjectId(rid) for rid in recipient_ids],
             'message': message,
+            'file_url': file_url,
+            'file_name': file_name,
             'shared_at': get_indian_time(),
             'status': 'sent'
         }
         
         result = db.document_shares.insert_one(share_data)
         
+        # Send notifications to recipients
         for recipient_id in recipient_ids:
             recipient = db.users.find_one({'_id': ObjectId(recipient_id)})
             if recipient:
-                send_document_notification(user, recipient, document, message)
+                send_document_notification(
+                    user, 
+                    recipient, 
+                    {'document_name': document_name, 'description': document_description, '_id': result.inserted_id},
+                    message
+                )
         
         db.activity_logs.insert_one({
             'user_id': user['_id'],
             'user_email': session['email'],
             'action': 'document_share',
-            'details': f'Shared document {document["document_name"]} with {len(recipient_ids)} users',
+            'details': f'Shared {"file" if file_url else "document"} with {len(recipient_ids)} users',
             'timestamp': get_indian_time(),
             'ip_address': request.remote_addr
         })
         
-        flash('✅ Document shared successfully', 'success')
+        flash('✅ Document shared successfully' + (' with attachment' if file_url else ''), 'success')
         return redirect(url_for('leader_dashboard'))
         
     except Exception as e:
         logger.error(f"Error sharing document: {e}")
         flash(f'Error sharing document: {str(e)[:100]}', 'error')
         return redirect(url_for('leader_dashboard'))
+    
 
+@app.route('/api/activity/status')
+@login_required
+def get_activity_status():
+    """Get real-time activity status for notifications"""
+    try:
+        user = db.users.find_one({'email': session['email']})
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        now = get_indian_time_aware()
+        five_minutes_ago = now - timedelta(minutes=5)
+        five_minutes_ago_naive = make_timezone_naive(five_minutes_ago)
+        
+        # Check for new tasks
+        new_tasks = db.tasks.count_documents({
+            'assigned_to': user['_id'],
+            'created_at': {'$gte': five_minutes_ago_naive},
+            'status': 'pending'
+        })
+        
+        # Check for new shared documents
+        new_documents = db.document_shares.count_documents({
+            'shared_with': user['_id'],
+            'shared_at': {'$gte': five_minutes_ago_naive}
+        })
+        
+        # Check for overdue tasks
+        overdue_tasks = db.tasks.count_documents({
+            'assigned_to': user['_id'],
+            'due_date': {'$lt': five_minutes_ago_naive},
+            'status': {'$ne': 'completed'}
+        })
+        
+        # Check for task updates (for leaders)
+        updated_tasks = 0
+        if is_leader():
+            # Tasks assigned by this leader that were updated in last 5 minutes
+            updated_tasks = db.tasks.count_documents({
+                'assigned_by': user['_id'],
+                'updated_at': {'$gte': five_minutes_ago_naive},
+                'status': {'$in': ['in_progress', 'completed']}
+            })
+        
+        # Update user's last seen
+        db.users.update_one(
+            {'_id': user['_id']},
+            {'$set': {'last_seen': get_indian_time()}}
+        )
+        
+        return jsonify({
+            'success': True,
+            'new_tasks': new_tasks,
+            'new_documents': new_documents,
+            'overdue_tasks': overdue_tasks,
+            'updated_tasks': updated_tasks,
+            'timestamp': get_indian_time().strftime('%Y-%m-%d %H:%M:%S')
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting activity status: {e}")
+        return jsonify({'error': str(e)}), 500
+       
 @app.route('/assign_task', methods=['POST'])
 @approval_required
 def assign_task():
@@ -2451,6 +2533,7 @@ def assign_task():
             'has_attachment': file_url is not None,
             'attachment_url': file_url,
             'attachment_name': file_name,
+            'updates': [],  # Initialize updates array
             'created_at': get_indian_time(),
             'updated_at': get_indian_time()
         }
@@ -2479,7 +2562,7 @@ def assign_task():
         logger.error(f"Error assigning task: {e}")
         flash(f'Error assigning task: {str(e)[:100]}', 'error')
         return redirect(url_for('leader_dashboard'))
-
+    
 @app.route('/api/core-member/analytics/<member_id>')
 @approval_required
 def core_member_analytics(member_id):
@@ -2909,57 +2992,166 @@ def debug_create_collections():
         return jsonify({'error': str(e)}), 500
 
 # ===================== API ENDPOINTS =====================
-@app.route('/api/activity/status')
+
+@app.route('/api/update_task_progress/<task_id>', methods=['POST'])
 @login_required
-def get_activity_status():
-    """Get real-time activity status for notifications"""
+def update_task_progress(task_id):
+    """Update task progress and status with optional attachment"""
     try:
+        # Get form data (supports both JSON and form-data)
+        if request.is_json:
+            data = request.get_json()
+            progress = data.get('progress', 0)
+            status = data.get('status', 'in_progress')
+            comment = data.get('comment', '')
+            attachment = None
+        else:
+            progress = request.form.get('progress', 0, type=int)
+            status = request.form.get('status', 'in_progress')
+            comment = request.form.get('comment', '')
+            attachment = request.files.get('attachment')
+        
         user = db.users.find_one({'email': session['email']})
         if not user:
             return jsonify({'error': 'User not found'}), 404
         
-        now = get_indian_time_aware()
-        five_minutes_ago = now - timedelta(minutes=5)
-        five_minutes_ago_naive = make_timezone_naive(five_minutes_ago)
+        # Get the task
+        task = db.tasks.find_one({'_id': ObjectId(task_id)})
+        if not task:
+            return jsonify({'error': 'Task not found'}), 404
         
-        # Check for new tasks
-        new_tasks = db.tasks.count_documents({
-            'assigned_to': user['_id'],
-            'created_at': {'$gte': five_minutes_ago_naive},
-            'status': 'pending'
+        # Check if user is assigned to this task
+        if str(task['assigned_to']) != str(user['_id']):
+            return jsonify({'error': 'You are not assigned to this task'}), 403
+        
+        # Handle file upload
+        file_url = None
+        file_name = None
+        
+        if attachment and attachment.filename and allowed_file(attachment.filename):
+            filename = secure_filename(attachment.filename)
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            name_part, ext_part = os.path.splitext(filename)
+            unique_filename = f"task_update_{name_part}_{timestamp}{ext_part}"
+            
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+            attachment.save(filepath)
+            file_url = '/' + filepath.replace('\\', '/')
+            file_name = filename
+            
+            logger.info(f"✅ Task update file uploaded: {filename}")
+        
+        # Prepare update data
+        update_data = {
+            'progress': progress,
+            'status': status,
+            'updated_at': get_indian_time()
+        }
+        
+        # If file uploaded, add to task
+        if file_url:
+            update_data['latest_attachment_url'] = file_url
+            update_data['latest_attachment_name'] = file_name
+        
+        # Add to update history
+        update_entry = {
+            'progress': progress,
+            'status': status,
+            'comment': comment,
+            'timestamp': get_indian_time()
+        }
+        
+        # Add file info to update history if present
+        if file_url:
+            update_entry['attachment_url'] = file_url
+            update_entry['attachment_name'] = file_name
+        
+        # Initialize updates array if it doesn't exist
+        if 'updates' not in task:
+            update_data['updates'] = [update_entry]
+            db.tasks.update_one(
+                {'_id': ObjectId(task_id)},
+                {'$set': update_data}
+            )
+        else:
+            # Push to existing updates array
+            db.tasks.update_one(
+                {'_id': ObjectId(task_id)},
+                {
+                    '$set': update_data,
+                    '$push': {'updates': update_entry}
+                }
+            )
+        
+        # Log activity
+        db.activity_logs.insert_one({
+            'user_id': user['_id'],
+            'user_email': session['email'],
+            'action': 'task_update',
+            'details': f'Updated task: {task["title"]} to {status} ({progress}%)',
+            'timestamp': get_indian_time(),
+            'ip_address': request.remote_addr
         })
         
-        # Check for new shared documents
-        new_documents = db.document_shares.count_documents({
-            'shared_with': user['_id'],
-            'shared_at': {'$gte': five_minutes_ago_naive}
-        })
-        
-        # Check for overdue tasks
-        overdue_tasks = db.tasks.count_documents({
-            'assigned_to': user['_id'],
-            'due_date': {'$lt': five_minutes_ago_naive},
-            'status': {'$ne': 'completed'}
-        })
-        
-        # Update user's last seen
-        db.users.update_one(
-            {'_id': user['_id']},
-            {'$set': {'last_seen': get_indian_time()}}
-        )
+        # If task is completed, send notification to the leader who assigned it
+        if status == 'completed':
+            assigner = db.users.find_one({'_id': task['assigned_by']})
+            if assigner:
+                try:
+                    send_completion_notification(assigner, user, task, comment, file_url)
+                except Exception as e:
+                    logger.error(f"Error sending completion notification: {e}")
         
         return jsonify({
             'success': True,
-            'new_tasks': new_tasks,
-            'new_documents': new_documents,
-            'overdue_tasks': overdue_tasks,
-            'timestamp': get_indian_time().strftime('%Y-%m-%d %H:%M:%S')
+            'message': 'Task updated successfully' + (' with attachment' if file_url else '')
         })
         
     except Exception as e:
-        logger.error(f"Error getting activity status: {e}")
+        logger.error(f"Error updating task: {e}", exc_info=True)
         return jsonify({'error': str(e)}), 500
 
+def send_completion_notification(assigner, completer, task, comment, attachment_url=None):
+    """Send notification when task is completed"""
+    try:
+        attachment_msg = " with attachment" if attachment_url else ""
+        
+        msg = Message(
+            subject=f"✅ Task Completed: {task['title']}",
+            sender=app.config['MAIL_USERNAME'],
+            recipients=[assigner['email']]
+        )
+        
+        msg.body = f"""
+========================================
+            TASK COMPLETED
+========================================
+
+Task: {task['title']}
+Completed by: {completer['email'].split('@')[0]}
+Progress: {task.get('progress', 0)}%
+{attachment_msg}
+
+Completion Message:
+{comment if comment else 'Task marked as completed'}
+
+Please log in to review:
+{request.url_root}leader_dashboard
+
+========================================
+Jain University Portal - Office of Academics
+========================================
+        """
+        
+        # If there's an attachment, include the link
+        if attachment_url:
+            msg.body += f"\n\nAttachment: {request.url_root.rstrip('/')}{attachment_url}"
+        
+        mail.send(msg)
+        logger.info(f"Task completion notification sent to {assigner['email']}")
+        
+    except Exception as e:
+        logger.error(f"Error sending task completion notification: {e}")
 @app.route('/api/notifications')
 @login_required
 def api_notifications():
