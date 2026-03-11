@@ -8,9 +8,6 @@
 <div class="min-h-screen bg-gray-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         
-        <!-- Header -->
-        
-
         <!-- Quick Stats Cards -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-[#04043a] hover:shadow-md transition-all">
@@ -191,8 +188,6 @@
                 </button>
             </div>
 
-            <!-- Tab Content Sections -->
-            
             <!-- Upload Document Section -->
             <div id="content-upload" class="tab-content p-5">
                 <h2 class="text-lg font-bold text-[#04043a] mb-4 flex items-center gap-2">
@@ -307,15 +302,29 @@
                 <div class="space-y-3 max-h-[600px] overflow-y-auto pr-2">
                     {% for task in my_tasks %}
                     <div class="border-l-4 
-                        {% if task.priority == 'high' %}border-red-500
+                        {% if task.status == 'rework' %}border-orange-500
+                        {% elif task.status == 'accepted' %}border-emerald-500
+                        {% elif task.status == 'completed' %}border-green-500
+                        {% elif task.priority == 'high' %}border-red-500
                         {% elif task.priority == 'medium' %}border-yellow-500
                         {% else %}border-green-500{% endif %}
                         bg-gray-50 rounded-lg p-4 hover:shadow-sm transition" id="task-{{ task._id }}">
                         <div class="flex items-start justify-between">
                             <div class="flex-1">
                                 <div class="flex items-center gap-2 mb-2">
-                                    <div class="w-8 h-8 {% if task.priority == 'high' %}bg-red-100{% elif task.priority == 'medium' %}bg-yellow-100{% else %}bg-green-100{% endif %} rounded-lg flex items-center justify-center">
-                                        <i class="fas fa-clipboard-list {% if task.priority == 'high' %}text-red-600{% elif task.priority == 'medium' %}text-yellow-600{% else %}text-green-600{% endif %} text-sm"></i>
+                                    <div class="w-8 h-8 
+                                        {% if task.status == 'rework' %}bg-orange-100
+                                        {% elif task.status == 'accepted' %}bg-emerald-100
+                                        {% elif task.priority == 'high' %}bg-red-100
+                                        {% elif task.priority == 'medium' %}bg-yellow-100
+                                        {% else %}bg-green-100{% endif %} rounded-lg flex items-center justify-center">
+                                        <i class="fas 
+                                            {% if task.status == 'rework' %}fa-redo text-orange-600
+                                            {% elif task.status == 'accepted' %}fa-check-double text-emerald-600
+                                            {% else %}fa-clipboard-list
+                                            {% if task.priority == 'high' %}text-red-600
+                                            {% elif task.priority == 'medium' %}text-yellow-600
+                                            {% else %}text-green-600{% endif %}{% endif %} text-sm"></i>
                                     </div>
                                     <div>
                                         <h3 class="text-sm font-bold text-gray-900">{{ task.title }}</h3>
@@ -324,11 +333,60 @@
                                 </div>
                                 <p class="text-xs text-gray-700 mb-3">{{ task.description }}</p>
 
+                                <!-- REWORK ALERT BANNER -->
+                                {% if task.status == 'rework' %}
+                                <div class="mb-3 p-3 bg-orange-50 border-l-4 border-orange-500 rounded-lg">
+                                    <div class="flex items-start gap-2">
+                                        <i class="fas fa-exclamation-triangle text-orange-600 mt-0.5"></i>
+                                        <div>
+                                            <p class="text-xs font-bold text-orange-800">Rework Requested by Leader</p>
+                                            {% if task.rework_comment %}
+                                            <p class="text-xs text-orange-700 mt-1">{{ task.rework_comment }}</p>
+                                            {% endif %}
+                                            <p class="text-[10px] text-orange-500 mt-1">Please update your progress after making the required changes.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                <!-- ACCEPTED BANNER -->
+                                {% if task.status == 'accepted' %}
+                                <div class="mb-3 p-3 bg-emerald-50 border-l-4 border-emerald-500 rounded-lg">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fas fa-star text-emerald-600"></i>
+                                        <p class="text-xs font-bold text-emerald-800">Task Accepted! Great work!</p>
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                <!-- Leader Comments -->
+                                {% if task.leader_comments and task.leader_comments|length > 0 %}
+                                <div class="mb-3 space-y-1">
+                                    <p class="text-xs font-semibold text-purple-700 flex items-center gap-1">
+                                        <i class="fas fa-comments text-purple-500"></i>Leader Comments
+                                    </p>
+                                    {% for lc in task.leader_comments[-3:] %}
+                                    <div class="p-2 bg-purple-50 rounded-lg border border-purple-100">
+                                        <p class="text-[11px] text-purple-800">"{{ lc.comment }}"</p>
+                                        <p class="text-[10px] text-purple-500 mt-0.5">— {{ lc.commented_by }} 
+                                            {% if lc.timestamp %}
+                                            · {% if lc.timestamp is string %}{{ lc.timestamp }}{% else %}{{ lc.timestamp.strftime('%d %b, %I:%M %p') }}{% endif %}
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+
                                 {% if task.has_attachment and task.attachment_url %}
                                 <div class="mb-3">
-                                    <a href="{{ task.attachment_url }}" target="_blank" class="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-600 rounded-lg text-xs hover:bg-blue-100">
+                                    <button onclick="viewFile('{{ task.attachment_url }}', '{{ task.attachment_name or task.title }}')" 
+                                            class="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-600 rounded-lg text-xs hover:bg-blue-100">
                                         <i class="fas fa-paperclip"></i>{{ task.attachment_name or 'Attachment' }}
-                                    </a>
+                                        {% if task.attachment_url.endswith('.pdf') %}
+                                        <span class="bg-red-100 text-red-700 px-1 py-0.5 rounded text-[10px]">PDF</span>
+                                        {% endif %}
+                                    </button>
                                 </div>
                                 {% endif %}
 
@@ -355,15 +413,26 @@
                                                 {% if task.status == 'completed' %}bg-green-100 text-green-800
                                                 {% elif task.status == 'in_progress' %}bg-blue-100 text-blue-800
                                                 {% elif task.status == 'pending' %}bg-yellow-100 text-yellow-800
+                                                {% elif task.status == 'rework' %}bg-orange-100 text-orange-800
+                                                {% elif task.status == 'accepted' %}bg-emerald-100 text-emerald-800
                                                 {% else %}bg-gray-100 text-gray-800{% endif %}">
-                                                {{ task.status|replace('_', ' ')|title }}
+                                                {% if task.status == 'rework' %}🔄 Rework Required
+                                                {% elif task.status == 'accepted' %}✅ Accepted
+                                                {% elif task.status == 'completed' %}🏁 Completed
+                                                {% elif task.status == 'in_progress' %}⚡ In Progress
+                                                {% else %}⏳ {{ task.status|replace('_', ' ')|title }}{% endif %}
                                             </span>
                                         </p>
                                     </div>
                                     <div>
                                         <span class="font-semibold text-gray-700">Progress:</span>
                                         <div class="w-full bg-gray-200 rounded-full h-1.5 mt-1" id="progress-bar-wrap-{{ task._id }}">
-                                            <div class="{% if task.priority == 'high' %}bg-red-500{% elif task.priority == 'medium' %}bg-yellow-500{% else %}bg-green-500{% endif %} rounded-full h-1.5" 
+                                            <div class="rounded-full h-1.5 transition-all
+                                                {% if task.status == 'accepted' %}bg-emerald-500
+                                                {% elif task.status == 'rework' %}bg-orange-500
+                                                {% elif task.priority == 'high' %}bg-red-500
+                                                {% elif task.priority == 'medium' %}bg-yellow-500
+                                                {% else %}bg-green-500{% endif %}" 
                                                  id="progress-bar-{{ task._id }}"
                                                  style="width: {{ task.progress }}%"></div>
                                         </div>
@@ -373,20 +442,38 @@
 
                                 {% if task.updates and task.updates|length > 0 %}
                                 <div class="mt-3 border-t pt-2">
-                                    <p class="text-xs font-semibold text-gray-700 mb-1">Update History:</p>
-                                    {% for update in task.updates[-3:] %}
+                                    <p class="text-xs font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                                        <i class="fas fa-history text-gray-500"></i>Update History
+                                        <span class="bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full text-[10px]">{{ task.updates|length }}</span>
+                                    </p>
+                                    {% for update in task.updates[-3:]|reverse %}
                                     <div class="text-xs text-gray-600 flex items-start gap-1 mb-2">
-                                        <i class="fas fa-history text-gray-400 mt-0.5"></i>
+                                        <div class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5
+                                            {% if 'LEADER' in (update.comment or '') %}bg-orange-100
+                                            {% elif update.status == 'completed' %}bg-green-100
+                                            {% elif update.status == 'in_progress' %}bg-blue-100
+                                            {% elif update.status == 'rework' %}bg-orange-100
+                                            {% else %}bg-yellow-100{% endif %}">
+                                            <i class="fas fa-circle text-[6px]
+                                                {% if 'LEADER' in (update.comment or '') %}text-orange-600
+                                                {% elif update.status == 'completed' %}text-green-600
+                                                {% elif update.status == 'in_progress' %}text-blue-600
+                                                {% elif update.status == 'rework' %}text-orange-600
+                                                {% else %}text-yellow-600{% endif %}"></i>
+                                        </div>
                                         <div class="flex-1">
                                             <div>
-                                                <span class="font-medium">{{ update.status|title }}</span> - {{ update.progress }}%
+                                                <span class="font-medium capitalize">{{ update.status|replace('_',' ') }}</span> - {{ update.progress }}%
                                                 {% if update.comment %}: "{{ update.comment }}"{% endif %}
                                             </div>
                                             {% if update.attachment_url %}
                                             <div class="mt-1">
-                                                <a href="{{ update.attachment_url }}" target="_blank" class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800">
-                                                    <i class="fas fa-paperclip text-xs"></i>{{ update.attachment_name or 'Attachment' }}
-                                                </a>
+                                                <button onclick="viewFile('{{ update.attachment_url }}', '{{ update.attachment_name or 'Attachment' }}')" 
+                                                        class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-0.5 rounded-full text-[11px]">
+                                                    <i class="fas fa-{% if update.attachment_url.endswith('.pdf') %}file-pdf{% else %}paperclip{% endif %}"></i>
+                                                    {{ update.attachment_name or 'Attachment' }}
+                                                    <i class="fas fa-external-link-alt text-[9px]"></i>
+                                                </button>
                                             </div>
                                             {% endif %}
                                             <span class="text-gray-400 text-[10px] block">
@@ -399,7 +486,8 @@
                                 </div>
                                 {% endif %}
 
-                                {% if task.status != 'completed' %}
+                                <!-- Action buttons based on status -->
+                                {% if task.status == 'rework' or task.status == 'pending' or task.status == 'in_progress' %}
                                 <div class="mt-3 flex justify-end">
                                     <button 
                                         type="button"
@@ -408,10 +496,16 @@
                                         <i class="fas fa-edit"></i>Update Progress
                                     </button>
                                 </div>
-                                {% else %}
+                                {% elif task.status == 'completed' %}
                                 <div class="mt-3 flex justify-end">
                                     <span class="px-4 py-2 bg-green-100 text-green-800 rounded-lg text-sm flex items-center gap-2 font-medium">
-                                        <i class="fas fa-check-circle"></i>Completed
+                                        <i class="fas fa-check-circle"></i>Completed — Awaiting Review
+                                    </span>
+                                </div>
+                                {% elif task.status == 'accepted' %}
+                                <div class="mt-3 flex justify-end">
+                                    <span class="px-4 py-2 bg-emerald-100 text-emerald-800 rounded-lg text-sm flex items-center gap-2 font-medium">
+                                        <i class="fas fa-star"></i>Task Accepted & Closed
                                     </span>
                                 </div>
                                 {% endif %}
@@ -495,10 +589,16 @@
                                 {% endif %}
                             </div>
                             {% if doc.file_url %}
-                            <a href="{{ doc.file_url }}" target="_blank"
-                               class="ml-3 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-1 text-xs">
-                                <i class="fas fa-eye"></i>View
-                            </a>
+                            <div class="ml-3 flex flex-col gap-1">
+                                <button onclick="viewFile('{{ doc.file_url }}', '{{ doc.document_name }}')"
+                                   class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-1 text-xs">
+                                    <i class="fas fa-eye"></i>View
+                                </button>
+                                <a href="{{ doc.file_url }}" download
+                                   class="px-3 py-1.5 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition flex items-center gap-1 text-xs">
+                                    <i class="fas fa-download"></i>Download
+                                </a>
+                            </div>
                             {% endif %}
                         </div>
                     </div>
@@ -537,6 +637,8 @@
                                         {% elif activity.status == 'pending' %}bg-yellow-100 text-yellow-800
                                         {% elif activity.status == 'revision' %}bg-orange-100 text-orange-800
                                         {% elif activity.status == 'rejected' %}bg-red-100 text-red-800
+                                        {% elif activity.status == 'rework' %}bg-orange-100 text-orange-800
+                                        {% elif activity.status == 'accepted' %}bg-emerald-100 text-emerald-800
                                         {% else %}bg-gray-100 text-gray-800{% endif %}">
                                         {{ activity.status }}
                                     </span>
@@ -555,7 +657,7 @@
             </div>
         </div>
 
-        <!-- Shared Documents Section (always visible at bottom) -->
+        <!-- Shared Documents Section -->
         {% if recent_shares and recent_shares|length > 0 %}
         <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-200">
             <h2 class="text-lg font-bold text-[#04043a] mb-4 flex items-center gap-2">
@@ -580,9 +682,14 @@
                             </div>
                             <p class="text-[10px] text-gray-500 mt-1"><i class="far fa-clock mr-1"></i>{{ share.shared_at.strftime('%d %b %Y, %I:%M %p') }}</p>
                             {% if share.file_url %}
-                            <a href="{{ share.file_url }}" target="_blank" class="mt-2 inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800">
-                                <i class="fas fa-eye"></i> View File
-                            </a>
+                            <div class="mt-2 flex gap-2">
+                                <button onclick="viewFile('{{ share.file_url }}', '{{ share.document_name }}')" class="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-1 rounded">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                                <a href="{{ share.file_url }}" download class="inline-flex items-center gap-1 text-xs text-gray-600 hover:text-gray-800 bg-gray-50 px-2 py-1 rounded">
+                                    <i class="fas fa-download"></i> Download
+                                </a>
+                            </div>
                             {% endif %}
                         </div>
                     </div>
@@ -594,7 +701,67 @@
     </div>
 </div>
 
-<!-- ===================== TASK UPDATE MODAL (FIXED) ===================== -->
+<!-- ===================== PDF/FILE VIEWER MODAL ===================== -->
+<div id="fileViewerModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex items-center justify-center p-4" style="backdrop-filter:blur(4px);">
+    <div class="bg-white rounded-2xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl">
+        <div class="flex items-center justify-between p-4 border-b border-gray-200">
+            <h3 class="text-base font-bold text-[#04043a] flex items-center gap-2">
+                <i class="fas fa-file text-blue-500" id="fileViewerIcon"></i>
+                <span id="fileViewerTitle">File Viewer</span>
+            </h3>
+            <button onclick="closeFileViewer()" class="p-1.5 hover:bg-gray-100 rounded-full transition"><i class="fas fa-times text-gray-600"></i></button>
+        </div>
+        <div class="flex-1 overflow-hidden p-4 min-h-0">
+            <!-- PDF embed -->
+            <div id="pdfViewerContainer" class="w-full h-full" style="min-height:500px;">
+                <object id="pdfObject" data="" type="application/pdf" class="w-full h-full rounded-lg" style="min-height:500px;">
+                    <div class="flex flex-col items-center justify-center h-full bg-gray-50 rounded-lg p-8">
+                        <i class="fas fa-file-pdf text-red-500 text-5xl mb-4"></i>
+                        <p class="text-gray-600 text-sm mb-4">Unable to display PDF in browser.</p>
+                        <div class="flex gap-3">
+                            <a id="pdfFallbackView" href="#" target="_blank" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm flex items-center gap-1">
+                                <i class="fas fa-external-link-alt"></i> Open in New Tab
+                            </a>
+                            <a id="pdfFallbackDownload" href="#" download class="px-4 py-2 bg-[#04043a] text-white rounded-lg hover:bg-[#1e3c72] transition text-sm flex items-center gap-1">
+                                <i class="fas fa-download"></i> Download
+                            </a>
+                        </div>
+                    </div>
+                </object>
+            </div>
+            <!-- Image viewer -->
+            <div id="imageViewerContainer" class="w-full h-full hidden flex items-center justify-center" style="min-height:500px;">
+                <img id="imageViewer" src="" class="max-w-full max-h-full object-contain rounded-lg" alt="File Preview">
+            </div>
+            <!-- Non-viewable file -->
+            <div id="noPreviewContainer" class="w-full h-full hidden flex flex-col items-center justify-center bg-gray-50 rounded-lg" style="min-height:500px;">
+                <i class="fas fa-file text-gray-400 text-5xl mb-4"></i>
+                <p class="text-gray-600 text-sm mb-4">Preview not available for this file type.</p>
+                <div class="flex gap-3">
+                    <a id="noPreviewView" href="#" target="_blank" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm flex items-center gap-1">
+                        <i class="fas fa-external-link-alt"></i> Open in New Tab
+                    </a>
+                    <a id="noPreviewDownload" href="#" download class="px-4 py-2 bg-[#04043a] text-white rounded-lg hover:bg-[#1e3c72] transition text-sm flex items-center gap-1">
+                        <i class="fas fa-download"></i> Download
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="p-4 border-t border-gray-200 flex justify-between items-center">
+            <div class="flex gap-2">
+                <a id="fileViewLink" href="#" target="_blank" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm flex items-center gap-1">
+                    <i class="fas fa-external-link-alt text-xs"></i> Open in New Tab
+                </a>
+                <a id="fileDownloadLink" href="#" download class="px-4 py-2 bg-[#04043a] text-white rounded-lg hover:bg-[#1e3c72] transition text-sm flex items-center gap-1">
+                    <i class="fas fa-download text-xs"></i> Download
+                </a>
+            </div>
+            <button onclick="closeFileViewer()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== TASK UPDATE MODAL ===================== -->
 <div id="coreTaskModal" style="
     display: none;
     position: fixed;
@@ -615,7 +782,6 @@
         overflow: hidden;
         animation: modalSlideIn 0.25s ease-out;
     ">
-        <!-- Modal Header -->
         <div style="background: linear-gradient(to right, #04043a, #1e3c72); padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between;">
             <div style="display: flex; align-items: center; gap: 0.75rem;">
                 <div style="width: 2rem; height: 2rem; background: #eab308; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center;">
@@ -623,17 +789,15 @@
                 </div>
                 <h3 style="font-size: 1rem; font-weight: 700; color: white; margin: 0;">Update Task Progress</h3>
             </div>
-            <button onclick="closeTaskUpdateModal()" style="background: rgba(255,255,255,0.15); border: none; border-radius: 50%; width: 2rem; height: 2rem; cursor: pointer; color: white; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">
+            <button onclick="closeTaskUpdateModal()" style="background: rgba(255,255,255,0.15); border: none; border-radius: 50%; width: 2rem; height: 2rem; cursor: pointer; color: white; font-size: 1rem; display: flex; align-items: center; justify-content: center;">
                 <i class="fas fa-times"></i>
             </button>
         </div>
 
-        <!-- Modal Body -->
         <div style="padding: 1.5rem;">
             <form id="coreTaskUpdateForm" enctype="multipart/form-data">
                 <input type="hidden" id="coreTaskId" name="taskId">
 
-                <!-- Progress Slider -->
                 <div style="margin-bottom: 1.25rem;">
                     <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.75rem;">
                         <i class="fas fa-percentage" style="color: #04043a; margin-right: 0.25rem;"></i>Progress
@@ -653,24 +817,22 @@
                     </div>
                 </div>
 
-                <!-- Status Select -->
                 <div style="margin-bottom: 1.25rem;">
                     <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
                         <i class="fas fa-flag" style="color: #04043a; margin-right: 0.25rem;"></i>Status
                     </label>
-                    <select id="coreStatusSelect" name="status" style="width: 100%; padding: 0.625rem 1rem; font-size: 0.875rem; border: 2px solid #e5e7eb; border-radius: 0.75rem; background: white; cursor: pointer; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#04043a'" onblur="this.style.borderColor='#e5e7eb'">
+                    <select id="coreStatusSelect" name="status" style="width: 100%; padding: 0.625rem 1rem; font-size: 0.875rem; border: 2px solid #e5e7eb; border-radius: 0.75rem; background: white; cursor: pointer; outline: none;">
                         <option value="pending">⏳ Pending</option>
                         <option value="in_progress">🔄 In Progress</option>
                         <option value="completed">✅ Completed</option>
                     </select>
                 </div>
 
-                <!-- File Attachment -->
                 <div style="margin-bottom: 1.25rem;">
                     <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
                         <i class="fas fa-paperclip" style="color: #04043a; margin-right: 0.25rem;"></i>Attachment <span style="font-weight: 400; color: #9ca3af;">(Optional)</span>
                     </label>
-                    <div style="position: relative; border: 2px dashed #d1d5db; border-radius: 0.75rem; padding: 0.75rem; background: #f9fafb; cursor: pointer; transition: border-color 0.2s;" onmouseover="this.style.borderColor='#04043a'" onmouseout="this.style.borderColor='#d1d5db'" onclick="document.getElementById('coreTaskAttachment').click()">
+                    <div style="position: relative; border: 2px dashed #d1d5db; border-radius: 0.75rem; padding: 0.75rem; background: #f9fafb; cursor: pointer;" onclick="document.getElementById('coreTaskAttachment').click()">
                         <input type="file" id="coreTaskAttachment" name="attachment" 
                                accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.gif,.xlsx,.csv,.xls"
                                style="position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;"
@@ -680,7 +842,6 @@
                             <span id="coreAttachmentLabel" style="font-size: 0.875rem;">Click to choose file</span>
                         </div>
                     </div>
-                    <!-- File preview -->
                     <div id="coreAttachmentPreview" style="display: none; margin-top: 0.5rem; background: #eff6ff; border-radius: 0.5rem; padding: 0.5rem 0.75rem; align-items: center; justify-content: space-between;">
                         <div style="display: flex; align-items: center; gap: 0.5rem;">
                             <i class="fas fa-file" style="color: #3b82f6;"></i>
@@ -692,27 +853,22 @@
                     </div>
                 </div>
 
-                <!-- Comment -->
                 <div style="margin-bottom: 1.5rem;">
                     <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
                         <i class="fas fa-comment" style="color: #04043a; margin-right: 0.25rem;"></i>Comment <span style="font-weight: 400; color: #9ca3af;">(Optional)</span>
                     </label>
                     <textarea id="coreCommentText" name="comment" rows="3"
-                              style="width: 100%; padding: 0.625rem 1rem; font-size: 0.875rem; border: 2px solid #e5e7eb; border-radius: 0.75rem; resize: none; outline: none; transition: border-color 0.2s; font-family: inherit; box-sizing: border-box;"
-                              onfocus="this.style.borderColor='#04043a'" onblur="this.style.borderColor='#e5e7eb'"
+                              style="width: 100%; padding: 0.625rem 1rem; font-size: 0.875rem; border: 2px solid #e5e7eb; border-radius: 0.75rem; resize: none; outline: none; font-family: inherit; box-sizing: border-box;"
                               placeholder="Add a note about your progress..."></textarea>
                 </div>
 
-                <!-- Buttons -->
                 <div style="display: flex; gap: 0.75rem;">
                     <button type="submit" id="coreSubmitBtn"
-                            style="flex: 1; background: #04043a; color: white; padding: 0.75rem 1rem; border: none; border-radius: 0.75rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: background 0.2s;"
-                            onmouseover="this.style.background='#1e3c72'" onmouseout="this.style.background='#04043a'">
+                            style="flex: 1; background: #04043a; color: white; padding: 0.75rem 1rem; border: none; border-radius: 0.75rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
                         <i class="fas fa-save"></i> Save Update
                     </button>
                     <button type="button" onclick="closeTaskUpdateModal()"
-                            style="padding: 0.75rem 1.25rem; border: 2px solid #e5e7eb; border-radius: 0.75rem; font-size: 0.875rem; font-weight: 600; color: #6b7280; background: white; cursor: pointer; transition: all 0.2s;"
-                            onmouseover="this.style.borderColor='#9ca3af'; this.style.background='#f9fafb'" onmouseout="this.style.borderColor='#e5e7eb'; this.style.background='white'">
+                            style="padding: 0.75rem 1.25rem; border: 2px solid #e5e7eb; border-radius: 0.75rem; font-size: 0.875rem; font-weight: 600; color: #6b7280; background: white; cursor: pointer;">
                         Cancel
                     </button>
                 </div>
@@ -737,14 +893,10 @@
     from { transform: translateX(0); opacity: 1; }
     to   { transform: translateX(110%); opacity: 0; }
 }
-
-/* Checkbox styling */
 .form-checkbox { border-radius: 0.25rem; border: 2px solid #d1d5db; cursor: pointer; }
 .form-checkbox:checked { background-color: currentColor; border-color: currentColor; }
 .leader-checkbox:checked { color: #eab308; }
 .core-checkbox:checked   { color: #3b82f6; }
-
-/* Slider thumb */
 #coreProgressSlider::-webkit-slider-thumb {
     -webkit-appearance: none;
     width: 22px; height: 22px;
@@ -753,9 +905,7 @@
     border-radius: 50%;
     cursor: pointer;
     box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-    transition: transform 0.1s;
 }
-#coreProgressSlider::-webkit-slider-thumb:hover { transform: scale(1.15); }
 #coreProgressSlider::-moz-range-thumb {
     width: 22px; height: 22px;
     background: #04043a;
@@ -766,72 +916,109 @@
 </style>
 
 <script>
+// ===================== FILE VIEWER =====================
+function viewFile(fileUrl, fileName) {
+    if (!fileUrl) return;
+    
+    var ext = fileUrl.split('.').pop().toLowerCase().split('?')[0];
+    var isPdf = (ext === 'pdf');
+    var isImage = ['jpg','jpeg','png','gif','webp'].indexOf(ext) !== -1;
+    
+    document.getElementById('fileViewerTitle').textContent = fileName || 'File Viewer';
+    document.getElementById('fileViewLink').href = fileUrl;
+    document.getElementById('fileDownloadLink').href = fileUrl;
+    
+    // Set icon
+    var icon = document.getElementById('fileViewerIcon');
+    if (isPdf) {
+        icon.className = 'fas fa-file-pdf text-red-500';
+    } else if (isImage) {
+        icon.className = 'fas fa-file-image text-green-500';
+    } else {
+        icon.className = 'fas fa-file text-blue-500';
+    }
+    
+    // Hide all containers
+    document.getElementById('pdfViewerContainer').classList.add('hidden');
+    document.getElementById('imageViewerContainer').classList.add('hidden');
+    document.getElementById('noPreviewContainer').classList.add('hidden');
+    
+    if (isPdf) {
+        document.getElementById('pdfViewerContainer').classList.remove('hidden');
+        var pdfObj = document.getElementById('pdfObject');
+        pdfObj.data = fileUrl;
+        document.getElementById('pdfFallbackView').href = fileUrl;
+        document.getElementById('pdfFallbackDownload').href = fileUrl;
+    } else if (isImage) {
+        document.getElementById('imageViewerContainer').classList.remove('hidden');
+        document.getElementById('imageViewer').src = fileUrl;
+    } else {
+        document.getElementById('noPreviewContainer').classList.remove('hidden');
+        document.getElementById('noPreviewView').href = fileUrl;
+        document.getElementById('noPreviewDownload').href = fileUrl;
+    }
+    
+    document.getElementById('fileViewerModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeFileViewer() {
+    document.getElementById('fileViewerModal').classList.add('hidden');
+    document.getElementById('pdfObject').data = '';
+    document.getElementById('imageViewer').src = '';
+    document.body.style.overflow = '';
+}
+
+document.getElementById('fileViewerModal').addEventListener('click', function(e) {
+    if (e.target === this) closeFileViewer();
+});
+
 // ===================== TAB SWITCHING =====================
 function switchTab(tabName) {
-    // Hide all content sections
-    document.querySelectorAll('.tab-content').forEach(el => {
-        el.classList.add('hidden');
-    });
-    
-    // Remove active class from all tabs
-    document.querySelectorAll('.tab-button').forEach(el => {
+    document.querySelectorAll('.tab-content').forEach(function(el) { el.classList.add('hidden'); });
+    document.querySelectorAll('.tab-button').forEach(function(el) {
         el.classList.remove('active', 'border-[#04043a]', 'text-[#04043a]');
         el.classList.add('border-transparent', 'text-gray-600');
     });
-    
-    // Show selected content
     document.getElementById('content-' + tabName).classList.remove('hidden');
-    
-    // Activate selected tab
-    const activeTab = document.getElementById('tab-' + tabName);
+    var activeTab = document.getElementById('tab-' + tabName);
     activeTab.classList.add('active', 'border-[#04043a]', 'text-[#04043a]');
     activeTab.classList.remove('border-transparent', 'text-gray-600');
-    
-    // Save active tab to session storage
     sessionStorage.setItem('coreActiveTab', tabName);
 }
 
 // ===================== CHECKBOX HELPERS =====================
 function updateSelectedCount() {
-    const count = document.querySelectorAll('input[name="assigned_users"]:checked').length;
-    const el = document.getElementById('selectedCount');
-    if (el) el.innerHTML = `<i class="fas fa-users mr-1"></i><span>${count} reviewer${count !== 1 ? 's' : ''} selected</span>`;
+    var count = document.querySelectorAll('input[name="assigned_users"]:checked').length;
+    var el = document.getElementById('selectedCount');
+    if (el) el.innerHTML = '<i class="fas fa-users mr-1"></i><span>' + count + ' reviewer' + (count !== 1 ? 's' : '') + ' selected</span>';
 }
-function selectAllLeaders() { document.querySelectorAll('.leader-checkbox').forEach(cb => cb.checked = true); updateSelectedCount(); }
-function selectAllCore()    { document.querySelectorAll('.core-checkbox').forEach(cb => cb.checked = true); updateSelectedCount(); }
-function selectAll()        { document.querySelectorAll('input[name="assigned_users"]').forEach(cb => cb.checked = true); updateSelectedCount(); }
-function clearAll()         { document.querySelectorAll('input[name="assigned_users"]').forEach(cb => cb.checked = false); updateSelectedCount(); }
+function selectAllLeaders() { document.querySelectorAll('.leader-checkbox').forEach(function(cb) { cb.checked = true; }); updateSelectedCount(); }
+function selectAllCore()    { document.querySelectorAll('.core-checkbox').forEach(function(cb) { cb.checked = true; }); updateSelectedCount(); }
+function selectAll()        { document.querySelectorAll('input[name="assigned_users"]').forEach(function(cb) { cb.checked = true; }); updateSelectedCount(); }
+function clearAll()         { document.querySelectorAll('input[name="assigned_users"]').forEach(function(cb) { cb.checked = false; }); updateSelectedCount(); }
 
 // ===================== PROGRESS SLIDER =====================
 function updateCoreProgress(value) {
-    const v = parseInt(value);
+    var v = parseInt(value);
     document.getElementById('coreProgressBadge').textContent = v + '%';
-
-    // Update slider track fill
-    const slider = document.getElementById('coreProgressSlider');
-    const pct = ((v - slider.min) / (slider.max - slider.min)) * 100;
-    slider.style.background = `linear-gradient(to right, #04043a 0%, #04043a ${pct}%, #e5e7eb ${pct}%, #e5e7eb 100%)`;
-
-    // Auto-update status
-    const sel = document.getElementById('coreStatusSelect');
-    if (v >= 100) {
-        sel.value = 'completed';
-    } else if (v > 0 && sel.value === 'pending') {
-        sel.value = 'in_progress';
-    }
+    var slider = document.getElementById('coreProgressSlider');
+    var pct = ((v - slider.min) / (slider.max - slider.min)) * 100;
+    slider.style.background = 'linear-gradient(to right, #04043a 0%, #04043a ' + pct + '%, #e5e7eb ' + pct + '%, #e5e7eb 100%)';
+    var sel = document.getElementById('coreStatusSelect');
+    if (v >= 100) { sel.value = 'completed'; }
+    else if (v > 0 && sel.value === 'pending') { sel.value = 'in_progress'; }
 }
 
 // ===================== FILE HANDLING =====================
 function handleCoreFileSelect(input) {
-    const file = input.files[0];
+    var file = input.files[0];
     if (file) {
         document.getElementById('coreAttachmentLabel').textContent = file.name;
         document.getElementById('coreAttachmentName').textContent = file.name;
-        const preview = document.getElementById('coreAttachmentPreview');
-        preview.style.display = 'flex';
+        document.getElementById('coreAttachmentPreview').style.display = 'flex';
     }
 }
-
 function clearCoreAttachment() {
     document.getElementById('coreTaskAttachment').value = '';
     document.getElementById('coreAttachmentLabel').textContent = 'Click to choose file';
@@ -840,72 +1027,51 @@ function clearCoreAttachment() {
 
 // ===================== MODAL OPEN/CLOSE =====================
 function openTaskUpdateModal(taskId, currentProgress, currentStatus) {
-    console.log('Opening modal for task:', taskId, 'progress:', currentProgress, 'status:', currentStatus);
-
-    const modal = document.getElementById('coreTaskModal');
-
-    // Set values
+    var modal = document.getElementById('coreTaskModal');
     document.getElementById('coreTaskId').value = taskId;
-
-    const progress = parseInt(currentProgress) || 0;
-    const slider = document.getElementById('coreProgressSlider');
+    var progress = parseInt(currentProgress) || 0;
+    var slider = document.getElementById('coreProgressSlider');
     slider.value = progress;
     updateCoreProgress(progress);
-
-    // Set status
-    const status = currentStatus || 'pending';
+    // For rework tasks, allow re-submission as in_progress
+    var status = currentStatus || 'pending';
+    if (status === 'rework') { status = 'in_progress'; }
     document.getElementById('coreStatusSelect').value = status;
-
-    // Clear previous inputs
     document.getElementById('coreCommentText').value = '';
     clearCoreAttachment();
-
-    // Reset submit button
-    const btn = document.getElementById('coreSubmitBtn');
+    var btn = document.getElementById('coreSubmitBtn');
     btn.innerHTML = '<i class="fas fa-save"></i> Save Update';
     btn.disabled = false;
-
-    // SHOW MODAL
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
 }
 
 function closeTaskUpdateModal() {
-    const modal = document.getElementById('coreTaskModal');
+    var modal = document.getElementById('coreTaskModal');
     modal.style.display = 'none';
     document.body.style.overflow = '';
-
-    const btn = document.getElementById('coreSubmitBtn');
+    var btn = document.getElementById('coreSubmitBtn');
     if (btn) { btn.innerHTML = '<i class="fas fa-save"></i> Save Update'; btn.disabled = false; }
-
     clearCoreAttachment();
 }
 
 // ===================== FORM SUBMISSION =====================
 document.getElementById('coreTaskUpdateForm').addEventListener('submit', function(e) {
     e.preventDefault();
-
-    const taskId   = document.getElementById('coreTaskId').value;
-    const progress = parseInt(document.getElementById('coreProgressSlider').value);
-    const status   = document.getElementById('coreStatusSelect').value;
-    const comment  = document.getElementById('coreCommentText').value.trim();
-
+    var taskId   = document.getElementById('coreTaskId').value;
+    var progress = parseInt(document.getElementById('coreProgressSlider').value);
+    var status   = document.getElementById('coreStatusSelect').value;
+    var comment  = document.getElementById('coreCommentText').value.trim();
     if (!taskId) { showCoreNotif('Error', 'No task ID found', 'error'); return; }
-
-    const btn = document.getElementById('coreSubmitBtn');
+    var btn = document.getElementById('coreSubmitBtn');
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
     btn.disabled = true;
-
-    const formData = new FormData();
+    var formData = new FormData();
     formData.append('progress', progress);
     formData.append('status', status);
     formData.append('comment', comment);
-
-    const fileInput = document.getElementById('coreTaskAttachment');
-    if (fileInput.files[0]) {
-        formData.append('attachment', fileInput.files[0]);
-    }
-
+    var fileInput = document.getElementById('coreTaskAttachment');
+    if (fileInput.files[0]) { formData.append('attachment', fileInput.files[0]); }
     fetch('/api/update_task_progress/' + taskId, {
         method: 'POST',
         body: formData,
@@ -924,90 +1090,27 @@ document.getElementById('coreTaskUpdateForm').addEventListener('submit', functio
         if (data.success) {
             showCoreNotif('Success', data.message || 'Task updated!', 'success');
             closeTaskUpdateModal();
-            // Update DOM immediately
-            updateTaskDOM(taskId, progress, status);
             setTimeout(function() { window.location.reload(); }, 1500);
-        } else {
-            throw new Error(data.error || 'Failed to update task');
-        }
+        } else { throw new Error(data.error || 'Failed to update task'); }
     })
     .catch(function(err) {
-        console.error('Task update error:', err);
         showCoreNotif('Error', err.message || 'Failed to update. Please try again.', 'error');
         btn.innerHTML = '<i class="fas fa-save"></i> Save Update';
         btn.disabled = false;
     });
 });
 
-// ===================== DOM UPDATE =====================
-function updateTaskDOM(taskId, progress, status) {
-    try {
-        // Update progress bar
-        const bar = document.getElementById('progress-bar-' + taskId);
-        if (bar) bar.style.width = progress + '%';
-
-        // Update progress text
-        const txt = document.getElementById('progress-text-' + taskId);
-        if (txt) txt.textContent = progress + '%';
-
-        // Update status badge
-        const badgeWrap = document.getElementById('status-badge-' + taskId);
-        if (badgeWrap) {
-            const colors = {
-                completed:   'bg-green-100 text-green-800',
-                in_progress: 'bg-blue-100 text-blue-800',
-                pending:     'bg-yellow-100 text-yellow-800'
-            };
-            const labels = {
-                completed:   'Completed',
-                in_progress: 'In Progress',
-                pending:     'Pending'
-            };
-            badgeWrap.innerHTML = `<span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium ${colors[status] || 'bg-gray-100 text-gray-800'}">${labels[status] || status}</span>`;
-        }
-    } catch(err) {
-        console.warn('DOM update error:', err);
-    }
-}
-
 // ===================== NOTIFICATION SYSTEM =====================
 function showCoreNotif(title, message, type) {
-    const colors = { success: '#22c55e', error: '#ef4444', warning: '#f59e0b', info: '#3b82f6' };
-    const icons  = { success: 'fa-check-circle', error: 'fa-times-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
-
-    const container = document.getElementById('coreNotifContainer');
-    const n = document.createElement('div');
-    n.style.cssText = `
-        pointer-events: all;
-        background: white;
-        border-left: 4px solid ${colors[type] || colors.info};
-        border-radius: 0.75rem;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-        padding: 0.75rem 1rem;
-        display: flex;
-        align-items: flex-start;
-        gap: 0.75rem;
-        max-width: 20rem;
-        animation: notifSlideIn 0.3s ease-out forwards;
-    `;
-    n.innerHTML = `
-        <i class="fas ${icons[type] || icons.info}" style="color:${colors[type]};font-size:1.25rem;flex-shrink:0;margin-top:0.1rem;"></i>
-        <div style="flex:1;">
-            <p style="font-weight:600;font-size:0.875rem;color:#111827;margin:0 0 0.15rem;">${title}</p>
-            <p style="font-size:0.75rem;color:#6b7280;margin:0;">${message}</p>
-        </div>
-        <button onclick="this.parentElement.remove()" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:0.875rem;flex-shrink:0;">
-            <i class="fas fa-times"></i>
-        </button>
-    `;
+    var colors = { success: '#22c55e', error: '#ef4444', warning: '#f59e0b', info: '#3b82f6' };
+    var icons  = { success: 'fa-check-circle', error: 'fa-times-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+    var container = document.getElementById('coreNotifContainer');
+    var n = document.createElement('div');
+    n.style.cssText = 'pointer-events:all;background:white;border-left:4px solid ' + (colors[type]||colors.info) + ';border-radius:0.75rem;box-shadow:0 10px 25px rgba(0,0,0,0.15);padding:0.75rem 1rem;display:flex;align-items:flex-start;gap:0.75rem;max-width:20rem;animation:notifSlideIn 0.3s ease-out forwards;';
+    n.innerHTML = '<i class="fas ' + (icons[type]||icons.info) + '" style="color:' + (colors[type]||colors.info) + ';font-size:1.25rem;flex-shrink:0;margin-top:0.1rem;"></i><div style="flex:1;"><p style="font-weight:600;font-size:0.875rem;color:#111827;margin:0 0 0.15rem;">' + title + '</p><p style="font-size:0.75rem;color:#6b7280;margin:0;">' + message + '</p></div><button onclick="this.parentElement.remove()" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:0.875rem;flex-shrink:0;"><i class="fas fa-times"></i></button>';
     container.appendChild(n);
-    setTimeout(function() {
-        n.style.animation = 'notifSlideOut 0.3s ease-in forwards';
-        setTimeout(function() { if (n.parentElement) n.remove(); }, 300);
-    }, 5000);
+    setTimeout(function() { n.style.animation = 'notifSlideOut 0.3s ease-in forwards'; setTimeout(function() { if (n.parentElement) n.remove(); }, 300); }, 5000);
 }
-
-// Also expose as window.showNotification for compatibility
 window.showNotification = showCoreNotif;
 
 // ===================== ACTIVITY POLLING =====================
@@ -1015,7 +1118,7 @@ function pollActivity() {
     fetch('/api/activity/status', { credentials: 'same-origin' })
         .then(function(r) { return r.json(); })
         .then(function(d) {
-            if (d.new_tasks > 0)     showCoreNotif('New Tasks', 'You have ' + d.new_tasks + ' new task(s)', 'info');
+            if (d.new_tasks > 0) showCoreNotif('New Tasks', 'You have ' + d.new_tasks + ' new task(s)', 'info');
             if (d.new_documents > 0) showCoreNotif('New Documents', d.new_documents + ' new document(s) shared', 'success');
             if (d.overdue_tasks > 0) showCoreNotif('Overdue', 'You have ' + d.overdue_tasks + ' overdue task(s)', 'warning');
         })
@@ -1024,34 +1127,22 @@ function pollActivity() {
 
 // ===================== INIT =====================
 document.addEventListener('DOMContentLoaded', function() {
-    // Checkbox listeners
-    document.querySelectorAll('input[name="assigned_users"]').forEach(function(cb) {
-        cb.addEventListener('change', updateSelectedCount);
-    });
+    document.querySelectorAll('input[name="assigned_users"]').forEach(function(cb) { cb.addEventListener('change', updateSelectedCount); });
     updateSelectedCount();
-
-    // Load saved tab or default to upload
-    const savedTab = sessionStorage.getItem('coreActiveTab') || 'upload';
+    var savedTab = sessionStorage.getItem('coreActiveTab') || 'upload';
     switchTab(savedTab);
-
-    // Close modal on backdrop click
-    document.getElementById('coreTaskModal').addEventListener('click', function(e) {
-        if (e.target === this) closeTaskUpdateModal();
-    });
-
-    // Close on Escape
+    document.getElementById('coreTaskModal').addEventListener('click', function(e) { if (e.target === this) closeTaskUpdateModal(); });
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') closeTaskUpdateModal();
+        if (e.key === 'Escape') { closeTaskUpdateModal(); closeFileViewer(); }
     });
-
-    // Poll activity every 30s
     setInterval(pollActivity, 30000);
 });
 
-// Expose globally
 window.switchTab = switchTab;
 window.openTaskUpdateModal = openTaskUpdateModal;
 window.closeTaskUpdateModal = closeTaskUpdateModal;
+window.viewFile = viewFile;
+window.closeFileViewer = closeFileViewer;
 window.selectAllLeaders = selectAllLeaders;
 window.selectAllCore = selectAllCore;
 window.selectAll = selectAll;

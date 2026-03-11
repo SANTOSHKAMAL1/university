@@ -232,10 +232,12 @@ def normalize_date(date_str):
 
 # ===================== DECORATORS =====================
 def approval_required(f):
-    """Decorator to require admin approval before accessing route"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'email' not in session:
+            # Return JSON for API routes
+            if request.path.startswith('/api/'):
+                return jsonify({'error': 'Not logged in'}), 401
             flash('Please log in to access this page', 'error')
             return redirect(url_for('login'))
         
@@ -248,18 +250,23 @@ def approval_required(f):
                 session['approved'] = approved
         
         if not approved:
+            # Return JSON for API routes
+            if request.path.startswith('/api/'):
+                return jsonify({'error': 'Account pending approval'}), 403
             flash('⏳ Your account is pending admin approval. Access denied.', 'warning')
             return redirect(url_for('home'))
         
         return f(*args, **kwargs)
     
     return decorated_function
-
 def login_required(f):
     """Decorator to require login before accessing route"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'email' not in session:
+            if request.path.startswith('/api/') or request.is_json or \
+               request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({'error': 'Not logged in'}), 401
             flash('Please log in to access this page', 'error')
             return redirect(url_for('login'))
         return f(*args, **kwargs)
@@ -2994,106 +3001,89 @@ def debug_create_collections():
 # ===================== API ENDPOINTS =====================
 
 @app.route('/api/update_task_progress/<task_id>', methods=['POST'])
-@login_required
+@login_required          # <-- use login_required only (no approval_required)
 def update_task_progress(task_id):
     """Update task progress and status with optional attachment"""
     try:
-        # Get form data (supports both JSON and form-data)
-        if request.is_json:
-            data = request.get_json()
-            progress = data.get('progress', 0)
-            status = data.get('status', 'in_progress')
-            comment = data.get('comment', '')
+        # Support both JSON body and multipart/form-data
+        if request.content_type and 'application/json' in request.content_type:
+            data = request.get_json(force=True) or {}
+            progress = int(data.get('progress', 0))
+            status   = data.get('status', 'in_progress')
+            comment  = data.get('comment', '')
             attachment = None
         else:
-            progress = request.form.get('progress', 0, type=int)
-            status = request.form.get('status', 'in_progress')
-            comment = request.form.get('comment', '')
+            progress   = int(request.form.get('progress', 0))
+            status     = request.form.get('status', 'in_progress')
+            comment    = request.form.get('comment', '')
             attachment = request.files.get('attachment')
-        
+
         user = db.users.find_one({'email': session['email']})
         if not user:
-            return jsonify({'error': 'User not found'}), 404
-        
-        # Get the task
+            return jsonify({'success': False, 'error': 'User not found'}), 404
+
         task = db.tasks.find_one({'_id': ObjectId(task_id)})
         if not task:
-            return jsonify({'error': 'Task not found'}), 404
-        
-        # Check if user is assigned to this task
+            return jsonify({'success': False, 'error': 'Task not found'}), 404
+
+        # Only the assigned core member may update
         if str(task['assigned_to']) != str(user['_id']):
-            return jsonify({'error': 'You are not assigned to this task'}), 403
-        
-        # Handle file upload
-        file_url = None
+            return jsonify({'success': False, 'error': 'You are not assigned to this task'}), 403
+
+        # Handle optional file upload
+        file_url  = None
         file_name = None
-        
         if attachment and attachment.filename and allowed_file(attachment.filename):
-            filename = secure_filename(attachment.filename)
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            filename        = secure_filename(attachment.filename)
+            timestamp       = datetime.now().strftime('%Y%m%d_%H%M%S')
             name_part, ext_part = os.path.splitext(filename)
             unique_filename = f"task_update_{name_part}_{timestamp}{ext_part}"
-            
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+            filepath        = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
             attachment.save(filepath)
-            file_url = '/' + filepath.replace('\\', '/')
+            file_url  = '/' + filepath.replace('\\', '/')
             file_name = filename
-            
             logger.info(f"✅ Task update file uploaded: {filename}")
-        
-        # Prepare update data
-        update_data = {
-            'progress': progress,
-            'status': status,
-            'updated_at': get_indian_time()
-        }
-        
-        # If file uploaded, add to task
-        if file_url:
-            update_data['latest_attachment_url'] = file_url
-            update_data['latest_attachment_name'] = file_name
-        
-        # Add to update history
+
+        # Build the update entry for history
         update_entry = {
-            'progress': progress,
-            'status': status,
-            'comment': comment,
+            'progress':  progress,
+            'status':    status,
+            'comment':   comment,
             'timestamp': get_indian_time()
         }
-        
-        # Add file info to update history if present
         if file_url:
-            update_entry['attachment_url'] = file_url
+            update_entry['attachment_url']  = file_url
             update_entry['attachment_name'] = file_name
-        
-        # Initialize updates array if it doesn't exist
-        if 'updates' not in task:
-            update_data['updates'] = [update_entry]
-            db.tasks.update_one(
-                {'_id': ObjectId(task_id)},
-                {'$set': update_data}
-            )
-        else:
-            # Push to existing updates array
-            db.tasks.update_one(
-                {'_id': ObjectId(task_id)},
-                {
-                    '$set': update_data,
-                    '$push': {'updates': update_entry}
-                }
-            )
-        
-        # Log activity
+
+        # Fields to $set on the task document
+        set_data = {
+            'progress':   progress,
+            'status':     status,
+            'updated_at': get_indian_time()
+        }
+        if file_url:
+            set_data['latest_attachment_url']  = file_url
+            set_data['latest_attachment_name'] = file_name
+
+        db.tasks.update_one(
+            {'_id': ObjectId(task_id)},
+            {
+                '$set':  set_data,
+                '$push': {'updates': update_entry}
+            }
+        )
+
+        # Activity log
         db.activity_logs.insert_one({
-            'user_id': user['_id'],
+            'user_id':    user['_id'],
             'user_email': session['email'],
-            'action': 'task_update',
-            'details': f'Updated task: {task["title"]} to {status} ({progress}%)',
-            'timestamp': get_indian_time(),
+            'action':     'task_update',
+            'details':    f'Updated task: {task["title"]} → {status} ({progress}%)',
+            'timestamp':  get_indian_time(),
             'ip_address': request.remote_addr
         })
-        
-        # If task is completed, send notification to the leader who assigned it
+
+        # Notify leader when task is completed
         if status == 'completed':
             assigner = db.users.find_one({'_id': task['assigned_by']})
             if assigner:
@@ -3101,15 +3091,15 @@ def update_task_progress(task_id):
                     send_completion_notification(assigner, user, task, comment, file_url)
                 except Exception as e:
                     logger.error(f"Error sending completion notification: {e}")
-        
+
         return jsonify({
             'success': True,
             'message': 'Task updated successfully' + (' with attachment' if file_url else '')
         })
-        
+
     except Exception as e:
         logger.error(f"Error updating task: {e}", exc_info=True)
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 def send_completion_notification(assigner, completer, task, comment, attachment_url=None):
     """Send notification when task is completed"""
@@ -3176,7 +3166,371 @@ def mark_notification_read(notification_id):
     except Exception as e:
         logger.error(f"Error marking notification as read: {e}")
         return jsonify({'error': str(e)}), 400
+# =====================================================================
+# ADD THESE ROUTES TO YOUR app.py
+# Place them after the existing leader dashboard routes
+# =====================================================================
 
+@app.route('/api/leader/accept_task/<task_id>', methods=['POST'])
+@approval_required
+def leader_accept_task(task_id):
+    """Leader accepts a completed task"""
+    if not is_leader():
+        return jsonify({'error': 'Access denied'}), 403
+    try:
+        user = db.users.find_one({'email': session['email']})
+        task = db.tasks.find_one({'_id': ObjectId(task_id)})
+        if not task:
+            return jsonify({'error': 'Task not found'}), 404
+        if str(task['assigned_by']) != str(user['_id']):
+            return jsonify({'error': 'Not authorized to review this task'}), 403
+
+        db.tasks.update_one(
+            {'_id': ObjectId(task_id)},
+            {'$set': {
+                'status': 'accepted',
+                'accepted_at': get_indian_time(),
+                'accepted_by': user['_id'],
+                'updated_at': get_indian_time()
+            }}
+        )
+
+        # Notify core member
+        assignee = db.users.find_one({'_id': task['assigned_to']})
+        if assignee:
+            try:
+                msg = Message(
+                    subject=f"✅ Task Accepted: {task['title']}",
+                    sender=app.config['MAIL_USERNAME'],
+                    recipients=[assignee['email']]
+                )
+                msg.body = f"""
+========================================
+            TASK ACCEPTED
+========================================
+
+Your task has been accepted by {user['email'].split('@')[0]}!
+
+Task: {task['title']}
+Status: ACCEPTED ✅
+
+Great work! The task has been marked as complete and accepted.
+
+View dashboard: {request.url_root}core_dashboard
+
+========================================
+Jain University Portal - Office of Academics
+========================================
+                """
+                mail.send(msg)
+            except Exception as e:
+                logger.error(f"Error sending accept notification: {e}")
+
+        db.activity_logs.insert_one({
+            'user_id': user['_id'],
+            'user_email': session['email'],
+            'action': 'task_accepted',
+            'details': f'Accepted task: {task["title"]}',
+            'timestamp': get_indian_time(),
+            'ip_address': request.remote_addr
+        })
+
+        return jsonify({'success': True, 'message': 'Task accepted successfully'})
+
+    except Exception as e:
+        logger.error(f"Error accepting task: {e}")
+        return jsonify({'error': str(e)}), 500
+@app.route('/api/leader/reschedule_task/<task_id>', methods=['POST'])
+@login_required      # <-- returns JSON on failure
+def leader_reschedule_task(task_id):
+    """Leader reschedules task due date (only today or future)"""
+    if not is_leader():
+        return jsonify({'error': 'Access denied'}), 403
+    try:
+        user = db.users.find_one({'email': session['email']})
+        task = db.tasks.find_one({'_id': ObjectId(task_id)})
+        if not task:
+            return jsonify({'error': 'Task not found'}), 404
+        if str(task['assigned_by']) != str(user['_id']):
+            return jsonify({'error': 'Not authorized to reschedule this task'}), 403
+
+        data = request.get_json()
+        new_due_date = data.get('new_due_date', '')
+        reason = data.get('reason', '').strip()
+
+        if not new_due_date:
+            return jsonify({'error': 'New due date is required'}), 400
+
+        try:
+            new_date_obj = datetime.strptime(new_due_date, '%Y-%m-%d')
+            today = get_indian_time().date()
+            if new_date_obj.date() < today:
+                return jsonify({'error': 'Due date cannot be in the past. Please select today or a future date.'}), 400
+            new_date_aware = IST.localize(new_date_obj)
+            new_date_naive = make_timezone_naive(new_date_aware)
+        except ValueError:
+            return jsonify({'error': 'Invalid date format. Use YYYY-MM-DD'}), 400
+
+        # Add reschedule to update history
+        update_entry = {
+            'progress': task.get('progress', 0),
+            'status': task.get('status', 'pending'),
+            'comment': f'Due date rescheduled to {new_due_date}' + (f'. Reason: {reason}' if reason else ''),
+            'timestamp': get_indian_time()
+        }
+
+        db.tasks.update_one(
+            {'_id': ObjectId(task_id)},
+            {
+                '$set': {
+                    'due_date': new_date_naive,
+                    'rescheduled_at': get_indian_time(),
+                    'rescheduled_by': user['_id'],
+                    'updated_at': get_indian_time()
+                },
+                '$push': {'updates': update_entry}
+            }
+        )
+
+        # Notify core member
+        assignee = db.users.find_one({'_id': task['assigned_to']})
+        if assignee:
+            try:
+                msg = Message(
+                    subject=f"📅 Task Rescheduled: {task['title']}",
+                    sender=app.config['MAIL_USERNAME'],
+                    recipients=[assignee['email']]
+                )
+                msg.body = f"""
+========================================
+         TASK RESCHEDULED
+========================================
+
+{user['email'].split('@')[0]} has updated the due date for your task.
+
+Task: {task['title']}
+New Due Date: {new_due_date}
+{f'Reason: {reason}' if reason else ''}
+
+View dashboard: {request.url_root}core_dashboard
+
+========================================
+Jain University Portal - Office of Academics
+========================================
+                """
+                mail.send(msg)
+            except Exception as e:
+                logger.error(f"Error sending reschedule notification: {e}")
+
+        return jsonify({'success': True, 'message': 'Task rescheduled successfully'})
+
+    except Exception as e:
+        logger.error(f"Error rescheduling task: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/leader/request_rework/<task_id>', methods=['POST'])
+@approval_required
+def leader_request_rework(task_id):
+    """Leader requests rework on a completed task with optional new due date"""
+    if not is_leader():
+        return jsonify({'error': 'Access denied'}), 403
+    try:
+        user = db.users.find_one({'email': session['email']})
+        task = db.tasks.find_one({'_id': ObjectId(task_id)})
+        if not task:
+            return jsonify({'error': 'Task not found'}), 404
+        if str(task['assigned_by']) != str(user['_id']):
+            return jsonify({'error': 'Not authorized to review this task'}), 403
+
+        data = request.get_json()
+        comment = data.get('comment', '').strip()
+        new_due_date = data.get('new_due_date', '')
+
+        if not comment:
+            return jsonify({'error': 'Rework instructions are required'}), 400
+
+        update_data = {
+            'status': 'rework',
+            'rework_comment': comment,
+            'rework_requested_at': get_indian_time(),
+            'rework_by': user['_id'],
+            'progress': 0,  # Reset progress for rework
+            'updated_at': get_indian_time()
+        }
+
+        # Update due date if provided and valid (today or future)
+        if new_due_date:
+            try:
+                new_date_obj = datetime.strptime(new_due_date, '%Y-%m-%d')
+                today = get_indian_time().date()
+                if new_date_obj.date() < today:
+                    return jsonify({'error': 'New due date cannot be in the past'}), 400
+                new_date_aware = IST.localize(new_date_obj)
+                update_data['due_date'] = make_timezone_naive(new_date_aware)
+            except ValueError:
+                return jsonify({'error': 'Invalid date format'}), 400
+
+        # Add to update history
+        update_entry = {
+            'progress': 0,
+            'status': 'rework',
+            'comment': f'LEADER REWORK REQUEST: {comment}',
+            'timestamp': get_indian_time()
+        }
+
+        db.tasks.update_one(
+            {'_id': ObjectId(task_id)},
+            {
+                '$set': update_data,
+                '$push': {'updates': update_entry}
+            }
+        )
+
+        # Notify core member
+        assignee = db.users.find_one({'_id': task['assigned_to']})
+        if assignee:
+            date_msg = f"\nNew Due Date: {new_due_date}" if new_due_date else ""
+            try:
+                msg = Message(
+                    subject=f"🔄 Rework Required: {task['title']}",
+                    sender=app.config['MAIL_USERNAME'],
+                    recipients=[assignee['email']]
+                )
+                msg.body = f"""
+========================================
+         REWORK REQUESTED
+========================================
+
+{user['email'].split('@')[0]} has requested rework on your task.
+
+Task: {task['title']}
+Status: REWORK REQUIRED 🔄
+{date_msg}
+
+Rework Instructions:
+{comment}
+
+Please update your progress after making the required changes.
+
+View dashboard: {request.url_root}core_dashboard
+
+========================================
+Jain University Portal - Office of Academics
+========================================
+                """
+                mail.send(msg)
+            except Exception as e:
+                logger.error(f"Error sending rework notification: {e}")
+
+        db.activity_logs.insert_one({
+            'user_id': user['_id'],
+            'user_email': session['email'],
+            'action': 'task_rework_requested',
+            'details': f'Requested rework on task: {task["title"]}',
+            'timestamp': get_indian_time(),
+            'ip_address': request.remote_addr
+        })
+
+        return jsonify({'success': True, 'message': 'Rework requested successfully'})
+
+    except Exception as e:
+        logger.error(f"Error requesting rework: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/leader/add_task_comment/<task_id>', methods=['POST'])
+@approval_required
+def leader_add_task_comment(task_id):
+    """Leader adds a comment to a task"""
+    if not is_leader():
+        return jsonify({'error': 'Access denied'}), 403
+    try:
+        user = db.users.find_one({'email': session['email']})
+        task = db.tasks.find_one({'_id': ObjectId(task_id)})
+        if not task:
+            return jsonify({'error': 'Task not found'}), 404
+        if str(task['assigned_by']) != str(user['_id']):
+            return jsonify({'error': 'Not authorized'}), 403
+
+        data = request.get_json()
+        comment = data.get('comment', '').strip()
+        if not comment:
+            return jsonify({'error': 'Comment is required'}), 400
+
+        comment_entry = {
+            'comment': comment,
+            'commented_by': user['email'].split('@')[0],
+            'timestamp': get_indian_time(),
+            'type': 'leader_comment'
+        }
+
+        db.tasks.update_one(
+            {'_id': ObjectId(task_id)},
+            {
+                '$push': {'leader_comments': comment_entry},
+                '$set': {'updated_at': get_indian_time()}
+            }
+        )
+
+        # Notify core member
+        assignee = db.users.find_one({'_id': task['assigned_to']})
+        if assignee:
+            try:
+                msg = Message(
+                    subject=f"💬 New Comment on Task: {task['title']}",
+                    sender=app.config['MAIL_USERNAME'],
+                    recipients=[assignee['email']]
+                )
+                msg.body = f"""
+{user['email'].split('@')[0]} commented on your task:
+
+Task: {task['title']}
+Comment: "{comment}"
+
+View dashboard: {request.url_root}core_dashboard
+                """
+                mail.send(msg)
+            except Exception as e:
+                logger.error(f"Error sending comment notification: {e}")
+
+        return jsonify({'success': True, 'message': 'Comment added successfully'})
+
+    except Exception as e:
+        logger.error(f"Error adding task comment: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/leader/add_share_comment/<share_id>', methods=['POST'])
+@approval_required
+def leader_add_share_comment(share_id):
+    """Leader adds a comment to a shared document"""
+    if not is_leader():
+        return jsonify({'error': 'Access denied'}), 403
+    try:
+        user = db.users.find_one({'email': session['email']})
+
+        data = request.get_json()
+        comment = data.get('comment', '').strip()
+        if not comment:
+            return jsonify({'error': 'Comment is required'}), 400
+
+        db.document_shares.update_one(
+            {'_id': ObjectId(share_id), 'shared_with': user['_id']},
+            {
+                '$set': {
+                    'leader_comment': comment,
+                    'leader_comment_at': get_indian_time(),
+                    'leader_comment_by': user['email']
+                }
+            }
+        )
+
+        return jsonify({'success': True, 'message': 'Comment saved successfully'})
+
+    except Exception as e:
+        logger.error(f"Error adding share comment: {e}")
+        return jsonify({'error': str(e)}), 500
 # ===================== GOOGLE OAUTH ROUTES =====================
 @app.route('/connect-drive')
 @login_required
@@ -3555,51 +3909,24 @@ def drive_create_folder():
 
 # ===================== FILE MANAGEMENT ROUTES =====================
 @app.route('/my_files')
-@approval_required
+@login_required
 def my_files():
-    """User's file management page - REQUIRES APPROVAL"""
+    """View user's uploaded files"""
     try:
         notifications = get_user_notifications()
-        
-        local_files = list(db.user_files.find({
+        user_files = list(db.user_files.find({
             'user_email': session['email']
         }).sort('uploaded_at', -1))
-        
-        drive_files = []
         drive_connected = 'drive_creds' in session
-        if drive_connected:
-            try:
-                service = get_drive_service()
-                if service:
-                    results = service.files().list(
-                        q="trashed=false",
-                        pageSize=100,
-                        orderBy="modifiedTime desc",
-                        fields="files(id, name, mimeType, size, createdTime, modifiedTime, webViewLink)"
-                    ).execute()
-                    drive_files = results.get('files', [])
-                    logger.info(f"✅ Retrieved {len(drive_files)} Drive files")
-            except Exception as e:
-                logger.error(f"❌ Error fetching drive files: {e}")
-                drive_connected = False
-        
-        return render_template(
-            'my_files.html',
-            local_files=local_files,
-            drive_files=drive_files,
+        return render_template('my_files.html',
+            user_files=user_files,
             drive_connected=drive_connected,
             notifications=notifications
         )
     except Exception as e:
         logger.error(f"Error in my_files: {e}")
         flash('Error loading files', 'error')
-        return render_template(
-            'my_files.html',
-            local_files=[],
-            drive_files=[],
-            drive_connected=False,
-            notifications=[]
-        )
+        return redirect(url_for('user_dashboard'))
 
 @app.route('/upload_file', methods=['POST'])
 @login_required
