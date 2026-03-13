@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Department Repository – {{ user_department or 'My Files' }} | Office of Academics</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#04043a;--navy-mid:#0d0d6b;--gold:#FFD700;--white:#fff;--off-white:#f4f5fb;--border:#e2e4f0;--text:#1c1c3a;--muted:#6b6d8a;--shadow-sm:0 2px 8px rgba(4,4,58,.08);--shadow-md:0 6px 24px rgba(4,4,58,.12);--shadow-lg:0 16px 48px rgba(4,4,58,.16);--r-sm:8px;--r-md:14px;--r-lg:22px;--r-xl:32px;--t:all .28s cubic-bezier(.4,0,.2,1)}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--off-white);color:var(--text);min-height:100vh}
+a{text-decoration:none;color:inherit}
+
+.navbar{background:var(--white);position:sticky;top:0;z-index:200;box-shadow:0 2px 0 var(--border),var(--shadow-sm)}
+.nav-inner{max-width:1380px;margin:0 auto;padding:0 32px;height:68px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.nav-logo{display:flex;align-items:center;gap:12px}
+.nav-logo img{height:48px}
+.nav-logo-text h1{font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--navy);line-height:1.2;font-weight:700}
+.nav-logo-text p{font-size:11px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase}
+.nav-right{display:flex;align-items:center;gap:10px}
+.nav-btn{display:inline-flex;align-items:center;gap:7px;padding:9px 20px;border-radius:var(--r-xl);font-size:13px;font-weight:600;transition:var(--t);cursor:pointer;border:none;font-family:'Inter',sans-serif}
+.nav-btn.back{background:var(--off-white);color:var(--navy);border:1.5px solid var(--border)}
+.nav-btn.back:hover{background:var(--navy);color:var(--white);border-color:var(--navy)}
+.nav-btn.gold{background:var(--gold);color:var(--navy)}
+.nav-btn.gold:hover{background:#e6c200}
+
+/* HERO */
+.repo-hero{background:linear-gradient(135deg,var(--navy) 0%,var(--navy-mid) 60%,#1a1a9e 100%);padding:40px 32px;position:relative;overflow:hidden}
+.repo-hero::before{content:'';position:absolute;top:-60px;right:-60px;width:280px;height:280px;border-radius:50%;background:rgba(255,215,0,.06);pointer-events:none}
+.hero-inner{max-width:1380px;margin:0 auto;position:relative;z-index:1}
+.dept-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:var(--white);padding:6px 16px;border-radius:30px;font-size:12px;font-weight:700;margin-bottom:12px;letter-spacing:.4px}
+.dept-badge i{color:var(--gold)}
+.repo-hero h2{font-family:'Cormorant Garamond',serif;font-size:2.3rem;font-weight:700;color:var(--white);margin-bottom:8px;line-height:1.2}
+.repo-hero p{font-size:14px;color:rgba(255,255,255,.8);max-width:560px;line-height:1.7}
+.hero-stats{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px}
+.hstat{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);padding:12px 20px;border-radius:var(--r-sm);text-align:center}
+.hstat strong{display:block;font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:var(--gold);line-height:1.2}
+.hstat span{font-size:11px;color:rgba(255,255,255,.75);margin-top:2px;display:block}
+
+.main-wrap{max-width:1380px;margin:0 auto;padding:32px}
+
+/* UPLOAD BANNER */
+.upload-banner{background:var(--white);border-radius:var(--r-lg);border:2px dashed var(--border);padding:22px 28px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;transition:var(--t)}
+.upload-banner:hover{border-color:var(--navy-mid);box-shadow:var(--shadow-sm)}
+.ub-left{display:flex;align-items:center;gap:16px}
+.ub-icon{width:48px;height:48px;border-radius:var(--r-sm);background:linear-gradient(135deg,var(--navy),var(--navy-mid));display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ub-icon i{color:var(--gold);font-size:20px}
+.ub-text h4{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:700;color:var(--navy);margin-bottom:3px}
+.ub-text p{font-size:13px;color:var(--muted);line-height:1.5}
+.ub-btn{display:inline-flex;align-items:center;gap:7px;padding:10px 22px;border-radius:var(--r-xl);background:var(--navy);color:var(--white);font-size:13px;font-weight:700;cursor:pointer;border:none;transition:var(--t);font-family:'Inter',sans-serif;white-space:nowrap}
+.ub-btn:hover{background:var(--gold);color:var(--navy)}
+
+/* UPLOAD FORM */
+.upload-form-wrap{background:var(--white);border-radius:var(--r-lg);border:1px solid var(--border);box-shadow:var(--shadow-sm);margin-bottom:24px;overflow:hidden;display:none}
+.upload-form-wrap.open{display:block;animation:slideDown .3s ease}
+@keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+.uf-head{background:linear-gradient(135deg,var(--navy),var(--navy-mid));padding:16px 24px;display:flex;align-items:center;justify-content:space-between}
+.uf-head h3{font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--white);font-weight:700;display:flex;align-items:center;gap:8px}
+.uf-close{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.15);color:var(--white);border:none;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:var(--t)}
+.uf-close:hover{background:var(--gold);color:var(--navy)}
+.uf-body{padding:24px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:640px){.uf-body{grid-template-columns:1fr}}
+.uf-full{grid-column:1/-1}
+.flabel{display:block;font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px;letter-spacing:.4px;text-transform:uppercase}
+.flabel i{color:var(--gold);margin-right:4px;font-size:11px}
+.opt{font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;font-size:11px;margin-left:3px}
+.finput,.ftextarea{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:'Inter',sans-serif;font-size:14px;color:var(--text);transition:var(--t)}
+.finput:focus,.ftextarea:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(4,4,58,.07)}
+.ftextarea{resize:vertical;min-height:72px;line-height:1.6}
+.dept-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:#e8eaff;color:var(--navy-mid);border-radius:20px;font-size:12px;font-weight:700}
+.dept-pill i{color:var(--gold)}
+
+/* Drag & drop */
+.dropzone{border:2px dashed var(--border);border-radius:var(--r-md);padding:20px;text-align:center;cursor:pointer;transition:var(--t);background:var(--off-white);position:relative}
+.dropzone.over{border-color:var(--navy);background:#e8eaff}
+.dropzone.got{border-color:#16a34a;background:#f0fdf4}
+.dropzone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.dropzone i{font-size:1.6rem;color:var(--navy);opacity:.45;display:block;margin-bottom:8px}
+.dz-m{font-size:13px;font-weight:600;color:var(--navy);margin-bottom:3px}
+.dz-s{font-size:12px;color:var(--muted)}
+.uf-submit{width:100%;padding:12px;background:linear-gradient(135deg,var(--navy),var(--navy-mid));color:var(--white);border-radius:var(--r-xl);font-size:14px;font-weight:700;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;transition:var(--t);cursor:pointer;border:none}
+.uf-submit:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.uf-submit:disabled{opacity:.6;cursor:not-allowed;transform:none}
+
+/* NOTICES */
+.notice-info{background:#eff6ff;border:1px solid #bfdbfe;border-radius:var(--r-sm);padding:11px 16px;font-size:13px;color:#1e40af;display:flex;align-items:center;gap:9px;margin-bottom:20px}
+.notice-info i{flex-shrink:0}
+
+/* FILTER BAR */
+.filter-bar{background:var(--white);border-radius:var(--r-lg);padding:16px 22px;box-shadow:var(--shadow-sm);border:1px solid var(--border);margin-bottom:24px;display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.search-wrap{flex:1;min-width:200px;position:relative}
+.search-wrap input{width:100%;padding:9px 12px 9px 38px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:'Inter',sans-serif;font-size:14px;color:var(--text);transition:var(--t)}
+.search-wrap input:focus{outline:none;border-color:var(--navy)}
+.search-wrap i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px}
+.fsort{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.fsort select{border:1.5px solid var(--border);border-radius:var(--r-sm);padding:8px 12px;font-family:'Inter',sans-serif;font-size:13px;color:var(--text);background:var(--white);cursor:pointer}
+.fsort select:focus{outline:none;border-color:var(--navy)}
+.vtoggle{display:flex;gap:4px}
+.vbtn{width:34px;height:34px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;border:1.5px solid var(--border);color:var(--muted);cursor:pointer;transition:var(--t);background:var(--white)}
+.vbtn.active,.vbtn:hover{background:var(--navy);color:var(--white);border-color:var(--navy)}
+
+/* SOURCE TABS */
+.source-tabs{display:flex;gap:6px;margin-bottom:20px}
+.stab{padding:8px 18px;border-radius:var(--r-xl);font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);color:var(--muted);background:var(--white);transition:var(--t);display:flex;align-items:center;gap:6px}
+.stab:hover{border-color:var(--navy);color:var(--navy)}
+.stab.active{background:var(--navy);color:var(--white);border-color:var(--navy)}
+.stab .cnt{background:rgba(255,255,255,.25);padding:2px 7px;border-radius:10px;font-size:11px;font-weight:700}
+.stab:not(.active) .cnt{background:var(--border);color:var(--muted)}
+
+/* DOCS GRID */
+.docs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px}
+.docs-grid.list-view{grid-template-columns:1fr}
+.doc-card{background:var(--white);border-radius:var(--r-md);border:1px solid var(--border);box-shadow:var(--shadow-sm);overflow:hidden;transition:var(--t);display:flex;flex-direction:column}
+.doc-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg);border-color:var(--navy)}
+.doc-card.faculty-card{border-left:3px solid var(--gold)}
+.dc-top{padding:18px 20px;flex:1}
+.dc-icon{width:44px;height:44px;border-radius:var(--r-sm);background:linear-gradient(135deg,var(--navy),var(--navy-mid));display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.dc-icon i{color:var(--gold);font-size:20px}
+.faculty-card .dc-icon{background:linear-gradient(135deg,#92400e,#d97706)}
+.dc-title{font-size:14.5px;font-weight:700;color:var(--navy);margin-bottom:7px;line-height:1.4}
+.dc-desc{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:10px}
+.dc-meta{display:flex;flex-wrap:wrap;gap:8px;font-size:12px;color:var(--muted)}
+.dc-meta span{display:inline-flex;align-items:center;gap:4px}
+.dc-meta i{font-size:11px;color:var(--navy)}
+.src-tag{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;margin-top:7px}
+.src-tag.faculty{background:#fef3c7;color:#92400e}
+.src-tag.core{background:#e8eaff;color:var(--navy-mid)}
+.deadline-tag{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;margin-top:5px}
+.deadline-tag.active{background:#fef3c7;color:#92400e}
+.deadline-tag.expired{background:#fee2e2;color:#991b1b}
+.dc-bottom{padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.dca{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:var(--r-xl);font-size:12.5px;font-weight:600;transition:var(--t);cursor:pointer;border:none;font-family:'Inter',sans-serif}
+.dca.view{background:var(--navy);color:var(--white)}
+.dca.view:hover{background:var(--navy-mid)}
+.dca.dl{background:var(--off-white);color:var(--navy);border:1.5px solid var(--border)}
+.dca.dl:hover{background:var(--border)}
+.dca.share{background:var(--gold);color:var(--navy)}
+.dca.share:hover{background:#e6c200}
+
+.empty-state{text-align:center;padding:64px 20px;color:var(--muted)}
+.empty-state i{font-size:3.5rem;opacity:.25;display:block;margin-bottom:18px}
+.empty-state h3{font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:var(--navy);margin-bottom:8px}
+.empty-state p{font-size:14px;max-width:360px;margin:0 auto;line-height:1.7}
+
+/* PDF MODAL */
+.pdf-ov{display:none;position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,.92);align-items:center;justify-content:center}
+.pdf-ov.show{display:flex;animation:fi .2s ease}
+@keyframes fi{from{opacity:0}to{opacity:1}}
+.pdf-modal{background:var(--white);width:96%;height:94%;border-radius:var(--r-md);overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.5)}
+.pdf-bar{background:linear-gradient(135deg,var(--navy),var(--navy-mid));color:var(--white);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.pdf-bar h4{font-size:14px;display:flex;align-items:center;gap:8px;font-family:'Inter',sans-serif}
+.pdf-acts{display:flex;gap:8px;align-items:center}
+.pdf-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;background:rgba(255,255,255,.15);color:var(--white);border:1px solid rgba(255,255,255,.25);cursor:pointer;transition:var(--t);text-decoration:none;font-family:'Inter',sans-serif}
+.pdf-btn:hover{background:var(--gold);color:var(--navy);border-color:var(--gold)}
+.pdf-x{width:32px;height:32px;border-radius:50%;background:rgba(231,76,60,.8);color:var(--white);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:var(--t);border:none}
+.pdf-x:hover{background:#e74c3c;transform:rotate(90deg) scale(1.1)}
+.pdf-frame{flex:1;width:100%;border:none}
+
+/* SHARE MODAL */
+.sov{display:none;position:fixed;inset:0;z-index:1200;background:rgba(4,4,58,.75);backdrop-filter:blur(6px);align-items:center;justify-content:center}
+.sov.show{display:flex;animation:fi .2s ease}
+.sbox{background:var(--white);border-radius:var(--r-lg);width:90%;max-width:460px;overflow:hidden;box-shadow:var(--shadow-lg)}
+.sbox-head{background:linear-gradient(135deg,var(--navy),var(--navy-mid));color:var(--white);padding:18px 24px;display:flex;align-items:center;justify-content:space-between}
+.sbox-head h3{font-size:16px;font-weight:700;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:8px}
+.sx{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.15);color:var(--white);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:var(--t);border:none}
+.sx:hover{background:var(--gold);color:var(--navy);transform:rotate(90deg)}
+.sbox-body{padding:22px}
+.slink{display:flex;gap:8px;margin-bottom:18px}
+.slink input{flex:1;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:'Inter',sans-serif;font-size:13px;background:var(--off-white)}
+.slink .cp{padding:10px 18px;background:var(--navy);color:var(--white);border-radius:var(--r-sm);font-size:13px;font-weight:700;cursor:pointer;border:none;transition:var(--t);font-family:'Inter',sans-serif}
+.slink .cp:hover{background:var(--gold);color:var(--navy)}
+.sopts{display:flex;gap:12px;flex-wrap:wrap}
+.sopt{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 18px;border-radius:var(--r-md);border:1.5px solid var(--border);cursor:pointer;transition:var(--t);flex:1;min-width:70px}
+.sopt:hover{border-color:var(--navy);background:var(--off-white)}
+.sopt i{font-size:1.4rem}
+.sopt span{font-size:11px;font-weight:700;color:var(--muted)}
+
+/* TOAST */
+.toast{position:fixed;top:84px;right:24px;z-index:9999;background:var(--white);padding:13px 18px;border-radius:var(--r-md);box-shadow:var(--shadow-lg);display:none;align-items:center;gap:10px;min-width:240px;border:1px solid var(--border)}
+.toast.show{display:flex;animation:si .3s ease}
+@keyframes si{from{transform:translateX(110%)}to{transform:translateX(0)}}
+.toast.success{border-left:4px solid #16a34a}.toast.success i{color:#16a34a}
+.toast.error{border-left:4px solid #e74c3c}.toast.error i{color:#e74c3c}
+.toast.info{border-left:4px solid #3b82f6}.toast.info i{color:#3b82f6}
+
+@media(max-width:768px){.nav-inner,.repo-hero,.main-wrap{padding-left:16px;padding-right:16px}.repo-hero h2{font-size:1.8rem}}
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <div class="nav-logo">
+      <img src="{{ url_for('static', filename='images/L23.png') }}" alt="Jain University" onerror="this.src='https://via.placeholder.com/48x48/04043a/FFD700?text=JU'">
+      <div class="nav-logo-text">
+        <h1>Office of Academics</h1>
+        <p>Department Repository</p>
+      </div>
+    </div>
+    <div class="nav-right">
+      {% if special_role in ['core','office_barrier'] or user_role == 'admin' %}
+      <a href="{{ url_for('core_repo') }}" class="nav-btn gold"><i class="fas fa-shield-alt"></i> Core Dashboard</a>
+      {% endif %}
+      <a href="{{ url_for('home') }}" class="nav-btn back"><i class="fas fa-arrow-left"></i> Home</a>
+    </div>
+  </div>
+</nav>
+
+{% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}
+<div style="max-width:1380px;margin:12px auto;padding:0 32px">
+{% for cat,msg in messages %}
+<div style="padding:12px 18px;border-radius:8px;background:{% if cat=='success' %}#d4edda{% elif cat=='error' %}#f8d7da{% else %}#d1ecf1{% endif %};color:{% if cat=='success' %}#155724{% elif cat=='error' %}#721c24{% else %}#0c5460{% endif %};margin-bottom:8px;font-size:14px;border-left:4px solid {% if cat=='success' %}#27ae60{% elif cat=='error' %}#e74c3c{% else %}#17a2b8{% endif %}">{{ msg }}</div>
+{% endfor %}
+</div>
+{% endif %}{% endwith %}
+
+<div class="repo-hero">
+  <div class="hero-inner">
+    <div class="dept-badge"><i class="fas fa-building"></i> {{ user_department or 'My Department' }}</div>
+    <h2>Department Document Repository</h2>
+    <p>Documents shared with your department — and files submitted by your team to the core office.</p>
+    <div class="hero-stats">
+      <div class="hstat"><strong>{{ docs|length }}</strong><span>Total Documents</span></div>
+      <div class="hstat"><strong>{{ recent_count }}</strong><span>This Month</span></div>
+      <div class="hstat"><strong>{{ faculty_count }}</strong><span>Faculty Submitted</span></div>
+      {% if user_location %}<div class="hstat"><strong>{{ user_location }}</strong><span>Campus</span></div>{% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="main-wrap">
+
+  <!-- Privacy notice -->
+  <div class="notice-info">
+    <i class="fas fa-lock"></i>
+    <span>You only see documents shared specifically with <strong>{{ user_department or 'your department' }}</strong>. Documents for other departments are not visible here.</span>
+  </div>
+
+  <!-- Upload Banner -->
+  {% if user_department %}
+  <div class="upload-banner">
+    <div class="ub-left">
+      <div class="ub-icon"><i class="fas fa-upload"></i></div>
+      <div class="ub-text">
+        <h4>Submit a Document to the Core Team</h4>
+        <p>Upload files from your department — core team will see them in their dashboard with your name and department.</p>
+      </div>
+    </div>
+    <button class="ub-btn" onclick="toggleUpload()">
+      <i class="fas fa-plus" id="ubIcon"></i> <span id="ubTxt">Add Document</span>
+    </button>
+  </div>
+
+  <div class="upload-form-wrap" id="uploadFormWrap">
+    <div class="uf-head">
+      <h3><i class="fas fa-file-upload" style="color:var(--gold)"></i> Submit Document to Core Team</h3>
+      <button class="uf-close" onclick="toggleUpload()">×</button>
+    </div>
+    <form method="POST" action="{{ url_for('faculty_upload') }}" enctype="multipart/form-data" id="facultyForm">
+      <div class="uf-body">
+        <div>
+          <label class="flabel"><i class="fas fa-heading"></i>Title <span class="opt">(optional)</span></label>
+          <input type="text" name="title" class="finput" placeholder="Document title…" maxlength="200">
+        </div>
+        <div>
+          <label class="flabel"><i class="fas fa-calendar"></i>Document Date <span class="opt">(optional)</span></label>
+          <input type="date" name="doc_date" class="finput">
+        </div>
+        <div class="uf-full">
+          <label class="flabel"><i class="fas fa-align-left"></i>Description <span class="opt">(optional)</span></label>
+          <textarea name="description" class="ftextarea" placeholder="Brief note about this document…" maxlength="500"></textarea>
+        </div>
+        <div class="uf-full">
+          <label class="flabel"><i class="fas fa-building"></i>Department</label>
+          <div class="dept-pill"><i class="fas fa-check-circle"></i> {{ user_department }}</div>
+          <p style="font-size:12px;color:var(--muted);margin-top:6px">Automatically tagged to your department.</p>
+        </div>
+        <div class="uf-full">
+          <label class="flabel"><i class="fas fa-paperclip"></i>Attach File <span class="opt">(optional)</span></label>
+          <div class="dropzone" id="dz">
+            <input type="file" name="file" id="dzFile" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.png,.jpg,.jpeg" onchange="dzHandle(this)">
+            <i class="fas fa-cloud-upload-alt" id="dzIcon2"></i>
+            <div class="dz-m" id="dzMain">Drag & drop or click to browse</div>
+            <div class="dz-s">PDF, Word, Excel, PPT, Images — max 16 MB</div>
+          </div>
+        </div>
+        <div class="uf-full">
+          <button type="submit" class="uf-submit" id="ufBtn"><i class="fas fa-paper-plane"></i> Submit to Core Team</button>
+        </div>
+      </div>
+    </form>
+  </div>
+  {% endif %}
+
+  <!-- Source tabs -->
+  {% if docs %}
+  <div class="source-tabs">
+    <button class="stab active" data-src="all" onclick="setSource('all',this)">
+      <i class="fas fa-layer-group"></i> All <span class="cnt">{{ docs|length }}</span>
+    </button>
+    <button class="stab" data-src="core" onclick="setSource('core',this)">
+      <i class="fas fa-shield-alt"></i> From Core Team <span class="cnt">{{ docs|selectattr('source','equalto','core')|list|length }}</span>
+    </button>
+    <button class="stab" data-src="faculty" onclick="setSource('faculty',this)">
+      <i class="fas fa-chalkboard-teacher"></i> Faculty Submitted <span class="cnt">{{ faculty_count }}</span>
+    </button>
+  </div>
+  {% endif %}
+
+  <!-- Filter bar -->
+  <div class="filter-bar">
+    <div class="search-wrap">
+      <i class="fas fa-search"></i>
+      <input type="text" id="srch" placeholder="Search by title or description…" oninput="filterDocs()">
+    </div>
+    <div class="fsort"><span>Sort</span>
+      <select id="sortSel" onchange="filterDocs()">
+        <option value="newest">Newest first</option>
+        <option value="oldest">Oldest first</option>
+        <option value="title">Title A–Z</option>
+      </select>
+    </div>
+    <div class="vtoggle">
+      <button class="vbtn active" id="gBtn" onclick="setView('grid')" title="Grid"><i class="fas fa-th-large"></i></button>
+      <button class="vbtn" id="lBtn" onclick="setView('list')" title="List"><i class="fas fa-list"></i></button>
+    </div>
+  </div>
+
+  <!-- Docs -->
+  <div id="docsOuter">
+    {% if docs %}
+    <div class="docs-grid" id="docsGrid">
+      {% for doc in docs %}
+      {% set has_file = doc.files and doc.files|length > 0 %}
+      {% set expired = doc.end_date and doc.end_date < today_str %}
+      {% set is_fac = doc.source == 'faculty' %}
+      <div class="doc-card {% if is_fac %}faculty-card{% endif %}"
+           data-title="{{ (doc.title or '')|lower }}"
+           data-desc="{{ (doc.description or '')|lower }}"
+           data-date="{{ doc.uploaded_at }}"
+           data-src="{{ doc.source or 'core' }}">
+        <div class="dc-top">
+          <div class="dc-icon"><i class="fas {% if has_file %}fa-file-pdf{% else %}fa-file-alt{% endif %}"></i></div>
+          <div class="dc-title">{{ doc.title or 'Untitled Document' }}</div>
+          {% if doc.description %}<div class="dc-desc">{{ doc.description|truncate(100) }}</div>{% endif %}
+          <div class="dc-meta">
+            {% if doc.uploaded_at %}<span><i class="far fa-calendar-alt"></i> {{ doc.uploaded_at.strftime('%d %b %Y') if doc.uploaded_at.__class__.__name__ == 'datetime' else doc.uploaded_at }}</span>{% endif %}
+            {% if has_file %}<span><i class="fas fa-paperclip"></i> {{ doc.files|length }} file{{ 's' if doc.files|length > 1 else '' }}</span>{% endif %}
+            {% if doc.uploaded_by %}<span><i class="fas fa-user"></i> {{ doc.uploaded_by.split('@')[0] }}</span>{% endif %}
+          </div>
+          <div class="src-tag {% if is_fac %}faculty{% else %}core{% endif %}">
+            <i class="fas {% if is_fac %}fa-chalkboard-teacher{% else %}fa-shield-alt{% endif %}"></i>
+            {% if is_fac %}Faculty Submission{% else %}Core Team{% endif %}
+          </div>
+          {% if doc.end_date %}
+          <div class="deadline-tag {% if expired %}expired{% else %}active{% endif %}">
+            <i class="fas fa-clock"></i> {% if expired %}Expired: {{ doc.end_date }}{% else %}Deadline: {{ doc.end_date }}{% endif %}
+          </div>
+          {% endif %}
+        </div>
+        <div class="dc-bottom">
+          {% if has_file %}
+          <button class="dca view" onclick="openPdf('{{ url_for('uploaded_file', filename=doc.files[0]) }}','{{ (doc.title or doc.files[0])|replace("'","\\'") }}')">
+            <i class="fas fa-eye"></i> View
+          </button>
+          <a href="{{ url_for('uploaded_file', filename=doc.files[0]) }}" download class="dca dl">
+            <i class="fas fa-download"></i> Download
+          </a>
+          {% endif %}
+          <button class="dca share" onclick="openShare('{{ doc._id }}','{{ (doc.title or 'Document')|replace("'","\\'") }}')">
+            <i class="fas fa-share-alt"></i> Share
+          </button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <i class="fas fa-folder-open"></i>
+      <h3>No Documents Yet</h3>
+      <p>The core team hasn't shared any documents with <strong>{{ user_department or 'your department' }}</strong> yet. You can also submit your own documents above.</p>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+
+<!-- PDF Viewer -->
+<div class="pdf-ov" id="pdfOv">
+  <div class="pdf-modal">
+    <div class="pdf-bar">
+      <h4 id="pdfTitle"><i class="fas fa-file-pdf" style="color:#ef4444"></i> Document</h4>
+      <div class="pdf-acts">
+        <a href="#" id="pdfDl" download class="pdf-btn"><i class="fas fa-download"></i> Download</a>
+        <a href="#" id="pdfTab" target="_blank" class="pdf-btn"><i class="fas fa-external-link-alt"></i> New Tab</a>
+        <button class="pdf-x" onclick="closePdf()">×</button>
+      </div>
+    </div>
+    <iframe id="pdfFr" class="pdf-frame"></iframe>
+  </div>
+</div>
+
+<!-- Share Modal -->
+<div class="sov" id="sOv">
+  <div class="sbox">
+    <div class="sbox-head"><h3><i class="fas fa-share-alt"></i> Share Document</h3><button class="sx" onclick="closeShare()">×</button></div>
+    <div class="sbox-body">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px" id="sTitle"></p>
+      <div class="slink">
+        <input type="text" id="sInput" readonly>
+        <button class="cp" onclick="copyLink()"><i class="fas fa-copy"></i> Copy</button>
+      </div>
+      <div class="sopts">
+        <div class="sopt" onclick="shareEmail()"><i class="fas fa-envelope" style="color:#e74c3c"></i><span>Email</span></div>
+        <div class="sopt" onclick="shareWA()"><i class="fab fa-whatsapp" style="color:#25d366"></i><span>WhatsApp</span></div>
+        <div class="sopt" onclick="shareTeams()"><i class="fab fa-microsoft" style="color:#4b53bc"></i><span>Teams</span></div>
+        <div class="sopt" onclick="copyLink()"><i class="fas fa-link" style="color:var(--navy)"></i><span>Copy</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><i class="fas fa-check-circle" id="tIcon"></i><span id="tMsg"></span></div>
+
+<script>
+/* UPLOAD TOGGLE */
+function toggleUpload(){
+  const w=document.getElementById('uploadFormWrap'),i=document.getElementById('ubIcon'),t=document.getElementById('ubTxt');
+  const open=w.classList.contains('open');
+  if(open){w.classList.remove('open');i.className='fas fa-plus';t.textContent='Add Document';}
+  else{w.classList.add('open');i.className='fas fa-times';t.textContent='Cancel';w.scrollIntoView({behavior:'smooth',block:'nearest'});}
+}
+
+/* DRAG & DROP */
+const dz=document.getElementById('dz'),dzf=document.getElementById('dzFile');
+if(dz){
+  dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('over')});
+  dz.addEventListener('dragleave',()=>dz.classList.remove('over'));
+  dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('over');if(e.dataTransfer.files.length){dzf.files=e.dataTransfer.files;dzHandle(dzf);}});
+}
+function dzHandle(inp){
+  const f=inp.files[0];if(!f)return;
+  if(f.size>16*1024*1024){showToast('Max 16 MB allowed.','error');inp.value='';return;}
+  dz.classList.add('got');
+  document.getElementById('dzIcon2').className='fas fa-check-circle';
+  document.getElementById('dzMain').textContent=f.name;
+}
+document.getElementById('facultyForm')?.addEventListener('submit',function(){
+  const b=document.getElementById('ufBtn');b.disabled=true;b.innerHTML='<i class="fas fa-spinner fa-spin"></i> Submitting…';
+});
+
+/* SOURCE FILTER */
+let _src='all';
+function setSource(src,btn){
+  _src=src;
+  document.querySelectorAll('.stab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');filterDocs();
+}
+
+/* FILTER / SORT */
+function filterDocs(){
+  const q=(document.getElementById('srch').value||'').toLowerCase();
+  const sort=document.getElementById('sortSel').value;
+  const cards=[...document.querySelectorAll('.doc-card')];
+  cards.forEach(c=>{
+    const mQ=!q||(c.dataset.title||'').includes(q)||(c.dataset.desc||'').includes(q);
+    const mS=_src==='all'||c.dataset.src===_src;
+    c.style.display=(mQ&&mS)?'':'none';
+  });
+  const grid=document.getElementById('docsGrid');if(!grid)return;
+  const vis=cards.filter(c=>c.style.display!=='none');
+  vis.sort((a,b)=>{
+    if(sort==='title')return(a.dataset.title||'').localeCompare(b.dataset.title||'');
+    if(sort==='oldest')return(a.dataset.date||'').localeCompare(b.dataset.date||'');
+    return(b.dataset.date||'').localeCompare(a.dataset.date||'');
+  });
+  vis.forEach(c=>grid.appendChild(c));
+}
+
+/* VIEW */
+function setView(v){
+  const g=document.getElementById('docsGrid');if(!g)return;
+  g.classList.toggle('list-view',v==='list');
+  document.getElementById('gBtn').classList.toggle('active',v==='grid');
+  document.getElementById('lBtn').classList.toggle('active',v==='list');
+}
+
+/* PDF */
+function openPdf(url,name){
+  document.getElementById('pdfTitle').innerHTML=`<i class="fas fa-file-pdf" style="color:#ef4444;margin-right:8px"></i>${name}`;
+  document.getElementById('pdfDl').href=url;document.getElementById('pdfDl').setAttribute('download',name);
+  document.getElementById('pdfTab').href=url;
+  document.getElementById('pdfFr').src=url;
+  document.getElementById('pdfOv').classList.add('show');document.body.style.overflow='hidden';
+}
+function closePdf(){document.getElementById('pdfOv').classList.remove('show');document.body.style.overflow='';setTimeout(()=>document.getElementById('pdfFr').src='',300);}
+
+/* SHARE */
+let _su='';
+function openShare(id,title){
+  _su=`${location.origin}/dept_repo?doc=${id}`;
+  document.getElementById('sTitle').textContent='Sharing: '+title;
+  document.getElementById('sInput').value=_su;
+  document.getElementById('sOv').classList.add('show');document.body.style.overflow='hidden';
+}
+function closeShare(){document.getElementById('sOv').classList.remove('show');document.body.style.overflow='';}
+function copyLink(){navigator.clipboard.writeText(_su).then(()=>showToast('Link copied!','success'));closeShare();}
+function shareEmail(){window.open(`mailto:?subject=Document&body=${encodeURIComponent(_su)}`);closeShare();}
+function shareWA(){window.open(`https://wa.me/?text=${encodeURIComponent(_su)}`,'_blank');closeShare();}
+function shareTeams(){window.open(`https://teams.microsoft.com/l/chat/0/0?message=${encodeURIComponent(_su)}`,'_blank');closeShare();}
+
+/* TOAST */
+let _tt;
+function showToast(msg,type='success'){
+  const icons={success:'fa-check-circle',error:'fa-times-circle',info:'fa-info-circle'};
+  document.getElementById('tIcon').className=`fas ${icons[type]||icons.success}`;
+  document.getElementById('tMsg').textContent=msg;
+  const t=document.getElementById('toast');t.className=`toast ${type} show`;
+  clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('show'),4000);
+}
+document.addEventListener('click',e=>{if(e.target===document.getElementById('pdfOv'))closePdf();if(e.target===document.getElementById('sOv'))closeShare();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closePdf();closeShare();}});
+</script>
+</body>
+</html>

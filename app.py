@@ -1554,6 +1554,19 @@ def home():
         can_upload = approved and special_role in ["core", "office_barrier", "leader"]
         is_fac = user_type == "faculty" and not special_role
 
+        # Get department and location from session or DB profile
+        user_department = session.get("user_department", "")
+        user_location = session.get("user_location", "")
+        
+        # If not in session, pull from DB and cache in session
+        if not user_department or not user_location:
+            if user:
+                profile = user.get("profile", {})
+                user_department = profile.get("department", "") or user.get("department", "")
+                user_location = profile.get("location", "") or user.get("location", "")
+                session["user_department"] = user_department
+                session["user_location"] = user_location
+
         return render_template(
             "home.html",
             records=list(db.ugc_data.find().sort("uploaded_at", -1).limit(50)),
@@ -1573,6 +1586,8 @@ def home():
             can_upload=can_upload,
             approved=approved,
             special_role=special_role,
+            user_department=user_department,
+            user_location=user_location,
         )
     except Exception as e:
         logger.error(f"Error in home route: {e}", exc_info=True)
@@ -4583,92 +4598,128 @@ def user_preferences():
         return redirect(url_for('user_dashboard'))
 
 # ===================== ADMIN DASHBOARD ROUTES =====================
-@app.route('/admin_dashboard')
+@app.route('/admin_dashboard', methods=['GET'])
 def admin_dashboard():
     if session.get('role') != 'admin':
-        flash('Access denied', 'error')
-        return redirect(url_for('login'))
-
-    try:
-        logger.info(f"Admin {session.get('email')} accessing dashboard")
-        
-        search_query = request.args.get('search', '')
-        type_filter = request.args.get('type_filter', '')
-        role_filter = request.args.get('role_filter', '')
-        
-        query = {}
-        
-        if search_query:
-            query['email'] = {'$regex': search_query, '$options': 'i'}
-        
-        if type_filter:
-            if type_filter == 'core':
-                query['$or'] = [
-                    {'user_type': 'core'},
-                    {'special_role': 'office_barrier'}
-                ]
-            else:
-                query['user_type'] = type_filter
-            
-        if role_filter:
-            if role_filter == 'office_barrier':
-                query['$or'] = [
-                    {'user_type': 'core'},
-                    {'special_role': 'office_barrier'}
-                ]
-            elif role_filter == 'leader':
-                query['special_role'] = 'leader'
-            elif role_filter == 'none':
-                query['special_role'] = {'$in': [None, '']}
-            else:
-                query['special_role'] = role_filter
-        
-        users = list(db.users.find(query).sort('created_at', -1))
-        
-        pre_assigned_leaders = list(db.pre_assigned_leaders.find())
-        pre_assigned_core = list(db.pre_assigned_core.find())
-        
-        total_users = len(users)
-        pending_users = len([u for u in users if not u.get('approved', False)])
-        approved_users = len([u for u in users if u.get('approved', False)])
-        
-        for user in users:
-            user.setdefault('approved', False)
-            user.setdefault('user_type', 'faculty')
-            user.setdefault('special_role', None)
-            
-            if user.get('user_type') == 'core' or user.get('special_role') == 'office_barrier':
-                user['display_type'] = 'Core Team'
-                user['display_special'] = 'Core Member'
-            elif user.get('special_role') == 'leader':
-                user['display_type'] = 'Leader'
-                user['display_special'] = 'Leader'
-            else:
-                user['display_type'] = user.get('user_type', 'faculty').capitalize()
-                user['display_special'] = user.get('special_role', 'None').capitalize() if user.get('special_role') else 'None'
-        
-        return render_template(
-            'admin_dashboard.html', 
-            users=users,
-            pre_assigned_leaders=pre_assigned_leaders,
-            pre_assigned_core=pre_assigned_core,
-            total_users=total_users,
-            pending_users=pending_users,
-            approved_users=approved_users
+        flash('Admin access required.', 'error')
+        return redirect(url_for('home'))
+ 
+    # Filters from query string
+    search      = request.args.get('search', '').strip()
+    type_filter = request.args.get('type_filter', '').strip()
+    role_filter = request.args.get('role_filter', '').strip()
+    dept_filter = request.args.get('dept_filter', '').strip()
+ 
+    query = {}
+    if search:
+        query['email'] = {'$regex': search, '$options': 'i'}
+    if type_filter:
+        query['user_type'] = type_filter
+    if role_filter == 'none':
+        query['special_role'] = {'$in': [None, '', 'none']}
+    elif role_filter:
+        query['special_role'] = role_filter
+    if dept_filter:
+        query['$or'] = [
+            {'department': {'$regex': dept_filter, '$options': 'i'}},
+            {'profile.department': {'$regex': dept_filter, '$options': 'i'}},
+        ]
+ 
+    users_raw = list(db.users.find(query).sort('created_at', -1))
+ 
+    now = datetime.utcnow()
+    users = []
+    for u in users_raw:
+        u['_id'] = str(u['_id'])
+        # Active = last_seen within 15 minutes
+        last_seen  = u.get('last_seen')
+        is_active  = False
+        if last_seen and isinstance(last_seen, datetime):
+            is_active = (now - last_seen).total_seconds() < 900
+        u['is_active_now'] = is_active
+ 
+        # Department & Location (handle both flat and nested profile)
+        profile = u.get('profile', {}) or {}
+        u['dept_display']     = u.get('department') or profile.get('department') or '—'
+        u['location_display'] = u.get('location')   or profile.get('location')   or '—'
+ 
+        # Human-readable times
+        u['last_login_display'] = (
+            u['last_login'].strftime('%d %b %Y, %H:%M') if isinstance(u.get('last_login'), datetime) else '—'
         )
-        
-    except Exception as e:
-        logger.error(f"Error in admin_dashboard: {e}", exc_info=True)
-        flash(f'Error loading dashboard: {str(e)[:100]}', 'error')
-        return render_template(
-            'admin_dashboard.html', 
-            users=[],
-            pre_assigned_leaders=[],
-            pre_assigned_core=[],
-            total_users=0,
-            pending_users=0,
-            approved_users=0
+        u['last_seen_display'] = (
+            u['last_seen'].strftime('%d %b %Y, %H:%M') if isinstance(last_seen, datetime) else '—'
         )
+        u['changes_made']   = u.get('changes_made', 0)
+        u['total_logins']   = u.get('total_logins', 0)
+ 
+        # Display type
+        if u.get('special_role') == 'leader':
+            u['display_type'] = 'Leader'
+        elif u.get('special_role') == 'office_barrier' or u.get('user_type') == 'core':
+            u['display_type'] = 'Core Team'
+        else:
+            u['display_type'] = 'Faculty'
+ 
+        users.append(u)
+ 
+    # Stats
+    total_users    = db.users.count_documents({})
+    pending_users  = db.users.count_documents({'approved': {'$ne': True}})
+    approved_users = db.users.count_documents({'approved': True})
+    active_now     = sum(1 for u in users if u['is_active_now'])
+ 
+    # Pre-assigned lists
+    pre_assigned_leaders = list(db.pre_assigned_roles.find({'role': 'leader'}).sort('assigned_at', -1))
+    pre_assigned_core    = list(db.pre_assigned_roles.find({'role': 'core'}).sort('assigned_at', -1))
+ 
+    # All unique departments for filter dropdown
+    all_departments = db.users.distinct('department') + db.users.distinct('profile.department')
+    all_departments = sorted(set(d for d in all_departments if d))
+ 
+    return render_template(
+        'admin_dashboard.html',
+        users=users,
+        total_users=total_users,
+        pending_users=pending_users,
+        approved_users=approved_users,
+        active_now=active_now,
+        pre_assigned_leaders=pre_assigned_leaders,
+        pre_assigned_core=pre_assigned_core,
+        all_departments=all_departments,
+        **_get_user_info()
+    )
+def record_login(email):
+    """
+    Call this right after setting session on successful login.
+    Sets login_time, clears last_seen, generates a session_id.
+    """
+    import uuid
+    sid = str(uuid.uuid4())[:8]
+    session['session_id'] = sid
+    db.users.update_one(
+        {'email': email},
+        {'$set': {
+            'last_login':   datetime.utcnow(),
+            'last_seen':    datetime.utcnow(),
+            'is_active':    True,
+            'session_id':   sid,
+        },
+         '$inc': {'total_logins': 1}
+        }
+    )
+ 
+ 
+def record_logout(email):
+    """Call this in your logout route before clearing session."""
+    db.users.update_one(
+        {'email': email},
+        {'$set': {
+            'is_active':  False,
+            'last_seen':  datetime.utcnow(),
+            'session_id': '',
+        }}
+    )
 
 @app.route('/admin/users')
 def view_users():
@@ -5826,6 +5877,7 @@ def debug_my_session():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
 @app.route('/debug/check-collections')
 @login_required
 def debug_check_collections():
@@ -6062,7 +6114,359 @@ def test_email():
     except Exception as e:
         logger.error(f"Test email failed: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
+# ═══════════════════════════════════════════════════════════════════════
+#  DEPARTMENT REPOSITORY ROUTES  — add to app.py
+#  MongoDB collection used: db.dept_repo_docs
+#  Each document has:
+#    title (str), description (str), departments (list[str]),
+#    doc_date (str), end_date (str), files (list[str]),
+#    uploaded_by (str), uploaded_at (datetime)
+# ═══════════════════════════════════════════════════════════════════════
 
+import os
+from datetime import datetime, date
+from bson import ObjectId
+from flask import (
+    render_template, request, redirect, url_for,
+    flash, jsonify, session
+)
+from werkzeug.utils import secure_filename
+
+
+# ── helpers ──────────────────────────────────────────────────────────
+ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'png', 'jpg', 'jpeg'}
+REPO_UPLOAD_FOLDER = 'uploads'   # same folder as existing uploads
+
+def _allowed(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def _login_required(f):
+    from functools import wraps
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get('email'):
+            flash('Please log in to continue.', 'error')
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated
+
+def _core_required(f):
+    from functools import wraps
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get('email'):
+            return redirect(url_for('login'))
+        user_type    = session.get('user_type', '')
+        special_role = session.get('special_role', '')
+        role         = session.get('role', '')
+        if not (user_type == 'core' or special_role == 'office_barrier' or role == 'admin'):
+            flash('Access denied. Core team only.', 'error')
+            return redirect(url_for('home'))
+        return f(*args, **kwargs)
+    return decorated
+
+def _get_user_info():
+    return {
+        'user_logged_in':  bool(session.get('email')),
+        'user_email':       session.get('email', ''),
+        'user_role':        session.get('role', 'user'),
+        'user_type':        session.get('user_type', ''),
+        'special_role':     session.get('special_role', ''),
+        'approved':         session.get('approved', False),
+        'user_department':  session.get('user_department', ''),
+        'user_location':    session.get('user_location', ''),
+    }
+# ── DEPT REPO — user view ─────────────────────────────────────────────
+@app.route('/dept_repo')
+@_login_required
+def dept_repo():
+    ui = _get_user_info()
+    if not ui['approved']:
+        flash('Your account is pending approval.', 'warning')
+        return redirect(url_for('home'))
+ 
+    _track_activity()   # update last_seen
+ 
+    today_str   = date.today().isoformat()
+    user_dept   = session.get('user_department', '')
+ 
+    # ── Only fetch docs tagged with THIS user's department ──
+    if user_dept:
+        docs = list(db.dept_repo_docs.find(
+            {'departments': user_dept}
+        ).sort('uploaded_at', -1))
+    else:
+        docs = []   # no department → no docs shown
+ 
+    for d in docs:
+        d['_id'] = str(d['_id'])
+ 
+    recent_count = sum(
+        1 for d in docs
+        if isinstance(d.get('uploaded_at'), datetime)
+        and (datetime.utcnow() - d['uploaded_at']).days <= 30
+    )
+    faculty_count = sum(1 for d in docs if d.get('source') == 'faculty')
+ 
+    return render_template(
+        'dept_repo.html',
+        docs=docs,
+        today_str=today_str,
+        recent_count=recent_count,
+        faculty_count=faculty_count,
+        **ui
+    )
+def _get_user_info():
+    return {
+        'user_logged_in':  bool(session.get('email')),
+        'user_email':       session.get('email', ''),
+        'user_role':        session.get('role', 'user'),
+        'user_type':        session.get('user_type', ''),
+        'special_role':     session.get('special_role', ''),
+        'approved':         session.get('approved', False),
+        'user_department':  session.get('user_department', ''),
+        'user_location':    session.get('user_location', ''),
+    }
+ 
+ 
+def _track_activity(action_description=None):
+    """
+    Call this on any meaningful user action.
+    Updates last_seen, and optionally increments changes_made + logs the action.
+    """
+    email = session.get('email')
+    if not email:
+        return
+    update = {'$set': {'last_seen': datetime.utcnow()}}
+    if action_description:
+        update['$inc'] = {'changes_made': 1}
+        update['$push'] = {
+            'activity_log': {
+                'action': action_description,
+                'at': datetime.utcnow(),
+                'session_id': session.get('session_id', '')
+            }
+        }
+
+def _core_required(f):
+    from functools import wraps
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get('email'):
+            return redirect(url_for('login'))
+        user_type    = session.get('user_type', '')
+        special_role = session.get('special_role', '')
+        role         = session.get('role', '')
+        if not (user_type == 'core' or special_role == 'office_barrier' or role == 'admin'):
+            flash('Access denied. Core team only.', 'error')
+            return redirect(url_for('home'))
+        return f(*args, **kwargs)
+    return decorated
+
+
+def _track_activity(action_description=None):
+    email = session.get('email')
+    if not email:
+        return
+    update = {'$set': {'last_seen': datetime.utcnow()}}
+    if action_description:
+        update['$inc'] = {'changes_made': 1}
+        update['$push'] = {
+            'activity_log': {
+                'action': action_description,
+                'at': datetime.utcnow(),
+                'session_id': session.get('session_id', '')
+            }
+        }
+    db.users.update_one({'email': email}, update)
+@app.route('/faculty_upload', methods=['POST'])
+@login_required
+def faculty_upload():
+    """Faculty can upload documents — visible to core team in core dashboard."""
+    if not session.get('approved'):
+        return jsonify({'success': False, 'error': 'Account not approved'}), 403
+
+    user = db.users.find_one({'email': session['email']})
+    if not user:
+        return jsonify({'success': False, 'error': 'User not found'}), 404
+
+    title       = request.form.get('title', '').strip()
+    description = request.form.get('description', '').strip()
+    doc_date    = request.form.get('doc_date', '').strip()
+
+    uploaded_files = []
+    file = request.files.get('file')
+    if file and file.filename:
+        if not allowed_file(file.filename):
+            flash('File type not allowed.', 'error')
+            return redirect(url_for('dept_repo'))
+        filename = secure_filename(file.filename)
+        base, ext = os.path.splitext(filename)
+        unique_name = f"{base}_{int(datetime.utcnow().timestamp())}{ext}"
+        save_path = os.path.join(app.config.get('UPLOAD_FOLDER', 'static/uploads'), unique_name)
+        file.save(save_path)
+        uploaded_files.append(unique_name)
+
+    user_dept = session.get('user_department', user.get('profile', {}).get('department', ''))
+
+    doc = {
+        'title':        title or None,
+        'description':  description or None,
+        'departments':  [user_dept] if user_dept else [],
+        'doc_date':     doc_date or None,
+        'files':        uploaded_files,
+        'uploaded_by':  session['email'],
+        'uploaded_by_dept': user_dept,
+        'source':       'faculty',   # flag so core dashboard can identify it
+        'uploaded_at':  datetime.utcnow(),
+    }
+    db.dept_repo_docs.insert_one(doc)
+
+    flash('✅ Your document has been submitted and is visible to the core team.', 'success')
+    return redirect(url_for('dept_repo'))
+
+
+# ── CORE REPO — core team upload & manage ────────────────────────────
+@app.route('/core_repo')
+@_core_required
+def core_repo():
+    ui        = _get_user_info()
+    today_str = date.today().isoformat()
+ 
+    _track_activity()
+ 
+    # All docs, newest first
+    repo_docs = list(db.dept_repo_docs.find({}).sort('uploaded_at', -1))
+    for d in repo_docs:
+        d['_id'] = str(d['_id'])
+ 
+    # Separate faculty submissions so core can see them clearly
+    faculty_submissions = [d for d in repo_docs if d.get('source') == 'faculty']
+    core_uploads        = [d for d in repo_docs if d.get('source') != 'faculty']
+ 
+    # Unique departments
+    seen, all_depts_with_docs = set(), []
+    for d in repo_docs:
+        for dept in (d.get('departments') or []):
+            if dept not in seen:
+                seen.add(dept)
+                all_depts_with_docs.append(dept)
+ 
+    return render_template(
+        'core_repo.html',
+        repo_docs=repo_docs,
+        faculty_submissions=faculty_submissions,
+        core_uploads=core_uploads,
+        today_str=today_str,
+        all_depts_with_docs=all_depts_with_docs,
+        faculty_count=len(faculty_submissions),
+        **ui
+    )
+
+
+
+# ── CORE REPO UPLOAD ──────────────────────────────────────────────────
+@app.route('/core_repo_upload', methods=['POST'])
+@_core_required
+def core_repo_upload():
+    title       = request.form.get('title', '').strip()
+    description = request.form.get('description', '').strip()
+    doc_date    = request.form.get('doc_date', '').strip()
+    end_date    = request.form.get('end_date', '').strip()
+    departments = request.form.getlist('departments')
+ 
+    if not departments:
+        flash('Please select at least one department.', 'error')
+        return redirect(url_for('core_repo'))
+ 
+    uploaded_files = []
+    file = request.files.get('file')
+    if file and file.filename:
+        if not _allowed(file.filename):
+            flash('File type not allowed.', 'error')
+            return redirect(url_for('core_repo'))
+        filename    = secure_filename(file.filename)
+        base, ext   = os.path.splitext(filename)
+        unique_name = f"{base}_{int(datetime.utcnow().timestamp())}{ext}"
+        save_path   = os.path.join(app.config.get('UPLOAD_FOLDER', 'uploads'), unique_name)
+        file.save(save_path)
+        uploaded_files.append(unique_name)
+ 
+    doc = {
+        'title':       title or None,
+        'description': description or None,
+        'departments': departments,
+        'doc_date':    doc_date or None,
+        'end_date':    end_date or None,
+        'files':       uploaded_files,
+        'uploaded_by': session.get('email', ''),
+        'source':      'core',
+        'uploaded_at': datetime.utcnow(),
+    }
+    db.dept_repo_docs.insert_one(doc)
+ 
+    dept_label = ', '.join(d.replace('Department of ', '') for d in departments[:3])
+    if len(departments) > 3:
+        dept_label += f' +{len(departments)-3} more'
+ 
+    _track_activity(f"Core upload: {title or 'Untitled'} → {dept_label}")
+ 
+    flash(f'✅ Document uploaded to: {dept_label}', 'success')
+    return redirect(url_for('core_repo'))
+ 
+
+# ── CORE REPO DELETE ──────────────────────────────────────────────────
+@app.route('/core_repo_delete', methods=['POST'])
+@_core_required
+def core_repo_delete():
+    data   = request.get_json()
+    doc_id = data.get('doc_id')
+    if not doc_id:
+        return jsonify({'success': False, 'error': 'Missing document ID'})
+    try:
+        doc    = db.dept_repo_docs.find_one({'_id': ObjectId(doc_id)})
+        result = db.dept_repo_docs.delete_one({'_id': ObjectId(doc_id)})
+        if result.deleted_count:
+            _track_activity(f"Deleted doc: {doc.get('title','Untitled') if doc else doc_id}")
+            return jsonify({'success': True})
+        return jsonify({'success': False, 'error': 'Document not found'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  UPDATE YOUR EXISTING home() ROUTE to pass user_department + user_location
+#  In your current home() function, make sure session values are passed:
+#
+#    user_department = session.get('user_department', '')
+#    user_location   = session.get('user_location', '')
+#
+#  And pass to render_template:
+#    user_department=user_department,
+#    user_location=user_location,
+#
+# ═══════════════════════════════════════════════════════════════════════
+#
+#  REGISTRATION UPDATE (register route) — after saving user to DB,
+#  store department and location in session:
+#
+#    session['user_department'] = department   # from form select
+#    session['user_location']   = location     # from form select
+#
+# ═══════════════════════════════════════════════════════════════════════
+#
+#  LOGIN UPDATE — when loading existing user from DB, also set:
+#
+#    session['user_department'] = user_doc.get('department', '')
+#    session['user_location']   = user_doc.get('location', '')
+#
+# ═══════════════════════════════════════════════════════════════════════
+#
+#  USER MODEL (MongoDB) — ensure users collection stores:
+#    department: str  (from register form)
+#    location:   str  (from register form)
+#
+# ═══════════════════════════════════════════════════════════════════════
 # ===================== CRON ENDPOINTS (for production) =====================
 @app.route('/cron/send-reminders')
 def cron_send_reminders():

@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Core Repository – Upload & Management | Office of Academics</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#04043a;--navy-mid:#0d0d6b;--gold:#FFD700;--white:#fff;--off-white:#f4f5fb;--border:#e2e4f0;--text:#1c1c3a;--muted:#6b6d8a;--shadow-sm:0 2px 8px rgba(4,4,58,.08);--shadow-md:0 6px 24px rgba(4,4,58,.12);--shadow-lg:0 16px 48px rgba(4,4,58,.16);--r-sm:8px;--r-md:14px;--r-lg:22px;--r-xl:32px;--t:all .28s cubic-bezier(.4,0,.2,1)}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--off-white);color:var(--text);min-height:100vh}
+a{text-decoration:none;color:inherit}
+
+.navbar{background:var(--white);position:sticky;top:0;z-index:200;box-shadow:0 2px 0 var(--border),var(--shadow-sm)}
+.nav-inner{max-width:1380px;margin:0 auto;padding:0 32px;height:68px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.nav-logo{display:flex;align-items:center;gap:12px}
+.nav-logo img{height:48px}
+.nav-logo-text h1{font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--navy);font-weight:700;line-height:1.2}
+.nav-logo-text p{font-size:11px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase}
+.nav-right{display:flex;align-items:center;gap:10px}
+.nav-btn{display:inline-flex;align-items:center;gap:7px;padding:9px 20px;border-radius:var(--r-xl);font-size:13px;font-weight:600;transition:var(--t);cursor:pointer;border:none;font-family:'Inter',sans-serif}
+.nav-btn.ghost{background:var(--off-white);color:var(--navy);border:1.5px solid var(--border)}
+.nav-btn.ghost:hover{background:var(--navy);color:var(--white)}
+
+/* HERO */
+.page-hero{background:linear-gradient(135deg,var(--navy) 0%,var(--navy-mid) 60%,#1a1a9e 100%);padding:32px;position:relative;overflow:hidden}
+.page-hero::before{content:'';position:absolute;top:-50px;right:-50px;width:240px;height:240px;border-radius:50%;background:rgba(255,215,0,.07);pointer-events:none}
+.hero-inner{max-width:1380px;margin:0 auto;position:relative;z-index:1;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:20px}
+.hero-left h2{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:700;color:var(--white);margin-bottom:6px}
+.hero-left p{font-size:14px;color:rgba(255,255,255,.8);max-width:520px;line-height:1.7}
+.role-badge{display:inline-flex;align-items:center;gap:7px;background:var(--gold);color:var(--navy);padding:5px 14px;border-radius:30px;font-size:12px;font-weight:700;margin-bottom:12px;letter-spacing:.4px}
+.hero-stats{display:flex;gap:12px;flex-wrap:wrap;align-self:center}
+.hst{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);padding:14px 20px;border-radius:var(--r-sm);text-align:center;min-width:90px}
+.hst strong{display:block;font-family:'Cormorant Garamond',serif;font-size:1.6rem;color:var(--gold)}
+.hst span{font-size:11px;color:rgba(255,255,255,.75);display:block;margin-top:2px}
+.faculty-alert{display:inline-flex;align-items:center;gap:6px;background:var(--gold);color:var(--navy);padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;animation:pulse 2s ease infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}
+
+/* LAYOUT */
+.main-wrap{max-width:1380px;margin:0 auto;padding:28px 32px;display:grid;grid-template-columns:400px 1fr;gap:24px;align-items:start}
+@media(max-width:1024px){.main-wrap{grid-template-columns:1fr}}
+@media(max-width:768px){.main-wrap{padding-left:16px;padding-right:16px}}
+
+/* UPLOAD PANEL */
+.upload-panel{background:var(--white);border-radius:var(--r-lg);box-shadow:var(--shadow-md);border:1px solid var(--border);position:sticky;top:90px;overflow:hidden}
+.up-head{background:linear-gradient(135deg,var(--navy),var(--navy-mid));padding:20px 24px;color:var(--white)}
+.up-head h3{font-family:'Cormorant Garamond',serif;font-size:1.25rem;font-weight:700;display:flex;align-items:center;gap:8px}
+.up-head p{font-size:12.5px;opacity:.8;margin-top:4px}
+.up-body{padding:22px}
+.fg{margin-bottom:16px}
+.flabel{display:block;font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px;letter-spacing:.4px;text-transform:uppercase}
+.flabel i{color:var(--gold);margin-right:4px;font-size:11px}
+.opt{font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;font-size:11px;margin-left:3px}
+.finput,.ftextarea{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:'Inter',sans-serif;font-size:14px;color:var(--text);transition:var(--t)}
+.finput:focus,.ftextarea:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(4,4,58,.08)}
+.ftextarea{resize:vertical;min-height:76px;line-height:1.6}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* Dept selector */
+.dept-sel{border:1.5px solid var(--border);border-radius:var(--r-sm);overflow:hidden;max-height:240px;overflow-y:auto}
+.dept-sel::-webkit-scrollbar{width:4px}.dept-sel::-webkit-scrollbar-thumb{background:var(--navy);border-radius:4px}
+.da-toggle{padding:10px 14px;background:var(--off-white);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.da-toggle label{font-size:13px;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:8px;cursor:pointer}
+.dg-label{padding:6px 14px;background:#f0f4ff;font-size:11px;font-weight:700;color:var(--navy);letter-spacing:.5px;text-transform:uppercase;border-bottom:1px solid var(--border);border-top:1px solid var(--border)}
+.dopt{display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:var(--t)}
+.dopt:last-child{border-bottom:none}
+.dopt:hover{background:var(--off-white)}
+.dopt input{width:14px;height:14px;accent-color:var(--navy);cursor:pointer;flex-shrink:0}
+.dopt label{font-size:13px;color:var(--text);cursor:pointer;flex:1;line-height:1.4}
+.sel-count{font-size:12px;color:var(--muted);margin-top:6px;display:flex;align-items:center;gap:5px}
+.sel-count span{font-weight:700;color:var(--navy)}
+
+/* Drop zone */
+.dropzone{border:2px dashed var(--border);border-radius:var(--r-md);padding:22px;text-align:center;cursor:pointer;transition:var(--t);background:var(--off-white);position:relative}
+.dropzone.over{border-color:var(--navy);background:#e8eaff}
+.dropzone.got{border-color:#16a34a;background:#f0fdf4}
+.dropzone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.dropzone i{font-size:1.8rem;color:var(--navy);opacity:.45;display:block;margin-bottom:9px}
+.dz-m{font-size:13px;font-weight:600;color:var(--navy);margin-bottom:4px}
+.dz-s{font-size:12px;color:var(--muted)}
+.dropzone.got i{opacity:.8;color:#16a34a}
+.sub-btn{width:100%;padding:12px;background:linear-gradient(135deg,var(--navy),var(--navy-mid));color:var(--white);border-radius:var(--r-xl);font-size:14px;font-weight:700;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;transition:var(--t);cursor:pointer;border:none;margin-top:4px}
+.sub-btn:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.sub-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+
+/* RIGHT PANEL */
+.right-panel{display:flex;flex-direction:column;gap:20px}
+
+/* Faculty submissions alert panel */
+.faculty-panel{background:var(--white);border-radius:var(--r-lg);border:2px solid var(--gold);box-shadow:var(--shadow-sm);overflow:hidden}
+.fp-head{background:linear-gradient(135deg,#92400e,#d97706);padding:16px 22px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.fp-head h3{font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--white);font-weight:700;display:flex;align-items:center;gap:8px}
+.fp-badge{background:rgba(255,255,255,.2);color:var(--white);padding:3px 12px;border-radius:20px;font-size:12px;font-weight:700}
+.fp-body{padding:0}
+.fac-item{display:flex;align-items:flex-start;gap:14px;padding:16px 22px;border-bottom:1px solid var(--border);transition:var(--t)}
+.fac-item:last-child{border-bottom:none}
+.fac-item:hover{background:var(--off-white)}
+.fac-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#92400e,#d97706);display:flex;align-items:center;justify-content:center;color:var(--white);font-size:16px;font-weight:700;flex-shrink:0}
+.fac-info{flex:1;min-width:0}
+.fac-name{font-size:13.5px;font-weight:700;color:var(--navy);margin-bottom:2px}
+.fac-dept{font-size:12px;color:var(--muted);margin-bottom:5px;display:flex;align-items:center;gap:5px}
+.fac-dept i{color:var(--gold);font-size:11px}
+.fac-doc{font-size:13px;color:var(--text);margin-bottom:5px;line-height:1.5}
+.fac-meta{display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:var(--muted)}
+.fac-meta span{display:inline-flex;align-items:center;gap:4px}
+.fac-meta i{font-size:11px;color:var(--navy)}
+.fac-acts{display:flex;flex-direction:column;gap:5px;flex-shrink:0;align-items:flex-end}
+.fac-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 13px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;transition:var(--t);border:none;font-family:'Inter',sans-serif;white-space:nowrap}
+.fac-btn.view{background:var(--navy);color:var(--white)}
+.fac-btn.view:hover{background:var(--navy-mid)}
+.fac-btn.del{background:#fee2e2;color:#991b1b}
+.fac-btn.del:hover{background:#fca5a5}
+.empty-fac{text-align:center;padding:32px;color:var(--muted);font-size:13px}
+.empty-fac i{font-size:2rem;opacity:.25;display:block;margin-bottom:10px}
+
+/* DOCS PANEL */
+.docs-panel{background:var(--white);border-radius:var(--r-lg);box-shadow:var(--shadow-md);border:1px solid var(--border);overflow:hidden}
+.dp-head{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.dp-head h3{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:8px}
+.dp-head h3 i{color:var(--gold)}
+.dp-cnt{background:var(--navy);color:var(--white);padding:3px 12px;border-radius:20px;font-size:12px;font-weight:700}
+
+/* Filters inside panel */
+.dp-filter{padding:12px 22px;border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:10px;background:var(--off-white);align-items:center}
+.dp-srch{position:relative;flex:1;min-width:160px}
+.dp-srch input{width:100%;padding:8px 12px 8px 34px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:'Inter',sans-serif;font-size:13px;background:var(--white)}
+.dp-srch input:focus{outline:none;border-color:var(--navy)}
+.dp-srch i{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:12px}
+.dp-filter select{border:1.5px solid var(--border);border-radius:var(--r-sm);padding:8px 12px;font-family:'Inter',sans-serif;font-size:13px;background:var(--white)}
+.dp-filter select:focus{outline:none;border-color:var(--navy)}
+
+/* Dept tabs inside panel */
+.dp-tabs{padding:10px 22px;border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:6px}
+.dp-tab{padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);color:var(--muted);background:var(--white);transition:var(--t)}
+.dp-tab:hover{border-color:var(--navy);color:var(--navy)}
+.dp-tab.active{background:var(--navy);color:var(--white);border-color:var(--navy)}
+
+/* Doc list rows */
+.doc-row{display:flex;align-items:flex-start;gap:14px;padding:16px 22px;border-bottom:1px solid var(--border);transition:var(--t)}
+.doc-row:last-child{border-bottom:none}
+.doc-row:hover{background:var(--off-white)}
+.doc-row.faculty-row{border-left:3px solid var(--gold)}
+.dr-icon{width:40px;height:40px;border-radius:var(--r-sm);background:linear-gradient(135deg,var(--navy),var(--navy-mid));display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.dr-icon i{color:var(--gold);font-size:17px}
+.faculty-row .dr-icon{background:linear-gradient(135deg,#92400e,#d97706)}
+.dr-info{flex:1;min-width:0}
+.dr-title{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:3px;line-height:1.4}
+.dr-desc{font-size:13px;color:var(--muted);margin-bottom:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dr-meta{display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:var(--muted)}
+.dr-meta span{display:inline-flex;align-items:center;gap:4px}
+.dr-meta i{font-size:11px;color:var(--navy)}
+.dr-src{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;margin-top:5px}
+.dr-src.faculty{background:#fef3c7;color:#92400e}
+.dr-src.core{background:#e8eaff;color:var(--navy-mid)}
+.dr-depts{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+.dtag{padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;background:#e8eaff;color:var(--navy-mid)}
+.dr-acts{display:flex;flex-direction:column;gap:5px;flex-shrink:0;align-items:flex-end}
+.dra{display:inline-flex;align-items:center;gap:5px;padding:6px 13px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;transition:var(--t);border:none;font-family:'Inter',sans-serif;white-space:nowrap}
+.dra.prev{background:var(--navy);color:var(--white)}
+.dra.prev:hover{background:var(--navy-mid)}
+.dra.share{background:var(--gold);color:var(--navy)}
+.dra.share:hover{background:#e6c200}
+.dra.del{background:#fee2e2;color:#991b1b}
+.dra.del:hover{background:#fca5a5}
+
+.empty-list{text-align:center;padding:48px 20px;color:var(--muted)}
+.empty-list i{font-size:3rem;opacity:.2;display:block;margin-bottom:14px}
+.empty-list h4{font-family:'Cormorant Garamond',serif;font-size:1.3rem;color:var(--navy);margin-bottom:6px}
+
+/* PDF MODAL */
+.pdf-ov{display:none;position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,.92);align-items:center;justify-content:center}
+.pdf-ov.show{display:flex;animation:fi .2s ease}
+@keyframes fi{from{opacity:0}to{opacity:1}}
+.pdf-modal{background:var(--white);width:95%;height:93%;border-radius:var(--r-md);overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.5)}
+.pdf-bar{background:linear-gradient(135deg,var(--navy),var(--navy-mid));color:var(--white);padding:12px 20px;display:flex;align-items:center;justify-content:space-between}
+.pdf-bar h4{font-size:14px;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:8px}
+.pdf-acts{display:flex;gap:8px}
+.pdf-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;background:rgba(255,255,255,.15);color:var(--white);border:1px solid rgba(255,255,255,.25);cursor:pointer;transition:var(--t);text-decoration:none;font-family:'Inter',sans-serif}
+.pdf-btn:hover{background:var(--gold);color:var(--navy);border-color:var(--gold)}
+.pdf-x{width:32px;height:32px;border-radius:50%;background:rgba(231,76,60,.8);color:var(--white);border:none;font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:var(--t)}
+.pdf-x:hover{background:#e74c3c;transform:rotate(90deg) scale(1.1)}
+.pdf-frame{flex:1;width:100%;border:none}
+
+/* DELETE CONFIRM */
+.del-ov{display:none;position:fixed;inset:0;z-index:1300;background:rgba(4,4,58,.75);backdrop-filter:blur(5px);align-items:center;justify-content:center}
+.del-ov.show{display:flex;animation:fi .15s ease}
+.del-box{background:var(--white);border-radius:var(--r-lg);width:90%;max-width:380px;padding:28px;text-align:center;box-shadow:var(--shadow-lg)}
+.del-box > i{font-size:2.5rem;color:#e74c3c;margin-bottom:14px;display:block}
+.del-box h3{font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--navy);margin-bottom:8px}
+.del-box p{font-size:14px;color:var(--muted);margin-bottom:20px;line-height:1.6}
+.del-btns{display:flex;gap:10px;justify-content:center}
+.del-cancel{padding:10px 24px;border-radius:var(--r-xl);border:1.5px solid var(--border);background:var(--white);color:var(--text);font-size:14px;font-weight:600;cursor:pointer;transition:var(--t);font-family:'Inter',sans-serif}
+.del-cancel:hover{border-color:var(--navy);color:var(--navy)}
+.del-confirm{padding:10px 24px;border-radius:var(--r-xl);background:#e74c3c;color:var(--white);font-size:14px;font-weight:700;cursor:pointer;transition:var(--t);border:none;font-family:'Inter',sans-serif}
+.del-confirm:hover{background:#c0392b;transform:translateY(-2px)}
+
+/* SHARE */
+.sov{display:none;position:fixed;inset:0;z-index:1200;background:rgba(4,4,58,.75);backdrop-filter:blur(6px);align-items:center;justify-content:center}
+.sov.show{display:flex;animation:fi .2s ease}
+.sbox{background:var(--white);border-radius:var(--r-lg);width:90%;max-width:440px;overflow:hidden;box-shadow:var(--shadow-lg)}
+.sbox-head{background:linear-gradient(135deg,var(--navy),var(--navy-mid));color:var(--white);padding:18px 24px;display:flex;align-items:center;justify-content:space-between}
+.sbox-head h3{font-size:15px;font-weight:700;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:8px}
+.sx{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.15);color:var(--white);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;transition:var(--t)}
+.sx:hover{background:var(--gold);color:var(--navy);transform:rotate(90deg)}
+.sbox-body{padding:20px}
+.slink{display:flex;gap:8px;margin-bottom:16px}
+.slink input{flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:13px;font-family:'Inter',sans-serif;background:var(--off-white)}
+.cp{padding:10px 16px;background:var(--navy);color:var(--white);border-radius:var(--r-sm);font-size:13px;font-weight:700;cursor:pointer;border:none;transition:var(--t);font-family:'Inter',sans-serif}
+.cp:hover{background:var(--gold);color:var(--navy)}
+.sopts{display:flex;gap:10px;flex-wrap:wrap}
+.sopt{flex:1;min-width:70px;display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 8px;border-radius:var(--r-sm);border:1.5px solid var(--border);cursor:pointer;transition:var(--t)}
+.sopt:hover{border-color:var(--navy);background:var(--off-white)}
+.sopt i{font-size:1.3rem}.sopt span{font-size:11px;font-weight:700;color:var(--muted)}
+
+/* TOAST */
+.toast{position:fixed;top:84px;right:24px;z-index:9999;background:var(--white);padding:13px 18px;border-radius:var(--r-md);box-shadow:var(--shadow-lg);display:none;align-items:center;gap:10px;min-width:240px;border:1px solid var(--border)}
+.toast.show{display:flex;animation:si .3s ease}
+@keyframes si{from{transform:translateX(110%)}to{transform:translateX(0)}}
+.toast.success{border-left:4px solid #16a34a}.toast.success i{color:#16a34a}
+.toast.error{border-left:4px solid #e74c3c}.toast.error i{color:#e74c3c}
+.toast.info{border-left:4px solid #3b82f6}.toast.info i{color:#3b82f6}
+
+@media(max-width:768px){.nav-inner,.page-hero,.main-wrap{padding-left:16px;padding-right:16px}.frow{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <div class="nav-logo">
+      <img src="{{ url_for('static', filename='images/L23.png') }}" alt="Jain University" onerror="this.src='https://via.placeholder.com/48x48/04043a/FFD700?text=JU'">
+      <div class="nav-logo-text">
+        <h1>Office of Academics</h1>
+        <p>Core Repository Management</p>
+      </div>
+    </div>
+    <div class="nav-right">
+      <a href="{{ url_for('dept_repo') }}" class="nav-btn ghost"><i class="fas fa-eye"></i> User View</a>
+      <a href="{{ url_for('home') }}" class="nav-btn ghost"><i class="fas fa-home"></i> Home</a>
+    </div>
+  </div>
+</nav>
+
+{% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}
+<div style="max-width:1380px;margin:12px auto;padding:0 32px">
+{% for cat,msg in messages %}
+<div style="padding:12px 18px;border-radius:8px;background:{% if cat=='success' %}#d4edda{% elif cat=='error' %}#f8d7da{% else %}#d1ecf1{% endif %};color:{% if cat=='success' %}#155724{% elif cat=='error' %}#721c24{% else %}#0c5460{% endif %};margin-bottom:8px;font-size:14px;border-left:4px solid {% if cat=='success' %}#27ae60{% elif cat=='error' %}#e74c3c{% else %}#17a2b8{% endif %}">{{ msg }}</div>
+{% endfor %}
+</div>
+{% endif %}{% endwith %}
+
+<div class="page-hero">
+  <div class="hero-inner">
+    <div class="hero-left">
+      <div class="role-badge"><i class="fas fa-shield-alt"></i> Core Team Access</div>
+      <h2><i class="fas fa-cloud-upload-alt" style="color:var(--gold)"></i> Department Repository Manager</h2>
+      <p>Upload documents to departments, manage existing files, and review documents submitted by faculty.</p>
+      {% if faculty_count > 0 %}
+      <div style="margin-top:12px">
+        <span class="faculty-alert"><i class="fas fa-bell"></i> {{ faculty_count }} faculty submission{{ 's' if faculty_count > 1 else '' }} awaiting review</span>
+      </div>
+      {% endif %}
+    </div>
+    <div class="hero-stats">
+      <div class="hst"><strong>{{ repo_docs|length }}</strong><span>Total Docs</span></div>
+      <div class="hst"><strong>{{ faculty_count }}</strong><span>Faculty Submitted</span></div>
+      <div class="hst"><strong>{{ all_depts_with_docs|length }}</strong><span>Departments</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="main-wrap">
+
+  <!-- LEFT: UPLOAD FORM -->
+  <div class="upload-panel">
+    <div class="up-head">
+      <h3><i class="fas fa-upload" style="color:var(--gold)"></i> Upload New Document</h3>
+      <p>Shared only with selected departments</p>
+    </div>
+    <div class="up-body">
+      <form method="POST" enctype="multipart/form-data" id="upForm" action="{{ url_for('core_repo_upload') }}">
+        <div class="fg">
+          <label class="flabel"><i class="fas fa-heading"></i>Title <span class="opt">(optional)</span></label>
+          <input type="text" name="title" class="finput" placeholder="e.g. Semester Schedule Aug 2026" maxlength="200">
+        </div>
+        <div class="fg">
+          <label class="flabel"><i class="fas fa-align-left"></i>Description <span class="opt">(optional)</span></label>
+          <textarea name="description" class="ftextarea" placeholder="Brief note…" maxlength="500"></textarea>
+        </div>
+        <div class="frow" style="margin-bottom:16px">
+          <div>
+            <label class="flabel"><i class="fas fa-calendar"></i>Doc Date <span class="opt">(opt)</span></label>
+            <input type="date" name="doc_date" class="finput">
+          </div>
+          <div>
+            <label class="flabel"><i class="fas fa-clock"></i>Deadline <span class="opt">(opt)</span></label>
+            <input type="date" name="end_date" class="finput">
+          </div>
+        </div>
+
+        <!-- DEPARTMENTS -->
+        <div class="fg">
+          <label class="flabel"><i class="fas fa-building"></i>Departments <span style="color:#e74c3c;font-size:12px">*required</span></label>
+          <div class="dept-sel" id="deptSel">
+            <div class="da-toggle">
+              <label><input type="checkbox" id="selAll" onchange="togAll(this)"> Select All</label>
+              <span style="font-size:11px;color:var(--muted)" id="sc">0 selected</span>
+            </div>
+            <div class="dg-label">Office</div>
+            <div class="dopt"><input type="checkbox" name="departments" value="OFFICE OF ACADEMICS" id="d0" onchange="updSC()"><label for="d0">Office of Academics</label></div>
+            <div class="dg-label">Engineering</div>
+            {% for d,i in [('Department of Computer Science and Engineering','d1'),('Department of Information Science and Engineering','d2'),('Department of Aerospace Engineering','d3'),('Department of Civil Engineering','d4'),('Department of Mechanical Engineering','d5'),('Department of Electrical and Electronics Engineering','d6'),('Department of Electronics and Communication Engineering','d7'),('Department of Food Technology','d8')] %}
+            <div class="dopt"><input type="checkbox" name="departments" value="{{ d }}" id="{{ i }}" onchange="updSC()"><label for="{{ i }}">{{ d|replace('Department of ','') }}</label></div>
+            {% endfor %}
+            <div class="dg-label">Humanities & Social Sciences</div>
+            {% for d,i in [('Department of Humanities and Social Sciences','d9'),('Department of Economics','d10'),('Department of Performing Arts and Cultural Studies','d11'),('Department of Languages','d12'),('Department of Journalism and Mass Communication','d13'),('Department of Law','d14')] %}
+            <div class="dopt"><input type="checkbox" name="departments" value="{{ d }}" id="{{ i }}" onchange="updSC()"><label for="{{ i }}">{{ d|replace('Department of ','') }}</label></div>
+            {% endfor %}
+            <div class="dg-label">Sciences</div>
+            {% for d,i in [('Department of Chemistry and Biochemistry','d15'),('Department of Biotechnology and Genetics','d16'),('Department of Microbiology and Botany','d17'),('Department of Data Analytics and Mathematical Science','d18'),('Department of Forensic Science','d19'),('Department of Physics and Electronics','d20'),('Department of Psychology and Allied Sciences','d21'),('Department of Allied Healthcare and Sciences','d22')] %}
+            <div class="dopt"><input type="checkbox" name="departments" value="{{ d }}" id="{{ i }}" onchange="updSC()"><label for="{{ i }}">{{ d|replace('Department of ','') }}</label></div>
+            {% endfor %}
+            <div class="dg-label">Management & Design</div>
+            {% for d,i in [('Department of Computer Science and IT','d23'),('Department of Animation and Virtual Reality','d24'),('Department of Commerce','d25'),('Department of Management Studies','d26'),('Department of Design','d27'),('Department of Art and Design','d28')] %}
+            <div class="dopt"><input type="checkbox" name="departments" value="{{ d }}" id="{{ i }}" onchange="updSC()"><label for="{{ i }}">{{ d|replace('Department of ','') }}</label></div>
+            {% endfor %}
+          </div>
+          <div class="sel-count"><i class="fas fa-check-circle" style="color:var(--gold)"></i><span id="scb">0</span> department(s) selected</div>
+        </div>
+
+        <!-- FILE -->
+        <div class="fg">
+          <label class="flabel"><i class="fas fa-paperclip"></i>File <span class="opt">(optional)</span></label>
+          <div class="dropzone" id="dz">
+            <input type="file" name="file" id="dzF" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.png,.jpg,.jpeg" onchange="dzHand(this)">
+            <i class="fas fa-cloud-upload-alt" id="dzI"></i>
+            <div class="dz-m" id="dzM">Drag & drop or click to upload</div>
+            <div class="dz-s">PDF, Word, PPT, Excel, Images — max 16 MB</div>
+          </div>
+        </div>
+
+        <button type="submit" class="sub-btn" id="subBtn"><i class="fas fa-paper-plane"></i> Upload to Departments</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+
+    <!-- FACULTY SUBMISSIONS -->
+    <div class="faculty-panel">
+      <div class="fp-head">
+        <h3><i class="fas fa-chalkboard-teacher"></i> Faculty Submissions</h3>
+        <span class="fp-badge">{{ faculty_count }} submission{{ 's' if faculty_count != 1 else '' }}</span>
+      </div>
+      <div class="fp-body">
+        {% if faculty_submissions %}
+          {% for doc in faculty_submissions %}
+          {% set has_file = doc.files and doc.files|length > 0 %}
+          <div class="fac-item">
+            <div class="fac-avatar">{{ (doc.uploaded_by_name or doc.uploaded_by or 'U')[0]|upper }}</div>
+            <div class="fac-info">
+              <div class="fac-name">{{ doc.uploaded_by_name or doc.uploaded_by.split('@')[0] if doc.uploaded_by else 'Unknown' }}</div>
+              <div class="fac-dept">
+                <i class="fas fa-building"></i>
+                {{ doc.uploaded_by_dept or (doc.departments[0] if doc.departments else '—') }}
+              </div>
+              <div class="fac-doc"><strong>{{ doc.title or 'Untitled Document' }}</strong>{% if doc.description %} — {{ doc.description|truncate(60) }}{% endif %}</div>
+              <div class="fac-meta">
+                <span><i class="far fa-calendar-alt"></i> {{ doc.uploaded_at.strftime('%d %b %Y, %H:%M') if doc.uploaded_at.__class__.__name__ == 'datetime' else doc.uploaded_at }}</span>
+                {% if has_file %}<span><i class="fas fa-paperclip"></i> {{ doc.files[0]|truncate(24) }}</span>{% endif %}
+              </div>
+            </div>
+            <div class="fac-acts">
+              {% if has_file %}
+              <button class="fac-btn view" onclick="openPdf('{{ url_for('uploaded_file', filename=doc.files[0]) }}','{{ (doc.title or doc.files[0])|replace("'","\\'") }}')">
+                <i class="fas fa-eye"></i> View
+              </button>
+              {% endif %}
+              <button class="fac-btn del" onclick="confirmDel('{{ doc._id }}','{{ (doc.title or 'this document')|replace("'","\\'") }}')">
+                <i class="fas fa-trash-alt"></i> Remove
+              </button>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+        <div class="empty-fac">
+          <i class="fas fa-inbox"></i>
+          No faculty submissions yet. When faculty upload documents, they appear here.
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- ALL DOCS LIST -->
+    <div class="docs-panel">
+      <div class="dp-head">
+        <h3><i class="fas fa-folder-open"></i> All Uploaded Documents</h3>
+        <span class="dp-cnt">{{ repo_docs|length }} total</span>
+      </div>
+      <div class="dp-filter">
+        <div class="dp-srch"><i class="fas fa-search"></i><input type="text" id="dpSrch" placeholder="Search…" oninput="dpFilter()"></div>
+        <select id="dpSort" onchange="dpFilter()">
+          <option value="newest">Newest</option>
+          <option value="oldest">Oldest</option>
+          <option value="title">Title A–Z</option>
+        </select>
+        <select id="dpSrc" onchange="dpFilter()">
+          <option value="all">All sources</option>
+          <option value="core">Core uploads</option>
+          <option value="faculty">Faculty only</option>
+        </select>
+      </div>
+      <div class="dp-tabs" id="dpTabs">
+        <button class="dp-tab active" data-dept="all" onclick="dpDept('all',this)">All</button>
+        {% for dept in all_depts_with_docs %}
+        <button class="dp-tab" data-dept="{{ dept }}" onclick="dpDept('{{ dept }}',this)">
+          {{ dept|replace('Department of ','')|replace('OFFICE OF ACADEMICS','Office')|truncate(22,True,'…') }}
+        </button>
+        {% endfor %}
+      </div>
+      <div id="docList">
+        {% if repo_docs %}
+          {% for doc in repo_docs %}
+          {% set has_file = doc.files and doc.files|length > 0 %}
+          {% set is_fac = doc.source == 'faculty' %}
+          {% set expired = doc.end_date and doc.end_date < today_str %}
+          <div class="doc-row {% if is_fac %}faculty-row{% endif %}"
+               data-dept="{{ doc.departments|join(',') }}"
+               data-title="{{ (doc.title or '')|lower }}"
+               data-date="{{ doc.uploaded_at }}"
+               data-src="{{ doc.source or 'core' }}">
+            <div class="dr-icon"><i class="fas {% if has_file %}fa-file-pdf{% else %}fa-file-alt{% endif %}"></i></div>
+            <div class="dr-info">
+              <div class="dr-title">{{ doc.title or 'Untitled Document' }}</div>
+              {% if doc.description %}<div class="dr-desc" title="{{ doc.description }}">{{ doc.description }}</div>{% endif %}
+              <div class="dr-meta">
+                <span><i class="far fa-calendar-alt"></i> {{ doc.uploaded_at.strftime('%d %b %Y') if doc.uploaded_at.__class__.__name__ == 'datetime' else doc.uploaded_at }}</span>
+                <span><i class="fas fa-user"></i> {{ doc.uploaded_by.split('@')[0] if doc.uploaded_by else '—' }}</span>
+                {% if has_file %}<span><i class="fas fa-file"></i> {{ doc.files[0]|truncate(22) }}</span>{% endif %}
+              </div>
+              <div class="dr-src {% if is_fac %}faculty{% else %}core{% endif %}">
+                <i class="fas {% if is_fac %}fa-chalkboard-teacher{% else %}fa-shield-alt{% endif %}"></i>
+                {% if is_fac %}Faculty — {{ doc.uploaded_by_dept or '—' }}{% else %}Core Upload{% endif %}
+              </div>
+              <div class="dr-depts">
+                {% for d in (doc.departments or []) %}<span class="dtag">{{ d|replace('Department of ','')|truncate(22,True,'…') }}</span>{% endfor %}
+              </div>
+              {% if doc.end_date %}
+              <div class="dr-src {% if expired %}expired-dl{% else %}active-dl{% endif %}" style="margin-top:4px;background:{% if expired %}#fee2e2{% else %}#fef3c7{% endif %};color:{% if expired %}#991b1b{% else %}#92400e{% endif %}">
+                <i class="fas fa-clock"></i> {% if expired %}Expired: {{ doc.end_date }}{% else %}Active until {{ doc.end_date }}{% endif %}
+              </div>
+              {% endif %}
+            </div>
+            <div class="dr-acts">
+              {% if has_file %}
+              <button class="dra prev" onclick="openPdf('{{ url_for('uploaded_file', filename=doc.files[0]) }}','{{ (doc.title or doc.files[0])|replace("'","\\'") }}')">
+                <i class="fas fa-eye"></i> Preview
+              </button>
+              {% endif %}
+              <button class="dra share" onclick="openShare('{{ doc._id }}','{{ (doc.title or 'Document')|replace("'","\\'") }}')">
+                <i class="fas fa-share-alt"></i> Share
+              </button>
+              <button class="dra del" onclick="confirmDel('{{ doc._id }}','{{ (doc.title or 'this document')|replace("'","\\'") }}')">
+                <i class="fas fa-trash-alt"></i> Delete
+              </button>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+        <div class="empty-list">
+          <i class="fas fa-inbox"></i>
+          <h4>No Documents Yet</h4>
+          <p style="font-size:13px">Use the upload panel to add your first document.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div><!-- end right-panel -->
+</div>
+
+<!-- PDF Viewer -->
+<div class="pdf-ov" id="pdfOv">
+  <div class="pdf-modal">
+    <div class="pdf-bar">
+      <h4 id="pdfT"><i class="fas fa-file-pdf" style="color:#ef4444"></i> Document</h4>
+      <div class="pdf-acts">
+        <a href="#" id="pdfDl" download class="pdf-btn"><i class="fas fa-download"></i> Download</a>
+        <a href="#" id="pdfNT" target="_blank" class="pdf-btn"><i class="fas fa-external-link-alt"></i> New Tab</a>
+        <button class="pdf-x" onclick="closePdf()">×</button>
+      </div>
+    </div>
+    <iframe id="pdfFr" class="pdf-frame"></iframe>
+  </div>
+</div>
+
+<!-- Delete Confirm -->
+<div class="del-ov" id="delOv">
+  <div class="del-box">
+    <i class="fas fa-exclamation-triangle"></i>
+    <h3>Delete Document?</h3>
+    <p id="delMsg">This permanently removes it from all department repositories.</p>
+    <div class="del-btns">
+      <button class="del-cancel" onclick="closeDel()">Cancel</button>
+      <button class="del-confirm" id="delBtn" onclick="execDel()"><i class="fas fa-trash-alt"></i> Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Share -->
+<div class="sov" id="sOv">
+  <div class="sbox">
+    <div class="sbox-head"><h3><i class="fas fa-share-alt"></i> Share</h3><button class="sx" onclick="closeSh()">×</button></div>
+    <div class="sbox-body">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px" id="sTitle"></p>
+      <div class="slink"><input type="text" id="sIn" readonly><button class="cp" onclick="copyL()"><i class="fas fa-copy"></i> Copy</button></div>
+      <div class="sopts">
+        <div class="sopt" onclick="sEmail()"><i class="fas fa-envelope" style="color:#e74c3c"></i><span>Email</span></div>
+        <div class="sopt" onclick="sWA()"><i class="fab fa-whatsapp" style="color:#25d366"></i><span>WhatsApp</span></div>
+        <div class="sopt" onclick="sTe()"><i class="fab fa-microsoft" style="color:#4b53bc"></i><span>Teams</span></div>
+        <div class="sopt" onclick="copyL()"><i class="fas fa-link" style="color:var(--navy)"></i><span>Copy</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><i class="fas fa-check-circle" id="tI"></i><span id="tM"></span></div>
+
+<script>
+/* SELECT ALL DEPTS */
+function togAll(cb){document.querySelectorAll('#deptSel input[type=checkbox][name=departments]').forEach(c=>c.checked=cb.checked);updSC();}
+function updSC(){
+  const n=document.querySelectorAll('#deptSel input[type=checkbox][name=departments]:checked').length;
+  const t=document.querySelectorAll('#deptSel input[type=checkbox][name=departments]').length;
+  document.getElementById('sc').textContent=n+' selected';
+  document.getElementById('scb').textContent=n;
+  const a=document.getElementById('selAll');a.checked=(n===t);a.indeterminate=(n>0&&n<t);
+}
+
+/* DRAG & DROP */
+const dz=document.getElementById('dz'),dzf=document.getElementById('dzF');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('over')});
+dz.addEventListener('dragleave',()=>dz.classList.remove('over'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('over');if(e.dataTransfer.files.length){dzf.files=e.dataTransfer.files;dzHand(dzf);}});
+function dzHand(inp){
+  const f=inp.files[0];if(!f)return;
+  if(f.size>16*1024*1024){showToast('Max 16 MB.','error');inp.value='';return;}
+  dz.classList.add('got');document.getElementById('dzI').className='fas fa-check-circle';document.getElementById('dzM').textContent=f.name;
+}
+
+/* FORM SUBMIT */
+document.getElementById('upForm').addEventListener('submit',function(e){
+  const c=document.querySelectorAll('#deptSel input[type=checkbox][name=departments]:checked');
+  if(c.length===0){e.preventDefault();showToast('Select at least one department.','error');return;}
+  const b=document.getElementById('subBtn');b.disabled=true;b.innerHTML='<i class="fas fa-spinner fa-spin"></i> Uploading…';
+});
+
+/* DOC LIST FILTER */
+let _dept='all';
+function dpDept(d,btn){_dept=d;document.querySelectorAll('.dp-tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');dpFilter();}
+function dpFilter(){
+  const q=(document.getElementById('dpSrch').value||'').toLowerCase();
+  const sort=document.getElementById('dpSort').value;
+  const src=document.getElementById('dpSrc').value;
+  const rows=[...document.querySelectorAll('.doc-row')];
+  rows.forEach(r=>{
+    const depts=(r.dataset.dept||'').split(',');
+    const mD=_dept==='all'||depts.some(d=>d.trim()===_dept);
+    const mQ=!q||(r.dataset.title||'').includes(q);
+    const mS=src==='all'||r.dataset.src===src;
+    r.style.display=(mD&&mQ&&mS)?'':'none';
+  });
+  const list=document.getElementById('docList');
+  const vis=rows.filter(r=>r.style.display!=='none');
+  vis.sort((a,b)=>{
+    if(sort==='title')return(a.dataset.title||'').localeCompare(b.dataset.title||'');
+    if(sort==='oldest')return(a.dataset.date||'').localeCompare(b.dataset.date||'');
+    return(b.dataset.date||'').localeCompare(a.dataset.date||'');
+  });
+  vis.forEach(r=>list.appendChild(r));
+}
+
+/* PDF */
+function openPdf(url,name){
+  document.getElementById('pdfT').innerHTML=`<i class="fas fa-file-pdf" style="color:#ef4444;margin-right:8px"></i>${name}`;
+  document.getElementById('pdfDl').href=url;document.getElementById('pdfDl').setAttribute('download',name);
+  document.getElementById('pdfNT').href=url;
+  document.getElementById('pdfFr').src=url;
+  document.getElementById('pdfOv').classList.add('show');document.body.style.overflow='hidden';
+}
+function closePdf(){document.getElementById('pdfOv').classList.remove('show');document.body.style.overflow='';setTimeout(()=>document.getElementById('pdfFr').src='',300);}
+
+/* DELETE */
+let _dId='';
+function confirmDel(id,title){
+  _dId=id;document.getElementById('delMsg').textContent=`Delete "${title}"? This removes it from all department repositories permanently.`;
+  document.getElementById('delOv').classList.add('show');document.body.style.overflow='hidden';
+}
+function closeDel(){document.getElementById('delOv').classList.remove('show');document.body.style.overflow='';}
+function execDel(){
+  const btn=document.getElementById('delBtn');btn.innerHTML='<i class="fas fa-spinner fa-spin"></i>';btn.disabled=true;
+  fetch('/core_repo_delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({doc_id:_dId})})
+  .then(r=>r.json()).then(d=>{
+    closeDel();
+    if(d.success){showToast('Document deleted.','success');setTimeout(()=>location.reload(),1200);}
+    else{showToast('Error: '+(d.error||'Could not delete'),'error');btn.innerHTML='<i class="fas fa-trash-alt"></i> Delete';btn.disabled=false;}
+  }).catch(()=>{closeDel();showToast('Server error.','error');});
+}
+
+/* SHARE */
+let _sU='';
+function openShare(id,title){_sU=`${location.origin}/dept_repo?doc=${id}`;document.getElementById('sTitle').textContent='Sharing: '+title;document.getElementById('sIn').value=_sU;document.getElementById('sOv').classList.add('show');document.body.style.overflow='hidden';}
+function closeSh(){document.getElementById('sOv').classList.remove('show');document.body.style.overflow='';}
+function copyL(){navigator.clipboard.writeText(_sU).then(()=>showToast('Copied!','success'));closeSh();}
+function sEmail(){window.open(`mailto:?subject=Document from Office of Academics&body=${encodeURIComponent(_sU)}`);closeSh();}
+function sWA(){window.open(`https://wa.me/?text=${encodeURIComponent(_sU)}`,'_blank');closeSh();}
+function sTe(){window.open(`https://teams.microsoft.com/l/chat/0/0?message=${encodeURIComponent(_sU)}`,'_blank');closeSh();}
+
+/* TOAST */
+let _tt;
+function showToast(msg,type='success'){
+  const icons={success:'fa-check-circle',error:'fa-times-circle',info:'fa-info-circle'};
+  document.getElementById('tI').className=`fas ${icons[type]||icons.success}`;
+  document.getElementById('tM').textContent=msg;
+  const t=document.getElementById('toast');t.className=`toast ${type} show`;
+  clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('show'),4000);
+}
+document.addEventListener('click',e=>{if(e.target===document.getElementById('pdfOv'))closePdf();if(e.target===document.getElementById('delOv'))closeDel();if(e.target===document.getElementById('sOv'))closeSh();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closePdf();closeDel();closeSh();}});
+</script>
+</body>
+</html>
