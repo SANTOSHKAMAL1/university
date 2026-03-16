@@ -1,1094 +1,990 @@
 {% extends 'base_user.html' %}
-
 {% block title %}Core Team Dashboard - Jain University{% endblock %}
 {% block page_title %}Core Team Dashboard{% endblock %}
 {% block page_subtitle %}Document Management & Team Collaboration{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gray-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        
-        
-
-            
-
-        <!-- Analytics Dashboard -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-            <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-200 lg:col-span-2">
-                <h2 class="text-lg font-bold text-[#04043a] mb-4 flex items-center gap-2">
-                    <i class="fas fa-chart-line text-yellow-500"></i>
-                    Document Analytics
-                </h2>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-                    <div class="bg-blue-50 rounded-lg p-2 text-center">
-                        <p class="text-xl font-bold text-blue-600">{{ docs_today|default(0) }}</p>
-                        <p class="text-xs text-gray-600">Today</p>
-                    </div>
-                    <div class="bg-green-50 rounded-lg p-2 text-center">
-                        <p class="text-xl font-bold text-green-600">{{ docs_this_week|default(0) }}</p>
-                        <p class="text-xs text-gray-600">This Week</p>
-                    </div>
-                    <div class="bg-purple-50 rounded-lg p-2 text-center">
-                        <p class="text-xl font-bold text-purple-600">{{ docs_this_month|default(0) }}</p>
-                        <p class="text-xs text-gray-600">This Month</p>
-                    </div>
-                    <div class="bg-yellow-50 rounded-lg p-2 text-center">
-                        <p class="text-xl font-bold text-yellow-600">{{ total_docs|default(0) }}</p>
-                        <p class="text-xs text-gray-600">Total</p>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <div class="bg-green-50 rounded-lg p-2">
-                        <div class="flex items-center gap-1">
-                            <div class="w-2 h-2 bg-green-500 rounded-full"></div>
-                            <span class="text-xs font-medium">Approved</span>
-                        </div>
-                        <p class="text-lg font-bold text-green-600 mt-1">{{ approved_count|default(0) }}</p>
-                    </div>
-                    <div class="bg-yellow-50 rounded-lg p-2">
-                        <div class="flex items-center gap-1">
-                            <div class="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                            <span class="text-xs font-medium">Pending</span>
-                        </div>
-                        <p class="text-lg font-bold text-yellow-600 mt-1">{{ pending_count|default(0) }}</p>
-                    </div>
-                    <div class="bg-orange-50 rounded-lg p-2">
-                        <div class="flex items-center gap-1">
-                            <div class="w-2 h-2 bg-orange-500 rounded-full"></div>
-                            <span class="text-xs font-medium">Revision</span>
-                        </div>
-                        <p class="text-lg font-bold text-orange-600 mt-1">{{ revision_count|default(0) }}</p>
-                    </div>
-                    <div class="bg-red-50 rounded-lg p-2">
-                        <div class="flex items-center gap-1">
-                            <div class="w-2 h-2 bg-red-500 rounded-full"></div>
-                            <span class="text-xs font-medium">Rejected</span>
-                        </div>
-                        <p class="text-lg font-bold text-red-600 mt-1">{{ rejected_count|default(0) }}</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-200">
-                <h2 class="text-lg font-bold text-[#04043a] mb-4 flex items-center gap-2">
-                    <i class="fas fa-tasks text-green-500"></i>
-                    Task Analytics
-                </h2>
-                <div class="space-y-3">
-                    <div>
-                        <div class="flex justify-between text-xs mb-1">
-                            <span class="text-gray-600">Completed</span>
-                            <span class="font-semibold">{{ completed_tasks|default(0) }}/{{ total_tasks|default(0) }}</span>
-                        </div>
-                        <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="bg-green-500 rounded-full h-2" style="width: {{ (completed_tasks/total_tasks*100)|int if total_tasks and total_tasks > 0 else 0 }}%"></div>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div class="bg-yellow-50 rounded-lg p-2 text-center">
-                            <p class="text-lg font-bold text-yellow-600">{{ pending_tasks|default(0) }}</p>
-                            <p class="text-xs text-gray-600">Pending</p>
-                        </div>
-                        <div class="bg-blue-50 rounded-lg p-2 text-center">
-                            <p class="text-lg font-bold text-blue-600">{{ in_progress_tasks|default(0) }}</p>
-                            <p class="text-xs text-gray-600">In Progress</p>
-                        </div>
-                    </div>
-                    <div class="border-t pt-3">
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="text-xs font-medium text-red-600"><i class="fas fa-exclamation-triangle mr-1"></i>High Priority</span>
-                            <span class="text-base font-bold text-red-600">{{ high_priority_tasks|default(0) }}</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-xs font-medium text-orange-600"><i class="fas fa-clock mr-1"></i>Overdue</span>
-                            <span class="text-base font-bold text-orange-600">{{ overdue_tasks|default(0) }}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Navigation Tabs -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6 overflow-hidden">
-            <div class="flex border-b border-gray-200 bg-gray-50 overflow-x-auto">
-                <button onclick="switchTab('upload')" id="tab-upload" class="tab-button active px-6 py-3 text-sm font-medium border-b-2 border-[#04043a] text-[#04043a] whitespace-nowrap flex items-center gap-2">
-                    <i class="fas fa-cloud-upload-alt"></i>Share Document
-                </button>
-                <button onclick="switchTab('tasks')" id="tab-tasks" class="tab-button px-6 py-3 text-sm font-medium border-b-2 border-transparent text-gray-600 hover:text-[#04043a] whitespace-nowrap flex items-center gap-2">
-                    <i class="fas fa-tasks"></i>My Assigned Tasks
-                    {% if total_tasks and total_tasks > 0 %}
-                    <span class="bg-green-500 text-white px-2 py-0.5 rounded-full text-xs">{{ total_tasks }}</span>
-                    {% endif %}
-                </button>
-                <button onclick="switchTab('documents')" id="tab-documents" class="tab-button px-6 py-3 text-sm font-medium border-b-2 border-transparent text-gray-600 hover:text-[#04043a] whitespace-nowrap flex items-center gap-2">
-                    <i class="fas fa-folder-open"></i>My Uploaded Documents
-                    {% if total_docs and total_docs > 0 %}
-                    <span class="bg-blue-500 text-white px-2 py-0.5 rounded-full text-xs">{{ total_docs }}</span>
-                    {% endif %}
-                </button>
-                <button onclick="switchTab('activity')" id="tab-activity" class="tab-button px-6 py-3 text-sm font-medium border-b-2 border-transparent text-gray-600 hover:text-[#04043a] whitespace-nowrap flex items-center gap-2">
-                    <i class="fas fa-history"></i>Recent Activity
-                </button>
-            </div>
-
-            <!-- Upload Document Section -->
-            <div id="content-upload" class="tab-content p-5">
-                <h2 class="text-lg font-bold text-[#04043a] mb-4 flex items-center gap-2">
-                    <div class="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-cloud-upload-alt text-white text-sm"></i>
-                    </div>
-                    Upload Document for Review
-                </h2>
-                <form action="{{ url_for('upload_document') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-700 mb-1">Document Name *</label>
-                            <input type="text" name="document_name" required 
-                                   class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
-                                   placeholder="Enter document name">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-700 mb-1">Select File *</label>
-                            <input type="file" name="file" required 
-                                   class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
-                                   accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.gif,.xlsx,.csv,.xls">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-700 mb-1">Description / Message</label>
-                        <textarea name="description" rows="3" 
-                                  class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
-                                  placeholder="Describe the document and add any message for the reviewers..."></textarea>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-700 mb-2">Assign to Reviewers</label>
-                        <div class="mb-4">
-                            <h4 class="text-xs font-medium text-gray-700 mb-2 flex items-center">
-                                <i class="fas fa-crown text-yellow-600 mr-1"></i>Leaders
-                            </h4>
-                            <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
-                                {% for leader in leaders %}
-                                <label class="flex items-center gap-2 p-2 border border-gray-200 rounded-lg hover:bg-yellow-50 cursor-pointer">
-                                    <input type="checkbox" name="assigned_users" value="{{ leader._id }}" 
-                                           class="form-checkbox h-4 w-4 text-yellow-500 rounded leader-checkbox">
-                                    <div class="flex-1">
-                                        <p class="text-xs font-medium">{{ leader.email.split('@')[0] }}</p>
-                                        <span class="text-[10px] bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded-full">Leader</span>
-                                    </div>
-                                </label>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        <div>
-                            <h4 class="text-xs font-medium text-gray-700 mb-2 flex items-center">
-                                <i class="fas fa-users text-blue-600 mr-1"></i>Core Team Members
-                            </h4>
-                            <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
-                                {% for member in core_members %}
-                                {% if member._id != user._id %}
-                                <label class="flex items-center gap-2 p-2 border border-gray-200 rounded-lg hover:bg-blue-50 cursor-pointer">
-                                    <input type="checkbox" name="assigned_users" value="{{ member._id }}" 
-                                           class="form-checkbox h-4 w-4 text-blue-500 rounded core-checkbox">
-                                    <div class="flex-1">
-                                        <p class="text-xs font-medium">{{ member.email.split('@')[0] }}</p>
-                                        <span class="text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded-full">Core Team</span>
-                                    </div>
-                                </label>
-                                {% endif %}
-                                {% endfor %}
-                            </div>
-                        </div>
-                        <div class="flex flex-wrap gap-2 mt-4 p-3 bg-gray-50 rounded-lg">
-                            <button type="button" onclick="selectAllLeaders()" class="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full hover:bg-yellow-200">
-                                <i class="fas fa-crown text-xs"></i> All Leaders
-                            </button>
-                            <button type="button" onclick="selectAllCore()" class="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full hover:bg-blue-200">
-                                <i class="fas fa-users text-xs"></i> All Core
-                            </button>
-                            <button type="button" onclick="selectAll()" class="text-xs px-2 py-1 bg-green-100 text-green-800 rounded-full hover:bg-green-200">
-                                <i class="fas fa-check-double text-xs"></i> Everyone
-                            </button>
-                            <button type="button" onclick="clearAll()" class="text-xs px-2 py-1 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300">
-                                <i class="fas fa-times text-xs"></i> Clear
-                            </button>
-                        </div>
-                        <div class="mt-2 text-xs text-gray-600" id="selectedCount">
-                            <i class="fas fa-users mr-1"></i><span>0 reviewers selected</span>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                        <input type="checkbox" name="notify_users" id="notify_users" checked class="h-4 w-4 text-yellow-500 rounded">
-                        <label for="notify_users" class="text-xs font-medium text-gray-700">
-                            <i class="fas fa-envelope mr-1 text-yellow-600"></i>
-                            Send email notification to assigned reviewers
-                        </label>
-                    </div>
-                    <button type="submit" class="w-full bg-[#04043a] text-white px-4 py-3 rounded-lg font-semibold text-sm hover:bg-[#1e3c72] transition-all flex items-center justify-center gap-2">
-                        <i class="fas fa-upload"></i>Submit Document for Review
-                    </button>
-                </form>
-            </div>
-
-            <!-- My Assigned Tasks Section -->
-            <div id="content-tasks" class="tab-content hidden p-5">
-                <h2 class="text-lg font-bold text-[#04043a] mb-4 flex items-center gap-2">
-                    <div class="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-tasks text-white text-sm"></i>
-                    </div>
-                    My Assigned Tasks
-                    {% if total_tasks and total_tasks > 0 %}
-                    <span class="bg-green-500 text-white px-2 py-0.5 rounded-full text-xs">{{ total_tasks }}</span>
-                    {% endif %}
-                </h2>
-
-                {% if my_tasks and my_tasks|length > 0 %}
-                <div class="space-y-3 max-h-[600px] overflow-y-auto pr-2">
-                    {% for task in my_tasks %}
-                    <div class="border-l-4 
-                        {% if task.status == 'rework' %}border-orange-500
-                        {% elif task.status == 'accepted' %}border-emerald-500
-                        {% elif task.status == 'completed' %}border-green-500
-                        {% elif task.priority == 'high' %}border-red-500
-                        {% elif task.priority == 'medium' %}border-yellow-500
-                        {% else %}border-green-500{% endif %}
-                        bg-gray-50 rounded-lg p-4 hover:shadow-sm transition" id="task-{{ task._id }}">
-                        <div class="flex items-start justify-between">
-                            <div class="flex-1">
-                                <div class="flex items-center gap-2 mb-2">
-                                    <div class="w-8 h-8 
-                                        {% if task.status == 'rework' %}bg-orange-100
-                                        {% elif task.status == 'accepted' %}bg-emerald-100
-                                        {% elif task.priority == 'high' %}bg-red-100
-                                        {% elif task.priority == 'medium' %}bg-yellow-100
-                                        {% else %}bg-green-100{% endif %} rounded-lg flex items-center justify-center">
-                                        <i class="fas 
-                                            {% if task.status == 'rework' %}fa-redo text-orange-600
-                                            {% elif task.status == 'accepted' %}fa-check-double text-emerald-600
-                                            {% else %}fa-clipboard-list
-                                            {% if task.priority == 'high' %}text-red-600
-                                            {% elif task.priority == 'medium' %}text-yellow-600
-                                            {% else %}text-green-600{% endif %}{% endif %} text-sm"></i>
-                                    </div>
-                                    <div>
-                                        <h3 class="text-sm font-bold text-gray-900">{{ task.title }}</h3>
-                                        <p class="text-xs text-gray-600">Assigned by: {{ task.assigned_by_name }}</p>
-                                    </div>
-                                </div>
-                                <p class="text-xs text-gray-700 mb-3">{{ task.description }}</p>
-
-                                <!-- REWORK ALERT BANNER -->
-                                {% if task.status == 'rework' %}
-                                <div class="mb-3 p-3 bg-orange-50 border-l-4 border-orange-500 rounded-lg">
-                                    <div class="flex items-start gap-2">
-                                        <i class="fas fa-exclamation-triangle text-orange-600 mt-0.5"></i>
-                                        <div>
-                                            <p class="text-xs font-bold text-orange-800">Rework Requested by Leader</p>
-                                            {% if task.rework_comment %}
-                                            <p class="text-xs text-orange-700 mt-1">{{ task.rework_comment }}</p>
-                                            {% endif %}
-                                            <p class="text-[10px] text-orange-500 mt-1">Please update your progress after making the required changes.</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                {% endif %}
-
-                                <!-- ACCEPTED BANNER -->
-                                {% if task.status == 'accepted' %}
-                                <div class="mb-3 p-3 bg-emerald-50 border-l-4 border-emerald-500 rounded-lg">
-                                    <div class="flex items-center gap-2">
-                                        <i class="fas fa-star text-emerald-600"></i>
-                                        <p class="text-xs font-bold text-emerald-800">Task Accepted! Great work!</p>
-                                    </div>
-                                </div>
-                                {% endif %}
-
-                                <!-- Leader Comments -->
-                                {% if task.leader_comments and task.leader_comments|length > 0 %}
-                                <div class="mb-3 space-y-1">
-                                    <p class="text-xs font-semibold text-purple-700 flex items-center gap-1">
-                                        <i class="fas fa-comments text-purple-500"></i>Leader Comments
-                                    </p>
-                                    {% for lc in task.leader_comments[-3:] %}
-                                    <div class="p-2 bg-purple-50 rounded-lg border border-purple-100">
-                                        <p class="text-[11px] text-purple-800">"{{ lc.comment }}"</p>
-                                        <p class="text-[10px] text-purple-500 mt-0.5">— {{ lc.commented_by }} 
-                                            {% if lc.timestamp %}
-                                            · {% if lc.timestamp is string %}{{ lc.timestamp }}{% else %}{{ lc.timestamp.strftime('%d %b, %I:%M %p') }}{% endif %}
-                                            {% endif %}
-                                        </p>
-                                    </div>
-                                    {% endfor %}
-                                </div>
-                                {% endif %}
-
-                                {% if task.has_attachment and task.attachment_url %}
-                                <div class="mb-3">
-                                    <button onclick="viewFile('{{ task.attachment_url }}', '{{ task.attachment_name or task.title }}')" 
-                                            class="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-600 rounded-lg text-xs hover:bg-blue-100">
-                                        <i class="fas fa-paperclip"></i>{{ task.attachment_name or 'Attachment' }}
-                                        {% if task.attachment_url.endswith('.pdf') %}
-                                        <span class="bg-red-100 text-red-700 px-1 py-0.5 rounded text-[10px]">PDF</span>
-                                        {% endif %}
-                                    </button>
-                                </div>
-                                {% endif %}
-
-                                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs bg-white p-3 rounded-lg">
-                                    <div>
-                                        <span class="font-semibold text-gray-700">Due Date:</span>
-                                        <p class="text-gray-900 mt-0.5">{{ task.due_date_str }}</p>
-                                    </div>
-                                    <div>
-                                        <span class="font-semibold text-gray-700">Priority:</span>
-                                        <p class="mt-0.5">
-                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium
-                                                {% if task.priority == 'high' %}bg-red-100 text-red-800
-                                                {% elif task.priority == 'medium' %}bg-yellow-100 text-yellow-800
-                                                {% else %}bg-green-100 text-green-800{% endif %}">
-                                                {{ task.priority|upper }}
-                                            </span>
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <span class="font-semibold text-gray-700">Status:</span>
-                                        <p class="mt-0.5" id="status-badge-{{ task._id }}">
-                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium
-                                                {% if task.status == 'completed' %}bg-green-100 text-green-800
-                                                {% elif task.status == 'in_progress' %}bg-blue-100 text-blue-800
-                                                {% elif task.status == 'pending' %}bg-yellow-100 text-yellow-800
-                                                {% elif task.status == 'rework' %}bg-orange-100 text-orange-800
-                                                {% elif task.status == 'accepted' %}bg-emerald-100 text-emerald-800
-                                                {% else %}bg-gray-100 text-gray-800{% endif %}">
-                                                {% if task.status == 'rework' %}🔄 Rework Required
-                                                {% elif task.status == 'accepted' %}✅ Accepted
-                                                {% elif task.status == 'completed' %}🏁 Completed
-                                                {% elif task.status == 'in_progress' %}⚡ In Progress
-                                                {% else %}⏳ {{ task.status|replace('_', ' ')|title }}{% endif %}
-                                            </span>
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <span class="font-semibold text-gray-700">Progress:</span>
-                                        <div class="w-full bg-gray-200 rounded-full h-1.5 mt-1" id="progress-bar-wrap-{{ task._id }}">
-                                            <div class="rounded-full h-1.5 transition-all
-                                                {% if task.status == 'accepted' %}bg-emerald-500
-                                                {% elif task.status == 'rework' %}bg-orange-500
-                                                {% elif task.priority == 'high' %}bg-red-500
-                                                {% elif task.priority == 'medium' %}bg-yellow-500
-                                                {% else %}bg-green-500{% endif %}" 
-                                                 id="progress-bar-{{ task._id }}"
-                                                 style="width: {{ task.progress }}%"></div>
-                                        </div>
-                                        <p class="text-xs text-gray-500 mt-0.5 text-right" id="progress-text-{{ task._id }}">{{ task.progress }}%</p>
-                                    </div>
-                                </div>
-
-                                {% if task.updates and task.updates|length > 0 %}
-                                <div class="mt-3 border-t pt-2">
-                                    <p class="text-xs font-semibold text-gray-700 mb-1 flex items-center gap-1">
-                                        <i class="fas fa-history text-gray-500"></i>Update History
-                                        <span class="bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full text-[10px]">{{ task.updates|length }}</span>
-                                    </p>
-                                    {% for update in task.updates[-3:]|reverse %}
-                                    <div class="text-xs text-gray-600 flex items-start gap-1 mb-2">
-                                        <div class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5
-                                            {% if 'LEADER' in (update.comment or '') %}bg-orange-100
-                                            {% elif update.status == 'completed' %}bg-green-100
-                                            {% elif update.status == 'in_progress' %}bg-blue-100
-                                            {% elif update.status == 'rework' %}bg-orange-100
-                                            {% else %}bg-yellow-100{% endif %}">
-                                            <i class="fas fa-circle text-[6px]
-                                                {% if 'LEADER' in (update.comment or '') %}text-orange-600
-                                                {% elif update.status == 'completed' %}text-green-600
-                                                {% elif update.status == 'in_progress' %}text-blue-600
-                                                {% elif update.status == 'rework' %}text-orange-600
-                                                {% else %}text-yellow-600{% endif %}"></i>
-                                        </div>
-                                        <div class="flex-1">
-                                            <div>
-                                                <span class="font-medium capitalize">{{ update.status|replace('_',' ') }}</span> - {{ update.progress }}%
-                                                {% if update.comment %}: "{{ update.comment }}"{% endif %}
-                                            </div>
-                                            {% if update.attachment_url %}
-                                            <div class="mt-1">
-                                                <button onclick="viewFile('{{ update.attachment_url }}', '{{ update.attachment_name or 'Attachment' }}')" 
-                                                        class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-0.5 rounded-full text-[11px]">
-                                                    <i class="fas fa-{% if update.attachment_url.endswith('.pdf') %}file-pdf{% else %}paperclip{% endif %}"></i>
-                                                    {{ update.attachment_name or 'Attachment' }}
-                                                    <i class="fas fa-external-link-alt text-[9px]"></i>
-                                                </button>
-                                            </div>
-                                            {% endif %}
-                                            <span class="text-gray-400 text-[10px] block">
-                                                {% if update.timestamp is string %}{{ update.timestamp }}
-                                                {% else %}{{ update.timestamp.strftime('%d %b %I:%M %p') }}{% endif %}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    {% endfor %}
-                                </div>
-                                {% endif %}
-
-                                <!-- Action buttons based on status -->
-                                {% if task.status == 'rework' or task.status == 'pending' or task.status == 'in_progress' %}
-                                <div class="mt-3 flex justify-end">
-                                    <button 
-                                        type="button"
-                                        onclick="openTaskUpdateModal('{{ task._id }}', {{ task.progress }}, '{{ task.status }}')"
-                                        class="px-4 py-2 bg-[#04043a] text-white rounded-lg text-sm hover:bg-[#1e3c72] transition flex items-center gap-2 font-medium shadow-sm">
-                                        <i class="fas fa-edit"></i>Update Progress
-                                    </button>
-                                </div>
-                                {% elif task.status == 'completed' %}
-                                <div class="mt-3 flex justify-end">
-                                    <span class="px-4 py-2 bg-green-100 text-green-800 rounded-lg text-sm flex items-center gap-2 font-medium">
-                                        <i class="fas fa-check-circle"></i>Completed — Awaiting Review
-                                    </span>
-                                </div>
-                                {% elif task.status == 'accepted' %}
-                                <div class="mt-3 flex justify-end">
-                                    <span class="px-4 py-2 bg-emerald-100 text-emerald-800 rounded-lg text-sm flex items-center gap-2 font-medium">
-                                        <i class="fas fa-star"></i>Task Accepted & Closed
-                                    </span>
-                                </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-                {% else %}
-                <div class="text-center py-10 bg-gray-50 rounded-lg">
-                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <i class="fas fa-tasks text-2xl text-green-600"></i>
-                    </div>
-                    <p class="text-sm text-gray-600">No tasks assigned yet</p>
-                    <p class="text-xs text-gray-500 mt-1">Tasks assigned by leaders will appear here</p>
-                </div>
-                {% endif %}
-            </div>
-
-            <!-- My Uploaded Documents Section -->
-            <div id="content-documents" class="tab-content hidden p-5">
-                <h2 class="text-lg font-bold text-[#04043a] mb-4 flex items-center gap-2">
-                    <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-folder-open text-white text-sm"></i>
-                    </div>
-                    My Uploaded Documents
-                    {% if total_docs and total_docs > 0 %}
-                    <span class="bg-blue-500 text-white px-2 py-0.5 rounded-full text-xs">{{ total_docs }}</span>
-                    {% endif %}
-                </h2>
-
-                {% if my_documents and my_documents|length > 0 %}
-                <div class="space-y-3 max-h-[600px] overflow-y-auto pr-2">
-                    {% for doc in my_documents %}
-                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition hover:border-yellow-500">
-                        <div class="flex items-start justify-between">
-                            <div class="flex-1">
-                                <div class="flex items-center gap-2 mb-2">
-                                    <div class="w-8 h-8 bg-[#04043a] bg-opacity-10 rounded-lg flex items-center justify-center">
-                                        <i class="fas fa-file-alt text-[#04043a] text-sm"></i>
-                                    </div>
-                                    <h3 class="text-sm font-bold text-gray-900">{{ doc.document_name }}</h3>
-                                </div>
-                                <p class="text-xs text-gray-600 mb-3">{{ doc.description }}</p>
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs bg-gray-50 p-3 rounded-lg">
-                                    <div>
-                                        <span class="font-semibold text-gray-700">Submitted:</span>
-                                        <span class="text-gray-600 ml-1">{{ doc.submitted_at.strftime('%d %b %Y, %I:%M %p') }}</span>
-                                    </div>
-                                    <div>
-                                        <span class="font-semibold text-gray-700">Status:</span>
-                                        {% if doc.status == 'pending' %}
-                                        <span class="inline-flex items-center gap-1 bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full text-xs font-bold ml-1"><i class="fas fa-clock"></i> PENDING</span>
-                                        {% elif doc.status == 'approved' %}
-                                        <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 px-2 py-0.5 rounded-full text-xs font-bold ml-1"><i class="fas fa-check-circle"></i> APPROVED</span>
-                                        {% elif doc.status == 'revision' %}
-                                        <span class="inline-flex items-center gap-1 bg-orange-100 text-orange-800 px-2 py-0.5 rounded-full text-xs font-bold ml-1"><i class="fas fa-edit"></i> REVISION</span>
-                                        {% elif doc.status == 'rejected' %}
-                                        <span class="inline-flex items-center gap-1 bg-red-100 text-red-800 px-2 py-0.5 rounded-full text-xs font-bold ml-1"><i class="fas fa-times-circle"></i> REJECTED</span>
-                                        {% endif %}
-                                    </div>
-                                    {% if doc.reviewed_at %}
-                                    <div>
-                                        <span class="font-semibold text-gray-700">Reviewed:</span>
-                                        <span class="text-gray-600 ml-1">{{ doc.reviewed_at.strftime('%d %b %Y') }}</span>
-                                    </div>
-                                    {% endif %}
-                                </div>
-                                {% if doc.comments %}
-                                <div class="mt-3 p-3 bg-yellow-50 border-l-4 border-yellow-500 rounded-lg">
-                                    <div class="flex items-start gap-2">
-                                        <div class="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center flex-shrink-0">
-                                            <i class="fas fa-user-tie text-white text-xs"></i>
-                                        </div>
-                                        <div>
-                                            <p class="text-xs font-semibold text-yellow-900">Reviewer's Response:</p>
-                                            <p class="text-xs text-yellow-800 mt-1">{{ doc.comments }}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                {% endif %}
-                            </div>
-                            {% if doc.file_url %}
-                            <div class="ml-3 flex flex-col gap-1">
-                                <button onclick="viewFile('{{ doc.file_url }}', '{{ doc.document_name }}')"
-                                   class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-1 text-xs">
-                                    <i class="fas fa-eye"></i>View
-                                </button>
-                                <a href="{{ doc.file_url }}" download
-                                   class="px-3 py-1.5 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition flex items-center gap-1 text-xs">
-                                    <i class="fas fa-download"></i>Download
-                                </a>
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-                {% else %}
-                <div class="text-center py-10 bg-gray-50 rounded-lg">
-                    <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <i class="fas fa-file-upload text-2xl text-yellow-600"></i>
-                    </div>
-                    <p class="text-sm text-gray-600">No documents uploaded yet</p>
-                </div>
-                {% endif %}
-            </div>
-
-            <!-- Recent Activity Section -->
-            <div id="content-activity" class="tab-content hidden p-5">
-                <h2 class="text-lg font-bold text-[#04043a] mb-4 flex items-center gap-2">
-                    <i class="fas fa-history text-purple-500"></i>
-                    Recent Activity
-                </h2>
-                <div class="space-y-2 max-h-[600px] overflow-y-auto pr-2">
-                    {% if recent_activity and recent_activity|length > 0 %}
-                        {% for activity in recent_activity %}
-                        <div class="flex items-start gap-2 p-2 bg-gray-50 rounded-lg hover:shadow-sm transition">
-                            <div class="w-6 h-6 bg-{{ activity.color }}-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                <i class="fas fa-{{ activity.icon }} text-{{ activity.color }}-600 text-xs"></i>
-                            </div>
-                            <div class="flex-1">
-                                <p class="text-xs font-medium text-gray-900">{{ activity.title }}</p>
-                                <div class="flex items-center gap-2 mt-0.5">
-                                    <span class="text-xs text-gray-500">{{ activity.time }}</span>
-                                    {% if activity.status %}
-                                    <span class="text-xs px-1.5 py-0.5 rounded-full
-                                        {% if activity.status == 'approved' %}bg-green-100 text-green-800
-                                        {% elif activity.status == 'pending' %}bg-yellow-100 text-yellow-800
-                                        {% elif activity.status == 'revision' %}bg-orange-100 text-orange-800
-                                        {% elif activity.status == 'rejected' %}bg-red-100 text-red-800
-                                        {% elif activity.status == 'rework' %}bg-orange-100 text-orange-800
-                                        {% elif activity.status == 'accepted' %}bg-emerald-100 text-emerald-800
-                                        {% else %}bg-gray-100 text-gray-800{% endif %}">
-                                        {{ activity.status }}
-                                    </span>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    {% else %}
-                    <div class="text-center py-10 text-gray-500">
-                        <i class="fas fa-inbox text-3xl mb-2 opacity-50"></i>
-                        <p class="text-sm">No recent activity</p>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
-        <!-- Shared Documents Section -->
-        {% if recent_shares and recent_shares|length > 0 %}
-        <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-200">
-            <h2 class="text-lg font-bold text-[#04043a] mb-4 flex items-center gap-2">
-                <div class="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-share-alt text-white text-sm"></i>
-                </div>
-                Recent Document Shares
-            </h2>
-            <div class="space-y-2">
-                {% for share in recent_shares %}
-                <div class="border border-gray-200 rounded-lg p-3 hover:shadow-sm transition">
-                    <div class="flex items-start justify-between">
-                        <div>
-                            <div class="flex items-center gap-2 mb-1">
-                                <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                                    <i class="fas fa-user text-blue-600 text-xs"></i>
-                                </div>
-                                <div>
-                                    <h4 class="text-xs font-semibold text-gray-900">{{ share.document_name }}</h4>
-                                    <p class="text-[10px] text-gray-500">Shared by: {{ share.sender_name }}</p>
-                                </div>
-                            </div>
-                            <p class="text-[10px] text-gray-500 mt-1"><i class="far fa-clock mr-1"></i>{{ share.shared_at.strftime('%d %b %Y, %I:%M %p') }}</p>
-                            {% if share.file_url %}
-                            <div class="mt-2 flex gap-2">
-                                <button onclick="viewFile('{{ share.file_url }}', '{{ share.document_name }}')" class="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-1 rounded">
-                                    <i class="fas fa-eye"></i> View
-                                </button>
-                                <a href="{{ share.file_url }}" download class="inline-flex items-center gap-1 text-xs text-gray-600 hover:text-gray-800 bg-gray-50 px-2 py-1 rounded">
-                                    <i class="fas fa-download"></i> Download
-                                </a>
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
-    </div>
-</div>
-
-<!-- ===================== PDF/FILE VIEWER MODAL ===================== -->
-<div id="fileViewerModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex items-center justify-center p-4" style="backdrop-filter:blur(4px);">
-    <div class="bg-white rounded-2xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl">
-        <div class="flex items-center justify-between p-4 border-b border-gray-200">
-            <h3 class="text-base font-bold text-[#04043a] flex items-center gap-2">
-                <i class="fas fa-file text-blue-500" id="fileViewerIcon"></i>
-                <span id="fileViewerTitle">File Viewer</span>
-            </h3>
-            <button onclick="closeFileViewer()" class="p-1.5 hover:bg-gray-100 rounded-full transition"><i class="fas fa-times text-gray-600"></i></button>
-        </div>
-        <div class="flex-1 overflow-hidden p-4 min-h-0">
-            <!-- PDF embed -->
-            <div id="pdfViewerContainer" class="w-full h-full" style="min-height:500px;">
-                <object id="pdfObject" data="" type="application/pdf" class="w-full h-full rounded-lg" style="min-height:500px;">
-                    <div class="flex flex-col items-center justify-center h-full bg-gray-50 rounded-lg p-8">
-                        <i class="fas fa-file-pdf text-red-500 text-5xl mb-4"></i>
-                        <p class="text-gray-600 text-sm mb-4">Unable to display PDF in browser.</p>
-                        <div class="flex gap-3">
-                            <a id="pdfFallbackView" href="#" target="_blank" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm flex items-center gap-1">
-                                <i class="fas fa-external-link-alt"></i> Open in New Tab
-                            </a>
-                            <a id="pdfFallbackDownload" href="#" download class="px-4 py-2 bg-[#04043a] text-white rounded-lg hover:bg-[#1e3c72] transition text-sm flex items-center gap-1">
-                                <i class="fas fa-download"></i> Download
-                            </a>
-                        </div>
-                    </div>
-                </object>
-            </div>
-            <!-- Image viewer -->
-            <div id="imageViewerContainer" class="w-full h-full hidden flex items-center justify-center" style="min-height:500px;">
-                <img id="imageViewer" src="" class="max-w-full max-h-full object-contain rounded-lg" alt="File Preview">
-            </div>
-            <!-- Non-viewable file -->
-            <div id="noPreviewContainer" class="w-full h-full hidden flex flex-col items-center justify-center bg-gray-50 rounded-lg" style="min-height:500px;">
-                <i class="fas fa-file text-gray-400 text-5xl mb-4"></i>
-                <p class="text-gray-600 text-sm mb-4">Preview not available for this file type.</p>
-                <div class="flex gap-3">
-                    <a id="noPreviewView" href="#" target="_blank" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm flex items-center gap-1">
-                        <i class="fas fa-external-link-alt"></i> Open in New Tab
-                    </a>
-                    <a id="noPreviewDownload" href="#" download class="px-4 py-2 bg-[#04043a] text-white rounded-lg hover:bg-[#1e3c72] transition text-sm flex items-center gap-1">
-                        <i class="fas fa-download"></i> Download
-                    </a>
-                </div>
-            </div>
-        </div>
-        <div class="p-4 border-t border-gray-200 flex justify-between items-center">
-            <div class="flex gap-2">
-                <a id="fileViewLink" href="#" target="_blank" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm flex items-center gap-1">
-                    <i class="fas fa-external-link-alt text-xs"></i> Open in New Tab
-                </a>
-                <a id="fileDownloadLink" href="#" download class="px-4 py-2 bg-[#04043a] text-white rounded-lg hover:bg-[#1e3c72] transition text-sm flex items-center gap-1">
-                    <i class="fas fa-download text-xs"></i> Download
-                </a>
-            </div>
-            <button onclick="closeFileViewer()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm">Close</button>
-        </div>
-    </div>
-</div>
-
-<!-- ===================== TASK UPDATE MODAL ===================== -->
-<div id="coreTaskModal" style="
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.6);
-    z-index: 99999;
-    align-items: center;
-    justify-content: center;
-    padding: 1rem;
-    backdrop-filter: blur(4px);
-">
-    <div style="
-        background: white;
-        border-radius: 1rem;
-        box-shadow: 0 25px 50px rgba(0,0,0,0.3);
-        width: 100%;
-        max-width: 480px;
-        overflow: hidden;
-        animation: modalSlideIn 0.25s ease-out;
-    ">
-        <div style="background: linear-gradient(to right, #04043a, #1e3c72); padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between;">
-            <div style="display: flex; align-items: center; gap: 0.75rem;">
-                <div style="width: 2rem; height: 2rem; background: #eab308; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center;">
-                    <i class="fas fa-edit" style="color: #04043a; font-size: 0.875rem;"></i>
-                </div>
-                <h3 style="font-size: 1rem; font-weight: 700; color: white; margin: 0;">Update Task Progress</h3>
-            </div>
-            <button onclick="closeTaskUpdateModal()" style="background: rgba(255,255,255,0.15); border: none; border-radius: 50%; width: 2rem; height: 2rem; cursor: pointer; color: white; font-size: 1rem; display: flex; align-items: center; justify-content: center;">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-
-        <div style="padding: 1.5rem;">
-            <form id="coreTaskUpdateForm" enctype="multipart/form-data">
-                <input type="hidden" id="coreTaskId" name="taskId">
-
-                <div style="margin-bottom: 1.25rem;">
-                    <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.75rem;">
-                        <i class="fas fa-percentage" style="color: #04043a; margin-right: 0.25rem;"></i>Progress
-                    </label>
-                    <input 
-                        type="range" 
-                        id="coreProgressSlider" 
-                        name="progress" 
-                        min="0" max="100" value="0"
-                        oninput="updateCoreProgress(this.value)"
-                        style="width: 100%; height: 8px; border-radius: 999px; cursor: pointer; appearance: none; -webkit-appearance: none; outline: none; background: linear-gradient(to right, #04043a 0%, #04043a 0%, #e5e7eb 0%, #e5e7eb 100%);"
-                    >
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
-                        <span style="font-size: 0.75rem; color: #9ca3af;">0%</span>
-                        <span id="coreProgressBadge" style="background: #04043a; color: white; padding: 0.2rem 0.75rem; border-radius: 999px; font-size: 0.875rem; font-weight: 700;">0%</span>
-                        <span style="font-size: 0.75rem; color: #9ca3af;">100%</span>
-                    </div>
-                </div>
-
-                <div style="margin-bottom: 1.25rem;">
-                    <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
-                        <i class="fas fa-flag" style="color: #04043a; margin-right: 0.25rem;"></i>Status
-                    </label>
-                    <select id="coreStatusSelect" name="status" style="width: 100%; padding: 0.625rem 1rem; font-size: 0.875rem; border: 2px solid #e5e7eb; border-radius: 0.75rem; background: white; cursor: pointer; outline: none;">
-                        <option value="pending">⏳ Pending</option>
-                        <option value="in_progress">🔄 In Progress</option>
-                        <option value="completed">✅ Completed</option>
-                    </select>
-                </div>
-
-                <div style="margin-bottom: 1.25rem;">
-                    <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
-                        <i class="fas fa-paperclip" style="color: #04043a; margin-right: 0.25rem;"></i>Attachment <span style="font-weight: 400; color: #9ca3af;">(Optional)</span>
-                    </label>
-                    <div style="position: relative; border: 2px dashed #d1d5db; border-radius: 0.75rem; padding: 0.75rem; background: #f9fafb; cursor: pointer;" onclick="document.getElementById('coreTaskAttachment').click()">
-                        <input type="file" id="coreTaskAttachment" name="attachment" 
-                               accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.gif,.xlsx,.csv,.xls"
-                               style="position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;"
-                               onchange="handleCoreFileSelect(this)">
-                        <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; color: #6b7280;">
-                            <i class="fas fa-cloud-upload-alt" style="color: #04043a; font-size: 1.25rem;"></i>
-                            <span id="coreAttachmentLabel" style="font-size: 0.875rem;">Click to choose file</span>
-                        </div>
-                    </div>
-                    <div id="coreAttachmentPreview" style="display: none; margin-top: 0.5rem; background: #eff6ff; border-radius: 0.5rem; padding: 0.5rem 0.75rem; align-items: center; justify-content: space-between;">
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <i class="fas fa-file" style="color: #3b82f6;"></i>
-                            <span id="coreAttachmentName" style="font-size: 0.75rem; color: #374151;"></span>
-                        </div>
-                        <button type="button" onclick="clearCoreAttachment()" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.875rem;">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div style="margin-bottom: 1.5rem;">
-                    <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
-                        <i class="fas fa-comment" style="color: #04043a; margin-right: 0.25rem;"></i>Comment <span style="font-weight: 400; color: #9ca3af;">(Optional)</span>
-                    </label>
-                    <textarea id="coreCommentText" name="comment" rows="3"
-                              style="width: 100%; padding: 0.625rem 1rem; font-size: 0.875rem; border: 2px solid #e5e7eb; border-radius: 0.75rem; resize: none; outline: none; font-family: inherit; box-sizing: border-box;"
-                              placeholder="Add a note about your progress..."></textarea>
-                </div>
-
-                <div style="display: flex; gap: 0.75rem;">
-                    <button type="submit" id="coreSubmitBtn"
-                            style="flex: 1; background: #04043a; color: white; padding: 0.75rem 1rem; border: none; border-radius: 0.75rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
-                        <i class="fas fa-save"></i> Save Update
-                    </button>
-                    <button type="button" onclick="closeTaskUpdateModal()"
-                            style="padding: 0.75rem 1.25rem; border: 2px solid #e5e7eb; border-radius: 0.75rem; font-size: 0.875rem; font-weight: 600; color: #6b7280; background: white; cursor: pointer;">
-                        Cancel
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Notification Container -->
-<div id="coreNotifContainer" style="position: fixed; top: 1rem; right: 1rem; z-index: 999999; display: flex; flex-direction: column; gap: 0.5rem; pointer-events: none;"></div>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 
 <style>
-@keyframes modalSlideIn {
-    from { opacity: 0; transform: translateY(-20px) scale(0.97); }
-    to   { opacity: 1; transform: translateY(0) scale(1); }
+:root {
+  --navy: #04043a;
+  --navy-mid: #0a0a5c;
+  --gold: #eab308;
+  --gold-light: #fef3c7;
+  --surface: #ffffff;
+  --surface-2: #f8f7ff;
+  --border: rgba(4,4,58,0.10);
+  --text-main: #04043a;
+  --text-muted: #64748b;
+  --radius: 14px;
+  --radius-sm: 8px;
+  --shadow: 0 2px 16px rgba(4,4,58,0.07);
+  --shadow-lg: 0 8px 40px rgba(4,4,58,0.13);
 }
-@keyframes notifSlideIn {
-    from { transform: translateX(110%); opacity: 0; }
-    to   { transform: translateX(0); opacity: 1; }
+
+* { box-sizing: border-box; }
+body { font-family: 'DM Sans', sans-serif; background: #f3f2fa; }
+
+.core-wrap { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
+
+/* ── Stats grid ── */
+.stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 1.5rem; }
+.stat-card {
+  background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border);
+  padding: 1.1rem 1.25rem; box-shadow: var(--shadow);
 }
-@keyframes notifSlideOut {
-    from { transform: translateX(0); opacity: 1; }
-    to   { transform: translateX(110%); opacity: 0; }
+.stat-card .num { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 700; line-height: 1; }
+.stat-card .lbl { font-size: 11px; color: var(--text-muted); margin-top: 4px; font-weight: 500; letter-spacing:.03em; text-transform:uppercase; }
+.stat-card .bar { height: 3px; border-radius: 3px; margin-top: 12px; }
+
+/* ── Analytics row ── */
+.analytics-row { display: grid; grid-template-columns: 1fr 320px; gap: 14px; margin-bottom: 1.5rem; }
+.analytics-card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 1.25rem; box-shadow: var(--shadow); }
+.card-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--navy); display: flex; align-items: center; gap: 8px; margin-bottom: 1rem; }
+.doc-counts { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 1rem; }
+.count-pill { border-radius: var(--radius-sm); padding: 10px; text-align: center; }
+.count-pill .n { font-family:'Syne',sans-serif; font-size:1.4rem; font-weight:700; line-height:1; }
+.count-pill .l { font-size:10px; text-transform:uppercase; letter-spacing:.04em; margin-top:4px; font-weight:500; }
+.status-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
+.status-pill { border-radius: var(--radius-sm); padding: 8px 10px; display:flex; align-items:center; gap:6px; }
+.dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+
+/* ── Tab nav ── */
+.tab-shell { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 1.5rem; overflow: hidden; }
+.tab-nav { display: flex; border-bottom: 1px solid var(--border); background: #fafafa; overflow-x: auto; }
+.tab-btn {
+  padding: 13px 20px; font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap;
+  border: none; background: none; color: var(--text-muted); display: flex; align-items: center; gap: 7px;
+  border-bottom: 2px solid transparent; transition: all .18s; font-family: 'DM Sans', sans-serif;
+  position: relative;
 }
-.form-checkbox { border-radius: 0.25rem; border: 2px solid #d1d5db; cursor: pointer; }
-.form-checkbox:checked { background-color: currentColor; border-color: currentColor; }
-.leader-checkbox:checked { color: #eab308; }
-.core-checkbox:checked   { color: #3b82f6; }
-#coreProgressSlider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 22px; height: 22px;
-    background: #04043a;
-    border: 3px solid #eab308;
-    border-radius: 50%;
-    cursor: pointer;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+.tab-btn.active { color: var(--navy); border-bottom-color: var(--gold); background: var(--surface); }
+.tab-btn:hover:not(.active) { color: var(--navy); background: #f0effa; }
+.tab-badge { background: var(--navy); color: #fff; font-size: 10px; padding: 2px 7px; border-radius: 20px; }
+.tab-content { display: none; padding: 1.5rem; }
+.tab-content.active { display: block; }
+
+/* ── Forms ── */
+.form-label { font-size: 12px; font-weight: 600; color: var(--navy); margin-bottom: 6px; display: block; letter-spacing:.02em; }
+.form-input {
+  width: 100%; padding: 10px 14px; font-size: 13px; border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); background: var(--surface); color: var(--text-main);
+  font-family: 'DM Sans',sans-serif; transition: border-color .15s;
 }
-#coreProgressSlider::-moz-range-thumb {
-    width: 22px; height: 22px;
-    background: #04043a;
-    border: 3px solid #eab308;
-    border-radius: 50%;
-    cursor: pointer;
+.form-input:focus { outline: none; border-color: var(--navy); }
+.form-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+/* ── Reviewer cards ── */
+.reviewer-card {
+  display: flex; align-items: center; gap: 8px; padding: 9px 11px;
+  border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  cursor: pointer; transition: all .15s;
 }
+.reviewer-card:hover { border-color: var(--gold); background: var(--gold-light); }
+.reviewer-card input[type=checkbox] { accent-color: var(--navy); }
+
+/* ── Buttons ── */
+.btn-primary {
+  background: var(--navy); color: #fff; padding: 11px 22px; border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 600; border: none; cursor: pointer; display: inline-flex;
+  align-items: center; gap: 8px; transition: background .15s; font-family: 'DM Sans',sans-serif;
+}
+.btn-primary:hover { background: #1e3c72; }
+.btn-gold {
+  background: var(--gold); color: var(--navy); padding: 8px 16px; border-radius: var(--radius-sm);
+  font-size: 12px; font-weight: 700; border: none; cursor: pointer; display: inline-flex;
+  align-items: center; gap: 6px; transition: all .15s; font-family: 'DM Sans',sans-serif;
+}
+.btn-gold:hover { background: #ca9a00; }
+.btn-outline {
+  background: transparent; color: var(--navy); padding: 8px 16px; border-radius: var(--radius-sm);
+  font-size: 12px; font-weight: 500; border: 1.5px solid var(--border); cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px; transition: all .15s; font-family: 'DM Sans',sans-serif;
+}
+.btn-outline:hover { border-color: var(--navy); background: var(--surface-2); }
+
+/* ── Task cards ── */
+.task-card {
+  border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1rem 1.25rem;
+  background: var(--surface); margin-bottom: 12px; transition: box-shadow .15s;
+}
+.task-card:hover { box-shadow: var(--shadow); }
+.task-card.high { border-left: 4px solid #ef4444; }
+.task-card.medium { border-left: 4px solid #f59e0b; }
+.task-card.low { border-left: 4px solid #22c55e; }
+.task-card.rework { border-left: 4px solid #f97316; }
+.task-card.accepted { border-left: 4px solid #10b981; }
+
+/* ── Status badges ── */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px;
+  border-radius: 20px; font-size: 11px; font-weight: 600;
+}
+.badge-pending { background: #fef9c3; color: #854d0e; }
+.badge-approved { background: #dcfce7; color: #166534; }
+.badge-revision { background: #ffedd5; color: #9a3412; }
+.badge-rejected { background: #fee2e2; color: #991b1b; }
+.badge-progress { background: #dbeafe; color: #1e40af; }
+.badge-rework { background: #ffedd5; color: #9a3412; }
+.badge-accepted { background: #d1fae5; color: #065f46; }
+.badge-completed { background: #dcfce7; color: #166534; }
+.badge-high { background: #fee2e2; color: #991b1b; }
+.badge-medium { background: #fef9c3; color: #854d0e; }
+.badge-low { background: #dcfce7; color: #166534; }
+
+/* ── Progress bar ── */
+.prog-wrap { background: #e5e7eb; border-radius: 4px; height: 6px; overflow: hidden; }
+.prog-fill { height: 100%; border-radius: 4px; transition: width .4s; }
+
+/* ── Doc cards ── */
+.doc-card { border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; background: var(--surface); margin-bottom: 10px; transition: all .15s; }
+.doc-card:hover { border-color: var(--gold); box-shadow: var(--shadow); }
+
+/* ── Activity feed ── */
+.activity-item { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.activity-item:last-child { border-bottom: none; }
+.activity-icon { width: 30px; height: 30px; border-radius: 50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+
+/* ── AI Panel ── */
+.ai-panel {
+  background: linear-gradient(135deg, var(--navy) 0%, #1a1a6e 100%);
+  border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1rem; color: #fff;
+}
+.ai-panel-title { font-family: 'Syne',sans-serif; font-size: 15px; font-weight: 700; display:flex; align-items:center; gap:8px; margin-bottom: .75rem; }
+.ai-spark { color: var(--gold); font-size: 18px; }
+.ai-btn {
+  background: var(--gold); color: var(--navy); padding: 8px 16px; border-radius: var(--radius-sm);
+  font-size: 12px; font-weight: 700; border: none; cursor: pointer; display: inline-flex;
+  align-items: center; gap: 5px; transition: all .15s; font-family: 'DM Sans',sans-serif;
+}
+.ai-btn:hover { background: #fbbf24; transform: translateY(-1px); }
+.ai-btn:disabled { opacity:.6; cursor:not-allowed; transform:none; }
+.ai-response-box {
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+  border-radius: var(--radius-sm); padding: 12px; margin-top: 10px; font-size: 13px;
+  line-height: 1.65; color: #e2e8f0; display: none; white-space: pre-wrap; max-height: 240px; overflow-y: auto;
+}
+.ai-response-box.show { display: block; }
+
+/* ── AI Chat Modal ── */
+.ai-chat-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55);
+  z-index: 99999; align-items: flex-end; justify-content: flex-end; padding: 1.5rem;
+  backdrop-filter: blur(3px);
+}
+.ai-chat-overlay.open { display: flex; }
+.ai-chat-box {
+  background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow-lg);
+  width: 420px; max-height: 600px; display: flex; flex-direction: column;
+  border: 1px solid var(--border); animation: slideUp .25s ease;
+}
+@keyframes slideUp { from{transform:translateY(30px);opacity:0} to{transform:translateY(0);opacity:1} }
+.ai-chat-header {
+  background: linear-gradient(135deg,var(--navy),#1a1a6e); padding: 1rem 1.25rem;
+  border-radius: var(--radius) var(--radius) 0 0; display:flex; align-items:center; justify-content:space-between;
+}
+.ai-chat-title { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; color:#fff; display:flex; align-items:center; gap:8px; }
+.ai-chat-messages { flex:1; overflow-y:auto; padding:1rem; display:flex; flex-direction:column; gap:10px; min-height:200px; }
+.msg-user { background: var(--navy); color:#fff; padding:9px 13px; border-radius:12px 12px 3px 12px; font-size:13px; align-self:flex-end; max-width:85%; line-height:1.5; }
+.msg-ai { background: var(--surface-2); color: var(--text-main); padding:9px 13px; border-radius:12px 12px 12px 3px; font-size:13px; align-self:flex-start; max-width:90%; line-height:1.6; border:1px solid var(--border); white-space:pre-wrap; }
+.msg-thinking { color: var(--text-muted); font-size:12px; align-self:flex-start; display:flex; gap:4px; align-items:center; }
+.ai-chat-input-row { padding:.75rem 1rem; border-top:1px solid var(--border); display:flex; gap:8px; }
+.ai-chat-input { flex:1; padding:9px 13px; font-size:13px; border:1.5px solid var(--border); border-radius: var(--radius-sm); font-family:'DM Sans',sans-serif; background:var(--surface); color:var(--text-main); }
+.ai-chat-input:focus { outline:none; border-color:var(--navy); }
+.ai-chat-send { background:var(--navy); color:#fff; border:none; border-radius:var(--radius-sm); padding:9px 14px; cursor:pointer; font-size:15px; }
+.ai-chat-send:hover { background:#1e3c72; }
+
+/* ── Floating AI button ── */
+.ai-float-btn {
+  position: fixed; bottom: 2rem; right: 2rem; z-index: 9999;
+  background: var(--navy); color: #fff; border: 3px solid var(--gold);
+  border-radius: 50%; width: 58px; height: 58px; font-size: 22px;
+  cursor: pointer; box-shadow: 0 4px 20px rgba(4,4,58,.35); display:flex; align-items:center; justify-content:center;
+  transition: all .2s;
+}
+.ai-float-btn:hover { transform: scale(1.1); background:#1e3c72; }
+
+/* ── File viewer modal ── */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:50000; align-items:center; justify-content:center; padding:1rem; backdrop-filter:blur(4px); }
+.modal-overlay.open { display:flex; }
+.modal-box { background:var(--surface); border-radius:var(--radius); box-shadow:var(--shadow-lg); width:100%; max-width:900px; max-height:92vh; display:flex; flex-direction:column; }
+.modal-header { padding:1rem 1.25rem; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.modal-title { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; color:var(--navy); display:flex; align-items:center; gap:8px; }
+.modal-close { background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:18px; padding:4px; border-radius:6px; }
+.modal-close:hover { background:var(--surface-2); color:var(--text-main); }
+.modal-body { flex:1; overflow:hidden; padding:1rem; min-height:0; }
+.modal-footer { padding:.75rem 1.25rem; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+
+/* ── Task update modal ── */
+.task-modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:99999; align-items:center; justify-content:center; padding:1rem; backdrop-filter:blur(4px); }
+.task-modal-overlay.open { display:flex; }
+.task-modal-box { background:var(--surface); border-radius:var(--radius); box-shadow:var(--shadow-lg); width:100%; max-width:480px; overflow:hidden; animation:slideUp .25s ease; }
+.task-modal-header { background:linear-gradient(135deg,var(--navy),#1a1a6e); padding:1rem 1.25rem; display:flex; align-items:center; justify-content:space-between; }
+.task-modal-title { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; color:#fff; display:flex; align-items:center; gap:8px; }
+.task-modal-body { padding:1.5rem; }
+
+/* ── Notifs ── */
+#notifContainer { position:fixed; top:1rem; right:1rem; z-index:999999; display:flex; flex-direction:column; gap:8px; pointer-events:none; }
+.notif { pointer-events:all; background:var(--surface); border-radius:var(--radius-sm); box-shadow:var(--shadow-lg); padding:12px 16px; display:flex; align-items:flex-start; gap:10px; max-width:320px; animation:notifIn .3s ease; border-left:4px solid; }
+.notif.success { border-left-color:#22c55e; }
+.notif.error { border-left-color:#ef4444; }
+.notif.info { border-left-color:#3b82f6; }
+.notif.warning { border-left-color:#f59e0b; }
+@keyframes notifIn { from{transform:translateX(110%);opacity:0} to{transform:translateX(0);opacity:1} }
+@keyframes notifOut { from{transform:translateX(0);opacity:1} to{transform:translateX(110%);opacity:0} }
+
+/* ── Progress slider ── */
+#progressSlider { width:100%; accent-color:var(--navy); }
+
+/* ── Scrollable lists ── */
+.scroll-list { max-height:560px; overflow-y:auto; padding-right:4px; }
+.scroll-list::-webkit-scrollbar { width:4px; }
+.scroll-list::-webkit-scrollbar-track { background:transparent; }
+.scroll-list::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
+
+@media(max-width:900px) {
+  .analytics-row { grid-template-columns:1fr; }
+  .stats-grid { grid-template-columns:repeat(2,1fr); }
+  .form-grid2 { grid-template-columns:1fr; }
+  .form-grid3 { grid-template-columns:repeat(2,1fr); }
+  .ai-chat-box { width:100%; max-width:100%; }
+  .ai-float-btn { bottom:1rem; right:1rem; }
+}
+
+/* Rework alert */
+.rework-alert { background:#fff7ed; border-left:4px solid #f97316; border-radius:0 var(--radius-sm) var(--radius-sm) 0; padding:10px 14px; margin-bottom:10px; }
+.accepted-alert { background:#f0fdf4; border-left:4px solid #22c55e; border-radius:0 var(--radius-sm) var(--radius-sm) 0; padding:10px 14px; margin-bottom:10px; }
+.leader-comment-box { background:#f5f3ff; border:1px solid #ede9fe; border-radius:var(--radius-sm); padding:8px 12px; margin-bottom:6px; }
+
+/* Thinking dots */
+.thinking { display:inline-flex; gap:4px; align-items:center; padding:4px 0; }
+.thinking span { width:6px; height:6px; border-radius:50%; background:var(--gold); animation:blink 1s infinite; }
+.thinking span:nth-child(2){animation-delay:.2s}
+.thinking span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
 </style>
 
+<div class="core-wrap">
+
+  <!-- ── Stats ── -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="num" style="color:#3b82f6">{{ docs_today|default(0) }}</div>
+      <div class="lbl">Today</div>
+      <div class="bar" style="background:#dbeafe;"><div style="width:60%;height:100%;background:#3b82f6;border-radius:3px;"></div></div>
+    </div>
+    <div class="stat-card">
+      <div class="num" style="color:#8b5cf6">{{ docs_this_week|default(0) }}</div>
+      <div class="lbl">This Week</div>
+      <div class="bar" style="background:#ede9fe;"><div style="width:40%;height:100%;background:#8b5cf6;border-radius:3px;"></div></div>
+    </div>
+    <div class="stat-card">
+      <div class="num" style="color:#f59e0b">{{ total_tasks|default(0) }}</div>
+      <div class="lbl">My Tasks</div>
+      <div class="bar" style="background:#fef3c7;"><div style="width:{{ (completed_tasks/total_tasks*100)|int if total_tasks and total_tasks > 0 else 0 }}%;height:100%;background:#f59e0b;border-radius:3px;"></div></div>
+    </div>
+    <div class="stat-card">
+      <div class="num" style="color:#10b981">{{ approved_count|default(0) }}</div>
+      <div class="lbl">Approved</div>
+      <div class="bar" style="background:#dcfce7;"><div style="width:70%;height:100%;background:#10b981;border-radius:3px;"></div></div>
+    </div>
+  </div>
+
+  <!-- ── Analytics ── -->
+  <div class="analytics-row">
+    <div class="analytics-card">
+      <div class="card-title"><i class="fas fa-chart-line" style="color:var(--gold)"></i> Document Analytics</div>
+      <div class="doc-counts">
+        <div class="count-pill" style="background:#eff6ff"><div class="n" style="color:#1d4ed8">{{ docs_today|default(0) }}</div><div class="l" style="color:#3b82f6">Today</div></div>
+        <div class="count-pill" style="background:#f5f3ff"><div class="n" style="color:#6d28d9">{{ docs_this_week|default(0) }}</div><div class="l" style="color:#8b5cf6">Week</div></div>
+        <div class="count-pill" style="background:#fdf4ff"><div class="n" style="color:#a21caf">{{ docs_this_month|default(0) }}</div><div class="l" style="color:#c026d3">Month</div></div>
+        <div class="count-pill" style="background:#fef3c7"><div class="n" style="color:#92400e">{{ total_docs|default(0) }}</div><div class="l" style="color:#d97706">Total</div></div>
+      </div>
+      <div class="status-row">
+        <div class="status-pill" style="background:#dcfce7"><div class="dot" style="background:#22c55e"></div><div><div style="font-size:11px;font-weight:600;color:#166534">Approved</div><div style="font-size:16px;font-weight:700;color:#15803d">{{ approved_count|default(0) }}</div></div></div>
+        <div class="status-pill" style="background:#fef9c3"><div class="dot" style="background:#eab308"></div><div><div style="font-size:11px;font-weight:600;color:#854d0e">Pending</div><div style="font-size:16px;font-weight:700;color:#a16207">{{ pending_count|default(0) }}</div></div></div>
+        <div class="status-pill" style="background:#ffedd5"><div class="dot" style="background:#f97316"></div><div><div style="font-size:11px;font-weight:600;color:#9a3412">Revision</div><div style="font-size:16px;font-weight:700;color:#c2410c">{{ revision_count|default(0) }}</div></div></div>
+        <div class="status-pill" style="background:#fee2e2"><div class="dot" style="background:#ef4444"></div><div><div style="font-size:11px;font-weight:600;color:#991b1b">Rejected</div><div style="font-size:16px;font-weight:700;color:#dc2626">{{ rejected_count|default(0) }}</div></div></div>
+      </div>
+    </div>
+    <div class="analytics-card">
+      <div class="card-title"><i class="fas fa-tasks" style="color:#22c55e"></i> Task Analytics</div>
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;"><span style="color:var(--text-muted)">Completed</span><span style="font-weight:600">{{ completed_tasks|default(0) }}/{{ total_tasks|default(0) }}</span></div>
+        <div class="prog-wrap"><div class="prog-fill" style="width:{{ (completed_tasks/total_tasks*100)|int if total_tasks and total_tasks > 0 else 0 }}%;background:#22c55e;"></div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+        <div class="count-pill" style="background:#fef9c3;text-align:center"><div class="n" style="color:#92400e">{{ pending_tasks|default(0) }}</div><div class="l" style="color:#a16207">Pending</div></div>
+        <div class="count-pill" style="background:#dbeafe;text-align:center"><div class="n" style="color:#1e3a8a">{{ in_progress_tasks|default(0) }}</div><div class="l" style="color:#1d4ed8">In Progress</div></div>
+      </div>
+      <div style="border-top:1px solid var(--border);padding-top:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><span style="font-size:12px;color:#dc2626;font-weight:600"><i class="fas fa-exclamation-triangle" style="margin-right:4px"></i>High Priority</span><span style="font-size:18px;font-weight:700;color:#dc2626">{{ high_priority_tasks|default(0) }}</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:12px;color:#d97706;font-weight:600"><i class="fas fa-clock" style="margin-right:4px"></i>Overdue</span><span style="font-size:18px;font-weight:700;color:#d97706">{{ overdue_tasks|default(0) }}</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Tab shell ── -->
+  <div class="tab-shell">
+    <div class="tab-nav">
+      <button class="tab-btn active" id="btn-upload" onclick="switchTab('upload')"><i class="fas fa-cloud-upload-alt"></i> Share Document</button>
+      <button class="tab-btn" id="btn-tasks" onclick="switchTab('tasks')">
+        <i class="fas fa-tasks"></i> My Tasks
+        {% if total_tasks and total_tasks > 0 %}<span class="tab-badge">{{ total_tasks }}</span>{% endif %}
+      </button>
+      <button class="tab-btn" id="btn-documents" onclick="switchTab('documents')">
+        <i class="fas fa-folder-open"></i> My Documents
+        {% if total_docs and total_docs > 0 %}<span class="tab-badge">{{ total_docs }}</span>{% endif %}
+      </button>
+      <button class="tab-btn" id="btn-activity" onclick="switchTab('activity')"><i class="fas fa-history"></i> Activity</button>
+    </div>
+
+    <!-- ── Upload tab ── -->
+    <div class="tab-content active" id="tab-upload">
+      <div style="max-width:720px">
+        <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:700;color:var(--navy);margin-bottom:1.25rem;display:flex;align-items:center;gap:10px;">
+          <div style="width:34px;height:34px;background:var(--gold);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;"><i class="fas fa-cloud-upload-alt" style="color:var(--navy);"></i></div>
+          Upload Document for Review
+        </div>
+        <form action="{{ url_for('upload_document') }}" method="POST" enctype="multipart/form-data">
+          <div class="form-grid2" style="margin-bottom:14px">
+            <div><label class="form-label">Document Name *</label><input type="text" name="document_name" required class="form-input" placeholder="Enter document name"></div>
+            <div><label class="form-label">Select File *</label><input type="file" name="file" required class="form-input" accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.gif,.xlsx,.csv,.xls"></div>
+          </div>
+          <div style="margin-bottom:14px"><label class="form-label">Description / Message</label><textarea name="description" rows="3" class="form-input" placeholder="Describe the document and add any message for the reviewers..."></textarea></div>
+
+          <label class="form-label" style="margin-bottom:10px">Assign to Reviewers</label>
+          <div style="margin-bottom:12px">
+            <div style="font-size:11px;font-weight:700;color:#a16207;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;"><i class="fas fa-crown" style="margin-right:4px"></i>Leaders</div>
+            <div class="form-grid3">
+              {% for leader in leaders %}
+              <label class="reviewer-card">
+                <input type="checkbox" name="assigned_users" value="{{ leader._id }}" class="leader-cb">
+                <div><div style="font-size:12px;font-weight:600">{{ leader.email.split('@')[0] }}</div><span class="badge badge-medium" style="font-size:10px;margin-top:2px">Leader</span></div>
+              </label>
+              {% endfor %}
+            </div>
+          </div>
+          <div style="margin-bottom:14px">
+            <div style="font-size:11px;font-weight:700;color:#1d4ed8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;"><i class="fas fa-users" style="margin-right:4px"></i>Core Team</div>
+            <div class="form-grid3">
+              {% for member in core_members %}{% if member._id != user._id %}
+              <label class="reviewer-card">
+                <input type="checkbox" name="assigned_users" value="{{ member._id }}" class="core-cb">
+                <div><div style="font-size:12px;font-weight:600">{{ member.email.split('@')[0] }}</div><span class="badge badge-progress" style="font-size:10px;margin-top:2px">Core</span></div>
+              </label>
+              {% endif %}{% endfor %}
+            </div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;padding:10px;background:var(--surface-2);border-radius:var(--radius-sm);">
+            <button type="button" onclick="selLeaders()" class="btn-outline" style="font-size:11px;padding:5px 12px"><i class="fas fa-crown"></i> All Leaders</button>
+            <button type="button" onclick="selCore()" class="btn-outline" style="font-size:11px;padding:5px 12px"><i class="fas fa-users"></i> All Core</button>
+            <button type="button" onclick="selAll()" class="btn-outline" style="font-size:11px;padding:5px 12px"><i class="fas fa-check-double"></i> Everyone</button>
+            <button type="button" onclick="selNone()" class="btn-outline" style="font-size:11px;padding:5px 12px"><i class="fas fa-times"></i> Clear</button>
+            <span id="selCount" style="font-size:12px;color:var(--text-muted);align-self:center;margin-left:4px">0 selected</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--gold-light);border-radius:var(--radius-sm);border:1px solid #fde68a;margin-bottom:14px">
+            <input type="checkbox" name="notify_users" id="notify_users" checked style="accent-color:var(--navy)">
+            <label for="notify_users" style="font-size:12px;font-weight:500;cursor:pointer"><i class="fas fa-envelope" style="color:var(--gold);margin-right:5px"></i>Send email notification to reviewers</label>
+          </div>
+          <button type="submit" class="btn-primary" style="width:100%;justify-content:center;padding:13px"><i class="fas fa-upload"></i> Submit Document for Review</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ── Tasks tab ── -->
+    <div class="tab-content" id="tab-tasks">
+      <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:700;color:var(--navy);margin-bottom:1.25rem;display:flex;align-items:center;gap:10px;">
+        <div style="width:34px;height:34px;background:#22c55e;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;"><i class="fas fa-tasks" style="color:#fff;"></i></div>
+        My Assigned Tasks
+        {% if total_tasks and total_tasks > 0 %}<span class="tab-badge">{{ total_tasks }}</span>{% endif %}
+      </div>
+
+      {% if my_tasks and my_tasks|length > 0 %}
+      <div class="scroll-list">
+        {% for task in my_tasks %}
+        <div class="task-card {{ 'rework' if task.status == 'rework' else ('accepted' if task.status == 'accepted' else task.priority) }}" id="task-{{ task._id }}">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px">
+            <div style="flex:1">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+                <span style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--navy)">{{ task.title }}</span>
+                <span class="badge badge-{{ task.priority }}">{{ task.priority|upper }}</span>
+                <span class="badge badge-{{ task.status|replace('_','-') }}">
+                  {% if task.status=='rework' %}🔄 Rework
+                  {% elif task.status=='accepted' %}✅ Accepted
+                  {% elif task.status=='completed' %}🏁 Completed
+                  {% elif task.status=='in_progress' %}⚡ In Progress
+                  {% else %}⏳ {{ task.status|replace('_',' ')|title }}{% endif %}
+                </span>
+              </div>
+              <div style="font-size:12px;color:var(--text-muted)">Assigned by: <strong>{{ task.assigned_by_name }}</strong></div>
+            </div>
+          </div>
+          <p style="font-size:13px;color:#475569;margin-bottom:10px">{{ task.description }}</p>
+
+          {% if task.status=='rework' %}
+          <div class="rework-alert">
+            <div style="font-size:12px;font-weight:700;color:#c2410c;margin-bottom:3px"><i class="fas fa-exclamation-triangle" style="margin-right:5px"></i>Rework Requested</div>
+            {% if task.rework_comment %}<div style="font-size:12px;color:#9a3412">{{ task.rework_comment }}</div>{% endif %}
+          </div>
+          {% endif %}
+          {% if task.status=='accepted' %}
+          <div class="accepted-alert">
+            <div style="font-size:12px;font-weight:700;color:#15803d"><i class="fas fa-star" style="margin-right:5px"></i>Task Accepted — Great work!</div>
+          </div>
+          {% endif %}
+
+          {% if task.leader_comments and task.leader_comments|length > 0 %}
+          <div style="margin-bottom:10px">
+            <div style="font-size:11px;font-weight:700;color:#6d28d9;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px"><i class="fas fa-comments" style="margin-right:4px"></i>Leader Comments</div>
+            {% for lc in task.leader_comments[-2:] %}
+            <div class="leader-comment-box">
+              <div style="font-size:12px;color:#5b21b6">"{{ lc.comment }}"</div>
+              <div style="font-size:11px;color:#7c3aed;margin-top:3px">— {{ lc.commented_by }} · {% if lc.timestamp is string %}{{ lc.timestamp }}{% else %}{{ lc.timestamp.strftime('%d %b, %I:%M %p') }}{% endif %}</div>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          {% if task.has_attachment and task.attachment_url %}
+          <div style="margin-bottom:10px">
+            <button onclick="viewFile('{{ task.attachment_url }}','{{ task.attachment_name or task.title }}')" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:5px">
+              <i class="fas fa-paperclip"></i>{{ task.attachment_name or 'Attachment' }}
+            </button>
+          </div>
+          {% endif %}
+
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;background:var(--surface-2);padding:10px;border-radius:var(--radius-sm);margin-bottom:10px;font-size:12px">
+            <div><div style="color:var(--text-muted);font-weight:500;margin-bottom:2px">Due Date</div><div style="font-weight:600">{{ task.due_date_str }}</div></div>
+            <div><div style="color:var(--text-muted);font-weight:500;margin-bottom:2px">Priority</div><span class="badge badge-{{ task.priority }}">{{ task.priority|upper }}</span></div>
+            <div>
+              <div style="color:var(--text-muted);font-weight:500;margin-bottom:2px">Progress</div>
+              <div class="prog-wrap" style="margin-top:4px"><div class="prog-fill" style="width:{{ task.progress }}%;background:{% if task.status=='accepted' %}#10b981{% elif task.status=='rework' %}#f97316{% elif task.priority=='high' %}#ef4444{% elif task.priority=='medium' %}#f59e0b{% else %}#22c55e{% endif %}"></div></div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:2px;text-align:right">{{ task.progress }}%</div>
+            </div>
+          </div>
+
+          <!-- ── AI Help panel per task ── -->
+          <div class="ai-panel" style="margin-bottom:10px">
+            <div class="ai-panel-title"><span class="ai-spark">✦</span> Claude AI — Task Help</div>
+            <div style="font-size:12px;color:#94a3b8;margin-bottom:10px">Get a step-by-step plan to complete this task, ask for clarification, or get ideas.</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="ai-btn" onclick="aiTaskHelp('{{ task._id }}','{{ task.title|replace("'","\\'")|truncate(60) }}','{{ task.description|replace("'","\\'")|truncate(200) }}','{{ task.due_date_str }}','{{ task.priority }}')">
+                <span>✦</span> How to complete this task
+              </button>
+              <button class="ai-btn" onclick="aiTaskChat('{{ task._id }}','{{ task.title|replace("'","\\'")|truncate(60) }}','{{ task.description|replace("'","\\'")|truncate(200) }}')">
+                <i class="fas fa-comment-dots"></i> Ask AI anything
+              </button>
+            </div>
+            <div class="ai-response-box" id="ai-task-{{ task._id }}"></div>
+          </div>
+
+          {% if task.updates and task.updates|length > 0 %}
+          <div style="border-top:1px solid var(--border);padding-top:10px;margin-bottom:10px">
+            <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px"><i class="fas fa-history" style="margin-right:4px"></i>Update History</div>
+            {% for update in task.updates[-3:]|reverse %}
+            <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;font-size:12px">
+              <div style="width:18px;height:18px;border-radius:50%;background:#e5e7eb;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px"><div style="width:6px;height:6px;border-radius:50%;background:#6b7280"></div></div>
+              <div>
+                <span style="font-weight:600;text-transform:capitalize">{{ update.status|replace('_',' ') }}</span> — {{ update.progress }}%
+                {% if update.comment %}: "{{ update.comment }}"{% endif %}
+                {% if update.attachment_url %}<button onclick="viewFile('{{ update.attachment_url }}','{{ update.attachment_name or 'Attachment' }}')" style="margin-left:6px;background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:4px;padding:2px 6px;font-size:11px;cursor:pointer">View</button>{% endif %}
+                <div style="color:var(--text-muted);margin-top:2px">{% if update.timestamp is string %}{{ update.timestamp }}{% else %}{{ update.timestamp.strftime('%d %b %I:%M %p') }}{% endif %}</div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          <div style="display:flex;justify-content:flex-end;gap:8px">
+            {% if task.status in ['rework','pending','in_progress'] %}
+            <button onclick="openUpdateModal('{{ task._id }}',{{ task.progress }},'{{ task.status }}')" class="btn-primary" style="font-size:12px;padding:8px 16px"><i class="fas fa-edit"></i> Update Progress</button>
+            {% elif task.status=='completed' %}
+            <span class="badge badge-approved" style="padding:8px 14px;font-size:12px"><i class="fas fa-check-circle" style="margin-right:5px"></i>Awaiting Review</span>
+            {% elif task.status=='accepted' %}
+            <span class="badge badge-accepted" style="padding:8px 14px;font-size:12px"><i class="fas fa-star" style="margin-right:5px"></i>Task Accepted & Closed</span>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div style="text-align:center;padding:3rem;background:var(--surface-2);border-radius:var(--radius)">
+        <i class="fas fa-tasks" style="font-size:2.5rem;color:#d1d5db;margin-bottom:12px;display:block"></i>
+        <div style="font-size:14px;color:var(--text-muted)">No tasks assigned yet</div>
+        <div style="font-size:12px;color:#94a3b8;margin-top:4px">Tasks assigned by leaders will appear here</div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- ── Documents tab ── -->
+    <div class="tab-content" id="tab-documents">
+      <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:700;color:var(--navy);margin-bottom:1.25rem;display:flex;align-items:center;gap:10px;">
+        <div style="width:34px;height:34px;background:#3b82f6;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;"><i class="fas fa-folder-open" style="color:#fff;"></i></div>
+        My Uploaded Documents
+        {% if total_docs and total_docs > 0 %}<span class="tab-badge">{{ total_docs }}</span>{% endif %}
+      </div>
+      {% if my_documents and my_documents|length > 0 %}
+      <div class="scroll-list">
+        {% for doc in my_documents %}
+        <div class="doc-card">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between">
+            <div style="flex:1">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                <i class="fas fa-file-alt" style="color:var(--navy);font-size:16px"></i>
+                <span style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--navy)">{{ doc.document_name }}</span>
+                <span class="badge badge-{{ doc.status }}">{{ doc.status|upper }}</span>
+              </div>
+              <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px">{{ doc.description }}</p>
+              <div style="display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--text-muted)">
+                <span><i class="fas fa-calendar" style="margin-right:4px"></i>{{ doc.submitted_at.strftime('%d %b %Y, %I:%M %p') }}</span>
+                {% if doc.reviewed_at %}<span><i class="fas fa-check" style="margin-right:4px;color:#22c55e"></i>Reviewed: {{ doc.reviewed_at.strftime('%d %b %Y') }}</span>{% endif %}
+              </div>
+              {% if doc.comments %}
+              <div style="margin-top:10px;background:#fef9c3;border-left:3px solid var(--gold);padding:8px 12px;border-radius:0 var(--radius-sm) var(--radius-sm) 0">
+                <div style="font-size:11px;font-weight:700;color:#92400e;margin-bottom:3px">Reviewer's Response:</div>
+                <div style="font-size:12px;color:#78350f">{{ doc.comments }}</div>
+              </div>
+              {% endif %}
+
+              <!-- ── AI summarize per doc ── -->
+              <div style="margin-top:10px;display:flex;gap:8px;align-items:center">
+                <button class="ai-btn" style="font-size:11px;padding:5px 12px" onclick="aiSummarizeDoc('{{ doc._id }}','{{ doc.document_name|replace("'","\\'")|truncate(60) }}','{{ doc.description|replace("'","\\'")|truncate(150) }}','{{ doc.file_url or '' }}')">
+                  <span>✦</span> AI Summary
+                </button>
+                <span id="ai-doc-status-{{ doc._id }}" style="font-size:11px;color:var(--text-muted)"></span>
+              </div>
+              <div class="ai-response-box" id="ai-doc-{{ doc._id }}" style="margin-top:8px;font-size:12px;color:#e2e8f0;background:linear-gradient(135deg,var(--navy),#1a1a6e)"></div>
+            </div>
+            {% if doc.file_url %}
+            <div style="margin-left:12px;display:flex;flex-direction:column;gap:6px">
+              <button onclick="viewFile('{{ doc.file_url }}','{{ doc.document_name }}')" class="btn-outline" style="font-size:11px;padding:5px 10px"><i class="fas fa-eye"></i> View</button>
+              <a href="{{ doc.file_url }}" download class="btn-outline" style="font-size:11px;padding:5px 10px;text-decoration:none;text-align:center"><i class="fas fa-download"></i> DL</a>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div style="text-align:center;padding:3rem;background:var(--surface-2);border-radius:var(--radius)">
+        <i class="fas fa-file-upload" style="font-size:2.5rem;color:#d1d5db;margin-bottom:12px;display:block"></i>
+        <div style="font-size:14px;color:var(--text-muted)">No documents uploaded yet</div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- ── Activity tab ── -->
+    <div class="tab-content" id="tab-activity">
+      <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:700;color:var(--navy);margin-bottom:1.25rem;display:flex;align-items:center;gap:10px;">
+        <i class="fas fa-history" style="color:#8b5cf6;font-size:18px"></i> Recent Activity
+      </div>
+      <div class="scroll-list">
+        {% if recent_activity and recent_activity|length > 0 %}
+          {% for activity in recent_activity %}
+          <div class="activity-item">
+            <div class="activity-icon" style="background:#{{ 'dcfce7' if activity.color=='green' else ('fef9c3' if activity.color=='yellow' else ('dbeafe' if activity.color=='blue' else 'f3e8ff')) }}">
+              <i class="fas fa-{{ activity.icon }}" style="font-size:12px;color:#{{ '166534' if activity.color=='green' else ('854d0e' if activity.color=='yellow' else ('1d4ed8' if activity.color=='blue' else '7c3aed')) }}"></i>
+            </div>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:500;color:var(--text-main)">{{ activity.title }}</div>
+              <div style="display:flex;align-items:center;gap:8px;margin-top:3px">
+                <span style="font-size:11px;color:var(--text-muted)">{{ activity.time }}</span>
+                {% if activity.status %}<span class="badge badge-{{ activity.status }}" style="font-size:10px">{{ activity.status }}</span>{% endif %}
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+        <div style="text-align:center;padding:3rem;color:var(--text-muted)">
+          <i class="fas fa-inbox" style="font-size:2rem;margin-bottom:8px;display:block;opacity:.4"></i>No recent activity
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Shared docs ── -->
+  {% if recent_shares and recent_shares|length > 0 %}
+  <div class="analytics-card">
+    <div class="card-title"><div style="width:30px;height:30px;background:#8b5cf6;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;"><i class="fas fa-share-alt" style="color:#fff;font-size:13px"></i></div> Recent Document Shares</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px">
+      {% for share in recent_shares %}
+      <div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px">
+        <div style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:3px">{{ share.document_name }}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px"><i class="fas fa-user" style="margin-right:4px"></i>{{ share.sender_name }} · {{ share.shared_at.strftime('%d %b %Y, %I:%M %p') }}</div>
+        {% if share.file_url %}
+        <div style="display:flex;gap:6px">
+          <button onclick="viewFile('{{ share.file_url }}','{{ share.document_name }}')" class="btn-outline" style="font-size:11px;padding:4px 10px"><i class="fas fa-eye"></i> View</button>
+          <a href="{{ share.file_url }}" download class="btn-outline" style="font-size:11px;padding:4px 10px;text-decoration:none"><i class="fas fa-download"></i></a>
+          <button class="ai-btn" style="font-size:11px;padding:4px 10px" onclick="aiSummarizeDoc('share-{{ loop.index }}','{{ share.document_name|replace("'","\\'")|truncate(60) }}','','{{ share.file_url }}')"><span>✦</span> Summary</button>
+        </div>
+        <div class="ai-response-box" id="ai-doc-share-{{ loop.index }}" style="margin-top:8px;font-size:12px;color:#e2e8f0;background:linear-gradient(135deg,var(--navy),#1a1a6e)"></div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- ── File viewer modal ── -->
+<div class="modal-overlay" id="fileModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title"><i class="fas fa-file" id="fileIcon"></i><span id="fileTitle">File</span></div>
+      <button class="modal-close" onclick="closeFile()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div id="pdfWrap" style="width:100%;height:500px"><object id="pdfObj" data="" type="application/pdf" style="width:100%;height:100%;border-radius:var(--radius-sm)"><p style="text-align:center;padding:2rem;color:var(--text-muted)">PDF cannot be displayed. <a id="pdfLink" href="#" target="_blank">Open in new tab</a></p></object></div>
+      <div id="imgWrap" style="display:none;height:500px;display:none;align-items:center;justify-content:center"><img id="imgView" src="" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:var(--radius-sm)"></div>
+      <div id="noPreview" style="display:none;height:300px;align-items:center;justify-content:center;flex-direction:column;background:var(--surface-2);border-radius:var(--radius);color:var(--text-muted)"><i class="fas fa-file" style="font-size:3rem;margin-bottom:1rem"></i><p>Preview not available</p></div>
+    </div>
+    <div class="modal-footer">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <a id="fileOpenLink" href="#" target="_blank" class="btn-outline" style="font-size:12px;padding:7px 14px"><i class="fas fa-external-link-alt"></i> Open</a>
+        <a id="fileDlLink" href="#" download class="btn-primary" style="font-size:12px;padding:7px 14px"><i class="fas fa-download"></i> Download</a>
+        <!-- AI summarize inside viewer -->
+        <button class="ai-btn" id="viewerAiBtn" onclick="aiSummarizeViewer()"><span>✦</span> AI Summary</button>
+      </div>
+      <button onclick="closeFile()" class="btn-outline" style="font-size:12px;padding:7px 14px">Close</button>
+    </div>
+    <!-- AI response inside viewer -->
+    <div id="viewerAiBox" class="ai-response-box" style="margin:0 1rem 1rem;background:linear-gradient(135deg,var(--navy),#1a1a6e);color:#e2e8f0;font-size:13px"></div>
+  </div>
+</div>
+
+<!-- ── Task update modal ── -->
+<div class="task-modal-overlay" id="updateModal">
+  <div class="task-modal-box">
+    <div class="task-modal-header">
+      <div class="task-modal-title"><div style="width:28px;height:28px;background:var(--gold);border-radius:6px;display:flex;align-items:center;justify-content:center;"><i class="fas fa-edit" style="color:var(--navy);font-size:13px"></i></div> Update Task Progress</div>
+      <button onclick="closeUpdateModal()" style="background:rgba(255,255,255,.15);border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;color:#fff;font-size:14px;display:flex;align-items:center;justify-content:center"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="task-modal-body">
+      <form id="updateForm" enctype="multipart/form-data">
+        <input type="hidden" id="updateTaskId">
+        <div style="margin-bottom:16px">
+          <label class="form-label">Progress</label>
+          <input type="range" id="progressSlider" name="progress" min="0" max="100" value="0" oninput="updateProgress(this.value)" style="width:100%;margin-bottom:6px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:12px;color:var(--text-muted)">0%</span>
+            <span id="progressBadge" style="background:var(--navy);color:#fff;padding:3px 14px;border-radius:20px;font-size:14px;font-weight:700">0%</span>
+            <span style="font-size:12px;color:var(--text-muted)">100%</span>
+          </div>
+        </div>
+        <div style="margin-bottom:14px">
+          <label class="form-label">Status</label>
+          <select id="statusSelect" name="status" class="form-input">
+            <option value="pending">⏳ Pending</option>
+            <option value="in_progress">🔄 In Progress</option>
+            <option value="completed">✅ Completed</option>
+          </select>
+        </div>
+        <div style="margin-bottom:14px">
+          <label class="form-label">Attachment <span style="font-weight:400;color:var(--text-muted)">(Optional)</span></label>
+          <input type="file" name="attachment" id="attachFile" accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.gif,.xlsx,.csv,.xls" class="form-input" onchange="fileChosen(this)">
+        </div>
+        <div style="margin-bottom:16px">
+          <label class="form-label">Comment <span style="font-weight:400;color:var(--text-muted)">(Optional)</span></label>
+          <textarea id="commentText" name="comment" rows="3" class="form-input" placeholder="Add a note about your progress..."></textarea>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button type="submit" id="updateSubmitBtn" class="btn-primary" style="flex:1;justify-content:center"><i class="fas fa-save"></i> Save Update</button>
+          <button type="button" onclick="closeUpdateModal()" class="btn-outline" style="padding:11px 18px">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ── AI Chat modal ── -->
+<div class="ai-chat-overlay" id="aiChatOverlay">
+  <div class="ai-chat-box">
+    <div class="ai-chat-header">
+      <div class="ai-chat-title"><span style="color:var(--gold);font-size:18px">✦</span> Claude AI Assistant</div>
+      <button onclick="closeAiChat()" style="background:rgba(255,255,255,.15);border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;color:#fff;font-size:14px"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="ai-chat-messages" id="chatMessages"></div>
+    <div class="ai-chat-input-row">
+      <input class="ai-chat-input" id="chatInput" placeholder="Ask Claude anything about your task..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}">
+      <button class="ai-chat-send" onclick="sendChat()"><i class="fas fa-paper-plane"></i></button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Floating AI button ── -->
+<button class="ai-float-btn" onclick="openGlobalChat()" title="Ask Claude AI"><span style="font-size:20px">✦</span></button>
+
+<!-- ── Notifications ── -->
+<div id="notifContainer"></div>
+
 <script>
-// ===================== FILE VIEWER =====================
-function viewFile(fileUrl, fileName) {
-    if (!fileUrl) return;
-    
-    var ext = fileUrl.split('.').pop().toLowerCase().split('?')[0];
-    var isPdf = (ext === 'pdf');
-    var isImage = ['jpg','jpeg','png','gif','webp'].indexOf(ext) !== -1;
-    
-    document.getElementById('fileViewerTitle').textContent = fileName || 'File Viewer';
-    document.getElementById('fileViewLink').href = fileUrl;
-    document.getElementById('fileDownloadLink').href = fileUrl;
-    
-    // Set icon
-    var icon = document.getElementById('fileViewerIcon');
-    if (isPdf) {
-        icon.className = 'fas fa-file-pdf text-red-500';
-    } else if (isImage) {
-        icon.className = 'fas fa-file-image text-green-500';
-    } else {
-        icon.className = 'fas fa-file text-blue-500';
-    }
-    
-    // Hide all containers
-    document.getElementById('pdfViewerContainer').classList.add('hidden');
-    document.getElementById('imageViewerContainer').classList.add('hidden');
-    document.getElementById('noPreviewContainer').classList.add('hidden');
-    
-    if (isPdf) {
-        document.getElementById('pdfViewerContainer').classList.remove('hidden');
-        var pdfObj = document.getElementById('pdfObject');
-        pdfObj.data = fileUrl;
-        document.getElementById('pdfFallbackView').href = fileUrl;
-        document.getElementById('pdfFallbackDownload').href = fileUrl;
-    } else if (isImage) {
-        document.getElementById('imageViewerContainer').classList.remove('hidden');
-        document.getElementById('imageViewer').src = fileUrl;
-    } else {
-        document.getElementById('noPreviewContainer').classList.remove('hidden');
-        document.getElementById('noPreviewView').href = fileUrl;
-        document.getElementById('noPreviewDownload').href = fileUrl;
-    }
-    
-    document.getElementById('fileViewerModal').classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
+// ── Tab switching ──
+function switchTab(name) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  document.getElementById('btn-'+name).classList.add('active');
+  sessionStorage.setItem('coreTab', name);
 }
 
-function closeFileViewer() {
-    document.getElementById('fileViewerModal').classList.add('hidden');
-    document.getElementById('pdfObject').data = '';
-    document.getElementById('imageViewer').src = '';
-    document.body.style.overflow = '';
+// ── Checkbox helpers ──
+function updateSelCount(){
+  const n = document.querySelectorAll('input[name="assigned_users"]:checked').length;
+  document.getElementById('selCount').textContent = n+' selected';
+}
+function selLeaders(){document.querySelectorAll('.leader-cb').forEach(c=>c.checked=true);updateSelCount();}
+function selCore(){document.querySelectorAll('.core-cb').forEach(c=>c.checked=true);updateSelCount();}
+function selAll(){document.querySelectorAll('input[name="assigned_users"]').forEach(c=>c.checked=true);updateSelCount();}
+function selNone(){document.querySelectorAll('input[name="assigned_users"]').forEach(c=>c.checked=false);updateSelCount();}
+
+// ── Progress slider ──
+function updateProgress(v){
+  document.getElementById('progressBadge').textContent=v+'%';
+  const pct=((v-0)/100)*100;
+  document.getElementById('progressSlider').style.background=`linear-gradient(to right,#04043a ${pct}%,#e5e7eb ${pct}%)`;
+  const sel=document.getElementById('statusSelect');
+  if(v>=100)sel.value='completed';
+  else if(v>0&&sel.value==='pending')sel.value='in_progress';
 }
 
-document.getElementById('fileViewerModal').addEventListener('click', function(e) {
-    if (e.target === this) closeFileViewer();
+function fileChosen(input){
+  if(input.files[0]) showNotif('File selected: '+input.files[0].name,'info');
+}
+
+// ── Task update modal ──
+function openUpdateModal(id, progress, status){
+  document.getElementById('updateTaskId').value=id;
+  const s=document.getElementById('progressSlider');
+  s.value=progress;updateProgress(progress);
+  const stat=status==='rework'?'in_progress':status;
+  document.getElementById('statusSelect').value=stat;
+  document.getElementById('commentText').value='';
+  document.getElementById('attachFile').value='';
+  const btn=document.getElementById('updateSubmitBtn');
+  btn.innerHTML='<i class="fas fa-save"></i> Save Update';btn.disabled=false;
+  document.getElementById('updateModal').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeUpdateModal(){
+  document.getElementById('updateModal').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+document.getElementById('updateForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const id=document.getElementById('updateTaskId').value;
+  const btn=document.getElementById('updateSubmitBtn');
+  btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Saving...';btn.disabled=true;
+  const fd=new FormData();
+  fd.append('progress',document.getElementById('progressSlider').value);
+  fd.append('status',document.getElementById('statusSelect').value);
+  fd.append('comment',document.getElementById('commentText').value.trim());
+  const f=document.getElementById('attachFile').files[0];
+  if(f)fd.append('attachment',f);
+  try{
+    const r=await fetch('/api/update_task_progress/'+id,{method:'POST',body:fd,credentials:'same-origin'});
+    if(r.redirected){window.location.href=r.url;return;}
+    const d=await r.json();
+    if(d.success){showNotif(d.message||'Task updated!','success');closeUpdateModal();setTimeout(()=>location.reload(),1400);}
+    else throw new Error(d.error||'Failed');
+  }catch(err){
+    showNotif(err.message,'error');
+    btn.innerHTML='<i class="fas fa-save"></i> Save Update';btn.disabled=false;
+  }
 });
 
-// ===================== TAB SWITCHING =====================
-function switchTab(tabName) {
-    document.querySelectorAll('.tab-content').forEach(function(el) { el.classList.add('hidden'); });
-    document.querySelectorAll('.tab-button').forEach(function(el) {
-        el.classList.remove('active', 'border-[#04043a]', 'text-[#04043a]');
-        el.classList.add('border-transparent', 'text-gray-600');
-    });
-    document.getElementById('content-' + tabName).classList.remove('hidden');
-    var activeTab = document.getElementById('tab-' + tabName);
-    activeTab.classList.add('active', 'border-[#04043a]', 'text-[#04043a]');
-    activeTab.classList.remove('border-transparent', 'text-gray-600');
-    sessionStorage.setItem('coreActiveTab', tabName);
+// ── File viewer ──
+let currentFileUrl='',currentFileName='';
+function viewFile(url,name){
+  currentFileUrl=url;currentFileName=name;
+  const ext=url.split('.').pop().toLowerCase().split('?')[0];
+  const isPdf=ext==='pdf';
+  const isImg=['jpg','jpeg','png','gif','webp'].includes(ext);
+  document.getElementById('fileTitle').textContent=name;
+  document.getElementById('fileOpenLink').href=url;
+  document.getElementById('fileDlLink').href=url;
+  if(isPdf)document.getElementById('fileIcon').className='fas fa-file-pdf text-red-500';
+  else if(isImg)document.getElementById('fileIcon').className='fas fa-file-image';
+  else document.getElementById('fileIcon').className='fas fa-file';
+  document.getElementById('pdfWrap').style.display=isPdf?'block':'none';
+  const imgWrap=document.getElementById('imgWrap');
+  imgWrap.style.display=isImg?'flex':'none';
+  document.getElementById('noPreview').style.display=(!isPdf&&!isImg)?'flex':'none';
+  if(isPdf){document.getElementById('pdfObj').data=url;document.getElementById('pdfLink').href=url;}
+  if(isImg)document.getElementById('imgView').src=url;
+  document.getElementById('viewerAiBox').classList.remove('show');
+  document.getElementById('viewerAiBox').textContent='';
+  document.getElementById('fileModal').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeFile(){
+  document.getElementById('fileModal').classList.remove('open');
+  document.getElementById('pdfObj').data='';
+  document.getElementById('imgView').src='';
+  document.body.style.overflow='';
 }
 
-// ===================== CHECKBOX HELPERS =====================
-function updateSelectedCount() {
-    var count = document.querySelectorAll('input[name="assigned_users"]:checked').length;
-    var el = document.getElementById('selectedCount');
-    if (el) el.innerHTML = '<i class="fas fa-users mr-1"></i><span>' + count + ' reviewer' + (count !== 1 ? 's' : '') + ' selected</span>';
-}
-function selectAllLeaders() { document.querySelectorAll('.leader-checkbox').forEach(function(cb) { cb.checked = true; }); updateSelectedCount(); }
-function selectAllCore()    { document.querySelectorAll('.core-checkbox').forEach(function(cb) { cb.checked = true; }); updateSelectedCount(); }
-function selectAll()        { document.querySelectorAll('input[name="assigned_users"]').forEach(function(cb) { cb.checked = true; }); updateSelectedCount(); }
-function clearAll()         { document.querySelectorAll('input[name="assigned_users"]').forEach(function(cb) { cb.checked = false; }); updateSelectedCount(); }
-
-// ===================== PROGRESS SLIDER =====================
-function updateCoreProgress(value) {
-    var v = parseInt(value);
-    document.getElementById('coreProgressBadge').textContent = v + '%';
-    var slider = document.getElementById('coreProgressSlider');
-    var pct = ((v - slider.min) / (slider.max - slider.min)) * 100;
-    slider.style.background = 'linear-gradient(to right, #04043a 0%, #04043a ' + pct + '%, #e5e7eb ' + pct + '%, #e5e7eb 100%)';
-    var sel = document.getElementById('coreStatusSelect');
-    if (v >= 100) { sel.value = 'completed'; }
-    else if (v > 0 && sel.value === 'pending') { sel.value = 'in_progress'; }
+// ── AI summarize viewer ──
+async function aiSummarizeViewer(){
+  if(!currentFileUrl){showNotif('No file loaded','warning');return;}
+  const btn=document.getElementById('viewerAiBtn');
+  btn.disabled=true;btn.innerHTML='<div class="thinking"><span></span><span></span><span></span></div>';
+  const box=document.getElementById('viewerAiBox');
+  box.textContent='Analyzing document...';box.classList.add('show');
+  try{
+    const r=await fetch('/api/ai/summarize',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',
+      body:JSON.stringify({document_name:currentFileName,file_url:currentFileUrl})});
+    const d=await r.json();
+    if(d.success){box.textContent=d.summary;}
+    else throw new Error(d.error||'AI error');
+  }catch(err){box.textContent='Error: '+err.message;}
+  btn.disabled=false;btn.innerHTML='<span>✦</span> AI Summary';
 }
 
-// ===================== FILE HANDLING =====================
-function handleCoreFileSelect(input) {
-    var file = input.files[0];
-    if (file) {
-        document.getElementById('coreAttachmentLabel').textContent = file.name;
-        document.getElementById('coreAttachmentName').textContent = file.name;
-        document.getElementById('coreAttachmentPreview').style.display = 'flex';
-    }
-}
-function clearCoreAttachment() {
-    document.getElementById('coreTaskAttachment').value = '';
-    document.getElementById('coreAttachmentLabel').textContent = 'Click to choose file';
-    document.getElementById('coreAttachmentPreview').style.display = 'none';
-}
-
-// ===================== MODAL OPEN/CLOSE =====================
-function openTaskUpdateModal(taskId, currentProgress, currentStatus) {
-    var modal = document.getElementById('coreTaskModal');
-    document.getElementById('coreTaskId').value = taskId;
-    var progress = parseInt(currentProgress) || 0;
-    var slider = document.getElementById('coreProgressSlider');
-    slider.value = progress;
-    updateCoreProgress(progress);
-    // For rework tasks, allow re-submission as in_progress
-    var status = currentStatus || 'pending';
-    if (status === 'rework') { status = 'in_progress'; }
-    document.getElementById('coreStatusSelect').value = status;
-    document.getElementById('coreCommentText').value = '';
-    clearCoreAttachment();
-    var btn = document.getElementById('coreSubmitBtn');
-    btn.innerHTML = '<i class="fas fa-save"></i> Save Update';
-    btn.disabled = false;
-    modal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
+// ── AI summarize doc card ──
+async function aiSummarizeDoc(docId, name, desc, fileUrl){
+  const boxId=docId.startsWith('share-')?'ai-doc-'+docId:'ai-doc-'+docId;
+  const box=document.getElementById('ai-doc-'+docId)||document.getElementById('ai-doc-share-'+docId.replace('share-',''));
+  if(!box)return;
+  box.textContent='✦ Analyzing with Claude...';box.classList.add('show');
+  try{
+    const r=await fetch('/api/ai/summarize',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',
+      body:JSON.stringify({document_name:name,description:desc,file_url:fileUrl})});
+    const d=await r.json();
+    box.textContent=d.success?d.summary:'Error: '+(d.error||'AI unavailable');
+  }catch(err){box.textContent='Error: '+err.message;}
 }
 
-function closeTaskUpdateModal() {
-    var modal = document.getElementById('coreTaskModal');
-    modal.style.display = 'none';
-    document.body.style.overflow = '';
-    var btn = document.getElementById('coreSubmitBtn');
-    if (btn) { btn.innerHTML = '<i class="fas fa-save"></i> Save Update'; btn.disabled = false; }
-    clearCoreAttachment();
+// ── AI task help ──
+async function aiTaskHelp(id, title, desc, due, priority){
+  const box=document.getElementById('ai-task-'+id);
+  if(!box)return;
+  const btns=box.previousElementSibling.querySelectorAll('.ai-btn');
+  btns.forEach(b=>{b.disabled=true;});
+  box.innerHTML='<div class="thinking"><span></span><span></span><span></span></div> Getting step-by-step plan...';
+  box.classList.add('show');
+  try{
+    const r=await fetch('/api/ai/task-help',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',
+      body:JSON.stringify({title,description:desc,due_date:due,priority})});
+    const d=await r.json();
+    box.textContent=d.success?d.help:'Error: '+(d.error||'AI unavailable');
+  }catch(err){box.textContent='Error: '+err.message;}
+  btns.forEach(b=>{b.disabled=false;});
 }
 
-// ===================== FORM SUBMISSION =====================
-document.getElementById('coreTaskUpdateForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    var taskId   = document.getElementById('coreTaskId').value;
-    var progress = parseInt(document.getElementById('coreProgressSlider').value);
-    var status   = document.getElementById('coreStatusSelect').value;
-    var comment  = document.getElementById('coreCommentText').value.trim();
-    if (!taskId) { showCoreNotif('Error', 'No task ID found', 'error'); return; }
-    var btn = document.getElementById('coreSubmitBtn');
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-    btn.disabled = true;
-    var formData = new FormData();
-    formData.append('progress', progress);
-    formData.append('status', status);
-    formData.append('comment', comment);
-    var fileInput = document.getElementById('coreTaskAttachment');
-    if (fileInput.files[0]) { formData.append('attachment', fileInput.files[0]); }
-    fetch('/api/update_task_progress/' + taskId, {
-        method: 'POST',
-        body: formData,
-        credentials: 'same-origin'
-    })
-    .then(function(res) {
-        if (res.redirected) { window.location.href = res.url; return null; }
-        if (!res.ok) {
-            return res.json().then(function(d) { throw new Error(d.error || 'Server error ' + res.status); })
-                            .catch(function() { throw new Error('Server error ' + res.status); });
-        }
-        return res.json();
-    })
-    .then(function(data) {
-        if (!data) return;
-        if (data.success) {
-            showCoreNotif('Success', data.message || 'Task updated!', 'success');
-            closeTaskUpdateModal();
-            setTimeout(function() { window.location.reload(); }, 1500);
-        } else { throw new Error(data.error || 'Failed to update task'); }
-    })
-    .catch(function(err) {
-        showCoreNotif('Error', err.message || 'Failed to update. Please try again.', 'error');
-        btn.innerHTML = '<i class="fas fa-save"></i> Save Update';
-        btn.disabled = false;
-    });
+// ── AI task chat ──
+let chatContext=null;
+function aiTaskChat(id, title, desc){
+  chatContext={title,desc,history:[]};
+  document.getElementById('chatMessages').innerHTML='';
+  addMsg('ai','Hi! I\'m here to help you with the task: "'+title+'"\n\nAsk me anything — for a breakdown, ideas, advice, or help with any step.');
+  document.getElementById('aiChatOverlay').classList.add('open');
+  document.body.style.overflow='hidden';
+  document.getElementById('chatInput').focus();
+}
+
+function openGlobalChat(){
+  chatContext={title:'General Assistant',desc:'Help the user with any task or document question.',history:[]};
+  document.getElementById('chatMessages').innerHTML='';
+  addMsg('ai','Hi! I\'m Claude — your Jain University OOA assistant. Ask me about your tasks, documents, or anything else I can help with!');
+  document.getElementById('aiChatOverlay').classList.add('open');
+  document.body.style.overflow='hidden';
+  document.getElementById('chatInput').focus();
+}
+
+function closeAiChat(){
+  document.getElementById('aiChatOverlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+function addMsg(role, text){
+  const msgs=document.getElementById('chatMessages');
+  const div=document.createElement('div');
+  div.className=role==='user'?'msg-user':'msg-ai';
+  div.textContent=text;
+  msgs.appendChild(div);
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+function addThinking(){
+  const msgs=document.getElementById('chatMessages');
+  const div=document.createElement('div');
+  div.className='msg-thinking';div.id='thinking-msg';
+  div.innerHTML='<div class="thinking"><span></span><span></span><span></span></div><span style="font-size:12px;color:var(--text-muted);margin-left:6px">Claude is thinking...</span>';
+  msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
+}
+
+function removeThinking(){
+  const t=document.getElementById('thinking-msg');
+  if(t)t.remove();
+}
+
+async function sendChat(){
+  const input=document.getElementById('chatInput');
+  const text=input.value.trim();
+  if(!text||!chatContext)return;
+  input.value='';
+  addMsg('user',text);
+  chatContext.history.push({role:'user',content:text});
+  addThinking();
+  try{
+    const r=await fetch('/api/ai/chat',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',
+      body:JSON.stringify({message:text,task_title:chatContext.title,task_desc:chatContext.desc,history:chatContext.history.slice(-8)})});
+    const d=await r.json();
+    removeThinking();
+    const reply=d.success?d.reply:'Sorry, I could not process that request.';
+    addMsg('ai',reply);
+    chatContext.history.push({role:'assistant',content:reply});
+  }catch(err){
+    removeThinking();
+    addMsg('ai','Error connecting to AI. Please try again.');
+  }
+}
+
+// ── Notifications ──
+function showNotif(msg,type='info'){
+  const icons={success:'fa-check-circle',error:'fa-times-circle',warning:'fa-exclamation-triangle',info:'fa-info-circle'};
+  const n=document.createElement('div');
+  n.className='notif '+type;
+  n.innerHTML=`<i class="fas ${icons[type]||icons.info}" style="font-size:16px;flex-shrink:0;margin-top:2px"></i><div style="font-size:13px;color:var(--text-main)">${msg}</div><button onclick="this.parentElement.remove()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);margin-left:auto;padding:0;font-size:14px"><i class="fas fa-times"></i></button>`;
+  document.getElementById('notifContainer').appendChild(n);
+  setTimeout(()=>{n.style.animation='notifOut .3s ease forwards';setTimeout(()=>n.remove(),300);},4500);
+}
+
+// ── Keyboard & click outside ──
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){closeFile();closeUpdateModal();closeAiChat();}
+});
+document.getElementById('fileModal').addEventListener('click',e=>{if(e.target===document.getElementById('fileModal'))closeFile();});
+document.getElementById('updateModal').addEventListener('click',e=>{if(e.target===document.getElementById('updateModal'))closeUpdateModal();});
+document.getElementById('aiChatOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('aiChatOverlay'))closeAiChat();});
+
+// ── Init ──
+document.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('input[name="assigned_users"]').forEach(c=>c.addEventListener('change',updateSelCount));
+  const saved=sessionStorage.getItem('coreTab')||'upload';
+  switchTab(saved);
+  setInterval(()=>{
+    fetch('/api/activity/status',{credentials:'same-origin'}).then(r=>r.json()).then(d=>{
+      if(d.new_tasks>0)showNotif('You have '+d.new_tasks+' new task(s)','info');
+      if(d.new_documents>0)showNotif(d.new_documents+' new document(s) shared','success');
+      if(d.overdue_tasks>0)showNotif('You have '+d.overdue_tasks+' overdue task(s)','warning');
+    }).catch(()=>{});
+  },30000);
 });
 
-// ===================== NOTIFICATION SYSTEM =====================
-function showCoreNotif(title, message, type) {
-    var colors = { success: '#22c55e', error: '#ef4444', warning: '#f59e0b', info: '#3b82f6' };
-    var icons  = { success: 'fa-check-circle', error: 'fa-times-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
-    var container = document.getElementById('coreNotifContainer');
-    var n = document.createElement('div');
-    n.style.cssText = 'pointer-events:all;background:white;border-left:4px solid ' + (colors[type]||colors.info) + ';border-radius:0.75rem;box-shadow:0 10px 25px rgba(0,0,0,0.15);padding:0.75rem 1rem;display:flex;align-items:flex-start;gap:0.75rem;max-width:20rem;animation:notifSlideIn 0.3s ease-out forwards;';
-    n.innerHTML = '<i class="fas ' + (icons[type]||icons.info) + '" style="color:' + (colors[type]||colors.info) + ';font-size:1.25rem;flex-shrink:0;margin-top:0.1rem;"></i><div style="flex:1;"><p style="font-weight:600;font-size:0.875rem;color:#111827;margin:0 0 0.15rem;">' + title + '</p><p style="font-size:0.75rem;color:#6b7280;margin:0;">' + message + '</p></div><button onclick="this.parentElement.remove()" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:0.875rem;flex-shrink:0;"><i class="fas fa-times"></i></button>';
-    container.appendChild(n);
-    setTimeout(function() { n.style.animation = 'notifSlideOut 0.3s ease-in forwards'; setTimeout(function() { if (n.parentElement) n.remove(); }, 300); }, 5000);
-}
-window.showNotification = showCoreNotif;
-
-// ===================== ACTIVITY POLLING =====================
-function pollActivity() {
-    fetch('/api/activity/status', { credentials: 'same-origin' })
-        .then(function(r) { return r.json(); })
-        .then(function(d) {
-            if (d.new_tasks > 0) showCoreNotif('New Tasks', 'You have ' + d.new_tasks + ' new task(s)', 'info');
-            if (d.new_documents > 0) showCoreNotif('New Documents', d.new_documents + ' new document(s) shared', 'success');
-            if (d.overdue_tasks > 0) showCoreNotif('Overdue', 'You have ' + d.overdue_tasks + ' overdue task(s)', 'warning');
-        })
-        .catch(function() {});
-}
-
-// ===================== INIT =====================
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('input[name="assigned_users"]').forEach(function(cb) { cb.addEventListener('change', updateSelectedCount); });
-    updateSelectedCount();
-    var savedTab = sessionStorage.getItem('coreActiveTab') || 'upload';
-    switchTab(savedTab);
-    document.getElementById('coreTaskModal').addEventListener('click', function(e) { if (e.target === this) closeTaskUpdateModal(); });
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') { closeTaskUpdateModal(); closeFileViewer(); }
-    });
-    setInterval(pollActivity, 30000);
-});
-
-window.switchTab = switchTab;
-window.openTaskUpdateModal = openTaskUpdateModal;
-window.closeTaskUpdateModal = closeTaskUpdateModal;
-window.viewFile = viewFile;
-window.closeFileViewer = closeFileViewer;
-window.selectAllLeaders = selectAllLeaders;
-window.selectAllCore = selectAllCore;
-window.selectAll = selectAll;
-window.clearAll = clearAll;
+window.switchTab=switchTab;
+window.openUpdateModal=openUpdateModal;
+window.closeUpdateModal=closeUpdateModal;
+window.viewFile=viewFile;
+window.closeFile=closeFile;
+window.selLeaders=selLeaders;window.selCore=selCore;window.selAll=selAll;window.selNone=selNone;
+window.aiTaskHelp=aiTaskHelp;window.aiTaskChat=aiTaskChat;window.aiSummarizeDoc=aiSummarizeDoc;
+window.aiSummarizeViewer=aiSummarizeViewer;window.openGlobalChat=openGlobalChat;window.closeAiChat=closeAiChat;window.sendChat=sendChat;
+window.showNotification=showNotif;
 </script>
 {% endblock %}

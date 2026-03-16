@@ -1,1147 +1,1066 @@
 {% extends 'base_user.html' %}
-
 {% block title %}Leader Dashboard - Jain University{% endblock %}
 {% block page_title %}OOA-Leadership Board{% endblock %}
 {% block page_subtitle %}Review documents, assign tasks, track analytics, and collaborate with core team{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gray-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-
-        <!-- Quick Stats Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-[#04043a] hover:shadow-md transition-all">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-500 text-xs font-medium">Assigned Documents</p>
-                        <p class="text-2xl font-bold text-[#04043a]">{{ my_assigned_documents|length }}</p>
-                    </div>
-                    <div class="bg-[#04043a] bg-opacity-10 rounded-full p-2">
-                        <i class="fas fa-file-alt text-lg text-[#04043a]"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-yellow-500 hover:shadow-md transition-all">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-500 text-xs font-medium">Pending Reviews</p>
-                        <p class="text-2xl font-bold text-[#04043a]">{{ pending_count }}</p>
-                    </div>
-                    <div class="bg-yellow-500 bg-opacity-10 rounded-full p-2">
-                        <i class="fas fa-clock text-lg text-yellow-600"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-green-600 hover:shadow-md transition-all">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-500 text-xs font-medium">Core Team</p>
-                        <p class="text-2xl font-bold text-[#04043a]">{{ core_members|length }}</p>
-                    </div>
-                    <div class="bg-green-600 bg-opacity-10 rounded-full p-2">
-                        <i class="fas fa-users text-lg text-green-600"></i>
-                    </div>
-                </div>
-                <div class="mt-1 text-xs text-gray-500">
-                    <span class="text-green-600 font-semibold">{{ online_core|length }}</span> online now
-                </div>
-            </div>
-            <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-purple-600 hover:shadow-md transition-all">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-500 text-xs font-medium">Shared Today</p>
-                        <p class="text-2xl font-bold text-[#04043a]">{{ today_shared_count }}</p>
-                    </div>
-                    <div class="bg-purple-600 bg-opacity-10 rounded-full p-2">
-                        <i class="fas fa-share-alt text-lg text-purple-600"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tab Navigation -->
-        <div class="bg-white rounded-xl shadow-sm mb-6 overflow-hidden border border-gray-200">
-            <div class="border-b border-gray-200">
-                <nav class="flex -mb-px overflow-x-auto" id="tabNav">
-                    <button onclick="switchTab('share')" class="tab-button active px-4 py-3 text-sm font-medium border-b-2 border-yellow-500 text-[#04043a] whitespace-nowrap" data-tab="share">
-                        <i class="fas fa-share-alt mr-1 text-yellow-500"></i>Share
-                    </button>
-                    <button onclick="switchTab('assign')" class="tab-button px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap" data-tab="assign">
-                        <i class="fas fa-tasks mr-1 text-green-500"></i>Create
-                    </button>
-                    <button onclick="switchTab('assigned-tasks')" class="tab-button px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap" data-tab="assigned-tasks">
-                        <i class="fas fa-clipboard-list mr-1 text-indigo-500"></i>Assigned Tasks
-                        {% if assigned_tasks %}
-                        <span class="ml-1 bg-indigo-500 text-white px-1.5 py-0.5 rounded-full text-xs">{{ assigned_tasks|length }}</span>
-                        {% endif %}
-                    </button>
-                    <button onclick="switchTab('pending')" class="tab-button px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap" data-tab="pending">
-                        <i class="fas fa-clock mr-1 text-yellow-500"></i>Your Task
-                        {% if pending_count > 0 %}<span class="ml-1 bg-yellow-500 text-white px-1.5 py-0.5 rounded-full text-xs">{{ pending_count }}</span>{% endif %}
-                    </button>
-                    <button onclick="switchTab('analytics')" class="tab-button px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap" data-tab="analytics">
-                        <i class="fas fa-chart-line mr-1 text-purple-500"></i>Analytics
-                    </button>
-                    <button onclick="switchTab('shared')" class="tab-button px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap" data-tab="shared">
-                        <i class="fas fa-share-alt mr-1 text-blue-500"></i>Shared Docs
-                    </button>
-                    <button onclick="switchTab('members')" class="tab-button px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap" data-tab="members">
-                        <i class="fas fa-users mr-1 text-indigo-500"></i>Team
-                    </button>
-                </nav>
-            </div>
-        </div>
-
-        <!-- Tab Content -->
-        <div class="space-y-6">
-
-            <!-- ====== SHARE DOCUMENT TAB ====== -->
-            <div id="share-tab" class="tab-content active">
-                <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-200">
-                    <h3 class="text-base font-bold text-[#04043a] mb-3 flex items-center gap-2">
-                        <i class="fas fa-share-alt text-yellow-500"></i>Share Document with Team
-                    </h3>
-                    <form action="{{ url_for('share_document_leader') }}" method="POST" enctype="multipart/form-data" class="space-y-3">
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Select Document (Optional)</label>
-                            <select name="document_id" class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500">
-                                <option value="">Choose a document (optional)...</option>
-                                {% for doc in my_assigned_documents %}
-                                <option value="{{ doc._id }}">{{ doc.document_name }} ({{ doc.submitted_at.strftime('%d %b') }})</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="border-t border-gray-200 pt-3">
-                            <label class="block text-xs font-medium text-gray-700 mb-1"><i class="fas fa-paperclip text-gray-500 mr-1"></i>Attach File (Optional)</label>
-                            <div class="flex items-center gap-2">
-                                <input type="file" name="share_file" id="share_file" class="hidden" accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.xlsx,.csv">
-                                <button type="button" onclick="document.getElementById('share_file').click()" class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition flex items-center gap-1">
-                                    <i class="fas fa-upload text-gray-500 text-xs"></i>Choose File
-                                </button>
-                                <span id="share_file_name" class="text-xs text-gray-500">No file chosen</span>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Share With</label>
-                            <div class="max-h-32 overflow-y-auto border border-gray-200 rounded-lg p-2 text-sm">
-                                <div class="mb-2">
-                                    <h4 class="text-xs font-semibold text-yellow-600 mb-1">Leaders</h4>
-                                    {% for leader in leaders %}
-                                    <label class="flex items-center gap-2 p-1 hover:bg-yellow-50 rounded">
-                                        <input type="checkbox" name="leaders" value="{{ leader._id }}" class="text-yellow-500 rounded text-xs">
-                                        <span class="text-xs">{{ leader.email.split('@')[0] }}</span>
-                                    </label>
-                                    {% endfor %}
-                                </div>
-                                <div>
-                                    <h4 class="text-xs font-semibold text-blue-600 mb-1">Core Team</h4>
-                                    {% for member in core_members %}
-                                    <label class="flex items-center gap-2 p-1 hover:bg-blue-50 rounded">
-                                        <input type="checkbox" name="core_members" value="{{ member._id }}" class="text-blue-500 rounded text-xs">
-                                        <span class="text-xs">{{ member.email.split('@')[0] }}</span>
-                                    </label>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Message (Optional)</label>
-                            <textarea name="message" rows="2" class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg" placeholder="Add a note..."></textarea>
-                        </div>
-                        <button type="submit" class="w-full bg-[#04043a] text-white px-3 py-2 text-sm rounded-lg hover:bg-[#1e3c72] transition flex items-center justify-center gap-1">
-                            <i class="fas fa-paper-plane text-xs"></i>Share Document
-                        </button>
-                    </form>
-                </div>
-            </div>
-
-            <!-- ====== ASSIGN TASK TAB ====== -->
-            <div id="assign-tab" class="tab-content hidden">
-                <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-200">
-                    <h3 class="text-base font-bold text-[#04043a] mb-3 flex items-center gap-2">
-                        <i class="fas fa-tasks text-green-500"></i>Assign Task to Core Member
-                    </h3>
-                    <form action="{{ url_for('assign_task') }}" method="POST" enctype="multipart/form-data" class="space-y-3">
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Task Title *</label>
-                            <input type="text" name="task_title" required class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" placeholder="Enter task title">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Description *</label>
-                            <textarea name="description" rows="2" required class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" placeholder="Task details..."></textarea>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-xs font-medium text-gray-700 mb-1">Due Date *</label>
-                                <input type="date" name="due_date" id="assign_due_date" required class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" min="">
-                                <p class="text-xs text-gray-400 mt-0.5">Only today or future dates allowed</p>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-gray-700 mb-1">Priority</label>
-                                <select name="priority" class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
-                                    <option value="high">🔴 High</option>
-                                    <option value="medium" selected>🟡 Medium</option>
-                                    <option value="low">🟢 Low</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Assign to Core Member *</label>
-                            <select name="assigned_to" required class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
-                                <option value="">Select member...</option>
-                                {% for member in core_members %}
-                                <option value="{{ member._id }}">{{ member.email.split('@')[0] }} ({{ member.email }})</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="border-t border-gray-200 pt-3">
-                            <label class="block text-xs font-medium text-gray-700 mb-1"><i class="fas fa-paperclip text-gray-500 mr-1"></i>Attach Document (Optional)</label>
-                            <div class="flex items-center gap-2">
-                                <input type="file" name="task_file" id="task_file" class="hidden" accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.xlsx,.csv">
-                                <button type="button" onclick="document.getElementById('task_file').click()" class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition flex items-center gap-1">
-                                    <i class="fas fa-upload text-gray-500 text-xs"></i>Choose File
-                                </button>
-                                <span id="task_file_name" class="text-xs text-gray-500">No file chosen</span>
-                            </div>
-                        </div>
-                        <button type="submit" class="w-full bg-gradient-to-r from-green-600 to-green-700 text-white px-3 py-2 text-sm rounded-lg font-semibold hover:from-green-700 hover:to-green-800 transition flex items-center justify-center gap-1">
-                            <i class="fas fa-plus-circle text-xs"></i>Assign Task
-                        </button>
-                    </form>
-                </div>
-            </div>
-
-            <!-- ====== ASSIGNED TASKS TAB ====== -->
-            <div id="assigned-tasks-tab" class="tab-content hidden">
-                <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-200">
-                    <h2 class="text-lg font-bold text-[#04043a] mb-4 flex items-center gap-2">
-                        <div class="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-clipboard-list text-white text-sm"></i>
-                        </div>
-                        Assigned Tasks Progress
-                        {% if assigned_tasks %}
-                        <span class="bg-indigo-500 text-white px-2 py-0.5 rounded-full text-xs">{{ assigned_tasks|length }}</span>
-                        {% endif %}
-                    </h2>
-
-                    {% if assigned_tasks %}
-                    <div class="space-y-4">
-                        {% for task in assigned_tasks %}
-                        <div class="border rounded-xl overflow-hidden hover:shadow-md transition" id="leader-task-{{ task._id }}">
-                            <div class="flex items-start justify-between p-4
-                                {% if task.priority == 'high' %}bg-red-50 border-l-4 border-red-500
-                                {% elif task.priority == 'medium' %}bg-yellow-50 border-l-4 border-yellow-500
-                                {% else %}bg-green-50 border-l-4 border-green-500{% endif %}">
-                                <div class="flex-1">
-                                    <div class="flex items-center gap-2 flex-wrap mb-1">
-                                        <h4 class="text-sm font-bold text-gray-900">{{ task.title }}</h4>
-                                        <span class="text-xs px-2 py-0.5 rounded-full font-medium
-                                            {% if task.status == 'pending' %}bg-yellow-100 text-yellow-800
-                                            {% elif task.status == 'in_progress' %}bg-blue-100 text-blue-800
-                                            {% elif task.status == 'completed' %}bg-green-100 text-green-800
-                                            {% elif task.status == 'rework' %}bg-orange-100 text-orange-800
-                                            {% elif task.status == 'accepted' %}bg-emerald-100 text-emerald-800
-                                            {% else %}bg-gray-100 text-gray-800{% endif %}">
-                                            {% if task.status == 'rework' %}🔄 Rework
-                                            {% elif task.status == 'accepted' %}✅ Accepted
-                                            {% elif task.status == 'completed' %}🏁 Completed
-                                            {% elif task.status == 'in_progress' %}⚡ In Progress
-                                            {% else %}⏳ Pending{% endif %}
-                                        </span>
-                                        <span class="text-xs px-1.5 py-0.5 rounded-full
-                                            {% if task.priority == 'high' %}bg-red-100 text-red-700
-                                            {% elif task.priority == 'medium' %}bg-yellow-100 text-yellow-700
-                                            {% else %}bg-green-100 text-green-700{% endif %}">
-                                            {{ task.priority|upper }}
-                                        </span>
-                                    </div>
-                                    <p class="text-xs text-gray-600 mb-2">{{ task.description }}</p>
-                                    <div class="flex flex-wrap gap-3 text-xs text-gray-600">
-                                        <span><i class="fas fa-user mr-1 text-indigo-500"></i>{{ task.assigned_to_name }}</span>
-                                        <span><i class="fas fa-calendar mr-1 text-red-500"></i>Due: {{ task.due_date.strftime('%d %b %Y') }}</span>
-                                        <span><i class="fas fa-clock mr-1 text-gray-400"></i>Created: {{ task.created_at.strftime('%d %b %Y') }}</span>
-                                    </div>
-                                </div>
-                                <div class="relative ml-3" id="task-menu-wrap-{{ task._id }}">
-                                    <button onclick="toggleTaskMenu('{{ task._id }}')" class="p-2 hover:bg-white hover:bg-opacity-70 rounded-full transition">
-                                        <i class="fas fa-ellipsis-v text-gray-500"></i>
-                                    </button>
-                                    <div id="task-menu-{{ task._id }}" class="hidden absolute right-0 top-8 bg-white border border-gray-200 rounded-xl shadow-xl z-50 w-52 overflow-hidden">
-                                        {% if task.has_attachment and task.attachment_url %}
-                                        <button onclick="viewFile('{{ task.attachment_url }}', '{{ task.attachment_name }}'); closeTaskMenu('{{ task._id }}')" class="w-full text-left px-4 py-2.5 text-xs hover:bg-blue-50 flex items-center gap-2">
-                                            <i class="fas fa-eye text-blue-500"></i>View Attachment
-                                        </button>
-                                        <a href="{{ task.attachment_url }}" download onclick="closeTaskMenu('{{ task._id }}')" class="w-full text-left px-4 py-2.5 text-xs hover:bg-gray-50 flex items-center gap-2 block">
-                                            <i class="fas fa-download text-gray-500"></i>Download Attachment
-                                        </a>
-                                        {% endif %}
-                                        <button onclick="openCommentModal('{{ task._id }}', '{{ task.title }}'); closeTaskMenu('{{ task._id }}')" class="w-full text-left px-4 py-2.5 text-xs hover:bg-purple-50 flex items-center gap-2">
-                                            <i class="fas fa-comment text-purple-500"></i>Add Comment
-                                        </button>
-                                        {% if task.status == 'completed' %}
-                                        <div class="border-t border-gray-100"></div>
-                                        <button onclick="openReviewModal('{{ task._id }}', '{{ task.title }}', {{ task.progress }}); closeTaskMenu('{{ task._id }}')" class="w-full text-left px-4 py-2.5 text-xs hover:bg-green-50 flex items-center gap-2">
-                                            <i class="fas fa-check-double text-green-500"></i>Review & Accept/Rework
-                                        </button>
-                                        {% endif %}
-                                        <div class="border-t border-gray-100"></div>
-                                        <button onclick="openReschedulModal('{{ task._id }}', '{{ task.title }}', '{{ task.due_date.strftime('%Y-%m-%d') }}'); closeTaskMenu('{{ task._id }}')" class="w-full text-left px-4 py-2.5 text-xs hover:bg-orange-50 flex items-center gap-2">
-                                            <i class="fas fa-calendar-alt text-orange-500"></i>Reschedule Due Date
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Progress Bar -->
-                            <div class="px-4 py-3 bg-white border-t border-gray-100">
-                                <div class="flex items-center justify-between mb-1.5">
-                                    <span class="text-xs font-semibold text-gray-700">Progress</span>
-                                    <span class="text-xs font-bold text-[#04043a]">{{ task.progress }}%</span>
-                                </div>
-                                <div class="w-full bg-gray-200 rounded-full h-2.5">
-                                    <div class="rounded-full h-2.5 transition-all duration-500
-                                        {% if task.progress >= 100 %}bg-green-500
-                                        {% elif task.progress >= 60 %}bg-blue-500
-                                        {% elif task.progress >= 30 %}bg-yellow-500
-                                        {% else %}bg-red-400{% endif %}"
-                                        style="width: {{ task.progress }}%"></div>
-                                </div>
-                            </div>
-
-                            <!-- Task Attachment -->
-                            {% if task.has_attachment and task.attachment_url %}
-                            <div class="px-4 py-2 bg-blue-50 border-t border-blue-100">
-                                <div class="flex items-center gap-2">
-                                    <button onclick="viewFile('{{ task.attachment_url }}', '{{ task.attachment_name or 'Task Attachment' }}')" class="inline-flex items-center gap-1.5 text-xs text-blue-700 hover:text-blue-900 font-medium">
-                                        <i class="fas fa-paperclip"></i>
-                                        {{ task.attachment_name or 'Task Attachment' }}
-                                        {% if task.attachment_url.endswith('.pdf') %}
-                                        <span class="bg-red-100 text-red-700 px-1 py-0.5 rounded text-[10px]">PDF</span>
-                                        {% endif %}
-                                        <span class="text-blue-400">— click to view</span>
-                                    </button>
-                                    <a href="{{ task.attachment_url }}" download class="text-xs text-gray-500 hover:text-gray-700">
-                                        <i class="fas fa-download"></i>
-                                    </a>
-                                </div>
-                            </div>
-                            {% endif %}
-
-                            <!-- Update History -->
-                            {% if task.updates and task.updates|length > 0 %}
-                            <div class="px-4 py-3 bg-gray-50 border-t border-gray-100">
-                                <p class="text-xs font-semibold text-gray-700 mb-2 flex items-center gap-1">
-                                    <i class="fas fa-history text-gray-500"></i>Update History
-                                    <span class="bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full text-[10px]">{{ task.updates|length }}</span>
-                                </p>
-                                <div class="space-y-2 max-h-48 overflow-y-auto">
-                                    {% for update in task.updates|reverse %}
-                                    <div class="flex items-start gap-2 bg-white rounded-lg p-2.5 border border-gray-200">
-                                        <div class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5
-                                            {% if 'LEADER' in (update.comment or '') %}bg-orange-100
-                                            {% elif update.status == 'completed' %}bg-green-100
-                                            {% elif update.status == 'in_progress' %}bg-blue-100
-                                            {% elif update.status == 'rework' %}bg-orange-100
-                                            {% else %}bg-yellow-100{% endif %}">
-                                            <i class="fas fa-circle text-[8px]
-                                                {% if 'LEADER' in (update.comment or '') %}text-orange-600
-                                                {% elif update.status == 'completed' %}text-green-600
-                                                {% elif update.status == 'in_progress' %}text-blue-600
-                                                {% elif update.status == 'rework' %}text-orange-600
-                                                {% else %}text-yellow-600{% endif %}"></i>
-                                        </div>
-                                        <div class="flex-1 min-w-0">
-                                            <div class="flex items-center justify-between gap-2">
-                                                <span class="text-xs font-semibold text-gray-800 capitalize">{{ update.status|replace('_',' ') }}</span>
-                                                <span class="text-[10px] text-gray-400 whitespace-nowrap">
-                                                    {% if update.timestamp is string %}{{ update.timestamp }}
-                                                    {% else %}{{ update.timestamp.strftime('%d %b, %I:%M %p') }}{% endif %}
-                                                </span>
-                                            </div>
-                                            <div class="flex items-center gap-2 mt-0.5">
-                                                <div class="flex-1 bg-gray-200 rounded-full h-1">
-                                                    <div class="bg-indigo-500 rounded-full h-1" style="width: {{ update.progress }}%"></div>
-                                                </div>
-                                                <span class="text-[10px] text-indigo-600 font-medium">{{ update.progress }}%</span>
-                                            </div>
-                                            {% if update.comment %}
-                                            <p class="text-[11px] text-gray-600 mt-0.5 italic">"{{ update.comment }}"</p>
-                                            {% endif %}
-                                            {% if update.attachment_url %}
-                                            <div class="mt-1 flex gap-2">
-                                                <button onclick="viewFile('{{ update.attachment_url }}', '{{ update.attachment_name or 'Attachment' }}')"
-                                                        class="inline-flex items-center gap-1 text-[11px] text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-0.5 rounded-full">
-                                                    <i class="fas fa-{% if update.attachment_url.endswith('.pdf') %}file-pdf{% else %}paperclip{% endif %}"></i>
-                                                    {{ update.attachment_name or 'View Attachment' }}
-                                                </button>
-                                                <a href="{{ update.attachment_url }}" download class="inline-flex items-center gap-1 text-[11px] text-gray-500 hover:text-gray-700 bg-gray-50 px-2 py-0.5 rounded-full">
-                                                    <i class="fas fa-download"></i>Download
-                                                </a>
-                                            </div>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                            {% endif %}
-
-                            <!-- Leader Review Actions -->
-                            {% if task.status == 'completed' %}
-                            <div class="px-4 py-3 bg-green-50 border-t border-green-200">
-                                <div class="flex items-center justify-between flex-wrap gap-2">
-                                    <p class="text-xs font-semibold text-green-700 flex items-center gap-1">
-                                        <i class="fas fa-check-circle text-green-600"></i>Task completed — review required
-                                    </p>
-                                    <div class="flex gap-2">
-                                        <button onclick="acceptTask('{{ task._id }}')"
-                                                class="px-3 py-1.5 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700 transition font-semibold flex items-center gap-1">
-                                            <i class="fas fa-thumbs-up"></i>Accept
-                                        </button>
-                                        <button onclick="openReviewModal('{{ task._id }}', '{{ task.title }}', {{ task.progress }})"
-                                                class="px-3 py-1.5 bg-orange-500 text-white text-xs rounded-lg hover:bg-orange-600 transition font-semibold flex items-center gap-1">
-                                            <i class="fas fa-redo"></i>Rework
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            {% elif task.status == 'accepted' %}
-                            <div class="px-4 py-3 bg-emerald-50 border-t border-emerald-200">
-                                <p class="text-xs font-semibold text-emerald-700 flex items-center gap-1">
-                                    <i class="fas fa-star text-emerald-500"></i>Task accepted and closed
-                                </p>
-                            </div>
-                            {% elif task.status == 'rework' %}
-                            <div class="px-4 py-3 bg-orange-50 border-t border-orange-200">
-                                <p class="text-xs font-semibold text-orange-700 flex items-center gap-1">
-                                    <i class="fas fa-sync text-orange-500"></i>Rework requested — waiting for core team update
-                                </p>
-                            </div>
-                            {% endif %}
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% else %}
-                    <div class="text-center py-10 bg-gray-50 rounded-lg">
-                        <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-2">
-                            <i class="fas fa-tasks text-2xl text-gray-400"></i>
-                        </div>
-                        <p class="text-sm text-gray-600">No tasks assigned yet</p>
-                        <button onclick="switchTab('assign')" class="mt-2 text-xs text-indigo-600 hover:underline">Assign a task →</button>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <!-- ====== PENDING REVIEWS TAB ====== -->
-            <div id="pending-tab" class="tab-content hidden">
-                <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-200">
-                    <h2 class="text-lg font-bold text-[#04043a] mb-4 flex items-center gap-2">
-                        <div class="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-clock text-white text-sm"></i>
-                        </div>
-                        Pending Reviews
-                        {% if pending_count > 0 %}
-                        <span class="bg-yellow-500 text-white px-2 py-0.5 rounded-full text-xs">{{ pending_count }}</span>
-                        {% endif %}
-                    </h2>
-                    {% set pending_docs = my_assigned_documents|selectattr('status', 'equalto', 'pending')|list %}
-                    {% if pending_docs %}
-                    <div class="space-y-4">
-                        {% for doc in pending_docs %}
-                        <div class="border-l-4 border-yellow-500 bg-yellow-50 rounded-lg p-4 hover:shadow-sm transition">
-                            <div class="flex items-start justify-between mb-3">
-                                <div class="flex-1">
-                                    <div class="flex items-center gap-2 mb-2">
-                                        <div class="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center">
-                                            <i class="fas fa-file-alt text-white text-sm"></i>
-                                        </div>
-                                        <h3 class="text-base font-bold text-gray-900">{{ doc.document_name }}</h3>
-                                    </div>
-                                    <p class="text-xs text-gray-600 mb-3">{{ doc.description }}</p>
-                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs bg-white p-3 rounded-lg">
-                                        <div>
-                                            <span class="font-semibold text-gray-700">Submitted by:</span>
-                                            <p class="text-gray-900 font-medium mt-0.5">{{ doc.uploader_name }}</p>
-                                            <p class="text-xs text-gray-500">{{ doc.uploader_email }}</p>
-                                        </div>
-                                        <div>
-                                            <span class="font-semibold text-gray-700">Date:</span>
-                                            <p class="text-gray-900 mt-0.5">{{ doc.submitted_at.strftime('%d %b %Y') }}</p>
-                                        </div>
-                                        <div>
-                                            <span class="font-semibold text-gray-700">Time in Queue:</span>
-                                            <p class="text-gray-900 mt-0.5">{{ doc.time_in_queue }}</p>
-                                        </div>
-                                        {% if doc.file_url %}
-                                        <div class="flex items-end gap-1">
-                                            <button onclick="viewFile('{{ doc.file_url }}', '{{ doc.document_name }}')" class="inline-flex items-center gap-1 px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-xs">
-                                                <i class="fas fa-eye text-xs"></i>View
-                                            </button>
-                                            <a href="{{ doc.file_url }}" download class="inline-flex items-center gap-1 px-3 py-1 bg-[#04043a] text-white rounded-lg hover:bg-[#1e3c72] transition text-xs">
-                                                <i class="fas fa-download text-xs"></i>Download
-                                            </a>
-                                        </div>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                            <form action="{{ url_for('review_document', document_id=doc._id) }}" method="POST" class="border-t pt-4">
-                                <div class="mb-3">
-                                    <label class="block text-xs font-semibold text-gray-700 mb-1"><i class="fas fa-comment text-yellow-600 mr-1"></i>Feedback / Revision Instructions:</label>
-                                    <textarea name="comments" rows="3" required class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500" placeholder="Provide detailed feedback..."></textarea>
-                                </div>
-                                <div class="flex items-center gap-2 mb-3 p-2 bg-blue-50 rounded-lg border border-blue-200">
-                                    <input type="checkbox" name="send_reply" id="send_reply_{{ loop.index }}" checked class="h-4 w-4 text-yellow-500 rounded">
-                                    <label for="send_reply_{{ loop.index }}" class="text-xs font-medium text-gray-700"><i class="fas fa-envelope mr-1 text-blue-600"></i>Send email reply</label>
-                                </div>
-                                <div class="flex gap-2">
-                                    <button type="submit" name="status" value="approved" class="flex-1 bg-green-600 text-white px-4 py-2 text-sm rounded-lg font-bold hover:bg-green-700 transition flex items-center justify-center gap-1">
-                                        <i class="fas fa-check-circle text-xs"></i>Approve
-                                    </button>
-                                    <button type="submit" name="status" value="revision" class="flex-1 bg-orange-500 text-white px-4 py-2 text-sm rounded-lg font-bold hover:bg-orange-600 transition flex items-center justify-center gap-1">
-                                        <i class="fas fa-edit text-xs"></i>Revision
-                                    </button>
-                                    <button type="submit" name="status" value="rejected" class="flex-1 bg-red-600 text-white px-4 py-2 text-sm rounded-lg font-bold hover:bg-red-700 transition flex items-center justify-center gap-1">
-                                        <i class="fas fa-times-circle text-xs"></i>Reject
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% else %}
-                    <div class="text-center py-10 bg-gray-50 rounded-lg">
-                        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                            <i class="fas fa-check-double text-2xl text-green-600"></i>
-                        </div>
-                        <p class="text-sm text-gray-600">No pending documents to review</p>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <!-- ====== ANALYTICS TAB ====== -->
-            <div id="analytics-tab" class="tab-content hidden">
-                <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-200">
-                    <h2 class="text-lg font-bold text-[#04043a] mb-4 flex items-center gap-2">
-                        <div class="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-chart-line text-white text-sm"></i>
-                        </div>
-                        Core Team Analytics
-                    </h2>
-                    <div class="mb-4">
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Select Core Member</label>
-                        <select id="memberSelector" class="w-full md:w-96 px-3 py-1.5 text-sm border border-gray-300 rounded-lg" onchange="loadMemberAnalytics(this.value)">
-                            <option value="">Choose a member...</option>
-                            {% for member in core_members %}
-                            <option value="{{ member._id }}">{{ member.email.split('@')[0] }} ({{ member.email }})</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div id="memberAnalytics" class="hidden">
-                        <div class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4 mb-4">
-                            <div class="flex items-center gap-3">
-                                <div class="w-12 h-12 bg-[#04043a] rounded-full flex items-center justify-center text-white text-lg font-bold"><span id="memberInitial"></span></div>
-                                <div>
-                                    <h3 class="text-base font-bold text-[#04043a]" id="memberName"></h3>
-                                    <p class="text-xs text-gray-600" id="memberEmail"></p>
-                                    <div class="flex gap-3 mt-1">
-                                        <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 px-2 py-0.5 rounded-full text-xs" id="memberStatus"><span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>Online</span>
-                                        <span class="text-xs text-gray-500" id="lastSeen"></span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
-                            <div class="bg-gray-50 rounded-lg p-3 text-center"><p class="text-xl font-bold text-[#04043a]" id="totalDocs">0</p><p class="text-xs text-gray-600">Total</p></div>
-                            <div class="bg-gray-50 rounded-lg p-3 text-center"><p class="text-xl font-bold text-yellow-600" id="pendingDocs">0</p><p class="text-xs text-gray-600">Pending</p></div>
-                            <div class="bg-gray-50 rounded-lg p-3 text-center"><p class="text-xl font-bold text-green-600" id="approvedDocs">0</p><p class="text-xs text-gray-600">Approved</p></div>
-                            <div class="bg-gray-50 rounded-lg p-3 text-center"><p class="text-xl font-bold text-orange-600" id="revisionDocs">0</p><p class="text-xs text-gray-600">Revision</p></div>
-                        </div>
-                        <div class="mb-4"><h4 class="font-semibold text-gray-900 text-sm mb-2">Recent Activity</h4><div class="space-y-2" id="activityTimeline"></div></div>
-                        <div>
-                            <h4 class="font-semibold text-gray-900 text-sm mb-2">Documents</h4>
-                            <div class="overflow-x-auto">
-                                <table class="min-w-full bg-white border border-gray-200 rounded-lg text-xs">
-                                    <thead class="bg-gray-50"><tr>
-                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Document</th>
-                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Submitted</th>
-                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Status</th>
-                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Actions</th>
-                                    </tr></thead>
-                                    <tbody id="documentsTable" class="divide-y divide-gray-200"></tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ====== SHARED DOCUMENTS TAB ====== -->
-            <div id="shared-tab" class="tab-content hidden">
-                <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-200">
-                    <h2 class="text-lg font-bold text-[#04043a] mb-4 flex items-center gap-2">
-                        <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-share-alt text-white text-sm"></i>
-                        </div>
-                        Documents Shared With Me
-                    </h2>
-                    {% if shared_documents %}
-                    <div class="space-y-3">
-                        {% for share in shared_documents %}
-                        <div class="border border-gray-200 rounded-xl p-3 hover:shadow-sm transition hover:border-blue-300" id="share-{{ share._id }}">
-                            <div class="flex items-start justify-between">
-                                <div class="flex-1">
-                                    <div class="flex items-center gap-2 mb-1">
-                                        <div class="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center">
-                                            <i class="fas fa-{% if share.file_url and share.file_url.endswith('.pdf') %}file-pdf text-red-500{% else %}file-alt text-blue-600{% endif %} text-xs"></i>
-                                        </div>
-                                        <h4 class="font-semibold text-gray-900 text-sm">{{ share.document_name }}</h4>
-                                        <span class="text-xs bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded-full">Shared</span>
-                                    </div>
-                                    {% if share.message %}<p class="text-xs text-gray-600 ml-9 mb-1">{{ share.message }}</p>{% endif %}
-                                    <div class="flex flex-wrap gap-3 text-xs text-gray-500 ml-9">
-                                        <span><i class="fas fa-user mr-1"></i>{{ share.sender_name }}</span>
-                                        <span><i class="fas fa-clock mr-1"></i>{{ share.shared_at.strftime('%d %b %Y, %I:%M %p') }}</span>
-                                    </div>
-                                </div>
-                                <div class="relative" id="share-menu-wrap-{{ share._id }}">
-                                    <button onclick="toggleShareMenu('{{ share._id }}')" class="p-2 hover:bg-gray-100 rounded-full transition">
-                                        <i class="fas fa-ellipsis-v text-gray-500"></i>
-                                    </button>
-                                    <div id="share-menu-{{ share._id }}" class="hidden absolute right-0 top-8 bg-white border border-gray-200 rounded-xl shadow-xl z-50 w-48 overflow-hidden">
-                                        {% if share.file_url %}
-                                        <button onclick="viewFile('{{ share.file_url }}', '{{ share.document_name }}'); closeShareMenu('{{ share._id }}')" class="w-full text-left px-4 py-2.5 text-xs hover:bg-blue-50 flex items-center gap-2">
-                                            <i class="fas fa-eye text-blue-500"></i>View File
-                                        </button>
-                                        <a href="{{ share.file_url }}" download onclick="closeShareMenu('{{ share._id }}')" class="w-full text-left px-4 py-2.5 text-xs hover:bg-gray-50 flex items-center gap-2 block">
-                                            <i class="fas fa-download text-gray-500"></i>Download
-                                        </a>
-                                        {% endif %}
-                                        <div class="border-t border-gray-100"></div>
-                                        <button onclick="openShareCommentModal('{{ share._id }}', '{{ share.document_name }}'); closeShareMenu('{{ share._id }}')" class="w-full text-left px-4 py-2.5 text-xs hover:bg-purple-50 flex items-center gap-2">
-                                            <i class="fas fa-comment text-purple-500"></i>Add Comment
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            {% if share.leader_comment %}
-                            <div class="mt-2 ml-9 p-2 bg-purple-50 rounded-lg border border-purple-100">
-                                <p class="text-[11px] text-purple-700"><i class="fas fa-comment mr-1"></i><strong>Your comment:</strong> {{ share.leader_comment }}</p>
-                            </div>
-                            {% endif %}
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% else %}
-                    <div class="text-center py-10 bg-gray-50 rounded-lg">
-                        <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-2">
-                            <i class="fas fa-share-alt text-2xl text-gray-400"></i>
-                        </div>
-                        <p class="text-sm text-gray-600">No documents shared with you yet</p>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <!-- ====== MEMBERS TAB ====== -->
-            <div id="members-tab" class="tab-content hidden">
-                <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-200">
-                    <h2 class="text-lg font-bold text-[#04043a] mb-4 flex items-center gap-2">
-                        <div class="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-users text-white text-sm"></i>
-                        </div>
-                        Core Team Members ({{ core_members|length }})
-                    </h2>
-                    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                        {% for member in core_members %}
-                        <div class="border border-gray-200 rounded-lg p-3 text-center hover:shadow-sm transition hover:border-yellow-500 cursor-pointer" onclick="switchTab('analytics'); loadMemberAnalytics('{{ member._id }}')">
-                            <div class="relative inline-block">
-                                <div class="w-12 h-12 bg-gradient-to-r from-[#04043a] to-[#1e3c72] rounded-full flex items-center justify-center text-white text-lg font-bold mx-auto mb-2">{{ member.email[0]|upper }}</div>
-                                {% if member.is_online %}<span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>{% endif %}
-                            </div>
-                            <p class="font-semibold text-gray-900 text-xs">{{ member.email.split('@')[0] }}</p>
-                            <p class="text-xs text-gray-500 mb-1 truncate">{{ member.email }}</p>
-                            <div class="flex justify-center gap-1 mb-1">
-                                <span class="text-xs bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded-full">{{ member.doc_count|default(0) }} docs</span>
-                            </div>
-                            {% if member.is_online %}
-                            <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 px-1.5 py-0.5 rounded-full text-xs"><span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>Online</span>
-                            {% else %}
-                            <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full text-xs"><span class="w-1.5 h-1.5 bg-gray-400 rounded-full"></span>{{ member.last_seen_formatted }}</span>
-                            {% endif %}
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ====================================================== -->
-<!-- FILE VIEWER MODAL (Unified - PDF, Images, Other files) -->
-<!-- ====================================================== -->
-<div id="fileViewerModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex items-center justify-center p-4" style="backdrop-filter:blur(4px);">
-    <div class="bg-white rounded-2xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl">
-        <div class="flex items-center justify-between p-4 border-b border-gray-200">
-            <h3 class="text-base font-bold text-[#04043a] flex items-center gap-2">
-                <i class="fas fa-file text-blue-500" id="fileViewerIcon"></i>
-                <span id="fileViewerTitle">File Viewer</span>
-            </h3>
-            <button onclick="closeFileViewer()" class="p-1.5 hover:bg-gray-100 rounded-full transition"><i class="fas fa-times text-gray-600"></i></button>
-        </div>
-        <div class="flex-1 overflow-hidden p-4 min-h-0">
-            <!-- PDF viewer -->
-            <div id="pdfViewerContainer" class="w-full h-full" style="min-height:500px;">
-                <object id="pdfObject" data="" type="application/pdf" class="w-full h-full rounded-lg" style="min-height:500px;">
-                    <div class="flex flex-col items-center justify-center h-full bg-gray-50 rounded-lg p-8">
-                        <i class="fas fa-file-pdf text-red-500 text-5xl mb-4"></i>
-                        <p class="text-gray-600 text-sm mb-4">Unable to display PDF in browser.</p>
-                        <div class="flex gap-3">
-                            <a id="pdfFallbackView" href="#" target="_blank" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm flex items-center gap-1">
-                                <i class="fas fa-external-link-alt"></i> Open in New Tab
-                            </a>
-                            <a id="pdfFallbackDownload" href="#" download class="px-4 py-2 bg-[#04043a] text-white rounded-lg hover:bg-[#1e3c72] transition text-sm flex items-center gap-1">
-                                <i class="fas fa-download"></i> Download
-                            </a>
-                        </div>
-                    </div>
-                </object>
-            </div>
-            <!-- Image viewer -->
-            <div id="imageViewerContainer" class="w-full h-full hidden flex items-center justify-center" style="min-height:500px;">
-                <img id="imageViewer" src="" class="max-w-full max-h-full object-contain rounded-lg" alt="File Preview">
-            </div>
-            <!-- Non-viewable file -->
-            <div id="noPreviewContainer" class="w-full h-full hidden flex flex-col items-center justify-center bg-gray-50 rounded-lg" style="min-height:500px;">
-                <i class="fas fa-file text-gray-400 text-5xl mb-4"></i>
-                <p class="text-gray-600 text-sm mb-4">Preview not available for this file type.</p>
-                <div class="flex gap-3">
-                    <a id="noPreviewView" href="#" target="_blank" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm flex items-center gap-1">
-                        <i class="fas fa-external-link-alt"></i> Open in New Tab
-                    </a>
-                    <a id="noPreviewDownload" href="#" download class="px-4 py-2 bg-[#04043a] text-white rounded-lg hover:bg-[#1e3c72] transition text-sm flex items-center gap-1">
-                        <i class="fas fa-download"></i> Download
-                    </a>
-                </div>
-            </div>
-        </div>
-        <div class="p-4 border-t border-gray-200 flex justify-between items-center">
-            <div class="flex gap-2">
-                <a id="fileViewLink" href="#" target="_blank" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm flex items-center gap-1">
-                    <i class="fas fa-external-link-alt text-xs"></i> Open in New Tab
-                </a>
-                <a id="fileDownloadLink" href="#" download class="px-4 py-2 bg-[#04043a] text-white rounded-lg hover:bg-[#1e3c72] transition text-sm flex items-center gap-1">
-                    <i class="fas fa-download text-xs"></i> Download
-                </a>
-            </div>
-            <button onclick="closeFileViewer()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm">Close</button>
-        </div>
-    </div>
-</div>
-
-<!-- ====================================================== -->
-<!-- TASK REVIEW MODAL (Rework) -->
-<!-- ====================================================== -->
-<div id="taskReviewModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:99998;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(4px);">
-    <div style="background:white;border-radius:1rem;box-shadow:0 25px 50px rgba(0,0,0,0.3);width:100%;max-width:480px;overflow:hidden;">
-        <div style="background:linear-gradient(to right,#04043a,#1e3c72);padding:1rem 1.25rem;display:flex;align-items:center;justify-content:space-between;">
-            <div style="display:flex;align-items:center;gap:.75rem;">
-                <div style="width:2rem;height:2rem;background:#f97316;border-radius:.5rem;display:flex;align-items:center;justify-content:center;">
-                    <i class="fas fa-redo" style="color:white;font-size:.875rem;"></i>
-                </div>
-                <h3 style="font-size:1rem;font-weight:700;color:white;margin:0;">Request Rework</h3>
-            </div>
-            <button onclick="closeReviewModal()" style="background:rgba(255,255,255,0.15);border:none;border-radius:50%;width:2rem;height:2rem;cursor:pointer;color:white;font-size:1rem;display:flex;align-items:center;justify-content:center;">✕</button>
-        </div>
-        <div style="padding:1.5rem;">
-            <input type="hidden" id="reviewTaskId">
-            <div style="margin-bottom:1rem;padding:.75rem;background:#fff7ed;border:1px solid #fed7aa;border-radius:.75rem;">
-                <p style="font-size:.875rem;font-weight:600;color:#9a3412;margin:0;" id="reviewTaskTitle"></p>
-            </div>
-            <div style="margin-bottom:1rem;">
-                <label style="display:block;font-size:.875rem;font-weight:600;color:#374151;margin-bottom:.5rem;">Rework Instructions *</label>
-                <textarea id="reworkComment" rows="4" placeholder="Describe what needs to be fixed..."
-                    style="width:100%;padding:.625rem 1rem;font-size:.875rem;border:2px solid #e5e7eb;border-radius:.75rem;resize:none;outline:none;font-family:inherit;box-sizing:border-box;"></textarea>
-            </div>
-            <div style="margin-bottom:1.25rem;">
-                <label style="display:block;font-size:.875rem;font-weight:600;color:#374151;margin-bottom:.5rem;">New Due Date (Optional)</label>
-                <input type="date" id="reworkNewDate" style="width:100%;padding:.625rem 1rem;font-size:.875rem;border:2px solid #e5e7eb;border-radius:.75rem;outline:none;box-sizing:border-box;">
-                <p style="font-size:.75rem;color:#9ca3af;margin-top:.25rem;">Only today or future dates allowed</p>
-            </div>
-            <div style="display:flex;gap:.75rem;">
-                <button onclick="submitRework()" id="reworkSubmitBtn" style="flex:1;background:#f97316;color:white;padding:.75rem 1rem;border:none;border-radius:.75rem;font-size:.875rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.5rem;">
-                    <i class="fas fa-redo"></i>Send for Rework
-                </button>
-                <button onclick="closeReviewModal()" style="padding:.75rem 1.25rem;border:2px solid #e5e7eb;border-radius:.75rem;font-size:.875rem;font-weight:600;color:#6b7280;background:white;cursor:pointer;">Cancel</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ====================================================== -->
-<!-- RESCHEDULE MODAL -->
-<!-- ====================================================== -->
-<div id="rescheduleModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:99998;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(4px);">
-    <div style="background:white;border-radius:1rem;box-shadow:0 25px 50px rgba(0,0,0,0.3);width:100%;max-width:420px;overflow:hidden;">
-        <div style="background:linear-gradient(to right,#f97316,#ea580c);padding:1rem 1.25rem;display:flex;align-items:center;justify-content:space-between;">
-            <h3 style="font-size:1rem;font-weight:700;color:white;margin:0;"><i class="fas fa-calendar-alt mr-2"></i>Reschedule Due Date</h3>
-            <button onclick="closeRescheduleModal()" style="background:rgba(255,255,255,0.2);border:none;border-radius:50%;width:2rem;height:2rem;cursor:pointer;color:white;font-size:1rem;">✕</button>
-        </div>
-        <div style="padding:1.5rem;">
-            <input type="hidden" id="rescheduleTaskId">
-            <p style="font-size:.875rem;font-weight:600;color:#374151;margin-bottom:1rem;" id="rescheduleTaskTitle"></p>
-            <div style="margin-bottom:1rem;">
-                <label style="display:block;font-size:.875rem;font-weight:600;color:#374151;margin-bottom:.5rem;">New Due Date *</label>
-                <input type="date" id="rescheduleNewDate" style="width:100%;padding:.625rem 1rem;font-size:.875rem;border:2px solid #e5e7eb;border-radius:.75rem;outline:none;box-sizing:border-box;">
-            </div>
-            <div style="margin-bottom:1.5rem;">
-                <label style="display:block;font-size:.875rem;font-weight:600;color:#374151;margin-bottom:.5rem;">Reason (Optional)</label>
-                <textarea id="rescheduleReason" rows="2" placeholder="Reason for rescheduling..." style="width:100%;padding:.625rem 1rem;font-size:.875rem;border:2px solid #e5e7eb;border-radius:.75rem;resize:none;outline:none;font-family:inherit;box-sizing:border-box;"></textarea>
-            </div>
-            <div style="display:flex;gap:.75rem;">
-                <button onclick="submitReschedule()" style="flex:1;background:#f97316;color:white;padding:.75rem 1rem;border:none;border-radius:.75rem;font-size:.875rem;font-weight:600;cursor:pointer;"><i class="fas fa-calendar-check mr-1"></i>Update Date</button>
-                <button onclick="closeRescheduleModal()" style="padding:.75rem 1.25rem;border:2px solid #e5e7eb;border-radius:.75rem;font-size:.875rem;font-weight:600;color:#6b7280;background:white;cursor:pointer;">Cancel</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ====================================================== -->
-<!-- COMMENT MODAL (Task) -->
-<!-- ====================================================== -->
-<div id="commentModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:99998;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(4px);">
-    <div style="background:white;border-radius:1rem;box-shadow:0 25px 50px rgba(0,0,0,0.3);width:100%;max-width:420px;overflow:hidden;">
-        <div style="background:linear-gradient(to right,#7c3aed,#6d28d9);padding:1rem 1.25rem;display:flex;align-items:center;justify-content:space-between;">
-            <h3 style="font-size:1rem;font-weight:700;color:white;margin:0;"><i class="fas fa-comment mr-2"></i>Add Comment</h3>
-            <button onclick="closeCommentModal()" style="background:rgba(255,255,255,0.2);border:none;border-radius:50%;width:2rem;height:2rem;cursor:pointer;color:white;font-size:1rem;">✕</button>
-        </div>
-        <div style="padding:1.5rem;">
-            <input type="hidden" id="commentTaskId">
-            <p style="font-size:.875rem;font-weight:600;color:#374151;margin-bottom:1rem;" id="commentTaskTitle"></p>
-            <textarea id="commentText" rows="4" placeholder="Add your comment..." style="width:100%;padding:.625rem 1rem;font-size:.875rem;border:2px solid #e5e7eb;border-radius:.75rem;resize:none;outline:none;font-family:inherit;box-sizing:border-box;margin-bottom:1rem;"></textarea>
-            <div style="display:flex;gap:.75rem;">
-                <button onclick="submitTaskComment()" style="flex:1;background:#7c3aed;color:white;padding:.75rem 1rem;border:none;border-radius:.75rem;font-size:.875rem;font-weight:600;cursor:pointer;"><i class="fas fa-paper-plane mr-1"></i>Submit Comment</button>
-                <button onclick="closeCommentModal()" style="padding:.75rem 1.25rem;border:2px solid #e5e7eb;border-radius:.75rem;font-size:.875rem;font-weight:600;color:#6b7280;background:white;cursor:pointer;">Cancel</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ====================================================== -->
-<!-- SHARE DOC COMMENT MODAL -->
-<!-- ====================================================== -->
-<div id="shareCommentModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:99998;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(4px);">
-    <div style="background:white;border-radius:1rem;box-shadow:0 25px 50px rgba(0,0,0,0.3);width:100%;max-width:420px;overflow:hidden;">
-        <div style="background:linear-gradient(to right,#0284c7,#0369a1);padding:1rem 1.25rem;display:flex;align-items:center;justify-content:space-between;">
-            <h3 style="font-size:1rem;font-weight:700;color:white;margin:0;"><i class="fas fa-comment mr-2"></i>Comment on Shared Doc</h3>
-            <button onclick="closeShareCommentModal()" style="background:rgba(255,255,255,0.2);border:none;border-radius:50%;width:2rem;height:2rem;cursor:pointer;color:white;font-size:1rem;">✕</button>
-        </div>
-        <div style="padding:1.5rem;">
-            <input type="hidden" id="shareCommentDocId">
-            <p style="font-size:.875rem;font-weight:600;color:#374151;margin-bottom:1rem;" id="shareCommentDocTitle"></p>
-            <textarea id="shareCommentText" rows="4" placeholder="Add your comment..." style="width:100%;padding:.625rem 1rem;font-size:.875rem;border:2px solid #e5e7eb;border-radius:.75rem;resize:none;outline:none;font-family:inherit;box-sizing:border-box;margin-bottom:1rem;"></textarea>
-            <div style="display:flex;gap:.75rem;">
-                <button onclick="submitShareComment()" style="flex:1;background:#0284c7;color:white;padding:.75rem 1rem;border:none;border-radius:.75rem;font-size:.875rem;font-weight:600;cursor:pointer;"><i class="fas fa-paper-plane mr-1"></i>Save Comment</button>
-                <button onclick="closeShareCommentModal()" style="padding:.75rem 1.25rem;border:2px solid #e5e7eb;border-radius:.75rem;font-size:.875rem;font-weight:600;color:#6b7280;background:white;cursor:pointer;">Cancel</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Notification Container -->
-<div id="leaderNotifContainer" style="position:fixed;top:1rem;right:1rem;z-index:999999;display:flex;flex-direction:column;gap:.5rem;pointer-events:none;"></div>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 
 <style>
-.tab-button { transition: all 0.2s ease; }
-.tab-button.active { color: #04043a; border-bottom-color: #eab308; }
-@keyframes slideIn { from{transform:translateX(110%);opacity:0} to{transform:translateX(0);opacity:1} }
-@keyframes slideOut { from{transform:translateX(0);opacity:1} to{transform:translateX(110%);opacity:0} }
+:root {
+  --navy: #04043a;
+  --navy-mid: #0a0a5c;
+  --gold: #eab308;
+  --gold-light: #fef3c7;
+  --surface: #ffffff;
+  --surface-2: #f8f7ff;
+  --border: rgba(4,4,58,0.10);
+  --text-main: #04043a;
+  --text-muted: #64748b;
+  --radius: 14px;
+  --radius-sm: 8px;
+  --shadow: 0 2px 16px rgba(4,4,58,0.07);
+  --shadow-lg: 0 8px 40px rgba(4,4,58,0.13);
+}
+
+* { box-sizing: border-box; }
+body { font-family: 'DM Sans', sans-serif; background: #f3f2fa; }
+
+.leader-wrap { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
+
+/* ── Quick stats ── */
+.quick-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 1.5rem; }
+.qs-card {
+  background: var(--surface); border-radius: var(--radius); padding: 1.1rem 1.25rem;
+  border: 1px solid var(--border); box-shadow: var(--shadow); border-left-width: 4px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.qs-card .num { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 700; color: var(--navy); }
+.qs-card .lbl { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; margin-top: 3px; }
+.qs-icon { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 17px; }
+
+/* ── Tab shell ── */
+.tab-shell { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 1.5rem; overflow: hidden; }
+.tab-nav { display: flex; border-bottom: 1px solid var(--border); background: #fafafa; overflow-x: auto; }
+.tab-btn { padding: 13px 18px; font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap; border: none; background: none; color: var(--text-muted); display: flex; align-items: center; gap: 7px; border-bottom: 2px solid transparent; transition: all .18s; font-family: 'DM Sans', sans-serif; }
+.tab-btn.active { color: var(--navy); border-bottom-color: var(--gold); background: var(--surface); }
+.tab-btn:hover:not(.active) { color: var(--navy); background: #f0effa; }
+.tab-badge { background: var(--navy); color: #fff; font-size: 10px; padding: 2px 7px; border-radius: 20px; }
+.tab-content { display: none; padding: 1.5rem; }
+.tab-content.active { display: block; }
+
+/* ── Cards ── */
+.card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 1.25rem; box-shadow: var(--shadow); }
+.card-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--navy); display: flex; align-items: center; gap: 8px; margin-bottom: 1rem; }
+
+/* ── Forms ── */
+.form-label { font-size: 12px; font-weight: 600; color: var(--navy); margin-bottom: 6px; display: block; letter-spacing: .02em; }
+.form-input { width: 100%; padding: 10px 14px; font-size: 13px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text-main); font-family: 'DM Sans',sans-serif; transition: border-color .15s; }
+.form-input:focus { outline: none; border-color: var(--navy); }
+.form-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+/* ── Buttons ── */
+.btn-primary { background: var(--navy); color: #fff; padding: 11px 22px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: background .15s; font-family: 'DM Sans',sans-serif; text-decoration: none; }
+.btn-primary:hover { background: #1e3c72; }
+.btn-success { background: #16a34a; color: #fff; padding: 8px 16px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 600; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: background .15s; font-family: 'DM Sans',sans-serif; }
+.btn-success:hover { background: #15803d; }
+.btn-danger { background: #dc2626; color: #fff; padding: 8px 16px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 600; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: background .15s; font-family: 'DM Sans',sans-serif; }
+.btn-danger:hover { background: #b91c1c; }
+.btn-warn { background: #f97316; color: #fff; padding: 8px 16px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 600; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: background .15s; font-family: 'DM Sans',sans-serif; }
+.btn-warn:hover { background: #ea580c; }
+.btn-outline { background: transparent; color: var(--navy); padding: 8px 16px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 500; border: 1.5px solid var(--border); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all .15s; font-family: 'DM Sans',sans-serif; text-decoration: none; }
+.btn-outline:hover { border-color: var(--navy); background: var(--surface-2); }
+.btn-gold { background: var(--gold); color: var(--navy); padding: 8px 16px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 700; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all .15s; font-family: 'DM Sans',sans-serif; }
+.btn-gold:hover { background: #ca9a00; }
+
+/* ── Badges ── */
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+.badge-pending { background: #fef9c3; color: #854d0e; }
+.badge-approved { background: #dcfce7; color: #166534; }
+.badge-revision { background: #ffedd5; color: #9a3412; }
+.badge-rejected { background: #fee2e2; color: #991b1b; }
+.badge-progress { background: #dbeafe; color: #1e40af; }
+.badge-rework { background: #ffedd5; color: #9a3412; }
+.badge-accepted { background: #d1fae5; color: #065f46; }
+.badge-completed { background: #dcfce7; color: #166534; }
+.badge-high { background: #fee2e2; color: #991b1b; }
+.badge-medium { background: #fef9c3; color: #854d0e; }
+.badge-low { background: #dcfce7; color: #166534; }
+
+/* ── Progress ── */
+.prog-wrap { background: #e5e7eb; border-radius: 4px; height: 6px; overflow: hidden; }
+.prog-fill { height: 100%; border-radius: 4px; transition: width .4s; }
+
+/* ── Task cards ── */
+.task-card { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); margin-bottom: 12px; overflow: hidden; transition: box-shadow .15s; }
+.task-card:hover { box-shadow: var(--shadow); }
+.task-card-head { padding: 1rem 1.25rem; }
+.task-card.high .task-card-head { border-left: 4px solid #ef4444; }
+.task-card.medium .task-card-head { border-left: 4px solid #f59e0b; }
+.task-card.low .task-card-head { border-left: 4px solid #22c55e; }
+
+/* ── Pending doc card ── */
+.pending-card { border-left: 4px solid var(--gold); background: #fffbeb; border-radius: var(--radius); padding: 1.25rem; margin-bottom: 14px; border: 1px solid #fde68a; }
+
+/* ── Member card ── */
+.member-card { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; text-align: center; cursor: pointer; transition: all .15s; background: var(--surface); }
+.member-card:hover { border-color: var(--gold); box-shadow: var(--shadow); }
+.member-avatar { width: 48px; height: 48px; background: linear-gradient(135deg,var(--navy),#1a1a6e); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-family: 'Syne',sans-serif; font-size: 18px; font-weight: 700; margin: 0 auto 8px; position: relative; }
+.online-dot { position: absolute; bottom: 2px; right: 2px; width: 11px; height: 11px; background: #22c55e; border: 2px solid var(--surface); border-radius: 50%; }
+
+/* ── AI ── */
+.ai-panel { background: linear-gradient(135deg,var(--navy) 0%,#1a1a6e 100%); border-radius: var(--radius-sm); padding: 1rem 1.25rem; margin-top: 10px; color: #fff; }
+.ai-panel-title { font-family: 'Syne',sans-serif; font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+.ai-spark { color: var(--gold); }
+.ai-btn { background: var(--gold); color: var(--navy); padding: 7px 13px; border-radius: var(--radius-sm); font-size: 11px; font-weight: 700; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: all .15s; font-family: 'DM Sans',sans-serif; }
+.ai-btn:hover { background: #fbbf24; transform: translateY(-1px); }
+.ai-btn:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+.ai-response-box { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: var(--radius-sm); padding: 12px; margin-top: 8px; font-size: 12px; line-height: 1.65; color: #e2e8f0; display: none; white-space: pre-wrap; max-height: 220px; overflow-y: auto; }
+.ai-response-box.show { display: block; }
+.ai-fill-btn { font-size:11px; color: #7c3aed; background: #f5f3ff; border: 1px solid #ede9fe; border-radius: 6px; padding: 4px 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; font-family: 'DM Sans',sans-serif; font-weight:600; }
+.ai-fill-btn:hover { background: #ede9fe; }
+
+/* ── Floating AI chat ── */
+.ai-chat-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:99999; align-items:flex-end; justify-content:flex-end; padding:1.5rem; backdrop-filter:blur(3px); }
+.ai-chat-overlay.open { display:flex; }
+.ai-chat-box { background:var(--surface); border-radius:var(--radius); box-shadow:var(--shadow-lg); width:420px; max-height:600px; display:flex; flex-direction:column; border:1px solid var(--border); animation:slideUp .25s ease; }
+@keyframes slideUp { from{transform:translateY(30px);opacity:0} to{transform:translateY(0);opacity:1} }
+.ai-chat-header { background:linear-gradient(135deg,var(--navy),#1a1a6e); padding:1rem 1.25rem; border-radius:var(--radius) var(--radius) 0 0; display:flex; align-items:center; justify-content:space-between; }
+.ai-chat-title { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; color:#fff; display:flex; align-items:center; gap:8px; }
+.ai-chat-messages { flex:1; overflow-y:auto; padding:1rem; display:flex; flex-direction:column; gap:10px; min-height:200px; }
+.msg-user { background:var(--navy); color:#fff; padding:9px 13px; border-radius:12px 12px 3px 12px; font-size:13px; align-self:flex-end; max-width:85%; line-height:1.5; }
+.msg-ai { background:var(--surface-2); color:var(--text-main); padding:9px 13px; border-radius:12px 12px 12px 3px; font-size:13px; align-self:flex-start; max-width:90%; line-height:1.6; border:1px solid var(--border); white-space:pre-wrap; }
+.msg-thinking { color:var(--text-muted); font-size:12px; align-self:flex-start; display:flex; gap:4px; align-items:center; }
+.ai-chat-input-row { padding:.75rem 1rem; border-top:1px solid var(--border); display:flex; gap:8px; }
+.ai-chat-input { flex:1; padding:9px 13px; font-size:13px; border:1.5px solid var(--border); border-radius:var(--radius-sm); font-family:'DM Sans',sans-serif; background:var(--surface); color:var(--text-main); }
+.ai-chat-input:focus { outline:none; border-color:var(--navy); }
+.ai-chat-send { background:var(--navy); color:#fff; border:none; border-radius:var(--radius-sm); padding:9px 14px; cursor:pointer; }
+.ai-chat-send:hover { background:#1e3c72; }
+
+/* ── Floating btn ── */
+.ai-float-btn { position:fixed; bottom:2rem; right:2rem; z-index:9999; background:var(--navy); color:#fff; border:3px solid var(--gold); border-radius:50%; width:58px; height:58px; font-size:20px; cursor:pointer; box-shadow:0 4px 20px rgba(4,4,58,.35); display:flex; align-items:center; justify-content:center; transition:all .2s; }
+.ai-float-btn:hover { transform:scale(1.1); }
+
+/* ── File viewer ── */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:50000; align-items:center; justify-content:center; padding:1rem; backdrop-filter:blur(4px); }
+.modal-overlay.open { display:flex; }
+.modal-box { background:var(--surface); border-radius:var(--radius); box-shadow:var(--shadow-lg); width:100%; max-width:900px; max-height:92vh; display:flex; flex-direction:column; }
+.modal-header { padding:1rem 1.25rem; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.modal-title { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; color:var(--navy); display:flex; align-items:center; gap:8px; }
+.modal-close { background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:18px; padding:4px; border-radius:6px; }
+.modal-close:hover { background:var(--surface-2); }
+.modal-body { flex:1; overflow:hidden; padding:1rem; min-height:0; }
+.modal-footer { padding:.75rem 1.25rem; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+
+/* ── Modals ── */
+.gen-modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:99998; align-items:center; justify-content:center; padding:1rem; backdrop-filter:blur(4px); }
+.gen-modal-overlay.open { display:flex; }
+.gen-modal-box { background:var(--surface); border-radius:var(--radius); box-shadow:var(--shadow-lg); width:100%; max-width:480px; overflow:hidden; animation:slideUp .25s ease; }
+.gen-modal-header { padding:1rem 1.25rem; display:flex; align-items:center; justify-content:space-between; }
+.gen-modal-body { padding:1.25rem; }
+.gen-modal-close { background:rgba(255,255,255,.15); border:none; border-radius:50%; width:28px; height:28px; cursor:pointer; color:#fff; font-size:14px; display:flex; align-items:center; justify-content:center; }
+
+/* ── Dropdown menu ── */
+.ddmenu { position:absolute; right:0; top:36px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); box-shadow:var(--shadow-lg); z-index:1000; width:220px; overflow:hidden; display:none; }
+.ddmenu.open { display:block; }
+.ddmenu-item { display:flex; align-items:center; gap:8px; padding:9px 14px; font-size:12px; cursor:pointer; color:var(--text-main); text-decoration:none; background:none; border:none; width:100%; text-align:left; font-family:'DM Sans',sans-serif; }
+.ddmenu-item:hover { background:var(--surface-2); }
+
+/* ── Scroll ── */
+.scroll-list { max-height:600px; overflow-y:auto; padding-right:4px; }
+.scroll-list::-webkit-scrollbar { width:4px; }
+.scroll-list::-webkit-scrollbar-track { background:transparent; }
+.scroll-list::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
+
+/* ── Notifs ── */
+#notifContainer { position:fixed; top:1rem; right:1rem; z-index:999999; display:flex; flex-direction:column; gap:8px; pointer-events:none; }
+.notif { pointer-events:all; background:var(--surface); border-radius:var(--radius-sm); box-shadow:var(--shadow-lg); padding:12px 16px; display:flex; align-items:flex-start; gap:10px; max-width:320px; animation:notifIn .3s ease; border-left:4px solid; }
+.notif.success { border-left-color:#22c55e; }
+.notif.error { border-left-color:#ef4444; }
+.notif.info { border-left-color:#3b82f6; }
+.notif.warning { border-left-color:#f59e0b; }
+@keyframes notifIn { from{transform:translateX(110%);opacity:0} to{transform:translateX(0);opacity:1} }
+@keyframes notifOut { from{transform:translateX(0);opacity:1} to{transform:translateX(110%);opacity:0} }
+
+/* ── Thinking ── */
+.thinking { display:inline-flex; gap:4px; align-items:center; }
+.thinking span { width:6px; height:6px; border-radius:50%; background:var(--gold); animation:blink 1s infinite; }
+.thinking span:nth-child(2){animation-delay:.2s}
+.thinking span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
+
+/* ── Update history ── */
+.update-item { display:flex; align-items:flex-start; gap:8px; padding:8px 10px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); margin-bottom:6px; font-size:12px; }
+.update-dot { width:16px; height:16px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px; }
+
+@media(max-width:900px){
+  .quick-stats { grid-template-columns:repeat(2,1fr); }
+  .form-grid2 { grid-template-columns:1fr; }
+  .ai-chat-box { width:100%; max-width:100%; }
+  .ai-float-btn { bottom:1rem; right:1rem; }
+}
 </style>
 
+<div class="leader-wrap">
+
+  <!-- ── Quick stats ── -->
+  <div class="quick-stats">
+    <div class="qs-card" style="border-left-color:var(--navy)">
+      <div><div class="num">{{ my_assigned_documents|length }}</div><div class="lbl">Assigned Docs</div></div>
+      <div class="qs-icon" style="background:#e0e0f0"><i class="fas fa-file-alt" style="color:var(--navy)"></i></div>
+    </div>
+    <div class="qs-card" style="border-left-color:var(--gold)">
+      <div><div class="num">{{ pending_count }}</div><div class="lbl">Pending Reviews</div></div>
+      <div class="qs-icon" style="background:var(--gold-light)"><i class="fas fa-clock" style="color:#d97706"></i></div>
+    </div>
+    <div class="qs-card" style="border-left-color:#16a34a">
+      <div><div class="num">{{ core_members|length }}</div><div class="lbl">Core Team <span style="color:#16a34a;font-size:10px">• {{ online_core|length }} online</span></div></div>
+      <div class="qs-icon" style="background:#dcfce7"><i class="fas fa-users" style="color:#16a34a"></i></div>
+    </div>
+    <div class="qs-card" style="border-left-color:#8b5cf6">
+      <div><div class="num">{{ today_shared_count }}</div><div class="lbl">Shared Today</div></div>
+      <div class="qs-icon" style="background:#f5f3ff"><i class="fas fa-share-alt" style="color:#8b5cf6"></i></div>
+    </div>
+  </div>
+
+  <!-- ── Tab shell ── -->
+  <div class="tab-shell">
+    <div class="tab-nav">
+      <button class="tab-btn active" id="btn-share" onclick="switchTab('share')"><i class="fas fa-share-alt" style="color:var(--gold)"></i> Share</button>
+      <button class="tab-btn" id="btn-assign" onclick="switchTab('assign')"><i class="fas fa-tasks" style="color:#22c55e"></i> Create Task</button>
+      <button class="tab-btn" id="btn-assigned" onclick="switchTab('assigned')">
+        <i class="fas fa-clipboard-list" style="color:#6366f1"></i> Assigned Tasks
+        {% if assigned_tasks %}<span class="tab-badge">{{ assigned_tasks|length }}</span>{% endif %}
+      </button>
+      <button class="tab-btn" id="btn-pending" onclick="switchTab('pending')">
+        <i class="fas fa-clock" style="color:var(--gold)"></i> Pending Review
+        {% if pending_count > 0 %}<span class="tab-badge" style="background:var(--gold);color:var(--navy)">{{ pending_count }}</span>{% endif %}
+      </button>
+      <button class="tab-btn" id="btn-analytics" onclick="switchTab('analytics')"><i class="fas fa-chart-line" style="color:#8b5cf6"></i> Analytics</button>
+      <button class="tab-btn" id="btn-shared" onclick="switchTab('shared')"><i class="fas fa-share-alt" style="color:#3b82f6"></i> Shared Docs</button>
+      <button class="tab-btn" id="btn-members" onclick="switchTab('members')"><i class="fas fa-users" style="color:#6366f1"></i> Team</button>
+    </div>
+
+    <!-- ── Share tab ── -->
+    <div class="tab-content active" id="tab-share">
+      <div class="card-title"><i class="fas fa-share-alt" style="color:var(--gold)"></i> Share Document with Team</div>
+      <form action="{{ url_for('share_document_leader') }}" method="POST" enctype="multipart/form-data" style="max-width:680px">
+        <div style="margin-bottom:14px"><label class="form-label">Select Document (Optional)</label>
+          <select name="document_id" class="form-input">
+            <option value="">Choose a document (optional)...</option>
+            {% for doc in my_assigned_documents %}
+            <option value="{{ doc._id }}">{{ doc.document_name }} ({{ doc.submitted_at.strftime('%d %b') }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div style="margin-bottom:14px"><label class="form-label"><i class="fas fa-paperclip" style="margin-right:4px;color:var(--text-muted)"></i>Attach File (Optional)</label>
+          <input type="file" name="share_file" id="shareFile" class="form-input" accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.xlsx,.csv" onchange="document.getElementById('shareFileName').textContent=this.files[0]?this.files[0].name:'No file'">
+          <span id="shareFileName" style="font-size:11px;color:var(--text-muted);margin-top:4px;display:block">No file chosen</span>
+        </div>
+        <div style="margin-bottom:14px"><label class="form-label">Share With</label>
+          <div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;max-height:180px;overflow-y:auto">
+            <div style="font-size:11px;font-weight:700;color:#a16207;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Leaders</div>
+            {% for leader in leaders %}
+            <label style="display:flex;align-items:center;gap:8px;padding:5px 4px;cursor:pointer;border-radius:5px;font-size:13px" class="hover-row">
+              <input type="checkbox" name="leaders" value="{{ leader._id }}" style="accent-color:var(--gold)">{{ leader.email.split('@')[0] }}
+            </label>
+            {% endfor %}
+            <div style="font-size:11px;font-weight:700;color:#1d4ed8;text-transform:uppercase;letter-spacing:.04em;margin:8px 0 6px">Core Team</div>
+            {% for member in core_members %}
+            <label style="display:flex;align-items:center;gap:8px;padding:5px 4px;cursor:pointer;border-radius:5px;font-size:13px">
+              <input type="checkbox" name="core_members" value="{{ member._id }}" style="accent-color:#3b82f6">{{ member.email.split('@')[0] }}
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+        <div style="margin-bottom:14px"><label class="form-label">Message (Optional)</label><textarea name="message" rows="2" class="form-input" placeholder="Add a note..."></textarea></div>
+        <button type="submit" class="btn-primary" style="width:100%;justify-content:center;padding:13px"><i class="fas fa-paper-plane"></i> Share Document</button>
+      </form>
+    </div>
+
+    <!-- ── Assign tab ── -->
+    <div class="tab-content" id="tab-assign">
+      <div class="card-title"><i class="fas fa-tasks" style="color:#22c55e"></i> Assign Task to Core Member</div>
+      <form action="{{ url_for('assign_task') }}" method="POST" enctype="multipart/form-data" style="max-width:680px">
+        <div style="margin-bottom:14px"><label class="form-label">Task Title *</label><input type="text" name="task_title" required class="form-input" placeholder="Enter task title"></div>
+        <div style="margin-bottom:14px"><label class="form-label">Description *</label><textarea name="description" rows="3" required class="form-input" placeholder="Task details..."></textarea></div>
+
+        <!-- AI assist for task creation -->
+        <div class="ai-panel" style="margin-bottom:14px">
+          <div class="ai-panel-title"><span class="ai-spark">✦</span> Claude AI — Task Assistant</div>
+          <div style="font-size:11px;color:#94a3b8;margin-bottom:8px">Paste your task title above, then let Claude suggest a detailed description or break it into subtasks.</div>
+          <button type="button" class="ai-btn" onclick="aiSuggestTaskDesc()"><span>✦</span> Suggest Description</button>
+          <div class="ai-response-box" id="aiTaskDescBox"></div>
+          <button type="button" id="fillDescBtn" onclick="fillTaskDesc()" style="display:none;margin-top:8px" class="ai-fill-btn"><i class="fas fa-magic"></i> Fill into form</button>
+        </div>
+
+        <div class="form-grid2" style="margin-bottom:14px">
+          <div><label class="form-label">Due Date *</label><input type="date" name="due_date" id="assignDue" required class="form-input"><p style="font-size:11px;color:var(--text-muted);margin-top:3px">Today or future dates only</p></div>
+          <div><label class="form-label">Priority</label>
+            <select name="priority" class="form-input">
+              <option value="high">🔴 High</option>
+              <option value="medium" selected>🟡 Medium</option>
+              <option value="low">🟢 Low</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-bottom:14px"><label class="form-label">Assign to Core Member *</label>
+          <select name="assigned_to" required class="form-input">
+            <option value="">Select member...</option>
+            {% for member in core_members %}<option value="{{ member._id }}">{{ member.email.split('@')[0] }} ({{ member.email }})</option>{% endfor %}
+          </select>
+        </div>
+        <div style="margin-bottom:14px"><label class="form-label"><i class="fas fa-paperclip" style="margin-right:4px;color:var(--text-muted)"></i>Attach Document (Optional)</label>
+          <input type="file" name="task_file" id="taskFile" class="form-input" accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.xlsx,.csv" onchange="document.getElementById('taskFileName').textContent=this.files[0]?this.files[0].name:'No file'">
+          <span id="taskFileName" style="font-size:11px;color:var(--text-muted);margin-top:4px;display:block">No file chosen</span>
+        </div>
+        <button type="submit" class="btn-success" style="width:100%;justify-content:center;padding:13px;font-size:14px"><i class="fas fa-plus-circle"></i> Assign Task</button>
+      </form>
+    </div>
+
+    <!-- ── Assigned tasks tab ── -->
+    <div class="tab-content" id="tab-assigned">
+      <div class="card-title">
+        <div style="width:30px;height:30px;background:#6366f1;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;"><i class="fas fa-clipboard-list" style="color:#fff;font-size:13px"></i></div>
+        Assigned Tasks Progress
+        {% if assigned_tasks %}<span class="tab-badge">{{ assigned_tasks|length }}</span>{% endif %}
+      </div>
+
+      {% if assigned_tasks %}
+      <div class="scroll-list">
+        {% for task in assigned_tasks %}
+        <div class="task-card {{ task.priority }}" id="ltask-{{ task._id }}">
+          <div class="task-card-head">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between">
+              <div style="flex:1">
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px">
+                  <span style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--navy)">{{ task.title }}</span>
+                  <span class="badge badge-{{ task.status|replace('_','-') }}">
+                    {% if task.status=='rework' %}🔄 Rework{% elif task.status=='accepted' %}✅ Accepted{% elif task.status=='completed' %}🏁 Completed{% elif task.status=='in_progress' %}⚡ In Progress{% else %}⏳ Pending{% endif %}
+                  </span>
+                  <span class="badge badge-{{ task.priority }}">{{ task.priority|upper }}</span>
+                </div>
+                <p style="font-size:12px;color:var(--text-muted);margin-bottom:6px">{{ task.description }}</p>
+                <div style="display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--text-muted)">
+                  <span><i class="fas fa-user" style="margin-right:4px;color:#6366f1"></i>{{ task.assigned_to_name }}</span>
+                  <span><i class="fas fa-calendar" style="margin-right:4px;color:#ef4444"></i>Due: {{ task.due_date.strftime('%d %b %Y') }}</span>
+                </div>
+              </div>
+              <div style="position:relative;margin-left:10px" id="tmenu-wrap-{{ task._id }}">
+                <button onclick="toggleMenu('{{ task._id }}')" class="btn-outline" style="padding:6px 10px;font-size:13px;border-radius:50%;width:32px;height:32px;justify-content:center"><i class="fas fa-ellipsis-v"></i></button>
+                <div class="ddmenu" id="tmenu-{{ task._id }}">
+                  {% if task.has_attachment and task.attachment_url %}
+                  <button onclick="viewFile('{{ task.attachment_url }}','{{ task.attachment_name }}');closeMenu('{{ task._id }}')" class="ddmenu-item"><i class="fas fa-eye" style="color:#3b82f6"></i>View Attachment</button>
+                  <a href="{{ task.attachment_url }}" download onclick="closeMenu('{{ task._id }}')" class="ddmenu-item"><i class="fas fa-download" style="color:var(--text-muted)"></i>Download</a>
+                  {% endif %}
+                  <button onclick="openCommentModal('{{ task._id }}','{{ task.title|replace("'","\\'")|truncate(50) }}');closeMenu('{{ task._id }}')" class="ddmenu-item"><i class="fas fa-comment" style="color:#8b5cf6"></i>Add Comment</button>
+                  {% if task.status=='completed' %}
+                  <div style="height:1px;background:var(--border);margin:4px 0"></div>
+                  <button onclick="openReworkModal('{{ task._id }}','{{ task.title|replace("'","\\'")|truncate(50) }}');closeMenu('{{ task._id }}')" class="ddmenu-item"><i class="fas fa-redo" style="color:#f97316"></i>Request Rework</button>
+                  {% endif %}
+                  <div style="height:1px;background:var(--border);margin:4px 0"></div>
+                  <button onclick="openRescheduleModal('{{ task._id }}','{{ task.title|replace("'","\\'")|truncate(50) }}','{{ task.due_date.strftime('%Y-%m-%d') }}');closeMenu('{{ task._id }}')" class="ddmenu-item"><i class="fas fa-calendar-alt" style="color:#f97316"></i>Reschedule</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Progress bar -->
+            <div style="margin-top:10px">
+              <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;"><span style="color:var(--text-muted);font-weight:500">Progress</span><span style="font-weight:700;color:var(--navy)">{{ task.progress }}%</span></div>
+              <div class="prog-wrap"><div class="prog-fill" style="width:{{ task.progress }}%;background:{% if task.progress>=100 %}#22c55e{% elif task.progress>=60 %}#3b82f6{% elif task.progress>=30 %}#f59e0b{% else %}#ef4444{% endif %}"></div></div>
+            </div>
+          </div>
+
+          {% if task.has_attachment and task.attachment_url %}
+          <div style="padding:8px 1.25rem;background:#eff6ff;border-top:1px solid #bfdbfe;display:flex;align-items:center;gap:8px">
+            <button onclick="viewFile('{{ task.attachment_url }}','{{ task.attachment_name or 'Attachment' }}')" style="background:none;border:none;color:#1d4ed8;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px"><i class="fas fa-paperclip"></i>{{ task.attachment_name or 'Attachment' }}</button>
+            <a href="{{ task.attachment_url }}" download style="color:var(--text-muted);font-size:12px"><i class="fas fa-download"></i></a>
+          </div>
+          {% endif %}
+
+          {% if task.updates and task.updates|length > 0 %}
+          <div style="padding:10px 1.25rem;background:var(--surface-2);border-top:1px solid var(--border)">
+            <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px"><i class="fas fa-history" style="margin-right:4px"></i>Updates <span style="background:#e5e7eb;color:#6b7280;padding:1px 6px;border-radius:10px;font-weight:600">{{ task.updates|length }}</span></div>
+            <div style="max-height:220px;overflow-y:auto">
+              {% for update in task.updates|reverse %}
+              <div class="update-item">
+                <div class="update-dot" style="background:{% if update.status=='completed' %}#dcfce7{% elif update.status=='in_progress' %}#dbeafe{% elif update.status=='rework' %}#ffedd5{% else %}#fef9c3{% endif %}">
+                  <div style="width:6px;height:6px;border-radius:50%;background:{% if update.status=='completed' %}#22c55e{% elif update.status=='in_progress' %}#3b82f6{% elif update.status=='rework' %}#f97316{% else %}#eab308{% endif %}"></div>
+                </div>
+                <div style="flex:1;min-width:0">
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                    <span style="font-weight:600;text-transform:capitalize;font-size:12px">{{ update.status|replace('_',' ') }}</span>
+                    <span style="font-size:10px;color:var(--text-muted);white-space:nowrap">{% if update.timestamp is string %}{{ update.timestamp }}{% else %}{{ update.timestamp.strftime('%d %b, %I:%M %p') }}{% endif %}</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:6px;margin:3px 0">
+                    <div class="prog-wrap" style="flex:1"><div class="prog-fill" style="width:{{ update.progress }}%;background:#6366f1"></div></div>
+                    <span style="font-size:10px;color:#6366f1;font-weight:600">{{ update.progress }}%</span>
+                  </div>
+                  {% if update.comment %}<div style="font-size:11px;color:var(--text-muted);font-style:italic">"{{ update.comment }}"</div>{% endif %}
+                  {% if update.attachment_url %}
+                  <div style="margin-top:4px;display:flex;gap:6px">
+                    <button onclick="viewFile('{{ update.attachment_url }}','{{ update.attachment_name or 'Attachment' }}')" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px"><i class="fas fa-paperclip"></i>{{ update.attachment_name or 'View' }}</button>
+                    <a href="{{ update.attachment_url }}" download style="background:#f3f4f6;border:1px solid #e5e7eb;color:#6b7280;border-radius:4px;padding:2px 8px;font-size:11px;display:flex;align-items:center;gap:4px"><i class="fas fa-download"></i></a>
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- ── AI Review assist ── -->
+          <div class="ai-panel" style="margin:0 1.25rem 1rem;border-radius:var(--radius-sm)">
+            <div class="ai-panel-title"><span class="ai-spark">✦</span> Claude AI — Review Assistant</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="ai-btn" onclick="aiAnalyzeTask('{{ task._id }}','{{ task.title|replace("'","\\'")|truncate(60) }}','{{ task.description|replace("'","\\'")|truncate(200) }}',{{ task.progress }},'{{ task.status }}')">
+                <span>✦</span> Analyze Progress
+              </button>
+              {% if task.status=='completed' %}
+              <button class="ai-btn" onclick="aiSuggestFeedback('{{ task._id }}','{{ task.title|replace("'","\\'")|truncate(60) }}','{{ task.description|replace("'","\\'")|truncate(200) }}',{{ task.progress }})">
+                <i class="fas fa-comment"></i> Draft Rework Feedback
+              </button>
+              {% endif %}
+            </div>
+            <div class="ai-response-box" id="ai-ltask-{{ task._id }}"></div>
+          </div>
+
+          <!-- ── Review actions ── -->
+          {% if task.status=='completed' %}
+          <div style="padding:10px 1.25rem 1rem;background:#f0fdf4;border-top:1px solid #bbf7d0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+            <span style="font-size:12px;font-weight:600;color:#15803d"><i class="fas fa-check-circle" style="margin-right:5px"></i>Task completed — review required</span>
+            <div style="display:flex;gap:8px">
+              <button onclick="acceptTask('{{ task._id }}')" class="btn-success" style="font-size:12px;padding:7px 14px"><i class="fas fa-thumbs-up"></i> Accept</button>
+              <button onclick="openReworkModal('{{ task._id }}','{{ task.title|replace("'","\\'")|truncate(50) }}')" class="btn-warn" style="font-size:12px;padding:7px 14px"><i class="fas fa-redo"></i> Rework</button>
+            </div>
+          </div>
+          {% elif task.status=='accepted' %}
+          <div style="padding:8px 1.25rem;background:#f0fdf4;border-top:1px solid #bbf7d0">
+            <span style="font-size:12px;font-weight:600;color:#15803d"><i class="fas fa-star" style="margin-right:5px;color:var(--gold)"></i>Task accepted and closed</span>
+          </div>
+          {% elif task.status=='rework' %}
+          <div style="padding:8px 1.25rem;background:#fff7ed;border-top:1px solid #fed7aa">
+            <span style="font-size:12px;font-weight:600;color:#c2410c"><i class="fas fa-sync" style="margin-right:5px"></i>Rework requested — awaiting core team update</span>
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div style="text-align:center;padding:3rem;background:var(--surface-2);border-radius:var(--radius)">
+        <i class="fas fa-tasks" style="font-size:2.5rem;color:#d1d5db;margin-bottom:12px;display:block"></i>
+        <div style="font-size:14px;color:var(--text-muted);margin-bottom:8px">No tasks assigned yet</div>
+        <button onclick="switchTab('assign')" class="btn-outline" style="font-size:12px"><i class="fas fa-plus"></i> Create a task</button>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- ── Pending review tab ── -->
+    <div class="tab-content" id="tab-pending">
+      <div class="card-title">
+        <div style="width:30px;height:30px;background:var(--gold);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;"><i class="fas fa-clock" style="color:var(--navy);font-size:13px"></i></div>
+        Pending Reviews
+        {% if pending_count > 0 %}<span class="tab-badge" style="background:var(--gold);color:var(--navy)">{{ pending_count }}</span>{% endif %}
+      </div>
+
+      {% set pending_docs = my_assigned_documents|selectattr('status','equalto','pending')|list %}
+      {% if pending_docs %}
+      <div class="scroll-list">
+        {% for doc in pending_docs %}
+        <div class="pending-card">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px">
+            <div style="flex:1">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+                <i class="fas fa-file-alt" style="color:var(--gold);font-size:16px"></i>
+                <span style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--navy)">{{ doc.document_name }}</span>
+              </div>
+              <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px">{{ doc.description }}</p>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;background:var(--surface);padding:10px;border-radius:var(--radius-sm);margin-bottom:8px;font-size:12px">
+                <div><div style="color:var(--text-muted);font-weight:500;margin-bottom:2px">Submitted by</div><div style="font-weight:600">{{ doc.uploader_name }}</div><div style="color:var(--text-muted)">{{ doc.uploader_email }}</div></div>
+                <div><div style="color:var(--text-muted);font-weight:500;margin-bottom:2px">Date</div><div style="font-weight:600">{{ doc.submitted_at.strftime('%d %b %Y') }}</div></div>
+                <div><div style="color:var(--text-muted);font-weight:500;margin-bottom:2px">In Queue</div><div style="font-weight:600">{{ doc.time_in_queue }}</div></div>
+              </div>
+              {% if doc.file_url %}
+              <div style="display:flex;gap:8px;margin-bottom:8px">
+                <button onclick="viewFile('{{ doc.file_url }}','{{ doc.document_name }}')" class="btn-outline" style="font-size:12px;padding:6px 12px"><i class="fas fa-eye"></i> View</button>
+                <a href="{{ doc.file_url }}" download class="btn-outline" style="font-size:12px;padding:6px 12px"><i class="fas fa-download"></i> Download</a>
+                <button class="ai-btn" onclick="aiSummarizeForReview('{{ doc._id }}','{{ doc.document_name|replace("'","\\'")|truncate(60) }}','{{ doc.description|replace("'","\\'")|truncate(150) }}','{{ doc.file_url }}')"><span>✦</span> AI Summary</button>
+              </div>
+              <div class="ai-response-box" id="ai-pending-{{ doc._id }}" style="background:linear-gradient(135deg,var(--navy),#1a1a6e);color:#e2e8f0;font-size:12px;margin-bottom:8px"></div>
+              {% endif %}
+            </div>
+          </div>
+          <form action="{{ url_for('review_document', document_id=doc._id) }}" method="POST">
+            <div style="margin-bottom:10px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                <label class="form-label" style="margin-bottom:0"><i class="fas fa-comment" style="color:var(--gold);margin-right:4px"></i>Feedback / Revision Instructions:</label>
+                <button type="button" class="ai-fill-btn" onclick="aiSuggestReviewFeedback('{{ doc._id }}','{{ doc.document_name|replace("'","\\'")|truncate(60) }}','{{ doc.description|replace("'","\\'")|truncate(150) }}','{{ doc.uploader_name }}')">
+                  <span>✦</span> Suggest with AI
+                </button>
+              </div>
+              <textarea name="comments" id="comments-{{ doc._id }}" rows="3" required class="form-input" placeholder="Provide detailed feedback..."></textarea>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#eff6ff;border-radius:var(--radius-sm);border:1px solid #bfdbfe;margin-bottom:12px">
+              <input type="checkbox" name="send_reply" id="sendReply{{ loop.index }}" checked style="accent-color:var(--navy)">
+              <label for="sendReply{{ loop.index }}" style="font-size:12px;font-weight:500;cursor:pointer"><i class="fas fa-envelope" style="color:#3b82f6;margin-right:4px"></i>Send email reply to submitter</label>
+            </div>
+            <div style="display:flex;gap:10px">
+              <button type="submit" name="status" value="approved" class="btn-success" style="flex:1;justify-content:center;padding:11px"><i class="fas fa-check-circle"></i> Approve</button>
+              <button type="submit" name="status" value="revision" class="btn-warn" style="flex:1;justify-content:center;padding:11px"><i class="fas fa-edit"></i> Revision</button>
+              <button type="submit" name="status" value="rejected" class="btn-danger" style="flex:1;justify-content:center;padding:11px"><i class="fas fa-times-circle"></i> Reject</button>
+            </div>
+          </form>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div style="text-align:center;padding:3rem;background:var(--surface-2);border-radius:var(--radius)">
+        <i class="fas fa-check-double" style="font-size:2.5rem;color:#22c55e;margin-bottom:12px;display:block"></i>
+        <div style="font-size:14px;color:var(--text-muted)">No pending documents to review</div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- ── Analytics tab ── -->
+    <div class="tab-content" id="tab-analytics">
+      <div class="card-title"><div style="width:30px;height:30px;background:#8b5cf6;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;"><i class="fas fa-chart-line" style="color:#fff;font-size:13px"></i></div> Core Team Analytics</div>
+      <div style="margin-bottom:14px;max-width:400px">
+        <label class="form-label">Select Core Member</label>
+        <select id="memberSelector" class="form-input" onchange="loadAnalytics(this.value)">
+          <option value="">Choose a member...</option>
+          {% for member in core_members %}<option value="{{ member._id }}">{{ member.email.split('@')[0] }} ({{ member.email }})</option>{% endfor %}
+        </select>
+      </div>
+      <div id="analyticsPanel" style="display:none">
+        <div style="background:linear-gradient(135deg,var(--navy),#1a1a6e);border-radius:var(--radius);padding:1.25rem;margin-bottom:14px;display:flex;align-items:center;gap:14px">
+          <div style="width:52px;height:52px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:var(--navy)" id="memberInitial">?</div>
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:700;color:#fff" id="memberName"></div>
+            <div style="font-size:12px;color:#94a3b8" id="memberEmail"></div>
+            <div style="margin-top:4px" id="memberStatusBadge"></div>
+          </div>
+          <!-- AI member insight button -->
+          <button class="ai-btn" style="margin-left:auto" onclick="aiMemberInsight()"><span>✦</span> AI Insight</button>
+        </div>
+        <div id="aiMemberBox" style="background:linear-gradient(135deg,var(--navy),#1a1a6e);border-radius:var(--radius-sm);padding:12px;margin-bottom:12px;font-size:13px;color:#e2e8f0;display:none;white-space:pre-wrap;line-height:1.6"></div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px" id="memberStats"></div>
+        <div style="margin-bottom:14px"><div style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:8px">Recent Activity</div><div id="activityTimeline" class="scroll-list" style="max-height:160px"></div></div>
+        <div><div style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:8px">Documents</div>
+          <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px" id="docsTable">
+            <thead><tr style="background:var(--surface-2)"><th style="padding:8px 12px;text-align:left;font-weight:600;color:var(--text-muted);border-bottom:1px solid var(--border)">Document</th><th style="padding:8px 12px;text-align:left;font-weight:600;color:var(--text-muted);border-bottom:1px solid var(--border)">Submitted</th><th style="padding:8px 12px;text-align:left;font-weight:600;color:var(--text-muted);border-bottom:1px solid var(--border)">Status</th><th style="padding:8px 12px;text-align:left;font-weight:600;color:var(--text-muted);border-bottom:1px solid var(--border)">Actions</th></tr></thead>
+            <tbody id="docsTableBody"></tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Shared docs tab ── -->
+    <div class="tab-content" id="tab-shared">
+      <div class="card-title"><div style="width:30px;height:30px;background:#3b82f6;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;"><i class="fas fa-share-alt" style="color:#fff;font-size:13px"></i></div> Documents Shared With Me</div>
+      {% if shared_documents %}
+      <div class="scroll-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;max-height:none">
+        {% for share in shared_documents %}
+        <div style="border:1px solid var(--border);border-radius:var(--radius);padding:12px;background:var(--surface);transition:all .15s" id="share-{{ share._id }}">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between">
+            <div style="flex:1">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+                <i class="fas fa-file-{% if share.file_url and share.file_url.endswith('.pdf') %}pdf text-red-500{% else %}alt{% endif %}" style="color:{% if share.file_url and share.file_url.endswith('.pdf') %}#dc2626{% else %}#3b82f6{% endif %};font-size:14px"></i>
+                <span style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--navy)">{{ share.document_name }}</span>
+              </div>
+              {% if share.message %}<p style="font-size:12px;color:var(--text-muted);margin-bottom:5px">{{ share.message }}</p>{% endif %}
+              <div style="font-size:11px;color:var(--text-muted)"><i class="fas fa-user" style="margin-right:4px"></i>{{ share.sender_name }} · {{ share.shared_at.strftime('%d %b %Y, %I:%M %p') }}</div>
+              {% if share.file_url %}
+              <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+                <button onclick="viewFile('{{ share.file_url }}','{{ share.document_name }}')" class="btn-outline" style="font-size:11px;padding:4px 10px"><i class="fas fa-eye"></i> View</button>
+                <a href="{{ share.file_url }}" download class="btn-outline" style="font-size:11px;padding:4px 10px"><i class="fas fa-download"></i></a>
+                <button class="ai-btn" style="font-size:11px;padding:4px 10px" onclick="aiSummarizeForReview('share{{ loop.index }}','{{ share.document_name|replace("'","\\'")|truncate(60) }}','','{{ share.file_url }}')"><span>✦</span> Summary</button>
+                <button class="ai-fill-btn" onclick="openShareCommentModal('{{ share._id }}','{{ share.document_name|replace("'","\\'")|truncate(50) }}')"><i class="fas fa-comment"></i> Comment</button>
+              </div>
+              <div class="ai-response-box" id="ai-pending-share{{ loop.index }}" style="background:linear-gradient(135deg,var(--navy),#1a1a6e);color:#e2e8f0;font-size:12px;margin-top:6px"></div>
+              {% endif %}
+              {% if share.leader_comment %}<div style="margin-top:8px;background:#f5f3ff;border:1px solid #ede9fe;border-radius:6px;padding:7px 10px;font-size:12px;color:#6d28d9"><i class="fas fa-comment" style="margin-right:4px"></i>{{ share.leader_comment }}</div>{% endif %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div style="text-align:center;padding:3rem;background:var(--surface-2);border-radius:var(--radius)">
+        <i class="fas fa-share-alt" style="font-size:2.5rem;color:#d1d5db;margin-bottom:12px;display:block"></i>
+        <div style="font-size:14px;color:var(--text-muted)">No documents shared with you yet</div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- ── Team tab ── -->
+    <div class="tab-content" id="tab-members">
+      <div class="card-title"><div style="width:30px;height:30px;background:#6366f1;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;"><i class="fas fa-users" style="color:#fff;font-size:13px"></i></div> Core Team Members ({{ core_members|length }})</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px">
+        {% for member in core_members %}
+        <div class="member-card" onclick="switchTab('analytics');loadAnalytics('{{ member._id }}')">
+          <div class="member-avatar">{{ member.email[0]|upper }}{% if member.is_online %}<div class="online-dot"></div>{% endif %}</div>
+          <div style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:2px">{{ member.email.split('@')[0] }}</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ member.email }}</div>
+          <span class="badge badge-progress" style="font-size:10px;margin-bottom:5px">{{ member.doc_count|default(0) }} docs</span><br>
+          {% if member.is_online %}<span style="display:inline-flex;align-items:center;gap:4px;background:#dcfce7;color:#166534;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600"><span style="width:5px;height:5px;border-radius:50%;background:#22c55e"></span>Online</span>
+          {% else %}<span style="font-size:10px;color:var(--text-muted)">{{ member.last_seen_formatted }}</span>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── File viewer modal ── -->
+<div class="modal-overlay" id="fileModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title"><i class="fas fa-file" id="fileIcon"></i><span id="fileTitle">File</span></div>
+      <button class="modal-close" onclick="closeFile()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div id="pdfWrap" style="width:100%;height:500px"><object id="pdfObj" data="" type="application/pdf" style="width:100%;height:100%;border-radius:var(--radius-sm)"><p style="text-align:center;padding:2rem">PDF cannot display. <a id="pdfLink" href="#" target="_blank">Open</a></p></object></div>
+      <div id="imgWrap" style="display:none;height:500px;align-items:center;justify-content:center"><img id="imgView" src="" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:var(--radius-sm)"></div>
+      <div id="noPreview" style="display:none;height:300px;align-items:center;justify-content:center;flex-direction:column;background:var(--surface-2);border-radius:var(--radius);color:var(--text-muted)"><i class="fas fa-file" style="font-size:3rem;margin-bottom:1rem"></i><p>Preview not available</p></div>
+    </div>
+    <div class="modal-footer">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <a id="fileOpenLink" href="#" target="_blank" class="btn-outline" style="font-size:12px;padding:7px 14px"><i class="fas fa-external-link-alt"></i> Open</a>
+        <a id="fileDlLink" href="#" download class="btn-primary" style="font-size:12px;padding:7px 14px"><i class="fas fa-download"></i> Download</a>
+        <button class="ai-btn" id="viewerAiBtn" onclick="aiSummarizeViewer()"><span>✦</span> AI Summary</button>
+      </div>
+      <button onclick="closeFile()" class="btn-outline" style="font-size:12px;padding:7px 14px">Close</button>
+    </div>
+    <div id="viewerAiBox" class="ai-response-box" style="margin:0 1rem 1rem;background:linear-gradient(135deg,var(--navy),#1a1a6e);color:#e2e8f0;font-size:13px"></div>
+  </div>
+</div>
+
+<!-- ── Rework modal ── -->
+<div class="gen-modal-overlay" id="reworkModal">
+  <div class="gen-modal-box">
+    <div class="gen-modal-header" style="background:linear-gradient(135deg,#f97316,#ea580c)">
+      <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px"><div style="width:28px;height:28px;background:rgba(255,255,255,.2);border-radius:6px;display:flex;align-items:center;justify-content:center"><i class="fas fa-redo" style="font-size:13px"></i></div> Request Rework</div>
+      <button class="gen-modal-close" onclick="closeModal('reworkModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="gen-modal-body">
+      <input type="hidden" id="reworkTaskId">
+      <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:14px"><p style="font-size:13px;font-weight:600;color:#9a3412" id="reworkTaskTitle"></p></div>
+      <div style="margin-bottom:12px"><label class="form-label">Rework Instructions *</label><textarea id="reworkComment" rows="4" class="form-input" placeholder="Describe what needs to be fixed..."></textarea></div>
+      <div style="margin-bottom:14px"><label class="form-label">New Due Date (Optional)</label><input type="date" id="reworkNewDate" class="form-input"><p style="font-size:11px;color:var(--text-muted);margin-top:3px">Today or future dates only</p></div>
+      <div style="display:flex;gap:10px">
+        <button onclick="submitRework()" id="reworkSubmitBtn" class="btn-warn" style="flex:1;justify-content:center;padding:11px"><i class="fas fa-redo"></i> Send for Rework</button>
+        <button onclick="closeModal('reworkModal')" class="btn-outline" style="padding:11px 18px">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Reschedule modal ── -->
+<div class="gen-modal-overlay" id="rescheduleModal">
+  <div class="gen-modal-box">
+    <div class="gen-modal-header" style="background:linear-gradient(135deg,#f97316,#ea580c)">
+      <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff"><i class="fas fa-calendar-alt" style="margin-right:8px"></i>Reschedule Due Date</div>
+      <button class="gen-modal-close" onclick="closeModal('rescheduleModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="gen-modal-body">
+      <input type="hidden" id="rescheduleTaskId">
+      <p style="font-size:13px;font-weight:600;color:var(--text-main);margin-bottom:12px" id="rescheduleTaskTitle"></p>
+      <div style="margin-bottom:12px"><label class="form-label">New Due Date *</label><input type="date" id="rescheduleNewDate" class="form-input"></div>
+      <div style="margin-bottom:14px"><label class="form-label">Reason (Optional)</label><textarea id="rescheduleReason" rows="2" class="form-input" placeholder="Reason for rescheduling..."></textarea></div>
+      <div style="display:flex;gap:10px">
+        <button onclick="submitReschedule()" class="btn-warn" style="flex:1;justify-content:center;padding:11px"><i class="fas fa-calendar-check"></i> Update Date</button>
+        <button onclick="closeModal('rescheduleModal')" class="btn-outline" style="padding:11px 18px">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Task comment modal ── -->
+<div class="gen-modal-overlay" id="commentModal">
+  <div class="gen-modal-box">
+    <div class="gen-modal-header" style="background:linear-gradient(135deg,#7c3aed,#6d28d9)">
+      <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff"><i class="fas fa-comment" style="margin-right:8px"></i>Add Comment</div>
+      <button class="gen-modal-close" onclick="closeModal('commentModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="gen-modal-body">
+      <input type="hidden" id="commentTaskId">
+      <p style="font-size:13px;font-weight:600;margin-bottom:12px" id="commentTaskTitle"></p>
+      <textarea id="commentText" rows="4" class="form-input" placeholder="Add your comment..." style="margin-bottom:14px"></textarea>
+      <div style="display:flex;gap:10px">
+        <button onclick="submitComment()" style="flex:1;justify-content:center;padding:11px;background:#7c3aed;color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif"><i class="fas fa-paper-plane"></i> Submit</button>
+        <button onclick="closeModal('commentModal')" class="btn-outline" style="padding:11px 18px">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Share comment modal ── -->
+<div class="gen-modal-overlay" id="shareCommentModal">
+  <div class="gen-modal-box">
+    <div class="gen-modal-header" style="background:linear-gradient(135deg,#0284c7,#0369a1)">
+      <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff"><i class="fas fa-comment" style="margin-right:8px"></i>Comment on Shared Doc</div>
+      <button class="gen-modal-close" onclick="closeModal('shareCommentModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="gen-modal-body">
+      <input type="hidden" id="shareCommentDocId">
+      <p style="font-size:13px;font-weight:600;margin-bottom:12px" id="shareCommentDocTitle"></p>
+      <textarea id="shareCommentText" rows="4" class="form-input" placeholder="Add your comment..." style="margin-bottom:14px"></textarea>
+      <div style="display:flex;gap:10px">
+        <button onclick="submitShareComment()" style="flex:1;justify-content:center;padding:11px;background:#0284c7;color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif"><i class="fas fa-paper-plane"></i> Save</button>
+        <button onclick="closeModal('shareCommentModal')" class="btn-outline" style="padding:11px 18px">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── AI Chat ── -->
+<div class="ai-chat-overlay" id="aiChatOverlay">
+  <div class="ai-chat-box">
+    <div class="ai-chat-header">
+      <div class="ai-chat-title"><span style="color:var(--gold);font-size:18px">✦</span> Claude AI Assistant</div>
+      <button onclick="closeAiChat()" style="background:rgba(255,255,255,.15);border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;color:#fff;font-size:14px"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="ai-chat-messages" id="chatMessages"></div>
+    <div class="ai-chat-input-row">
+      <input class="ai-chat-input" id="chatInput" placeholder="Ask Claude anything..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}">
+      <button class="ai-chat-send" onclick="sendChat()"><i class="fas fa-paper-plane"></i></button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Floating AI button ── -->
+<button class="ai-float-btn" onclick="openGlobalChat()" title="Ask Claude AI"><span>✦</span></button>
+
+<!-- ── Notifications ── -->
+<div id="notifContainer"></div>
+
 <script>
-// ====== TODAY'S DATE HELPERS ======
-function getTodayString() {
-    var now = new Date();
-    var y = now.getFullYear();
-    var m = String(now.getMonth() + 1).padStart(2, '0');
-    var d = String(now.getDate()).padStart(2, '0');
-    return y + '-' + m + '-' + d;
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+
+// ── Tabs ──
+function switchTab(name){
+  document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(e=>e.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  document.getElementById('btn-'+name).classList.add('active');
+  localStorage.setItem('leaderTab',name);
+  closeAllMenus();
 }
 
-// ====== UNIFIED FILE VIEWER ======
-function viewFile(fileUrl, fileName) {
-    if (!fileUrl) return;
-    
-    var ext = fileUrl.split('.').pop().toLowerCase().split('?')[0];
-    var isPdf = (ext === 'pdf');
-    var isImage = ['jpg','jpeg','png','gif','webp'].indexOf(ext) !== -1;
-    
-    document.getElementById('fileViewerTitle').textContent = fileName || 'File Viewer';
-    document.getElementById('fileViewLink').href = fileUrl;
-    document.getElementById('fileDownloadLink').href = fileUrl;
-    
-    var icon = document.getElementById('fileViewerIcon');
-    if (isPdf) { icon.className = 'fas fa-file-pdf text-red-500'; }
-    else if (isImage) { icon.className = 'fas fa-file-image text-green-500'; }
-    else { icon.className = 'fas fa-file text-blue-500'; }
-    
-    document.getElementById('pdfViewerContainer').classList.add('hidden');
-    document.getElementById('imageViewerContainer').classList.add('hidden');
-    document.getElementById('noPreviewContainer').classList.add('hidden');
-    
-    if (isPdf) {
-        document.getElementById('pdfViewerContainer').classList.remove('hidden');
-        document.getElementById('pdfObject').data = fileUrl;
-        document.getElementById('pdfFallbackView').href = fileUrl;
-        document.getElementById('pdfFallbackDownload').href = fileUrl;
-    } else if (isImage) {
-        document.getElementById('imageViewerContainer').classList.remove('hidden');
-        document.getElementById('imageViewer').src = fileUrl;
-    } else {
-        document.getElementById('noPreviewContainer').classList.remove('hidden');
-        document.getElementById('noPreviewView').href = fileUrl;
-        document.getElementById('noPreviewDownload').href = fileUrl;
-    }
-    
-    document.getElementById('fileViewerModal').classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
+// ── Dropdown menus ──
+function toggleMenu(id){closeAllMenus();document.getElementById('tmenu-'+id).classList.toggle('open');}
+function closeMenu(id){document.getElementById('tmenu-'+id)?.classList.remove('open');}
+function closeAllMenus(){document.querySelectorAll('.ddmenu.open').forEach(m=>m.classList.remove('open'));}
+
+// ── Generic modal helpers ──
+function openModal(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';}
+function closeModal(id){document.getElementById(id).classList.remove('open');document.body.style.overflow='';}
+
+// ── File viewer ──
+let currentFileUrl='',currentFileName='';
+function viewFile(url,name){
+  currentFileUrl=url;currentFileName=name;
+  const ext=url.split('.').pop().toLowerCase().split('?')[0];
+  const isPdf=ext==='pdf';const isImg=['jpg','jpeg','png','gif','webp'].includes(ext);
+  document.getElementById('fileTitle').textContent=name;
+  document.getElementById('fileOpenLink').href=url;document.getElementById('fileDlLink').href=url;
+  document.getElementById('pdfWrap').style.display=isPdf?'block':'none';
+  const iw=document.getElementById('imgWrap');iw.style.display=isImg?'flex':'none';
+  document.getElementById('noPreview').style.display=(!isPdf&&!isImg)?'flex':'none';
+  if(isPdf){document.getElementById('pdfObj').data=url;document.getElementById('pdfLink').href=url;}
+  if(isImg)document.getElementById('imgView').src=url;
+  document.getElementById('viewerAiBox').classList.remove('show');
+  document.getElementById('fileModal').classList.add('open');document.body.style.overflow='hidden';
+}
+function closeFile(){document.getElementById('fileModal').classList.remove('open');document.getElementById('pdfObj').data='';document.getElementById('imgView').src='';document.body.style.overflow='';}
+
+// ── Accept task ──
+async function acceptTask(id){
+  if(!confirm('Accept this task as completed?'))return;
+  try{
+    const r=await fetch('/api/leader/accept_task/'+id,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({status:'accepted'})});
+    const d=await r.json();
+    if(d.success){showNotif('Task accepted!','success');setTimeout(()=>location.reload(),1400);}else throw new Error(d.error);
+  }catch(err){showNotif(err.message,'error');}
 }
 
-function closeFileViewer() {
-    document.getElementById('fileViewerModal').classList.add('hidden');
-    document.getElementById('pdfObject').data = '';
-    document.getElementById('imageViewer').src = '';
-    document.body.style.overflow = '';
+// ── Rework modal ──
+function openReworkModal(id,title){
+  document.getElementById('reworkTaskId').value=id;
+  document.getElementById('reworkTaskTitle').textContent=title;
+  document.getElementById('reworkComment').value='';
+  document.getElementById('reworkNewDate').value='';
+  document.getElementById('reworkNewDate').min=today();
+  openModal('reworkModal');
+}
+async function submitRework(){
+  const id=document.getElementById('reworkTaskId').value;
+  const comment=document.getElementById('reworkComment').value.trim();
+  const newDate=document.getElementById('reworkNewDate').value;
+  if(!comment){showNotif('Enter rework instructions','warning');return;}
+  if(newDate&&newDate<today()){showNotif('Date cannot be in the past','error');return;}
+  const btn=document.getElementById('reworkSubmitBtn');btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Sending...';btn.disabled=true;
+  try{
+    const r=await fetch('/api/leader/request_rework/'+id,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({comment,new_due_date:newDate})});
+    const d=await r.json();
+    if(d.success){showNotif('Rework requested','success');closeModal('reworkModal');setTimeout(()=>location.reload(),1400);}else throw new Error(d.error);
+  }catch(err){showNotif(err.message,'error');btn.innerHTML='<i class="fas fa-redo"></i> Send for Rework';btn.disabled=false;}
 }
 
-document.getElementById('fileViewerModal').addEventListener('click', function(e) {
-    if (e.target === this) closeFileViewer();
+// ── Reschedule ──
+function openRescheduleModal(id,title,cur){
+  document.getElementById('rescheduleTaskId').value=id;
+  document.getElementById('rescheduleTaskTitle').textContent='Task: '+title;
+  document.getElementById('rescheduleNewDate').min=today();document.getElementById('rescheduleNewDate').value='';
+  document.getElementById('rescheduleReason').value='';openModal('rescheduleModal');
+}
+async function submitReschedule(){
+  const id=document.getElementById('rescheduleTaskId').value;
+  const nd=document.getElementById('rescheduleNewDate').value;
+  const reason=document.getElementById('rescheduleReason').value.trim();
+  if(!nd){showNotif('Select a new date','warning');return;}
+  if(nd<today()){showNotif('Date cannot be in the past','error');return;}
+  try{
+    const r=await fetch('/api/leader/reschedule_task/'+id,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({new_due_date:nd,reason})});
+    const d=await r.json();
+    if(d.success){showNotif('Rescheduled','success');closeModal('rescheduleModal');setTimeout(()=>location.reload(),1400);}else throw new Error(d.error);
+  }catch(err){showNotif(err.message,'error');}
+}
+
+// ── Task comment ──
+function openCommentModal(id,title){
+  document.getElementById('commentTaskId').value=id;
+  document.getElementById('commentTaskTitle').textContent='Task: '+title;
+  document.getElementById('commentText').value='';openModal('commentModal');
+}
+async function submitComment(){
+  const id=document.getElementById('commentTaskId').value;
+  const comment=document.getElementById('commentText').value.trim();
+  if(!comment){showNotif('Enter a comment','warning');return;}
+  try{
+    const r=await fetch('/api/leader/add_task_comment/'+id,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({comment})});
+    const d=await r.json();
+    if(d.success){showNotif('Comment added','success');closeModal('commentModal');}else throw new Error(d.error);
+  }catch(err){showNotif(err.message,'error');}
+}
+
+// ── Share comment ──
+function openShareCommentModal(id,name){
+  document.getElementById('shareCommentDocId').value=id;
+  document.getElementById('shareCommentDocTitle').textContent='Document: '+name;
+  document.getElementById('shareCommentText').value='';openModal('shareCommentModal');
+}
+async function submitShareComment(){
+  const id=document.getElementById('shareCommentDocId').value;
+  const comment=document.getElementById('shareCommentText').value.trim();
+  if(!comment){showNotif('Enter a comment','warning');return;}
+  try{
+    const r=await fetch('/api/leader/add_share_comment/'+id,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({comment})});
+    const d=await r.json();
+    if(d.success){showNotif('Comment saved','success');closeModal('shareCommentModal');setTimeout(()=>location.reload(),1000);}else throw new Error(d.error);
+  }catch(err){showNotif(err.message,'error');}
+}
+
+// ── AI: summarize viewer ──
+async function aiSummarizeViewer(){
+  if(!currentFileUrl){showNotif('No file loaded','warning');return;}
+  const btn=document.getElementById('viewerAiBtn');btn.disabled=true;btn.innerHTML='<div class="thinking"><span></span><span></span><span></span></div>';
+  const box=document.getElementById('viewerAiBox');box.textContent='Analyzing document...';box.classList.add('show');
+  try{
+    const r=await fetch('/api/ai/summarize',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({document_name:currentFileName,file_url:currentFileUrl})});
+    const d=await r.json();box.textContent=d.success?d.summary:'Error: '+(d.error||'AI unavailable');
+  }catch(err){box.textContent='Error: '+err.message;}
+  btn.disabled=false;btn.innerHTML='<span>✦</span> AI Summary';
+}
+
+// ── AI: summarize for review ──
+async function aiSummarizeForReview(docId,name,desc,fileUrl){
+  const box=document.getElementById('ai-pending-'+docId);if(!box)return;
+  box.textContent='✦ Analyzing with Claude...';box.classList.add('show');
+  try{
+    const r=await fetch('/api/ai/summarize',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({document_name:name,description:desc,file_url:fileUrl})});
+    const d=await r.json();box.textContent=d.success?d.summary:'Error: '+(d.error||'AI unavailable');
+  }catch(err){box.textContent='Error: '+err.message;}
+}
+
+// ── AI: suggest review feedback ──
+let lastAiFeedback='',lastFeedbackDocId='';
+async function aiSuggestReviewFeedback(docId,name,desc,by){
+  lastFeedbackDocId=docId;
+  showNotif('Claude is drafting feedback...','info');
+  try{
+    const r=await fetch('/api/ai/suggest-feedback',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({document_name:name,description:desc,submitted_by:by})});
+    const d=await r.json();
+    if(d.success){
+      lastAiFeedback=d.feedback;
+      document.getElementById('comments-'+docId).value=d.feedback;
+      showNotif('AI feedback drafted — review and edit before submitting','success');
+    }else throw new Error(d.error||'AI error');
+  }catch(err){showNotif('AI error: '+err.message,'error');}
+}
+
+// ── AI: suggest task description ──
+let lastAiDesc='';
+async function aiSuggestTaskDesc(){
+  const title=document.querySelector('input[name="task_title"]').value.trim();
+  if(!title){showNotif('Enter a task title first','warning');return;}
+  const box=document.getElementById('aiTaskDescBox');const fillBtn=document.getElementById('fillDescBtn');
+  box.textContent='✦ Claude is drafting a description...';box.classList.add('show');fillBtn.style.display='none';
+  try{
+    const r=await fetch('/api/ai/suggest-task-desc',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({title})});
+    const d=await r.json();
+    if(d.success){lastAiDesc=d.description;box.textContent=d.description;fillBtn.style.display='inline-flex';}
+    else throw new Error(d.error||'AI error');
+  }catch(err){box.textContent='Error: '+err.message;}
+}
+function fillTaskDesc(){
+  if(lastAiDesc)document.querySelector('textarea[name="description"]').value=lastAiDesc;
+  showNotif('Description filled — review before submitting','success');
+}
+
+// ── AI: analyze task progress ──
+async function aiAnalyzeTask(id,title,desc,progress,status){
+  const box=document.getElementById('ai-ltask-'+id);if(!box)return;
+  box.innerHTML='<div class="thinking"><span></span><span></span><span></span></div> Analyzing...';box.classList.add('show');
+  try{
+    const r=await fetch('/api/ai/analyze-task',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({title,description:desc,progress,status})});
+    const d=await r.json();box.textContent=d.success?d.analysis:'Error: '+(d.error||'AI unavailable');
+  }catch(err){box.textContent='Error: '+err.message;}
+}
+
+// ── AI: suggest rework feedback ──
+async function aiSuggestFeedback(id,title,desc,progress){
+  const box=document.getElementById('ai-ltask-'+id);if(!box)return;
+  box.innerHTML='<div class="thinking"><span></span><span></span><span></span></div> Drafting rework feedback...';box.classList.add('show');
+  try{
+    const r=await fetch('/api/ai/suggest-rework-feedback',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({title,description:desc,progress})});
+    const d=await r.json();
+    if(d.success){box.textContent=d.feedback;showNotif('AI drafted rework feedback — you can use it in the rework modal','info');}
+    else box.textContent='Error: '+(d.error||'AI unavailable');
+  }catch(err){box.textContent='Error: '+err.message;}
+}
+
+// ── AI: member insight ──
+let currentMemberData=null;
+async function aiMemberInsight(){
+  if(!currentMemberData){showNotif('Load a member first','warning');return;}
+  const box=document.getElementById('aiMemberBox');box.style.display='block';box.textContent='✦ Generating insight...';
+  try{
+    const r=await fetch('/api/ai/member-insight',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(currentMemberData)});
+    const d=await r.json();box.textContent=d.success?d.insight:'Error: '+(d.error||'AI unavailable');
+  }catch(err){box.textContent='Error: '+err.message;}
+}
+
+// ── Analytics ──
+async function loadAnalytics(memberId){
+  if(!memberId)return;
+  document.getElementById('analyticsPanel').style.display='block';
+  document.getElementById('memberSelector').value=memberId;
+  try{
+    const r=await fetch('/api/core-member/analytics/'+memberId);
+    const data=await r.json();currentMemberData=data;
+    document.getElementById('memberInitial').textContent=data.email.charAt(0).toUpperCase();
+    document.getElementById('memberName').textContent=data.name;
+    document.getElementById('memberEmail').textContent=data.email;
+    document.getElementById('memberStatusBadge').innerHTML=data.is_online?
+      '<span style="display:inline-flex;align-items:center;gap:4px;background:#dcfce7;color:#166534;font-size:11px;padding:3px 8px;border-radius:10px;font-weight:600"><span style="width:5px;height:5px;border-radius:50%;background:#22c55e"></span>Online</span>':
+      '<span style="font-size:11px;color:#94a3b8">'+data.last_seen+'</span>';
+    const ms=document.getElementById('memberStats');
+    ms.innerHTML=['<div style="background:#f8f7ff;border-radius:var(--radius-sm);padding:10px;text-align:center"><div style="font-family:Syne,sans-serif;font-size:1.5rem;font-weight:700;color:var(--navy)">'+data.total_documents+'</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em">Total</div></div>',
+      '<div style="background:#fef9c3;border-radius:var(--radius-sm);padding:10px;text-align:center"><div style="font-family:Syne,sans-serif;font-size:1.5rem;font-weight:700;color:#92400e">'+data.pending+'</div><div style="font-size:11px;color:#a16207;text-transform:uppercase;letter-spacing:.04em">Pending</div></div>',
+      '<div style="background:#dcfce7;border-radius:var(--radius-sm);padding:10px;text-align:center"><div style="font-family:Syne,sans-serif;font-size:1.5rem;font-weight:700;color:#166534">'+data.approved+'</div><div style="font-size:11px;color:#15803d;text-transform:uppercase;letter-spacing:.04em">Approved</div></div>',
+      '<div style="background:#ffedd5;border-radius:var(--radius-sm);padding:10px;text-align:center"><div style="font-family:Syne,sans-serif;font-size:1.5rem;font-weight:700;color:#9a3412">'+data.revision+'</div><div style="font-size:11px;color:#c2410c;text-transform:uppercase;letter-spacing:.04em">Revision</div></div>'
+    ].join('');
+    const tl=document.getElementById('activityTimeline');tl.innerHTML='';
+    data.recent_activity.forEach(a=>{tl.innerHTML+='<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)"><div style="width:26px;height:26px;border-radius:50%;background:#e5e7eb;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas fa-'+a.icon+'" style="font-size:11px;color:#6b7280"></i></div><div><div style="font-size:12px;font-weight:500">'+a.description+'</div><div style="font-size:11px;color:var(--text-muted)">'+a.time+'</div></div></div>';});
+    const tb=document.getElementById('docsTableBody');tb.innerHTML='';
+    data.documents.forEach(doc=>{
+      const sc={approved:'badge-approved',revision:'badge-revision',rejected:'badge-rejected',pending:'badge-pending'};
+      const actions=doc.file_url?`<button onclick="viewFile('${doc.file_url}','${doc.name}')" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer;margin-right:4px"><i class="fas fa-eye"></i></button><a href="${doc.file_url}" download style="background:#f3f4f6;border:1px solid #e5e7eb;color:#6b7280;border-radius:4px;padding:2px 8px;font-size:11px"><i class="fas fa-download"></i></a>`:'';
+      tb.innerHTML+=`<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 12px;font-size:12px">${doc.name}</td><td style="padding:8px 12px;font-size:12px">${doc.submitted}</td><td style="padding:8px 12px"><span class="badge ${sc[doc.status]||'badge-pending'}" style="font-size:10px">${doc.status}</span></td><td style="padding:8px 12px">${actions}</td></tr>`;
+    });
+    document.getElementById('aiMemberBox').style.display='none';
+  }catch(err){showNotif('Failed to load analytics','error');}
+}
+
+// ── AI global chat ──
+let chatHistory=[];
+function openGlobalChat(){
+  chatHistory=[];document.getElementById('chatMessages').innerHTML='';
+  addMsg('ai','Hi! I\'m Claude — your Jain University OOA leader assistant. Ask me about reviewing documents, giving feedback, team performance, or anything else.');
+  document.getElementById('aiChatOverlay').classList.add('open');document.body.style.overflow='hidden';
+  document.getElementById('chatInput').focus();
+}
+function closeAiChat(){document.getElementById('aiChatOverlay').classList.remove('open');document.body.style.overflow='';}
+
+function addMsg(role,text){
+  const msgs=document.getElementById('chatMessages');
+  const div=document.createElement('div');div.className=role==='user'?'msg-user':'msg-ai';div.textContent=text;
+  msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
+}
+function addThinking(){
+  const msgs=document.getElementById('chatMessages');const div=document.createElement('div');
+  div.className='msg-thinking';div.id='thinking-msg';
+  div.innerHTML='<div class="thinking"><span></span><span></span><span></span></div><span style="font-size:12px;color:var(--text-muted);margin-left:6px">Claude is thinking...</span>';
+  msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
+}
+function removeThinking(){document.getElementById('thinking-msg')?.remove();}
+
+async function sendChat(){
+  const input=document.getElementById('chatInput');const text=input.value.trim();if(!text)return;
+  input.value='';addMsg('user',text);chatHistory.push({role:'user',content:text});addThinking();
+  try{
+    const r=await fetch('/api/ai/chat',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({message:text,task_title:'Leader Dashboard',task_desc:'University OOA leadership tasks',history:chatHistory.slice(-8)})});
+    const d=await r.json();removeThinking();
+    const reply=d.success?d.reply:'Sorry, I could not process that.';
+    addMsg('ai',reply);chatHistory.push({role:'assistant',content:reply});
+  }catch(err){removeThinking();addMsg('ai','Error connecting to AI.');}
+}
+
+// ── Notifs ──
+function showNotif(msg,type='info'){
+  const icons={success:'fa-check-circle',error:'fa-times-circle',warning:'fa-exclamation-triangle',info:'fa-info-circle'};
+  const n=document.createElement('div');n.className='notif '+type;
+  n.innerHTML=`<i class="fas ${icons[type]||icons.info}" style="font-size:16px;flex-shrink:0;margin-top:2px"></i><div style="font-size:13px;color:var(--text-main)">${msg}</div><button onclick="this.parentElement.remove()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);margin-left:auto;font-size:14px"><i class="fas fa-times"></i></button>`;
+  document.getElementById('notifContainer').appendChild(n);
+  setTimeout(()=>{n.style.animation='notifOut .3s ease forwards';setTimeout(()=>n.remove(),300);},5000);
+}
+
+// ── Keyboard & click-outside ──
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeFile();closeAiChat();['reworkModal','rescheduleModal','commentModal','shareCommentModal'].forEach(closeModal);}});
+document.getElementById('fileModal').addEventListener('click',e=>{if(e.target===document.getElementById('fileModal'))closeFile();});
+document.getElementById('aiChatOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('aiChatOverlay'))closeAiChat();});
+['reworkModal','rescheduleModal','commentModal','shareCommentModal'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',e=>{if(e.target===document.getElementById(id))closeModal(id);});
+});
+document.addEventListener('click',e=>{if(!e.target.closest('[id^="tmenu-wrap-"]'))closeAllMenus();});
+
+// ── Init ──
+document.addEventListener('DOMContentLoaded',()=>{
+  const t=today();['assignDue','reworkNewDate','rescheduleNewDate'].forEach(id=>{const el=document.getElementById(id);if(el)el.min=t;});
+  const saved=localStorage.getItem('leaderTab')||'share';switchTab(saved);
+
+  const af=document.querySelector('form[action*="assign_task"]');
+  if(af)af.addEventListener('submit',e=>{const d=document.getElementById('assignDue').value;if(d&&d<today()){e.preventDefault();showNotif('Due date cannot be in the past','error');}});
+
+  setInterval(()=>{
+    fetch('/api/activity/status',{credentials:'same-origin'}).then(r=>r.json()).then(d=>{if(d.updated_tasks>0)showNotif(d.updated_tasks+' task(s) updated','info');}).catch(()=>{});
+  },30000);
 });
 
-// ====== INIT ======
-document.addEventListener('DOMContentLoaded', function() {
-    var today = getTodayString();
-    var assignDate = document.getElementById('assign_due_date');
-    if (assignDate) assignDate.min = today;
-    var reschedDate = document.getElementById('rescheduleNewDate');
-    if (reschedDate) reschedDate.min = today;
-    var reworkDate = document.getElementById('reworkNewDate');
-    if (reworkDate) reworkDate.min = today;
-
-    var activeTab = localStorage.getItem('activeLeaderTab') || 'share';
-    switchTab(activeTab);
-
-    document.getElementById('share_file').addEventListener('change', function(e) {
-        document.getElementById('share_file_name').textContent = e.target.files[0] ? e.target.files[0].name : 'No file chosen';
-    });
-    document.getElementById('task_file').addEventListener('change', function(e) {
-        document.getElementById('task_file_name').textContent = e.target.files[0] ? e.target.files[0].name : 'No file chosen';
-    });
-
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') { closeFileViewer(); closeReviewModal(); closeRescheduleModal(); closeCommentModal(); closeShareCommentModal(); closeAllMenus(); }
-    });
-
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('[id^="task-menu-wrap-"]') && !e.target.closest('[id^="share-menu-wrap-"]')) { closeAllMenus(); }
-    });
-
-    var assignForm = document.querySelector('form[action*="assign_task"]');
-    if (assignForm) {
-        assignForm.addEventListener('submit', function(e) {
-            var dueDate = document.getElementById('assign_due_date').value;
-            if (dueDate && dueDate < today) {
-                e.preventDefault();
-                showLeaderNotif('Invalid Date', 'Due date cannot be in the past.', 'error');
-            }
-        });
-    }
-
-    setInterval(function() {
-        fetch('/api/activity/status', { credentials: 'same-origin' })
-            .then(function(r) { return r.json(); })
-            .then(function(d) { if (d.updated_tasks > 0) showLeaderNotif('Task Updates', d.updated_tasks + ' task(s) updated', 'info'); })
-            .catch(function() {});
-    }, 30000);
-});
-
-// ====== TAB SWITCHING ======
-function switchTab(tabName) {
-    document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.add('hidden'); c.classList.remove('active'); });
-    document.querySelectorAll('.tab-button').forEach(function(b) { b.classList.remove('active','border-yellow-500','text-[#04043a]'); b.classList.add('border-transparent','text-gray-500'); });
-    var sel = document.getElementById(tabName + '-tab');
-    if (sel) { sel.classList.remove('hidden'); sel.classList.add('active'); }
-    var btn = document.querySelector('.tab-button[onclick*="' + tabName + '"]');
-    if (btn) { btn.classList.add('active','border-yellow-500','text-[#04043a]'); btn.classList.remove('border-transparent','text-gray-500'); }
-    localStorage.setItem('activeLeaderTab', tabName);
-    closeAllMenus();
-}
-
-// ====== MENU HELPERS ======
-function closeAllMenus() {
-    document.querySelectorAll('[id^="task-menu-"]').forEach(function(m) { if (!m.id.includes('wrap')) m.classList.add('hidden'); });
-    document.querySelectorAll('[id^="share-menu-"]').forEach(function(m) { if (!m.id.includes('wrap')) m.classList.add('hidden'); });
-}
-function toggleTaskMenu(id) { closeAllMenus(); var menu = document.getElementById('task-menu-' + id); if (menu) menu.classList.toggle('hidden'); }
-function closeTaskMenu(id) { var menu = document.getElementById('task-menu-' + id); if (menu) menu.classList.add('hidden'); }
-function toggleShareMenu(id) { closeAllMenus(); var menu = document.getElementById('share-menu-' + id); if (menu) menu.classList.toggle('hidden'); }
-function closeShareMenu(id) { var menu = document.getElementById('share-menu-' + id); if (menu) menu.classList.add('hidden'); }
-
-// ====== ACCEPT TASK ======
-function acceptTask(taskId) {
-    if (!confirm('Accept this task as completed?')) return;
-    fetch('/api/leader/accept_task/' + taskId, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ status: 'accepted' }) })
-    .then(function(r) { return r.json(); })
-    .then(function(d) { if (d.success) { showLeaderNotif('Task Accepted', d.message || 'Task marked as accepted!', 'success'); setTimeout(function() { location.reload(); }, 1500); } else throw new Error(d.error); })
-    .catch(function(err) { showLeaderNotif('Error', err.message || 'Failed to accept task', 'error'); });
-}
-
-// ====== REVIEW / REWORK MODAL ======
-function openReviewModal(taskId, taskTitle, progress) {
-    document.getElementById('reviewTaskId').value = taskId;
-    document.getElementById('reviewTaskTitle').textContent = taskTitle;
-    document.getElementById('reworkComment').value = '';
-    document.getElementById('reworkNewDate').value = '';
-    document.getElementById('reworkNewDate').min = getTodayString();
-    document.getElementById('taskReviewModal').style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-}
-function closeReviewModal() { document.getElementById('taskReviewModal').style.display = 'none'; document.body.style.overflow = ''; }
-function submitRework() {
-    var taskId = document.getElementById('reviewTaskId').value;
-    var comment = document.getElementById('reworkComment').value.trim();
-    var newDate = document.getElementById('reworkNewDate').value;
-    if (!comment) { showLeaderNotif('Required', 'Please enter rework instructions', 'warning'); return; }
-    if (newDate && newDate < getTodayString()) { showLeaderNotif('Invalid Date', 'New due date cannot be in the past', 'error'); return; }
-    var btn = document.getElementById('reworkSubmitBtn');
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Sending...';
-    btn.disabled = true;
-    fetch('/api/leader/request_rework/' + taskId, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ comment: comment, new_due_date: newDate }) })
-    .then(function(r) { return r.json(); })
-    .then(function(d) { if (d.success) { showLeaderNotif('Rework Requested', 'Core member notified', 'success'); closeReviewModal(); setTimeout(function() { location.reload(); }, 1500); } else throw new Error(d.error); })
-    .catch(function(err) { showLeaderNotif('Error', err.message, 'error'); btn.innerHTML = '<i class="fas fa-redo mr-1"></i>Send for Rework'; btn.disabled = false; });
-}
-document.getElementById('taskReviewModal').addEventListener('click', function(e) { if (e.target === this) closeReviewModal(); });
-
-// ====== RESCHEDULE MODAL ======
-function openReschedulModal(taskId, taskTitle, currentDate) {
-    document.getElementById('rescheduleTaskId').value = taskId;
-    document.getElementById('rescheduleTaskTitle').textContent = 'Task: ' + taskTitle;
-    document.getElementById('rescheduleNewDate').min = getTodayString();
-    document.getElementById('rescheduleNewDate').value = '';
-    document.getElementById('rescheduleReason').value = '';
-    document.getElementById('rescheduleModal').style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-}
-function closeRescheduleModal() { document.getElementById('rescheduleModal').style.display = 'none'; document.body.style.overflow = ''; }
-function submitReschedule() {
-    var taskId = document.getElementById('rescheduleTaskId').value;
-    var newDate = document.getElementById('rescheduleNewDate').value;
-    var reason = document.getElementById('rescheduleReason').value.trim();
-    if (!newDate) { showLeaderNotif('Required', 'Please select a new due date', 'warning'); return; }
-    if (newDate < getTodayString()) { showLeaderNotif('Invalid Date', 'Cannot be in the past', 'error'); return; }
-    fetch('/api/leader/reschedule_task/' + taskId, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ new_due_date: newDate, reason: reason }) })
-    .then(function(r) { return r.json(); })
-    .then(function(d) { if (d.success) { showLeaderNotif('Rescheduled', 'Due date updated', 'success'); closeRescheduleModal(); setTimeout(function() { location.reload(); }, 1500); } else throw new Error(d.error); })
-    .catch(function(err) { showLeaderNotif('Error', err.message, 'error'); });
-}
-document.getElementById('rescheduleModal').addEventListener('click', function(e) { if (e.target === this) closeRescheduleModal(); });
-
-// ====== COMMENT MODAL ======
-function openCommentModal(taskId, taskTitle) {
-    document.getElementById('commentTaskId').value = taskId;
-    document.getElementById('commentTaskTitle').textContent = 'Task: ' + taskTitle;
-    document.getElementById('commentText').value = '';
-    document.getElementById('commentModal').style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-}
-function closeCommentModal() { document.getElementById('commentModal').style.display = 'none'; document.body.style.overflow = ''; }
-function submitTaskComment() {
-    var taskId = document.getElementById('commentTaskId').value;
-    var comment = document.getElementById('commentText').value.trim();
-    if (!comment) { showLeaderNotif('Required', 'Please enter a comment', 'warning'); return; }
-    fetch('/api/leader/add_task_comment/' + taskId, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ comment: comment }) })
-    .then(function(r) { return r.json(); })
-    .then(function(d) { if (d.success) { showLeaderNotif('Comment Added', 'Comment saved', 'success'); closeCommentModal(); } else throw new Error(d.error); })
-    .catch(function(err) { showLeaderNotif('Error', err.message, 'error'); });
-}
-document.getElementById('commentModal').addEventListener('click', function(e) { if (e.target === this) closeCommentModal(); });
-
-// ====== SHARE COMMENT MODAL ======
-function openShareCommentModal(shareId, docName) {
-    document.getElementById('shareCommentDocId').value = shareId;
-    document.getElementById('shareCommentDocTitle').textContent = 'Document: ' + docName;
-    document.getElementById('shareCommentText').value = '';
-    document.getElementById('shareCommentModal').style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-}
-function closeShareCommentModal() { document.getElementById('shareCommentModal').style.display = 'none'; document.body.style.overflow = ''; }
-function submitShareComment() {
-    var shareId = document.getElementById('shareCommentDocId').value;
-    var comment = document.getElementById('shareCommentText').value.trim();
-    if (!comment) { showLeaderNotif('Required', 'Please enter a comment', 'warning'); return; }
-    fetch('/api/leader/add_share_comment/' + shareId, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ comment: comment }) })
-    .then(function(r) { return r.json(); })
-    .then(function(d) { if (d.success) { showLeaderNotif('Comment Added', 'Comment saved', 'success'); closeShareCommentModal(); setTimeout(function() { location.reload(); }, 1000); } else throw new Error(d.error); })
-    .catch(function(err) { showLeaderNotif('Error', err.message, 'error'); });
-}
-document.getElementById('shareCommentModal').addEventListener('click', function(e) { if (e.target === this) closeShareCommentModal(); });
-
-// ====== MEMBER ANALYTICS ======
-function loadMemberAnalytics(memberId) {
-    if (!memberId) return;
-    document.getElementById('memberAnalytics').classList.remove('hidden');
-    document.getElementById('memberSelector').value = memberId;
-    fetch('/api/core-member/analytics/' + memberId)
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-            document.getElementById('memberInitial').textContent = data.email.charAt(0).toUpperCase();
-            document.getElementById('memberName').textContent = data.name;
-            document.getElementById('memberEmail').textContent = data.email;
-            document.getElementById('memberStatus').innerHTML = data.is_online ? '<span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> Online' : '<span class="w-1.5 h-1.5 bg-gray-500 rounded-full"></span> Offline';
-            document.getElementById('lastSeen').textContent = data.last_seen;
-            document.getElementById('totalDocs').textContent = data.total_documents;
-            document.getElementById('pendingDocs').textContent = data.pending;
-            document.getElementById('approvedDocs').textContent = data.approved;
-            document.getElementById('revisionDocs').textContent = data.revision;
-            var timeline = document.getElementById('activityTimeline');
-            timeline.innerHTML = '';
-            data.recent_activity.forEach(function(a) {
-                timeline.innerHTML += '<div class="flex items-start gap-2 p-2 bg-gray-50 rounded-lg"><div class="w-6 h-6 bg-' + a.color + '-100 rounded-full flex items-center justify-center"><i class="fas fa-' + a.icon + ' text-' + a.color + '-600 text-xs"></i></div><div><p class="text-xs font-medium">' + a.description + '</p><p class="text-xs text-gray-500">' + a.time + '</p></div></div>';
-            });
-            var table = document.getElementById('documentsTable');
-            table.innerHTML = '';
-            data.documents.forEach(function(doc) {
-                var actions = '';
-                if (doc.file_url) {
-                    actions = '<button onclick="viewFile(\'' + doc.file_url + '\',\'' + doc.name + '\')" class="text-blue-600 hover:text-blue-800 mr-2"><i class="fas fa-eye"></i></button>';
-                    actions += '<a href="' + doc.file_url + '" download class="text-gray-600 hover:text-gray-800"><i class="fas fa-download"></i></a>';
-                }
-                var statusClass = doc.status==='approved'?'bg-green-100 text-green-800':doc.status==='revision'?'bg-orange-100 text-orange-800':doc.status==='rejected'?'bg-red-100 text-red-800':'bg-yellow-100 text-yellow-800';
-                table.innerHTML += '<tr><td class="px-3 py-2 text-xs">' + doc.name + '</td><td class="px-3 py-2 text-xs">' + doc.submitted + '</td><td class="px-3 py-2"><span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium ' + statusClass + '">' + doc.status + '</span></td><td class="px-3 py-2 text-xs">' + actions + '</td></tr>';
-            });
-        });
-}
-
-// ====== NOTIFICATIONS ======
-function showLeaderNotif(title, message, type) {
-    var colors = { success:'#22c55e', error:'#ef4444', warning:'#f59e0b', info:'#3b82f6' };
-    var icons  = { success:'fa-check-circle', error:'fa-times-circle', warning:'fa-exclamation-triangle', info:'fa-info-circle' };
-    var container = document.getElementById('leaderNotifContainer');
-    var n = document.createElement('div');
-    n.style.cssText = 'pointer-events:all;background:white;border-left:4px solid ' + (colors[type]||colors.info) + ';border-radius:.75rem;box-shadow:0 10px 25px rgba(0,0,0,.15);padding:.75rem 1rem;display:flex;align-items:flex-start;gap:.75rem;max-width:20rem;animation:slideIn .3s ease-out forwards;';
-    n.innerHTML = '<i class="fas ' + (icons[type]||icons.info) + '" style="color:' + (colors[type]||colors.info) + ';font-size:1.25rem;flex-shrink:0;margin-top:.1rem;"></i><div style="flex:1"><p style="font-weight:600;font-size:.875rem;color:#111827;margin:0 0 .15rem;">' + title + '</p><p style="font-size:.75rem;color:#6b7280;margin:0;">' + message + '</p></div><button onclick="this.parentElement.remove()" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:.875rem;flex-shrink:0;"><i class="fas fa-times"></i></button>';
-    container.appendChild(n);
-    setTimeout(function() { n.style.animation='slideOut .3s ease-in forwards'; setTimeout(function() { n.remove(); }, 300); }, 5000);
-}
-
-window.showNotification = showLeaderNotif;
-window.switchTab = switchTab;
-window.loadMemberAnalytics = loadMemberAnalytics;
-window.viewFile = viewFile;
-window.closeFileViewer = closeFileViewer;
+window.switchTab=switchTab;window.viewFile=viewFile;window.closeFile=closeFile;
+window.acceptTask=acceptTask;window.openReworkModal=openReworkModal;window.submitRework=submitRework;
+window.openRescheduleModal=openRescheduleModal;window.submitReschedule=submitReschedule;
+window.openCommentModal=openCommentModal;window.submitComment=submitComment;
+window.openShareCommentModal=openShareCommentModal;window.submitShareComment=submitShareComment;
+window.toggleMenu=toggleMenu;window.closeMenu=closeMenu;
+window.loadAnalytics=loadAnalytics;window.aiMemberInsight=aiMemberInsight;
+window.aiAnalyzeTask=aiAnalyzeTask;window.aiSuggestFeedback=aiSuggestFeedback;
+window.aiSummarizeForReview=aiSummarizeForReview;window.aiSuggestReviewFeedback=aiSuggestReviewFeedback;
+window.aiSuggestTaskDesc=aiSuggestTaskDesc;window.fillTaskDesc=fillTaskDesc;
+window.aiSummarizeViewer=aiSummarizeViewer;window.openGlobalChat=openGlobalChat;window.closeAiChat=closeAiChat;window.sendChat=sendChat;
+window.openModal=openModal;window.closeModal=closeModal;
+window.showNotification=showNotif;
 </script>
 {% endblock %}
