@@ -67,7 +67,7 @@
                         <i class="fas fa-share-alt mr-1 text-yellow-500"></i>Share
                     </button>
                     <button onclick="switchTab('assign')" class="tab-button px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap" data-tab="assign">
-                        <i class="fas fa-tasks mr-1 text-green-500"></i>Assign Task
+                        <i class="fas fa-tasks mr-1 text-green-500"></i>Create
                     </button>
                     <button onclick="switchTab('assigned-tasks')" class="tab-button px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap" data-tab="assigned-tasks">
                         <i class="fas fa-clipboard-list mr-1 text-indigo-500"></i>Assigned Tasks
@@ -76,7 +76,7 @@
                         {% endif %}
                     </button>
                     <button onclick="switchTab('pending')" class="tab-button px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap" data-tab="pending">
-                        <i class="fas fa-clock mr-1 text-yellow-500"></i>Pending
+                        <i class="fas fa-clock mr-1 text-yellow-500"></i>Your Task
                         {% if pending_count > 0 %}<span class="ml-1 bg-yellow-500 text-white px-1.5 py-0.5 rounded-full text-xs">{{ pending_count }}</span>{% endif %}
                     </button>
                     <button onclick="switchTab('analytics')" class="tab-button px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap" data-tab="analytics">
@@ -86,7 +86,7 @@
                         <i class="fas fa-share-alt mr-1 text-blue-500"></i>Shared Docs
                     </button>
                     <button onclick="switchTab('members')" class="tab-button px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap" data-tab="members">
-                        <i class="fas fa-users mr-1 text-indigo-500"></i>Members
+                        <i class="fas fa-users mr-1 text-indigo-500"></i>Team
                     </button>
                 </nav>
             </div>

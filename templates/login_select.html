@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Login – Office of Academic Affairs</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:linear-gradient(145deg,#f0f4f8,#e9eef3);min-height:100vh;display:flex;flex-direction:column}
+:root{--navy:#0A2A44;--gold:#C49A2B}
+.navbar{background:rgba(255,255,255,.88);backdrop-filter:blur(18px);box-shadow:0 6px 24px rgba(10,42,68,.08);padding:.7rem 2rem;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(196,154,43,.15)}
+.nav-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between}
+.logo-wrap{display:flex;align-items:center;gap:12px;text-decoration:none}
+.logo-wrap img{height:48px;width:auto}
+.logo-text h1{font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--navy)}
+.logo-text span{font-size:.72rem;color:#5a6e85;font-weight:500;letter-spacing:.3px}
+.back-link{background:white;padding:.5rem 1.4rem;border-radius:40px;font-weight:500;font-size:.9rem;color:var(--navy);text-decoration:none;display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(196,154,43,.25);transition:all .25s;box-shadow:0 4px 12px rgba(0,0,0,.04)}
+.back-link:hover{background:var(--navy);color:white;transform:translateY(-2px)}
+.page{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3rem 1.5rem}
+.page-title{font-family:'Playfair Display',serif;font-size:2.4rem;color:var(--navy);text-align:center;margin-bottom:.5rem}
+.page-sub{color:#5f6f82;font-size:1rem;text-align:center;margin-bottom:3rem}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:24px;max-width:1000px;width:100%}
+.role-card{background:white;border-radius:28px;padding:2rem 1.5rem;text-align:center;text-decoration:none;border:2px solid transparent;box-shadow:0 10px 30px rgba(0,0,0,.06);transition:all .3s;position:relative;overflow:hidden}
+.role-card::before{content:'';position:absolute;top:0;left:0;right:0;height:5px}
+.role-card:hover{transform:translateY(-8px);box-shadow:0 20px 50px rgba(0,0,0,.12)}
+.role-card.admin::before{background:linear-gradient(90deg,#8B0000,#c0392b)}
+.role-card.admin:hover{border-color:#8B0000}
+.role-card.leader::before{background:linear-gradient(90deg,#4B0082,#7c3aed)}
+.role-card.leader:hover{border-color:#4B0082}
+.role-card.core::before{background:linear-gradient(90deg,#006064,#0097a7)}
+.role-card.core:hover{border-color:#006064}
+.role-card.faculty::before{background:linear-gradient(90deg,#0A2A44,#1a4a6e)}
+.role-card.faculty:hover{border-color:#0A2A44}
+.card-icon{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.6rem;margin:0 auto 1rem;color:white}
+.admin .card-icon{background:linear-gradient(135deg,#8B0000,#c0392b)}
+.leader .card-icon{background:linear-gradient(135deg,#4B0082,#7c3aed)}
+.core .card-icon{background:linear-gradient(135deg,#006064,#0097a7)}
+.faculty .card-icon{background:linear-gradient(135deg,#0A2A44,#1a4a6e)}
+.card-title{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;margin-bottom:.4rem}
+.admin .card-title{color:#8B0000}
+.leader .card-title{color:#4B0082}
+.core .card-title{color:#006064}
+.faculty .card-title{color:#0A2A44}
+.card-desc{font-size:.85rem;color:#6b7b8f;line-height:1.5;margin-bottom:1.2rem}
+.card-btn{display:inline-flex;align-items:center;gap:7px;padding:.6rem 1.4rem;border-radius:30px;font-size:.88rem;font-weight:600;color:white;transition:opacity .2s}
+.admin .card-btn{background:#8B0000}
+.leader .card-btn{background:#4B0082}
+.core .card-btn{background:#006064}
+.faculty .card-btn{background:#0A2A44}
+.card-btn:hover{opacity:.85}
+.reg-links{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:2rem}
+.reg-link{font-size:.85rem;color:#6b7b8f;text-decoration:none;display:flex;align-items:center;gap:5px;padding:.4rem .8rem;border-radius:20px;border:1px solid #e2e8f0;background:white;transition:all .2s}
+.reg-link:hover{border-color:var(--gold);color:var(--navy)}
+.footer-mini{text-align:center;padding:1.2rem;font-size:.8rem;color:#7b8b9f;border-top:1px solid rgba(196,154,43,.12);background:rgba(255,255,255,.5)}
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="{{ url_for('index') }}" class="logo-wrap">
+      <img src="{{ url_for('static', filename='images/L23.png') }}" alt="Jain University" onerror="this.src='https://via.placeholder.com/48x48/0A2A44/FFD700?text=JU'">
+      <div class="logo-text">
+        <h1>Office of Academics</h1>
+        <span>Jain (Deemed-to-be University)</span>
+      </div>
+    </a>
+    <a href="{{ url_for('index') }}" class="back-link"><i class="fas fa-arrow-left"></i> Back to Home</a>
+  </div>
+</nav>
+
+<div class="page">
+  <h1 class="page-title">Choose Your Portal</h1>
+  <p class="page-sub">Select your role to access the right login page</p>
+
+  <div class="cards">
+    <a href="{{ url_for('admin_login') }}" class="role-card admin">
+      <div class="card-icon"><i class="fas fa-shield-alt"></i></div>
+      <div class="card-title">Admin</div>
+      <p class="card-desc">System administrators with full access to manage users, events, and platform settings.</p>
+      <span class="card-btn"><i class="fas fa-sign-in-alt"></i> Admin Login</span>
+    </a>
+    <a href="{{ url_for('leader_login') }}" class="role-card leader">
+      <div class="card-icon"><i class="fas fa-crown"></i></div>
+      <div class="card-title">Leader</div>
+      <p class="card-desc">Academic leaders overseeing departments and coordinating office activities.</p>
+      <span class="card-btn"><i class="fas fa-sign-in-alt"></i> Leader Login</span>
+    </a>
+    <a href="{{ url_for('core_login') }}" class="role-card core">
+      <div class="card-icon"><i class="fas fa-users-cog"></i></div>
+      <div class="card-title">Core Team</div>
+      <p class="card-desc">Core office members responsible for day-to-day academic operations.</p>
+      <span class="card-btn"><i class="fas fa-sign-in-alt"></i> Core Login</span>
+    </a>
+    <a href="{{ url_for('login') }}" class="role-card faculty">
+      <div class="card-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+      <div class="card-title">Faculty</div>
+      <p class="card-desc">Teaching staff accessing academic resources, notices, and department files.</p>
+      <span class="card-btn"><i class="fas fa-sign-in-alt"></i> Faculty Login</span>
+    </a>
+  </div>
+
+  <div class="reg-links">
+    <span style="font-size:.85rem;color:#94a3b8;align-self:center">New user? Register as:</span>
+    <a href="{{ url_for('register') }}" class="reg-link"><i class="fas fa-chalkboard-teacher"></i> Faculty</a>
+    <a href="{{ url_for('register_core') }}" class="reg-link"><i class="fas fa-users-cog"></i> Core Team</a>
+    <a href="{{ url_for('register_leader') }}" class="reg-link"><i class="fas fa-crown"></i> Leader</a>
+    <a href="{{ url_for('admin_register') }}" class="reg-link"><i class="fas fa-shield-alt"></i> Admin</a>
+  </div>
+</div>
+
+<div class="footer-mini">© 2025 Jain (Deemed-to-be University) – Office of Academics</div>
+</body>
+</html>

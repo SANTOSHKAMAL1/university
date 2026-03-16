@@ -730,23 +730,19 @@ footer{background:linear-gradient(to bottom,var(--navy-mid),var(--navy));color:v
   <div class="hero-carousel">
     <div class="hero-track" id="heroTrack">
       <div class="hero-slide">
-        <img src="static/images/ooacr.png" alt="Office of Academics" onerror="this.src='https://images.unsplash.com/photo-1562774053-701939374585?w=1400&q=80'">
+        <img src="{{ url_for('static', filename='images/ooacr.png') }}" alt="Office of Academics" onerror="this.src='https://images.unsplash.com/photo-1562774053-701939374585?w=1400&q=80'">
         <div class="hero-overlay"></div>
-       
       </div>
       <div class="hero-slide">
-        <img src="static/images/NEP15.png" alt="NEP Saarthis" onerror="this.src='https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=1400&q=80'">
+        <img src="{{ url_for('static', filename='images/NEP15.png') }}" alt="NEP Saarthis" onerror="this.src='https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=1400&q=80'">
         <div class="hero-overlay"></div>
-        
       </div>
       <div class="hero-slide">
-        <img src="static/images/1234.png" alt="Coursera Award" onerror="this.src='https://images.unsplash.com/photo-1544531585-9847b68c8c86?w=1400&q=80'">
+        <img src="{{ url_for('static', filename='images/1234.png') }}" alt="Coursera Award" onerror="this.src='https://images.unsplash.com/photo-1544531585-9847b68c8c86?w=1400&q=80'">
         <div class="hero-overlay"></div>
-        
       </div>
       <div class="hero-slide">
-         <img src="static/images/cor12.png" alt="Coursera Award" onerror="this.src='https://images.unsplash.com/photo-1544531585-9847b68c8c86?w=1400&q=80'">
-        <div class="hero-overlay"></div>
+        <img src="{{ url_for('static', filename='images/cor12.png') }}" alt="Coursera Award" onerror="this.src='https://images.unsplash.com/photo-1544531585-9847b68c8c86?w=1400&q=80'">
         <div class="hero-overlay"></div>
         <div class="hero-content"><h2>Future Leaders</h2><p>Preparing students for success in a rapidly changing, knowledge-driven world</p></div>
       </div>
@@ -806,7 +802,7 @@ footer{background:linear-gradient(to bottom,var(--navy-mid),var(--navy));color:v
                 {% endif %}{% endfor %}{% endif %}
               </div>
             </div>
-            <div class="ncp-footer"><a href="{{ url_for('ugc') }}"><i class="fas fa-eye"></i> View All Notices <i class="fas fa-arrow-right"></i></a></div>
+            
           </div>
           <div class="notice-card-panel">
             <div class="ncp-header uni"><i class="fas fa-university"></i> Office of Academics Announcements<span class="badge"><i class="fas fa-arrow-up"></i> Latest</span></div>
@@ -836,7 +832,6 @@ footer{background:linear-gradient(to bottom,var(--navy-mid),var(--navy));color:v
                 {% endif %}{% endfor %}{% endif %}
               </div>
             </div>
-            <div class="ncp-footer"><a href="{{ url_for('ugc') }}"><i class="fas fa-eye"></i> View All Announcements <i class="fas fa-arrow-right"></i></a></div>
           </div>
         </div>
       </div>
@@ -1136,10 +1131,10 @@ footer{background:linear-gradient(to bottom,var(--navy-mid),var(--navy));color:v
               <div class="stat-card"><div class="sc-num">16,115</div><div class="sc-label">Students Enrolled</div></div>
               <div class="stat-card"><div class="sc-num">506</div><div class="sc-label">Faculty Enrolled</div></div>
               <div class="stat-card"><div class="sc-num">38%</div><div class="sc-label">Avg Completion Rate</div></div>
-              <div class="stat-card"><div class="sc-num">1,847</div><div class="sc-label">Active Learners</div></div>
+              
             </div>
             <div class="stats-row">
-              <div class="stat-card accent-blue"><div class="sc-num">11,101</div><div class="sc-label">Total Licenses</div><div class="sc-sub">97.10% activation</div></div>
+             
               <div class="stat-card accent-green"><div class="sc-num">8,970</div><div class="sc-label">Active Users</div><div class="sc-sub">80.8% of activated</div></div>
               <div class="stat-card accent-orange"><div class="sc-num">126,140</div><div class="sc-label">Courses Viewed</div><div class="sc-sub">Avg 14.1/user</div></div>
               <div class="stat-card accent-purple"><div class="sc-num">56,605</div><div class="sc-label">Courses Completed</div><div class="sc-sub">44.9% rate</div></div>
@@ -1366,8 +1361,8 @@ footer{background:linear-gradient(to bottom,var(--navy-mid),var(--navy));color:v
                 <div class="mini-card"><h4>53 Shortlisted</h4>UG: 43 &nbsp;|&nbsp; PG: 10</div>
               </div>
               <div class="nep-img-grid">
-                <img src="/static/images/nep1.png" alt="NEP Essay Competition">
-                <img src="/static/images/nep2.png" alt="NEP Event">
+                <img src="{{ url_for('static', filename='images/nep1.png') }}" alt="NEP Essay Competition">
+                <img src="{{ url_for('static', filename='images/nep2.png') }}" alt="NEP Event">
               </div>
             </div>
 
@@ -1379,8 +1374,8 @@ footer{background:linear-gradient(to bottom,var(--navy-mid),var(--navy));color:v
                 <div class="mini-card"><h4>Speaker</h4>Prof. Ramachandra N.U.</div>
               </div>
               <div class="nep-img-grid">
-                <img src="/static/images/nep3.png" alt="IKS Workshop 1">
-                <img src="/static/images/nep4.png" alt="IKS Workshop 2">
+                <img src="{{ url_for('static', filename='images/nep3.png') }}" alt="IKS Workshop 1">
+                <img src="{{ url_for('static', filename='images/nep4.png') }}" alt="IKS Workshop 2">
               </div>
             </div>
 
@@ -1389,8 +1384,8 @@ footer{background:linear-gradient(to bottom,var(--navy-mid),var(--navy));color:v
               <p>NEP Saarthis alongside NSS volunteers organised a public rally to create community awareness about NEP 2020 reforms and their significance for the future of education in India. The rally took place at Jayanagar 9th Block Campus.</p>
               <div class="info-box"><i class="fas fa-users"></i>&nbsp; <strong>120 students</strong> participated, spanning multiple departments and programmes.</div>
               <div class="nep-img-grid">
-                <img src="/static/images/nep5.png" alt="NEP Rally 1">
-                <img src="/static/images/nep6.png" alt="NEP Rally 2">
+                <img src="{{ url_for('static', filename='images/nep5.png') }}" alt="NEP Rally 1">
+                <img src="{{ url_for('static', filename='images/nep6.png') }}" alt="NEP Rally 2">
               </div>
             </div>
 
@@ -1399,8 +1394,8 @@ footer{background:linear-gradient(to bottom,var(--navy-mid),var(--navy));color:v
               <p>Students performed a compelling street play highlighting the role of education in promoting gender equality and inclusive access under NEP 2020. The event was jointly organised by NSS, NEP Saarthis, and the Office of Academics.</p>
               <div class="info-box"><i class="fas fa-users"></i>&nbsp; <strong>180 participants</strong> — students, faculty, and community members.</div>
               <div class="nep-img-grid">
-                <img src="/static/images/nep7.png" alt="Street Play 1">
-                <img src="/static/images/nep8.png" alt="Street Play 2">
+                <img src="{{ url_for('static', filename='images/nep7.png') }}" alt="Street Play 1">
+                <img src="{{ url_for('static', filename='images/nep8.png') }}" alt="Street Play 2">
               </div>
             </div>
 
@@ -1412,8 +1407,8 @@ footer{background:linear-gradient(to bottom,var(--navy-mid),var(--navy));color:v
                 <div class="mini-card"><h4>90 Attendees</h4>80 students + 10 faculty</div>
               </div>
               <div class="nep-img-grid">
-                <img src="/static/images/nep9.png" alt="Skill Workshop 1">
-                <img src="/static/images/nep10.png" alt="Skill Workshop 2">
+                <img src="{{ url_for('static', filename='images/nep9.png') }}" alt="Skill Workshop 1">
+                <img src="{{ url_for('static', filename='images/nep10.png') }}" alt="Skill Workshop 2">
               </div>
             </div>
           </div>

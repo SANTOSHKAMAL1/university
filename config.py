@@ -18,7 +18,6 @@ class Config:
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
     PERMANENT_SESSION_LIFETIME = timedelta(days=7)
-    SESSION_TYPE = 'filesystem'  # Optional: store sessions on filesystem
     
     # File Upload Configuration
     MAX_CONTENT_LENGTH = 50 * 1024 * 1024  # 50MB

@@ -8,66 +8,9 @@
 <div class="min-h-screen bg-gray-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         
-        <!-- Quick Stats Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-[#04043a] hover:shadow-md transition-all">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-500 text-xs font-medium">My Documents</p>
-                        <p class="text-2xl font-bold text-[#04043a]">{{ total_docs|default(0) }}</p>
-                    </div>
-                    <div class="bg-[#04043a] bg-opacity-10 rounded-full p-2">
-                        <i class="fas fa-file-alt text-lg text-[#04043a]"></i>
-                    </div>
-                </div>
-                <div class="mt-1 text-xs text-gray-500">
-                    <span class="text-yellow-600 font-semibold">{{ pending_count|default(0) }}</span> pending review
-                </div>
-            </div>
+        
 
-            <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-green-500 hover:shadow-md transition-all">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-500 text-xs font-medium">My Tasks</p>
-                        <p class="text-2xl font-bold text-[#04043a]">{{ total_tasks|default(0) }}</p>
-                    </div>
-                    <div class="bg-green-500 bg-opacity-10 rounded-full p-2">
-                        <i class="fas fa-tasks text-lg text-green-600"></i>
-                    </div>
-                </div>
-                <div class="mt-1 text-xs text-gray-500">
-                    <span class="text-orange-600 font-semibold">{{ pending_tasks|default(0) }}</span> pending
-                </div>
-            </div>
-
-            <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-blue-500 hover:shadow-md transition-all">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-500 text-xs font-medium">Core Members</p>
-                        <p class="text-2xl font-bold text-[#04043a]">{{ core_members|length|default(0) }}</p>
-                    </div>
-                    <div class="bg-blue-500 bg-opacity-10 rounded-full p-2">
-                        <i class="fas fa-users text-lg text-blue-600"></i>
-                    </div>
-                </div>
-                <div class="mt-1 text-xs text-gray-500">
-                    <span class="text-green-600 font-semibold">{{ online_core|length|default(0) }}</span> online now
-                </div>
-            </div>
-
-            <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-orange-500 hover:shadow-md transition-all">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-500 text-xs font-medium">Total Leaders</p>
-                        <p class="text-2xl font-bold text-[#04043a]">{{ leaders|length|default(0) }}</p>
-                    </div>
-                    <div class="bg-orange-500 bg-opacity-10 rounded-full p-2">
-                        <i class="fas fa-crown text-lg text-orange-600"></i>
-                    </div>
-                </div>
-                <div class="mt-1 text-xs text-gray-500">Ready to review documents</div>
-            </div>
-        </div>
+            
 
         <!-- Analytics Dashboard -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
@@ -169,7 +112,7 @@
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6 overflow-hidden">
             <div class="flex border-b border-gray-200 bg-gray-50 overflow-x-auto">
                 <button onclick="switchTab('upload')" id="tab-upload" class="tab-button active px-6 py-3 text-sm font-medium border-b-2 border-[#04043a] text-[#04043a] whitespace-nowrap flex items-center gap-2">
-                    <i class="fas fa-cloud-upload-alt"></i>Upload Document
+                    <i class="fas fa-cloud-upload-alt"></i>Share Document
                 </button>
                 <button onclick="switchTab('tasks')" id="tab-tasks" class="tab-button px-6 py-3 text-sm font-medium border-b-2 border-transparent text-gray-600 hover:text-[#04043a] whitespace-nowrap flex items-center gap-2">
                     <i class="fas fa-tasks"></i>My Assigned Tasks

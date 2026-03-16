@@ -3,21 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Jain University - Office of Academics{% endblock %}</title>
+    <title>{% block title %}Jain (Deemed-to-be University) - Office of Academics{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap');
         
         :root {
-            --jain-blue: #04043a;
-            --jain-gold: #FFD700;
-            --jain-gold-light: #fff7cc;
-            --jain-gold-dark: #e6c200;
-            --sidebar-bg: #ffffff;
-            --sidebar-text: #1f2937;
-            --sidebar-hover: #f3f4f6;
-            --sidebar-active: #fff7cc;
+            --jain-navy: #0A1929;          /* Deep Navy Blue - primary */
+            --jain-navy-light: #1E3A5F;     /* Lighter Navy for hover */
+            --jain-gold: #C5A572;           /* Antique Gold - accent */
+            --jain-gold-light: #E8D5B5;     /* Light gold for hover states */
+            --jain-gold-dark: #A67C4E;       /* Darker gold for text */
+            --jain-cream: #FAF7F2;           /* Light cream background */
+            --jain-text: #1A2B3C;            /* Dark blue-gray for text */
+            --header-bg: #0A1929;             /* Navy header */
+            --header-text: #FFFFFF;            /* White text in header */
+            --header-hover: #1E3A5F;           /* Navy hover */
+            --header-active: #C5A572;          /* Gold active state */
         }
         
         * {
@@ -29,275 +33,24 @@
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: linear-gradient(135deg, #f5f7fa 0%, #eef2f6 100%);
+            color: var(--jain-text);
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
         
-        /* White Sidebar with Black Text */
-        .sidebar {
-            position: fixed;
-            left: 0;
-            top: 0;
-            height: 100vh;
-            width: 16rem;
-            background: var(--sidebar-bg);
-            border-right: 1px solid #e5e7eb;
-            overflow-y: auto;
-            z-index: 40;
-            padding-bottom: 140px;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            color: var(--sidebar-text);
-            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.03);
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Playfair Display', serif;
         }
         
-        .sidebar::-webkit-scrollbar {
-            width: 6px;
-        }
-        
-        .sidebar::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-        
-        .sidebar::-webkit-scrollbar-thumb {
-            background: #d1d5db;
-            border-radius: 10px;
-        }
-        
-        .sidebar::-webkit-scrollbar-thumb:hover {
-            background: #9ca3af;
-        }
-        
-        .logo-container {
-            animation: fadeInDown 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-            border-bottom: 1px solid #e5e7eb;
-            padding-bottom: 16px;
-        }
-        
-        @keyframes fadeInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .logo-icon {
-            background: var(--jain-blue);
-            box-shadow: 0 8px 16px rgba(4, 4, 58, 0.1);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            color: var(--jain-gold);
-        }
-        
-        .logo-icon:hover {
-            transform: scale(1.05) rotate(5deg);
-            box-shadow: 0 12px 24px rgba(4, 4, 58, 0.15);
-        }
-        
-        .logo-text h1 {
-            color: var(--jain-blue);
-            font-weight: 700;
-        }
-        
-        .logo-text p {
-            color: #6b7280;
-        }
-        
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 16px;
-            border-radius: 8px;
-            color: #4b5563;
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: 500;
-            transition: all 0.2s ease;
-            margin: 2px 8px;
-        }
-        
-        .nav-item:hover {
-            background: var(--sidebar-hover);
-            color: var(--jain-blue);
-            transform: translateX(4px);
-        }
-        
-        .nav-item.active {
-            background: var(--sidebar-active);
-            color: var(--jain-blue);
-            font-weight: 600;
-            border-left: 3px solid var(--jain-gold);
-        }
-        
-        .nav-item.active i {
-            color: var(--jain-blue);
-        }
-        
-        .nav-item i {
-            font-size: 14px;
-            width: 18px;
-            text-align: center;
-            color: #6b7280;
-        }
-        
-        .nav-item:hover i {
-            color: var(--jain-blue);
-        }
-        
-        .user-info-card {
-            background: #f9fafb;
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-            padding: 12px;
-            color: #1f2937;
-            animation: slideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.2s backwards;
-            margin: 12px 10px;
-        }
-        
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-        
-        .user-avatar {
-            background: var(--jain-blue);
-            color: var(--jain-gold);
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 16px;
-            box-shadow: 0 4px 12px rgba(4, 4, 58, 0.1);
-        }
-        
-        .online-indicator {
-            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-            color: #10b981;
-        }
-        
-        @keyframes pulse {
-            0%, 100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.5;
-            }
-        }
-        
-        .role-badge {
-            background: var(--jain-gold);
-            color: var(--jain-blue);
-            padding: 2px 8px;
-            border-radius: 16px;
-            font-size: 10px;
-            font-weight: 600;
-        }
-        
-        .section-header {
-            font-size: 10px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #9ca3af;
-            padding: 12px 16px 4px;
-        }
-        
-        .badge {
-            background: var(--jain-gold);
-            color: var(--jain-blue);
-            font-size: 10px;
-            font-weight: 600;
-            padding: 2px 6px;
-            border-radius: 16px;
-        }
-        
-        .sidebar-bottom {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 16rem;
-            background: white;
-            border-top: 1px solid #e5e7eb;
-            z-index: 50;
-            padding: 12px 10px;
-        }
-        
-        .settings-dropdown {
-            position: relative;
-        }
-        
-        .settings-menu {
-            position: absolute;
-            bottom: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.05);
-            margin-bottom: 8px;
-            padding: 6px;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(10px);
-            transition: all 0.3s ease;
-        }
-        
-        .settings-menu.active {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
-        
-        .settings-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 12px;
-            border-radius: 6px;
-            color: #4b5563;
-            text-decoration: none;
-            font-size: 12px;
-            transition: all 0.2s ease;
-        }
-        
-        .settings-item:hover {
-            background: #f3f4f6;
-            color: var(--jain-blue);
-            transform: translateX(4px);
-        }
-        
-        .settings-item i {
-            color: var(--jain-blue);
-            width: 16px;
-            font-size: 12px;
-        }
-        
-        .main-content {
-            margin-left: 16rem;
-            min-height: 100vh;
-        }
-        
-        .top-header {
-            background: white;
-            border-bottom: 1px solid #e5e7eb;
+        /* Top Navigation Styles */
+        .top-nav {
+            background: var(--header-bg);
+            color: var(--header-text);
+            box-shadow: 0 4px 20px rgba(10, 25, 41, 0.15);
             position: sticky;
             top: 0;
-            z-index: 30;
+            z-index: 50;
             animation: slideDown 0.6s ease;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
         }
         
         @keyframes slideDown {
@@ -311,79 +64,261 @@
             }
         }
         
-        .page-title {
-            color: var(--jain-blue);
-            font-size: 22px;
-            font-weight: 700;
+        .nav-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 0 24px;
         }
         
-        .page-subtitle {
-            color: #6b7280;
-            font-size: 13px;
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
         
-        .search-bar {
-            background: #f3f4f6;
-            border: none;
-            border-radius: 30px;
-            padding: 8px 16px 8px 40px;
-            font-size: 13px;
-            width: 240px;
+        .logo-icon {
+            background: var(--jain-gold);
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--jain-navy);
+            font-size: 20px;
             transition: all 0.3s ease;
-            border: 1px solid transparent;
         }
         
-        .search-bar:focus {
-            outline: none;
-            background: white;
-            width: 300px;
-            box-shadow: 0 4px 20px rgba(4, 4, 58, 0.1);
+        .logo-icon:hover {
+            transform: rotate(5deg) scale(1.05);
+            box-shadow: 0 4px 12px rgba(197, 165, 114, 0.3);
+        }
+        
+        .logo-text h1 {
+            color: var(--jain-gold);
+            font-weight: 700;
+            font-size: 1.1rem;
+            line-height: 1.3;
+        }
+        
+        .logo-text p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.65rem;
+        }
+        
+        .nav-menu {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin: 0 24px;
+        }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+        
+        .nav-item:hover {
+            background: var(--header-hover);
+            color: white;
+            transform: translateY(-1px);
+        }
+        
+        .nav-item.active {
+            background: var(--header-active);
+            color: var(--jain-navy);
+            font-weight: 600;
+        }
+        
+        .nav-item.active i {
+            color: var(--jain-navy);
+        }
+        
+        .nav-item i {
+            font-size: 14px;
+            color: var(--jain-gold);
+        }
+        
+        .nav-item:hover i {
+            color: white;
+        }
+        
+        .nav-item.active i {
+            color: var(--jain-navy);
+        }
+        
+        /* User Menu */
+        .user-menu {
+            position: relative;
+            margin-left: auto;
+        }
+        
+        .user-menu-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 6px 12px 6px 8px;
+            border-radius: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(197, 165, 114, 0.3);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .user-menu-btn:hover {
+            background: var(--header-hover);
             border-color: var(--jain-gold);
         }
         
-        .search-icon {
-            position: absolute;
-            left: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #9ca3af;
+        .user-avatar {
+            background: var(--jain-gold);
+            color: var(--jain-navy);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 15px;
+        }
+        
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .user-name {
+            color: white;
+            font-weight: 600;
             font-size: 13px;
         }
         
-        .notification-btn {
+        .user-role {
+            color: var(--jain-gold);
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 280px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(10, 25, 41, 0.2);
+            margin-top: 12px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 100;
+            border: 1px solid var(--jain-gold);
+            overflow: hidden;
+        }
+        
+        .user-dropdown.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .dropdown-header {
+            background: var(--jain-navy);
+            color: white;
+            padding: 16px;
+            border-bottom: 1px solid rgba(197, 165, 114, 0.3);
+        }
+        
+        .dropdown-header .user-name-lg {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        
+        .dropdown-header .user-email {
+            font-size: 11px;
+            opacity: 0.8;
+        }
+        
+        .dropdown-menu {
+            padding: 8px;
+        }
+        
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            color: var(--jain-text);
+            text-decoration: none;
+            font-size: 13px;
+            transition: all 0.2s ease;
+        }
+        
+        .dropdown-item:hover {
+            background: #f5f5f5;
+            color: var(--jain-navy);
+            transform: translateX(4px);
+        }
+        
+        .dropdown-item i {
+            color: var(--jain-gold);
+            width: 18px;
+            font-size: 14px;
+        }
+        
+        .dropdown-divider {
+            height: 1px;
+            background: #e5e7eb;
+            margin: 8px 0;
+        }
+        
+        /* Action Buttons */
+        .action-btn {
             position: relative;
             padding: 8px;
             border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
             transition: all 0.2s ease;
-            background: #f3f4f6;
-            color: #4b5563;
+            border: 1px solid transparent;
         }
         
-        .notification-btn:hover {
-            background: var(--jain-gold);
-            color: var(--jain-blue);
-            transform: scale(1.1);
+        .action-btn:hover {
+            background: var(--header-hover);
+            border-color: var(--jain-gold);
+            transform: scale(1.05);
         }
         
         .notification-badge {
             position: absolute;
-            top: 5px;
-            right: 5px;
+            top: 2px;
+            right: 2px;
             width: 8px;
             height: 8px;
             background: #ef4444;
             border-radius: 50%;
-            border: 2px solid white;
-            animation: bounce 1s infinite;
+            border: 2px solid var(--jain-navy);
+            animation: pulse 1s infinite;
         }
         
-        @keyframes bounce {
-            0%, 100% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.2);
-            }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
         }
         
         .notification-dropdown {
@@ -393,14 +328,14 @@
             width: 360px;
             background: white;
             border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 20px 60px rgba(10, 25, 41, 0.2);
             margin-top: 12px;
             opacity: 0;
             visibility: hidden;
             transform: translateY(-10px);
             transition: all 0.3s ease;
             z-index: 100;
-            border: 1px solid #e5e7eb;
+            border: 1px solid var(--jain-gold);
             max-height: 480px;
             overflow-y: auto;
         }
@@ -417,7 +352,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: var(--jain-blue);
+            background: var(--jain-navy);
             color: white;
             border-radius: 16px 16px 0 0;
         }
@@ -429,7 +364,7 @@
         
         .notification-header span {
             background: var(--jain-gold);
-            color: var(--jain-blue);
+            color: var(--jain-navy);
             padding: 2px 8px;
             border-radius: 20px;
             font-size: 11px;
@@ -451,7 +386,7 @@
         }
         
         .notification-item.unread {
-            background: #fff7cc;
+            background: #F5E6D3;
         }
         
         .notification-icon {
@@ -459,7 +394,7 @@
             height: 36px;
             border-radius: 8px;
             background: #f3f4f6;
-            color: var(--jain-blue);
+            color: var(--jain-navy);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -472,7 +407,7 @@
         
         .notification-title {
             font-weight: 600;
-            color: var(--jain-blue);
+            color: var(--jain-navy);
             margin-bottom: 2px;
             font-size: 13px;
         }
@@ -495,7 +430,7 @@
             display: block;
             padding: 12px;
             text-align: center;
-            color: var(--jain-blue);
+            color: var(--jain-navy);
             font-weight: 600;
             font-size: 13px;
             text-decoration: none;
@@ -504,35 +439,78 @@
         }
         
         .view-all-btn:hover {
-            background: #fff7cc;
-            color: var(--jain-blue);
+            background: #F5E6D3;
+            color: var(--jain-navy);
         }
         
-        .avatar {
-            background: var(--jain-blue);
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--jain-gold);
-            font-weight: 600;
-            font-size: 16px;
-            box-shadow: 0 4px 12px rgba(4, 4, 58, 0.1);
+        /* Search Bar */
+        .search-container {
+            position: relative;
+            margin-right: 16px;
+        }
+        
+        .search-bar {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(197, 165, 114, 0.3);
+            border-radius: 40px;
+            padding: 8px 16px 8px 40px;
+            font-size: 13px;
+            width: 260px;
             transition: all 0.3s ease;
+            color: white;
         }
         
-        .avatar:hover {
-            transform: scale(1.05);
-            box-shadow: 0 6px 16px rgba(4, 4, 58, 0.15);
+        .search-bar::placeholder {
+            color: rgba(255, 255, 255, 0.5);
         }
         
+        .search-bar:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.15);
+            width: 320px;
+            border-color: var(--jain-gold);
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 13px;
+        }
+        
+        /* Main Content Area */
+        .main-content {
+            min-height: 100vh;
+            padding: 24px 32px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        /* Page Header */
+        .page-header {
+            margin-bottom: 24px;
+        }
+        
+        .page-title {
+            color: var(--jain-navy);
+            font-size: 28px;
+            font-weight: 700;
+            font-family: 'Playfair Display', serif;
+            margin-bottom: 4px;
+        }
+        
+        .page-subtitle {
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        /* Alert Messages */
         .alert {
             animation: slideInAlert 0.4s ease;
             border-radius: 12px;
-            backdrop-filter: blur(10px);
-            margin: 20px 30px 0;
+            margin-bottom: 20px;
         }
         
         @keyframes slideInAlert {
@@ -570,10 +548,12 @@
             color: #92400e;
         }
         
+        /* Footer */
         .footer {
             background: white;
-            border-top: 1px solid #e5e7eb;
-            padding: 16px 30px;
+            border-top: 1px solid rgba(197, 165, 114, 0.2);
+            padding: 16px 32px;
+            margin-top: 40px;
         }
         
         .footer a {
@@ -582,9 +562,49 @@
         }
         
         .footer a:hover {
-            color: var(--jain-blue);
+            color: var(--jain-navy);
         }
         
+        /* Jain University decorative elements */
+        .jain-divider {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--jain-gold), var(--jain-navy), var(--jain-gold), transparent);
+            margin: 16px 0;
+        }
+        
+        .jain-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(10, 25, 41, 0.05);
+            border: 1px solid rgba(197, 165, 114, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .jain-card:hover {
+            box-shadow: 0 8px 24px rgba(10, 25, 41, 0.1);
+            border-color: var(--jain-gold);
+            transform: translateY(-2px);
+        }
+        
+        .jain-button {
+            background: var(--jain-navy);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 13px;
+            transition: all 0.2s ease;
+            border: 1px solid var(--jain-gold);
+        }
+        
+        .jain-button:hover {
+            background: var(--jain-navy-light);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(10, 25, 41, 0.2);
+        }
+        
+        /* Loading Spinner */
         .spinner {
             border: 3px solid #f3f4f6;
             border-top: 3px solid var(--jain-gold);
@@ -599,275 +619,77 @@
             100% { transform: rotate(360deg); }
         }
         
-        /* Leader Navigation Tabs */
-        .leader-tabs {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 2px;
-            margin-top: 8px;
-            padding: 0 8px;
-        }
-        
-        .leader-tab {
-            flex: 1 0 auto;
-            padding: 6px 8px;
-            font-size: 11px;
-            font-weight: 500;
-            color: #6b7280;
-            background: #f9fafb;
-            border-radius: 6px;
-            text-align: center;
-            transition: all 0.2s ease;
-            cursor: pointer;
-            border: 1px solid #e5e7eb;
-            white-space: nowrap;
-        }
-        
-        .leader-tab:hover {
-            background: var(--jain-gold-light);
-            color: var(--jain-blue);
-            border-color: var(--jain-gold);
-        }
-        
-        .leader-tab.active {
-            background: var(--jain-gold);
-            color: var(--jain-blue);
-            border-color: var(--jain-gold);
-            font-weight: 600;
-        }
-        
-        .leader-tab i {
-            margin-right: 4px;
-            font-size: 10px;
-        }
-        
-        /* Chat Popup */
-        .chat-popup-btn {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: var(--jain-blue);
-            color: var(--jain-gold);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(4, 4, 58, 0.3);
-            transition: all 0.3s ease;
-            z-index: 1000;
-        }
-        
-        .chat-popup-btn:hover {
-            transform: scale(1.1);
-            background: #1e3c72;
-        }
-        
-        .chat-popup {
-            position: fixed;
-            bottom: 80px;
-            right: 20px;
-            width: 350px;
-            height: 500px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-            display: flex;
-            flex-direction: column;
-            z-index: 1000;
-            border: 1px solid #e5e7eb;
-            transition: all 0.3s ease;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(20px);
-        }
-        
-        .chat-popup.active {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
-        
-        .chat-header {
-            padding: 12px 16px;
-            background: var(--jain-blue);
-            color: white;
-            border-radius: 12px 12px 0 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .chat-header h3 {
-            font-size: 14px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .chat-header button {
-            color: white;
-            opacity: 0.8;
-            transition: opacity 0.2s ease;
-        }
-        
-        .chat-header button:hover {
-            opacity: 1;
-        }
-        
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px;
-            background: #f9fafb;
-        }
-        
-        .chat-input-area {
-            padding: 12px;
-            border-top: 1px solid #e5e7eb;
-            display: flex;
-            gap: 8px;
-        }
-        
-        .chat-input-area input {
-            flex: 1;
-            padding: 8px 12px;
-            border: 1px solid #e5e7eb;
+        /* Mobile Menu */
+        .mobile-menu-btn {
+            display: none;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(197, 165, 114, 0.3);
             border-radius: 8px;
-            font-size: 13px;
-        }
-        
-        .chat-input-area input:focus {
-            outline: none;
-            border-color: var(--jain-gold);
-            box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.1);
-        }
-        
-        .chat-input-area button {
-            padding: 8px 16px;
-            background: var(--jain-blue);
+            padding: 8px;
             color: white;
-            border-radius: 8px;
-            font-size: 13px;
-            transition: all 0.2s ease;
+            cursor: pointer;
         }
         
-        .chat-input-area button:hover {
-            background: #1e3c72;
-        }
-        
-        .chat-message {
-            margin-bottom: 12px;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .chat-message.sent {
-            align-items: flex-end;
-        }
-        
-        .chat-message.received {
-            align-items: flex-start;
-        }
-        
-        .message-bubble {
-            max-width: 80%;
-            padding: 8px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            line-height: 1.4;
-        }
-        
-        .chat-message.sent .message-bubble {
-            background: var(--jain-gold);
-            color: var(--jain-blue);
-            border-bottom-right-radius: 4px;
-        }
-        
-        .chat-message.received .message-bubble {
-            background: white;
-            color: #1f2937;
-            border: 1px solid #e5e7eb;
-            border-bottom-left-radius: 4px;
-        }
-        
-        .message-time {
-            font-size: 9px;
-            color: #9ca3af;
-            margin-top: 2px;
-            padding: 0 4px;
-        }
-        
-        .chat-message.sent .message-time {
-            text-align: right;
-        }
-        
-        /* Notification Center */
-        #notificationCenter {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            z-index: 9999;
-            width: 320px;
-            max-width: 90vw;
-        }
-        
-        .notification-toast {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-            margin-bottom: 10px;
-            padding: 12px;
-            transform: translateX(-100%);
-            opacity: 0;
-            transition: all 0.3s ease;
-            border-left: 4px solid;
-            border: 1px solid #e5e7eb;
-        }
-        
-        .notification-toast.show {
-            transform: translateX(0);
-            opacity: 1;
-        }
-        
-        .notification-toast.success { border-left-color: #10b981; }
-        .notification-toast.error { border-left-color: #ef4444; }
-        .notification-toast.warning { border-left-color: #f59e0b; }
-        .notification-toast.info { border-left-color: #3b82f6; }
-        
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-                transition: transform 0.3s ease;
+        @media (max-width: 1024px) {
+            .nav-menu {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: var(--jain-navy);
+                flex-direction: column;
+                padding: 16px;
+                margin: 0;
+                border-top: 1px solid rgba(197, 165, 114, 0.2);
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
             }
             
-            .sidebar.open {
-                transform: translateX(0);
+            .nav-menu.active {
+                display: flex;
             }
             
-            .main-content {
-                margin-left: 0;
+            .nav-item {
+                width: 100%;
+            }
+            
+            .mobile-menu-btn {
+                display: block;
+            }
+            
+            .search-bar {
+                width: 200px;
+            }
+            
+            .search-bar:focus {
+                width: 240px;
             }
             
             .notification-dropdown {
-                width: 300px;
-                right: -50px;
+                width: 320px;
+                right: -80px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 16px;
             }
             
-            .leader-tabs {
-                flex-wrap: wrap;
+            .logo-text h1 {
+                font-size: 0.9rem;
             }
             
-            .leader-tab {
-                flex: 1 1 calc(33.333% - 2px);
+            .user-name {
+                display: none;
             }
             
-            .chat-popup {
-                width: 300px;
-                right: 10px;
+            .search-bar {
+                width: 160px;
+            }
+            
+            .search-bar:focus {
+                width: 200px;
             }
         }
     </style>
@@ -878,390 +700,296 @@
         {% set notifications = [] %}
     {% endif %}
     
-    <div class="flex h-screen">
-        
-        <!-- SIDEBAR NAVIGATION - White with Black Text -->
-        <aside class="sidebar">
-            <!-- Logo Section -->
-            <div class="p-5 logo-container">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 logo-icon rounded-xl flex items-center justify-center">
-                        <i class="fas fa-university text-xl"></i>
+    <!-- TOP NAVIGATION - Dark Navy Blue -->
+    <nav class="top-nav">
+        <div class="nav-container">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <div class="logo-area">
+                    <div class="logo-icon">
+                        <i class="fas fa-university"></i>
                     </div>
                     <div class="logo-text">
-                        <h1 class="text-base font-bold">Jain University</h1>
-                        <p class="text-[10px]">Office of Academics</p>
+                        <h1>Jain (Deemed-to-be University)</h1>
+                        <p>Office of Academics</p>
                     </div>
                 </div>
-            </div>
 
-            <!-- User Info Card -->
-            {% if session.email %}
-            <div class="user-info-card">
-                <div class="flex items-center gap-2 mb-2">
-                    <div class="user-avatar">
-                        {{ session.email[0:1].upper() }}
-                    </div>
-                    <div class="flex-1">
-                        <p class="text-xs font-semibold truncate">{{ session.email.split('@')[0] }}</p>
-                        <div class="flex items-center gap-1 mt-1">
-                            <span class="role-badge">
-                                {% if session.special_role == 'leader' %}
-                                    <i class="fas fa-crown mr-1"></i> Leader
-                                {% elif session.special_role == 'office_barrier' or session.user_type == 'core' %}
-                                    <i class="fas fa-users mr-1"></i> Core
-                                {% else %}
-                                    <i class="fas fa-user mr-1"></i> Faculty
-                                {% endif %}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Status Bar -->
-                <div class="flex items-center justify-between pt-2 border-t border-gray-200">
-                    <span class="text-[10px] bg-gray-100 text-gray-700 px-2 py-1 rounded-full flex items-center gap-1">
-                        <i class="fas fa-circle online-indicator text-[8px]"></i>
-                        Online
-                    </span>
+                <!-- Desktop Navigation -->
+                <div class="nav-menu" id="navMenu">
+                    <a href="{{ url_for('home') }}" class="nav-item {% if request.endpoint == 'home' %}active{% endif %}">
+                        <i class="fas fa-home"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    
+                    <a href="{{ url_for('usernewsletters') }}" class="nav-item {% if request.endpoint == 'usernewsletters' %}active{% endif %}">
+                        <i class="fas fa-newspaper"></i>
+                        <span>Newsletters</span>
+                    </a>
+
                     {% if session.approved %}
-                    <span class="text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded-full">
-                        <i class="fas fa-check-circle mr-1"></i> Approved
-                    </span>
-                    {% else %}
-                    <span class="text-[10px] bg-red-100 text-red-700 px-2 py-1 rounded-full">
-                        <i class="fas fa-clock mr-1"></i> Pending
-                    </span>
-                    {% endif %}
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- Main Navigation -->
-            <div class="px-2 py-3">
-                <div class="section-header">
-                    <i class="fas fa-compass mr-1"></i> Main Menu
-                </div>
-                
-                <a href="{{ url_for('home') }}" class="nav-item {% if request.endpoint == 'home' %}active{% endif %}">
-                    <i class="fas fa-home"></i>
-                    <span>Dashboard</span>
-                </a>
-                
-                <a href="{{ url_for('usernewsletters') }}" class="nav-item {% if request.endpoint == 'usernewsletters' %}active{% endif %}">
-                    <i class="fas fa-newspaper"></i>
-                    <span>Newsletters</span>
-                </a>
-
-                <!-- Role-Based Navigation -->
-                {% if session.approved %}
-                    {% if session.special_role == 'leader' %}
-                    <div class="px-2 py-2">
-                        <div class="section-header">
-                            <i class="fas fa-crown mr-1"></i> Leadership
-                        </div>
+                        {% if session.special_role == 'leader' %}
                         <a href="{{ url_for('leader_dashboard') }}" class="nav-item {% if request.endpoint == 'leader_dashboard' %}active{% endif %}">
-                            <i class="fas fa-tachometer-alt"></i>
+                            <i class="fas fa-crown"></i>
                             <span>Leader Dashboard</span>
                         </a>
+                        {% endif %}
                         
-                        <!-- Leader Navigation Tabs -->
-                        <div class="leader-tabs">
-                            <button onclick="switchLeaderTab('share')" class="leader-tab {% if active_tab == 'share' %}active{% endif %}" data-leader-tab="share">
-                                <i class="fas fa-share-alt"></i> Share
-                            </button>
-                            <button onclick="switchLeaderTab('assign')" class="leader-tab {% if active_tab == 'assign' %}active{% endif %}" data-leader-tab="assign">
-                                <i class="fas fa-tasks"></i> Assign
-                            </button>
-                            <button onclick="switchLeaderTab('pending')" class="leader-tab {% if active_tab == 'pending' %}active{% endif %}" data-leader-tab="pending">
-                                <i class="fas fa-clock"></i> Pending
-                                {% if pending_count is defined and pending_count > 0 %}<span class="ml-1 bg-yellow-500 text-white px-1 rounded-full text-[8px]">{{ pending_count }}</span>{% endif %}
-                            </button>
-                            <button onclick="switchLeaderTab('analytics')" class="leader-tab {% if active_tab == 'analytics' %}active{% endif %}" data-leader-tab="analytics">
-                                <i class="fas fa-chart-line"></i> Analytics
-                            </button>
-                            <button onclick="switchLeaderTab('shared')" class="leader-tab {% if active_tab == 'shared' %}active{% endif %}" data-leader-tab="shared">
-                                <i class="fas fa-share-alt"></i> Shared
-                            </button>
-                            <button onclick="switchLeaderTab('assigned')" class="leader-tab {% if active_tab == 'assigned' %}active{% endif %}" data-leader-tab="assigned">
-                                <i class="fas fa-tasks"></i> Tasks
-                            </button>
-                            <button onclick="switchLeaderTab('members')" class="leader-tab {% if active_tab == 'members' %}active{% endif %}" data-leader-tab="members">
-                                <i class="fas fa-users"></i> Members
-                            </button>
-                        </div>
-                    </div>
-                    {% endif %}
-                    
-                    {% if session.special_role == 'office_barrier' or session.user_type == 'core' %}
-                    <div class="px-2 py-1">
-                        <div class="section-header">
-                            <i class="fas fa-users mr-1"></i> Core Team
-                        </div>
+                        {% if session.special_role == 'office_barrier' or session.user_type == 'core' %}
                         <a href="{{ url_for('core_dashboard') }}" class="nav-item {% if request.endpoint == 'core_dashboard' %}active{% endif %}">
-                            <i class="fas fa-tachometer-alt"></i>
+                            <i class="fas fa-users"></i>
                             <span>Core Dashboard</span>
                         </a>
-                        <a href="{{ url_for('my_files') }}" class="nav-item {% if request.endpoint == 'my_files' %}active{% endif %}">
-                            <i class="fas fa-folder-open"></i>
-                            <span>My Documents</span>
-                        </a>
-                    </div>
-                    {% endif %}
-                    
-                    {% if session.role == 'admin' %}
-                    <div class="px-2 py-1">
-                        <div class="section-header">
-                            <i class="fas fa-shield-alt mr-1"></i> Admin
-                        </div>
+                        
+                        {% endif %}
+                        
+                        {% if session.role == 'admin' %}
                         <a href="{{ url_for('admin_dashboard') }}" class="nav-item {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">
                             <i class="fas fa-users-cog"></i>
-                            <span>User Management</span>
+                            <span>Admin</span>
                         </a>
                         <a href="{{ url_for('edit_ugc') }}" class="nav-item">
                             <i class="fas fa-edit"></i>
-                            <span>Edit UGC</span>
+                            <span>UGC</span>
                         </a>
                         <a href="{{ url_for('admin_events') }}" class="nav-item">
                             <i class="fas fa-calendar-plus"></i>
-                            <span>Manage Events</span>
+                            <span>Events</span>
                         </a>
-                    </div>
+                        {% endif %}
+
+                        <!-- Department Repository -->
+                        <a href="{{ url_for('dept_repo') }}" class="nav-item {% if request.endpoint == 'dept_repo' %}active{% endif %}">
+                            <i class="fas fa-database"></i>
+                            <span>Repository</span>
+                        </a>
+                        {% if session.user_type == 'core' or session.special_role == 'office_barrier' %}
+                        <a href="{{ url_for('core_repo') }}" class="nav-item {% if request.endpoint == 'core_repo' %}active{% endif %}">
+                            <i class="fas fa-upload"></i>
+                            <span>Manage Repo</span>
+                        </a>
+                        {% endif %}
                     {% endif %}
-                {% endif %}
-
-                <!-- Drive Folders Section -->
-                {% if user_navbar and user_navbar|length > 0 %}
-                <div class="px-2 py-1">
-                    <div class="section-header">
-                        <i class="fab fa-google-drive mr-1"></i> Folders
-                        <span class="badge ml-1">{{ user_navbar|length }}</span>
-                    </div>
-                    {% for item in user_navbar[:3] %}
-                    <a href="{{ item.link }}" target="_blank" class="nav-item">
-                        <i class="fas fa-folder" style="color: var(--jain-blue);"></i>
-                        <span class="truncate text-xs">{{ item.name|truncate(20) }}</span>
-                    </a>
-                    {% endfor %}
                 </div>
-                {% endif %}
-            </div>
-        </aside>
 
-        <!-- Bottom Navigation (Fixed) -->
-        <div class="sidebar-bottom">
-            <div class="space-y-1">
-                <!-- Settings with Dropdown -->
-                <div class="settings-dropdown">
-                    <div class="settings-menu" id="settingsMenu">
-                        <a href="#" class="settings-item" onclick="showComingSoon('Profile Settings')">
-                            <i class="fas fa-user"></i>
-                            <span>Profile</span>
-                        </a>
-                        <a href="#" class="settings-item" onclick="showComingSoon('Appearance')">
-                            <i class="fas fa-palette"></i>
-                            <span>Appearance</span>
-                        </a>
-                        <a href="#" class="settings-item" onclick="showComingSoon('Notifications')">
+                <!-- Right Side Actions -->
+                <div class="flex items-center gap-3">
+                    <!-- Search -->
+                    <div class="search-container hidden md:block">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" placeholder="Search..." class="search-bar" id="globalSearch">
+                    </div>
+
+                    <!-- Notifications -->
+                    <div class="relative">
+                        <button class="action-btn" onclick="toggleNotifications()" id="notificationBtn">
                             <i class="fas fa-bell"></i>
-                            <span>Notifications</span>
-                        </a>
-                        <a href="#" class="settings-item" onclick="showComingSoon('Help')">
-                            <i class="fas fa-question-circle"></i>
-                            <span>Help</span>
-                        </a>
-                    </div>
-                    <button onclick="toggleSettings()" class="nav-item text-sm w-full">
-                        <i class="fas fa-cog"></i>
-                        <span>Settings</span>
-                        <i class="fas fa-chevron-up ml-auto text-xs" id="settingsChevron"></i>
-                    </button>
-                </div>
-
-                <a href="{{ url_for('logout') }}" class="nav-item text-sm" onclick="return confirm('Are you sure you want to logout?')">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Logout</span>
-                </a>
-            </div>
-        </div>
-
-        <!-- MAIN CONTENT -->
-        <div class="main-content flex-1 flex flex-col overflow-hidden">
-            
-            <!-- TOP HEADER -->
-            <header class="top-header">
-                <div class="px-6 py-3 flex items-center justify-between">
-                    <div>
-                        <h2 class="page-title">{% block page_title %}Welcome{% endblock %}</h2>
-                        <p class="page-subtitle mt-0.5">{% block page_subtitle %}Jain University - Office of Academics{% endblock %}</p>
-                    </div>
-                    
-                    <!-- Top Right Actions -->
-                    <div class="flex items-center gap-3">
-                        <!-- Search -->
-                        <div class="relative hidden md:block">
-                            <i class="fas fa-search search-icon"></i>
-                            <input type="text" placeholder="Search..." class="search-bar" id="globalSearch">
-                        </div>
-
-                        <!-- Notifications Bell with Dropdown -->
-                        <div class="relative">
-                            <button class="notification-btn" onclick="toggleNotifications()" id="notificationBtn">
-                                <i class="fas fa-bell text-base"></i>
-                                {% if notifications and notifications|length > 0 %}
-                                <span class="notification-badge"></span>
-                                {% endif %}
-                            </button>
+                            {% if notifications and notifications|length > 0 %}
+                            <span class="notification-badge"></span>
+                            {% endif %}
+                        </button>
+                        
+                        <!-- Notification Dropdown -->
+                        <div class="notification-dropdown" id="notificationDropdown">
+                            <div class="notification-header">
+                                <h3><i class="fas fa-bell mr-2"></i> Notifications</h3>
+                                <span>{{ notifications|length }}</span>
+                            </div>
                             
-                            <!-- Notification Dropdown -->
-                            <div class="notification-dropdown" id="notificationDropdown">
-                                <div class="notification-header">
-                                    <h3><i class="fas fa-bell mr-2"></i> Notifications</h3>
-                                    <span>{{ notifications|length }}</span>
-                                </div>
-                                
-                                <div class="notification-list">
-                                    {% if notifications and notifications|length > 0 %}
-                                        {% for notification in notifications[:5] %}
-                                        <div class="notification-item {% if loop.first %}unread{% endif %}">
-                                            <div class="notification-icon">
-                                                {% if notification.type == 'reminder' %}
-                                                    <i class="fas fa-bell"></i>
-                                                {% elif notification.type == 'document' %}
-                                                    <i class="fas fa-file-alt"></i>
-                                                {% elif notification.type == 'event' %}
-                                                    <i class="fas fa-calendar"></i>
-                                                {% elif notification.type == 'task' %}
-                                                    <i class="fas fa-tasks"></i>
-                                                {% elif notification.type == 'progress' %}
-                                                    <i class="fas fa-chart-line"></i>
-                                                {% else %}
-                                                    <i class="fas fa-info-circle"></i>
-                                                {% endif %}
-                                            </div>
-                                            <div class="notification-content">
-                                                <div class="notification-title">{{ notification.title|truncate(30) }}</div>
-                                                <div class="notification-message">{{ notification.message|truncate(40) }}</div>
-                                                <div class="notification-time">
-                                                    <i class="far fa-clock"></i>
-                                                    {{ notification.time.strftime('%I:%M %p') if notification.time else 'Just now' }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {% endfor %}
-                                    {% else %}
-                                        <div class="text-center py-6 px-4">
-                                            <div class="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                                                <i class="fas fa-bell-slash text-gray-400 text-xl"></i>
-                                            </div>
-                                            <p class="text-gray-500 text-xs">No notifications</p>
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                
+                            <div class="notification-list">
                                 {% if notifications and notifications|length > 0 %}
-                                <a href="{{ url_for('user_dashboard') }}" class="view-all-btn">
-                                    View All <i class="fas fa-arrow-right ml-1"></i>
-                                </a>
+                                    {% for notification in notifications[:5] %}
+                                    <div class="notification-item {% if loop.first %}unread{% endif %}">
+                                        <div class="notification-icon">
+                                            {% if notification.type == 'reminder' %}
+                                                <i class="fas fa-bell"></i>
+                                            {% elif notification.type == 'document' %}
+                                                <i class="fas fa-file-alt"></i>
+                                            {% elif notification.type == 'event' %}
+                                                <i class="fas fa-calendar"></i>
+                                            {% elif notification.type == 'task' %}
+                                                <i class="fas fa-tasks"></i>
+                                            {% elif notification.type == 'progress' %}
+                                                <i class="fas fa-chart-line"></i>
+                                            {% else %}
+                                                <i class="fas fa-info-circle"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div class="notification-content">
+                                            <div class="notification-title">{{ notification.title|truncate(30) }}</div>
+                                            <div class="notification-message">{{ notification.message|truncate(40) }}</div>
+                                            <div class="notification-time">
+                                                <i class="far fa-clock"></i>
+                                                {{ notification.time.strftime('%I:%M %p') if notification.time else 'Just now' }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="text-center py-6 px-4">
+                                        <div class="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                                            <i class="fas fa-bell-slash text-gray-400 text-xl"></i>
+                                        </div>
+                                        <p class="text-gray-500 text-xs">No notifications</p>
+                                    </div>
                                 {% endif %}
                             </div>
+                            
+                            {% if notifications and notifications|length > 0 %}
+                            <a href="{{ url_for('user_dashboard') }}" class="view-all-btn">
+                                View All <i class="fas fa-arrow-right ml-1"></i>
+                            </a>
+                            {% endif %}
                         </div>
+                    </div>
 
-                        <!-- User Avatar -->
-                        <div class="flex items-center gap-2 border-l border-gray-200 pl-3">
-                            <div class="avatar">
+                    <!-- User Menu -->
+                    <div class="user-menu">
+                        <div class="user-menu-btn" onclick="toggleUserMenu()" id="userMenuBtn">
+                            <div class="user-avatar">
                                 {% if session.email %}
                                 {{ session.email[0:1].upper() }}
                                 {% else %}
                                 <i class="fas fa-user"></i>
                                 {% endif %}
                             </div>
-                            <div class="hidden lg:block">
-                                <p class="text-xs font-semibold text-gray-900">
+                            <div class="user-info hidden lg:block">
+                                <span class="user-name">
                                     {% if session.email %}
                                     {{ session.email.split('@')[0] }}
                                     {% else %}
                                     Guest
                                     {% endif %}
-                                </p>
-                                <p class="text-[10px] text-gray-500">
+                                </span>
+                                <span class="user-role">
                                     {% if session.special_role == 'leader' %}
-                                        Leader
+                                        <i class="fas fa-crown"></i> Leader
                                     {% elif session.special_role == 'office_barrier' or session.user_type == 'core' %}
-                                        Core Team
+                                        <i class="fas fa-users"></i> Core Team
                                     {% elif session.role == 'admin' %}
-                                        Admin
+                                        <i class="fas fa-shield-alt"></i> Admin
                                     {% else %}
-                                        Faculty
+                                        <i class="fas fa-user"></i> Faculty
                                     {% endif %}
-                                </p>
+                                </span>
                             </div>
+                            <i class="fas fa-chevron-down text-xs text-[#C5A572] ml-1"></i>
                         </div>
-                    </div>
-                </div>
-            </header>
 
-            <!-- MAIN CONTENT AREA -->
-            <main class="flex-1 overflow-y-auto">
-                <!-- Flash Messages -->
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                        {% for category, message in messages %}
-                            <div class="alert">
-                                <div class="alert-{{ category }} px-3 py-2 rounded-xl flex items-center gap-2 shadow-sm text-sm">
-                                    {% if category == 'error' %}
-                                        <i class="fas fa-exclamation-circle"></i>
-                                    {% elif category == 'success' %}
-                                        <i class="fas fa-check-circle"></i>
-                                    {% elif category == 'info' %}
-                                        <i class="fas fa-info-circle"></i>
-                                    {% else %}
-                                        <i class="fas fa-exclamation-triangle"></i>
-                                    {% endif %}
-                                    <span class="flex-1">{{ message }}</span>
-                                    <button onclick="this.parentElement.parentElement.remove()" class="hover:opacity-70">
-                                        <i class="fas fa-times"></i>
-                                    </button>
+                        <!-- User Dropdown -->
+                        <div class="user-dropdown" id="userDropdown">
+                            <div class="dropdown-header">
+                                <div class="user-name-lg">{{ session.email.split('@')[0] if session.email else 'Guest' }}</div>
+                                <div class="user-email">{{ session.email if session.email else 'Not logged in' }}</div>
+                                {% if session.user_department %}
+                                <div class="text-[11px] mt-1 text-[#C5A572]">
+                                    <i class="fas fa-building mr-1"></i> {{ session.user_department }}
                                 </div>
+                                {% endif %}
+                                {% if session.user_location %}
+                                <div class="text-[11px] text-[#C5A572]">
+                                    <i class="fas fa-map-marker-alt mr-1"></i> {{ session.user_location }}
+                                </div>
+                                {% endif %}
                             </div>
-                        {% endfor %}
-                    {% endif %}
-                {% endwith %}
-
-                <!-- Page Content -->
-                {% block content %}
-                    <div class="p-6">
-                        <div class="bg-white rounded-xl shadow-sm p-8 text-center border border-gray-100">
-                            <div class="inline-block p-3 bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-full mb-3">
-                                <i class="fas fa-graduation-cap text-2xl" style="color: var(--jain-blue);"></i>
+                            <div class="dropdown-menu">
+                                <a href="#" class="dropdown-item" onclick="showComingSoon('My Profile')">
+                                    <i class="fas fa-user"></i>
+                                    <span>My Profile</span>
+                                </a>
+                                <a href="#" class="dropdown-item" onclick="showComingSoon('Settings')">
+                                    <i class="fas fa-cog"></i>
+                                    <span>Settings</span>
+                                </a>
+                                <a href="#" class="dropdown-item" onclick="showComingSoon('Help')">
+                                    <i class="fas fa-question-circle"></i>
+                                    <span>Help & Support</span>
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a href="{{ url_for('logout') }}" class="dropdown-item text-red-600" onclick="return confirm('Are you sure you want to logout?')">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                    <span>Logout</span>
+                                </a>
                             </div>
-                            <h3 class="text-lg font-bold mb-1" style="color: var(--jain-blue);">Welcome to Jain University</h3>
-                            <p class="text-sm text-gray-500">Office of Academics</p>
-                            
-                            {% if not session.approved and session.email %}
-                            <div class="mt-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200 text-xs">
-                                <i class="fas fa-clock text-yellow-600 mr-1"></i>
-                                <span class="text-yellow-800">Account pending approval</span>
-                            </div>
-                            {% endif %}
                         </div>
                     </div>
-                {% endblock %}
-            </main>
 
-            <!-- FOOTER -->
-            <footer class="footer">
-                <div class="flex items-center justify-between text-xs text-gray-600">
-                    <p>© 2026 Jain University</p>
-                    <div class="flex gap-4">
-                        <a href="{{ url_for('about') }}" class="hover:text-yellow-600">About</a>
-                        <a href="#" onclick="showComingSoon('Contact')">Contact</a>
-                        <a href="#" onclick="showComingSoon('Privacy')">Privacy</a>
-                    </div>
+                    <!-- Mobile Menu Button -->
+                    <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                        <i class="fas fa-bars"></i>
+                    </button>
                 </div>
-            </footer>
+            </div>
         </div>
-    </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">{% block page_title %}Jain (Deemed-to-be University){% endblock %}</h1>
+            <p class="page-subtitle">{% block page_subtitle %}Office of Academics{% endblock %}</p>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert">
+                        <div class="alert-{{ category }} px-3 py-2 rounded-xl flex items-center gap-2 shadow-sm text-sm">
+                            {% if category == 'error' %}
+                                <i class="fas fa-exclamation-circle"></i>
+                            {% elif category == 'success' %}
+                                <i class="fas fa-check-circle"></i>
+                            {% elif category == 'info' %}
+                                <i class="fas fa-info-circle"></i>
+                            {% else %}
+                                <i class="fas fa-exclamation-triangle"></i>
+                            {% endif %}
+                            <span class="flex-1">{{ message }}</span>
+                            <button onclick="this.parentElement.parentElement.remove()" class="hover:opacity-70">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Page Content -->
+        {% block content %}
+            <div class="jain-card text-center p-12">
+                <div class="inline-block p-4 bg-gradient-to-br from-[#C5A572] to-[#E8D5B5] rounded-full mb-4">
+                    <i class="fas fa-university text-3xl" style="color: var(--jain-navy);"></i>
+                </div>
+                <h2 class="text-2xl font-bold mb-2" style="color: var(--jain-navy);">Welcome to Jain (Deemed-to-be University)</h2>
+                <p class="text-gray-600 mb-4">Office of Academics Portal</p>
+                
+                {% if not session.approved and session.email %}
+                <div class="mt-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200 text-xs inline-block">
+                    <i class="fas fa-clock text-yellow-600 mr-1"></i>
+                    <span class="text-yellow-800">Account pending approval</span>
+                </div>
+                {% endif %}
+                
+                <!-- Jain University Motto -->
+                <div class="jain-divider max-w-md mx-auto my-6"></div>
+                <p class="text-sm italic text-[#8B1E3F]">"श्रद्धावान् लभते ज्ञानम्" - The faithful attain knowledge</p>
+            </div>
+        {% endblock %}
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="flex items-center justify-between text-xs text-gray-600">
+            <p>© 2026 Jain (Deemed-to-be University). All rights reserved.</p>
+            <div class="flex gap-4">
+                <a href="{{ url_for('about') }}" class="hover:text-[#0A1929]">About</a>
+                <a href="#" onclick="showComingSoon('Contact')">Contact</a>
+                <a href="#" onclick="showComingSoon('Privacy')">Privacy</a>
+            </div>
+        </div>
+    </footer>
 
     <!-- Chat Popup Button -->
     <div class="chat-popup-btn" onclick="toggleChat()" id="chatPopupBtn">
@@ -1297,12 +1025,12 @@
     <!-- Coming Soon Modal -->
     <div id="comingSoonModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-white p-6 rounded-xl shadow-2xl max-w-sm text-center">
-            <div class="w-14 h-14 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <i class="fas fa-rocket text-xl" style="color: var(--jain-blue);"></i>
+            <div class="w-14 h-14 bg-[#C5A572] bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-rocket text-xl" style="color: var(--jain-navy);"></i>
             </div>
-            <h3 class="text-base font-bold mb-1" style="color: var(--jain-blue);">Coming Soon!</h3>
+            <h3 class="text-base font-bold mb-1" style="color: var(--jain-navy);">Coming Soon!</h3>
             <p class="text-sm text-gray-600 mb-4" id="comingSoonMessage">This feature is under development</p>
-            <button onclick="closeComingSoon()" class="px-4 py-1.5 text-sm rounded-lg text-white" style="background: var(--jain-blue);">
+            <button onclick="closeComingSoon()" class="px-4 py-1.5 text-sm rounded-lg text-white" style="background: var(--jain-navy);">
                 Got it
             </button>
         </div>
@@ -1312,7 +1040,7 @@
     <div id="taskUpdateModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-xl w-full max-w-md">
             <div class="flex items-center justify-between p-4 border-b border-gray-200">
-                <h3 class="text-lg font-bold text-[#04043a]">Update Task Progress</h3>
+                <h3 class="text-lg font-bold text-[#0A1929]">Update Task Progress</h3>
                 <button onclick="closeTaskModal()" class="text-gray-500 hover:text-gray-700">
                     <i class="fas fa-times"></i>
                 </button>
@@ -1323,7 +1051,7 @@
                     
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Update Status</label>
-                        <select id="taskStatus" name="status" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500" required>
+                        <select id="taskStatus" name="status" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C5A572]" required>
                             <option value="in_progress">In Progress</option>
                             <option value="completed">Completed</option>
                         </select>
@@ -1340,7 +1068,7 @@
                     
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Add Comment (Optional)</label>
-                        <textarea id="taskComment" name="comment" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500" placeholder="Add a comment about your progress..."></textarea>
+                        <textarea id="taskComment" name="comment" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C5A572]" placeholder="Add a comment about your progress..."></textarea>
                     </div>
                     
                     <div class="mb-4">
@@ -1349,7 +1077,7 @@
                     </div>
                     
                     <div class="flex gap-2">
-                        <button type="submit" class="flex-1 bg-[#04043a] text-white px-4 py-2 rounded-lg hover:bg-[#1e3c72] transition">
+                        <button type="submit" class="flex-1 bg-[#0A1929] text-white px-4 py-2 rounded-lg hover:bg-[#1E3A5F] transition">
                             Update Task
                         </button>
                         <button type="button" onclick="closeTaskModal()" class="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition">
@@ -1361,13 +1089,206 @@
         </div>
     </div>
 
+    <style>
+        /* Chat Popup Styles */
+        .chat-popup-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--jain-navy);
+            color: var(--jain-gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(10, 25, 41, 0.3);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .chat-popup-btn:hover {
+            transform: scale(1.1);
+            background: var(--jain-navy-light);
+        }
+        
+        .chat-popup {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 350px;
+            height: 500px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(10, 25, 41, 0.2);
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+            border: 1px solid var(--jain-gold);
+            transition: all 0.3s ease;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(20px);
+        }
+        
+        .chat-popup.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .chat-header {
+            padding: 12px 16px;
+            background: var(--jain-navy);
+            color: white;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .chat-header h3 {
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            background: #f9fafb;
+        }
+        
+        .chat-input-area {
+            padding: 12px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: 8px;
+        }
+        
+        .chat-input-area input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+        
+        .chat-input-area input:focus {
+            outline: none;
+            border-color: var(--jain-gold);
+            box-shadow: 0 0 0 2px rgba(197, 165, 114, 0.1);
+        }
+        
+        .chat-input-area button {
+            padding: 8px 16px;
+            background: var(--jain-navy);
+            color: white;
+            border-radius: 8px;
+            font-size: 13px;
+            transition: all 0.2s ease;
+        }
+        
+        .chat-input-area button:hover {
+            background: var(--jain-navy-light);
+        }
+        
+        .chat-message {
+            margin-bottom: 12px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-message.sent {
+            align-items: flex-end;
+        }
+        
+        .chat-message.received {
+            align-items: flex-start;
+        }
+        
+        .message-bubble {
+            max-width: 80%;
+            padding: 8px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        
+        .chat-message.sent .message-bubble {
+            background: var(--jain-gold);
+            color: var(--jain-navy);
+            border-bottom-right-radius: 4px;
+        }
+        
+        .chat-message.received .message-bubble {
+            background: white;
+            color: var(--jain-text);
+            border: 1px solid #e5e7eb;
+            border-bottom-left-radius: 4px;
+        }
+        
+        .message-time {
+            font-size: 9px;
+            color: #9ca3af;
+            margin-top: 2px;
+            padding: 0 4px;
+        }
+        
+        .notification-toast {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(10, 25, 41, 0.15);
+            margin-bottom: 10px;
+            padding: 12px;
+            transform: translateX(-100%);
+            opacity: 0;
+            transition: all 0.3s ease;
+            border-left: 4px solid;
+            border: 1px solid var(--jain-gold);
+        }
+        
+        .notification-toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        
+        #notificationCenter {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 9999;
+            width: 320px;
+            max-width: 90vw;
+        }
+    </style>
+
     <script>
+        // Toggle Mobile Menu
+        function toggleMobileMenu() {
+            const navMenu = document.getElementById('navMenu');
+            navMenu.classList.toggle('active');
+        }
+
+        // Toggle User Dropdown
+        function toggleUserMenu() {
+            const dropdown = document.getElementById('userDropdown');
+            dropdown.classList.toggle('active');
+        }
+
         // Settings Dropdown Toggle
         function toggleSettings() {
             const menu = document.getElementById('settingsMenu');
             const chevron = document.getElementById('settingsChevron');
-            menu.classList.toggle('active');
-            chevron.style.transform = menu.classList.contains('active') ? 'rotate(180deg)' : 'rotate(0deg)';
+            if (menu) {
+                menu.classList.toggle('active');
+                if (chevron) chevron.style.transform = menu.classList.contains('active') ? 'rotate(180deg)' : 'rotate(0deg)';
+            }
         }
 
         // Notifications Dropdown Toggle
@@ -1385,14 +1306,14 @@
 
         // Close dropdowns when clicking outside
         document.addEventListener('click', function(event) {
-            const settingsDropdown = document.querySelector('.settings-dropdown');
-            if (settingsDropdown && !settingsDropdown.contains(event.target)) {
-                const menu = document.getElementById('settingsMenu');
-                const chevron = document.getElementById('settingsChevron');
-                if (menu) menu.classList.remove('active');
-                if (chevron) chevron.style.transform = 'rotate(0deg)';
+            // User dropdown
+            const userMenu = document.querySelector('.user-menu');
+            const userDropdown = document.getElementById('userDropdown');
+            if (userMenu && userDropdown && !userMenu.contains(event.target)) {
+                userDropdown.classList.remove('active');
             }
             
+            // Notifications
             const notificationBtn = document.getElementById('notificationBtn');
             const notificationDropdown = document.getElementById('notificationDropdown');
             if (notificationBtn && notificationDropdown && 
@@ -1401,6 +1322,14 @@
                 notificationDropdown.classList.remove('active');
             }
             
+            // Mobile menu - close when clicking outside
+            const navMenu = document.getElementById('navMenu');
+            const mobileBtn = document.querySelector('.mobile-menu-btn');
+            if (navMenu && mobileBtn && !navMenu.contains(event.target) && !mobileBtn.contains(event.target)) {
+                navMenu.classList.remove('active');
+            }
+            
+            // Chat popup
             const chatPopup = document.getElementById('chatPopup');
             const chatBtn = document.getElementById('chatPopupBtn');
             if (chatPopup && chatBtn && !chatPopup.contains(event.target) && !chatBtn.contains(event.target)) {
@@ -1408,7 +1337,7 @@
             }
         });
 
-        // Switch Leader Tab Function
+        // Switch Leader Tab Function (if needed)
         function switchLeaderTab(tabName) {
             const currentPath = window.location.pathname;
             if (currentPath.includes('leader_dashboard')) {
@@ -1452,7 +1381,7 @@
                             messageDiv.className = `chat-message ${msg.is_me ? 'sent' : 'received'}`;
                             messageDiv.innerHTML = `
                                 <div class="message-bubble">
-                                    <p class="font-semibold text-xs ${msg.is_me ? 'text-[#04043a]' : 'text-gray-700'}">${msg.sender_name}</p>
+                                    <p class="font-semibold text-xs ${msg.is_me ? 'text-[#0A1929]' : 'text-gray-700'}">${msg.sender_name}</p>
                                     <p class="text-xs">${msg.content}</p>
                                 </div>
                                 <div class="message-time">${msg.timestamp}</div>
@@ -1623,16 +1552,6 @@
                 }
             });
 
-            // Check URL hash for active leader tab
-            if (currentPath.includes('leader_dashboard') && window.location.hash) {
-                const hash = window.location.hash.substring(1);
-                const activeTab = document.querySelector(`.leader-tab[data-leader-tab="${hash}"]`);
-                if (activeTab) {
-                    document.querySelectorAll('.leader-tab').forEach(t => t.classList.remove('active'));
-                    activeTab.classList.add('active');
-                }
-            }
-
             // Global search
             const searchBar = document.getElementById('globalSearch');
             if (searchBar) {
@@ -1653,20 +1572,17 @@
                     e.preventDefault();
                     toggleNotifications();
                 }
-                if (e.altKey && e.key === 's') {
-                    e.preventDefault();
-                    toggleSettings();
-                }
                 if (e.altKey && e.key === 'c') {
                     e.preventDefault();
                     toggleChat();
                 }
                 if (e.key === 'Escape') {
                     document.getElementById('notificationDropdown')?.classList.remove('active');
-                    document.getElementById('settingsMenu')?.classList.remove('active');
+                    document.getElementById('userDropdown')?.classList.remove('active');
                     document.getElementById('chatPopup')?.classList.remove('active');
                     document.getElementById('comingSoonModal')?.classList.add('hidden');
                     document.getElementById('taskUpdateModal')?.classList.add('hidden');
+                    document.getElementById('navMenu')?.classList.remove('active');
                 }
             });
 
