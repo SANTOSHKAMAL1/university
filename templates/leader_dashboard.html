@@ -108,7 +108,7 @@ body { font-family: 'DM Sans', sans-serif; background: #f3f2fa; }
 .member-avatar { width: 48px; height: 48px; background: linear-gradient(135deg,var(--navy),#1a1a6e); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-family: 'Syne',sans-serif; font-size: 18px; font-weight: 700; margin: 0 auto 8px; position: relative; }
 .online-dot { position: absolute; bottom: 2px; right: 2px; width: 11px; height: 11px; background: #22c55e; border: 2px solid var(--surface); border-radius: 50%; }
 
-/* ── AI ── */
+/* ── Jain AI Panel ── */
 .ai-panel { background: linear-gradient(135deg,var(--navy) 0%,#1a1a6e 100%); border-radius: var(--radius-sm); padding: 1rem 1.25rem; margin-top: 10px; color: #fff; }
 .ai-panel-title { font-family: 'Syne',sans-serif; font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
 .ai-spark { color: var(--gold); }
@@ -120,7 +120,7 @@ body { font-family: 'DM Sans', sans-serif; background: #f3f2fa; }
 .ai-fill-btn { font-size:11px; color: #7c3aed; background: #f5f3ff; border: 1px solid #ede9fe; border-radius: 6px; padding: 4px 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; font-family: 'DM Sans',sans-serif; font-weight:600; }
 .ai-fill-btn:hover { background: #ede9fe; }
 
-/* ── Floating AI chat ── */
+/* ── Jain AI Chat ── */
 .ai-chat-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:99999; align-items:flex-end; justify-content:flex-end; padding:1.5rem; backdrop-filter:blur(3px); }
 .ai-chat-overlay.open { display:flex; }
 .ai-chat-box { background:var(--surface); border-radius:var(--radius); box-shadow:var(--shadow-lg); width:420px; max-height:600px; display:flex; flex-direction:column; border:1px solid var(--border); animation:slideUp .25s ease; }
@@ -128,20 +128,37 @@ body { font-family: 'DM Sans', sans-serif; background: #f3f2fa; }
 .ai-chat-header { background:linear-gradient(135deg,var(--navy),#1a1a6e); padding:1rem 1.25rem; border-radius:var(--radius) var(--radius) 0 0; display:flex; align-items:center; justify-content:space-between; }
 .ai-chat-title { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; color:#fff; display:flex; align-items:center; gap:8px; }
 .ai-chat-messages { flex:1; overflow-y:auto; padding:1rem; display:flex; flex-direction:column; gap:10px; min-height:200px; }
-.msg-user { background:var(--navy); color:#fff; padding:9px 13px; border-radius:12px 12px 3px 12px; font-size:13px; align-self:flex-end; max-width:85%; line-height:1.5; }
-.msg-ai { background:var(--surface-2); color:var(--text-main); padding:9px 13px; border-radius:12px 12px 12px 3px; font-size:13px; align-self:flex-start; max-width:90%; line-height:1.6; border:1px solid var(--border); white-space:pre-wrap; }
-.msg-thinking { color:var(--text-muted); font-size:12px; align-self:flex-start; display:flex; gap:4px; align-items:center; }
+.msg-user {
+  background:var(--navy); color:#fff;
+  padding:9px 13px; border-radius:12px 12px 3px 12px;
+  font-size:13px; line-height:1.5;
+  max-width:85%; width:fit-content;
+  margin-left:auto; margin-right:0;
+  align-self:flex-end;
+  word-break:break-word;
+}
+.msg-ai {
+  background:var(--surface-2); color:var(--text-main);
+  padding:9px 13px; border-radius:12px 12px 12px 3px;
+  font-size:13px; line-height:1.6;
+  border:1px solid var(--border); white-space:pre-wrap;
+  max-width:90%; width:fit-content;
+  margin-left:0; margin-right:auto;
+  align-self:flex-start;
+  word-break:break-word;
+}
+.msg-thinking { color:var(--text-muted); font-size:12px; align-self:flex-start; margin-left:0; margin-right:auto; display:flex; gap:4px; align-items:center; }
 .ai-chat-input-row { padding:.75rem 1rem; border-top:1px solid var(--border); display:flex; gap:8px; }
 .ai-chat-input { flex:1; padding:9px 13px; font-size:13px; border:1.5px solid var(--border); border-radius:var(--radius-sm); font-family:'DM Sans',sans-serif; background:var(--surface); color:var(--text-main); }
 .ai-chat-input:focus { outline:none; border-color:var(--navy); }
 .ai-chat-send { background:var(--navy); color:#fff; border:none; border-radius:var(--radius-sm); padding:9px 14px; cursor:pointer; }
 .ai-chat-send:hover { background:#1e3c72; }
 
-/* ── Floating btn ── */
+/* ── Floating Jain AI button ── */
 .ai-float-btn { position:fixed; bottom:2rem; right:2rem; z-index:9999; background:var(--navy); color:#fff; border:3px solid var(--gold); border-radius:50%; width:58px; height:58px; font-size:20px; cursor:pointer; box-shadow:0 4px 20px rgba(4,4,58,.35); display:flex; align-items:center; justify-content:center; transition:all .2s; }
 .ai-float-btn:hover { transform:scale(1.1); }
 
-/* ── File viewer ── */
+/* ── File viewer modal ── */
 .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:50000; align-items:center; justify-content:center; padding:1rem; backdrop-filter:blur(4px); }
 .modal-overlay.open { display:flex; }
 .modal-box { background:var(--surface); border-radius:var(--radius); box-shadow:var(--shadow-lg); width:100%; max-width:900px; max-height:92vh; display:flex; flex-direction:column; }
@@ -151,6 +168,35 @@ body { font-family: 'DM Sans', sans-serif; background: #f3f2fa; }
 .modal-close:hover { background:var(--surface-2); }
 .modal-body { flex:1; overflow:hidden; padding:1rem; min-height:0; }
 .modal-footer { padding:.75rem 1.25rem; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+
+/* ── Enhanced file viewer action bar ── */
+.file-action-bar {
+  display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+}
+.file-action-btn {
+  display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px;
+  border-radius: var(--radius-sm); font-size: 12px; font-weight: 600;
+  cursor: pointer; border: none; font-family: 'DM Sans', sans-serif;
+  transition: all .15s; text-decoration: none;
+}
+.file-action-btn.open-btn { background: var(--surface-2); color: var(--navy); border: 1.5px solid var(--border); }
+.file-action-btn.open-btn:hover { border-color: var(--navy); background: #ebebfa; }
+.file-action-btn.summarize-btn { background: linear-gradient(135deg,var(--navy),#1a1a6e); color: #fff; }
+.file-action-btn.summarize-btn:hover { opacity: .88; transform: translateY(-1px); }
+.file-action-btn.summarize-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+.file-action-btn.ask-btn { background: var(--gold); color: var(--navy); }
+.file-action-btn.ask-btn:hover { background: #d97706; transform: translateY(-1px); }
+.file-action-btn.download-btn { background: #16a34a; color: #fff; }
+.file-action-btn.download-btn:hover { background: #15803d; }
+
+/* Jain AI badge in modal */
+.jain-ai-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: linear-gradient(135deg,var(--navy),#1a1a6e);
+  color: var(--gold); font-size: 10px; font-weight: 800;
+  padding: 3px 9px; border-radius: 20px; font-family: 'Syne',sans-serif;
+  letter-spacing: .04em;
+}
 
 /* ── Modals ── */
 .gen-modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:99998; align-items:center; justify-content:center; padding:1rem; backdrop-filter:blur(4px); }
@@ -192,6 +238,19 @@ body { font-family: 'DM Sans', sans-serif; background: #f3f2fa; }
 /* ── Update history ── */
 .update-item { display:flex; align-items:flex-start; gap:8px; padding:8px 10px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); margin-bottom:6px; font-size:12px; }
 .update-dot { width:16px; height:16px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px; }
+
+/* Viewer AI response */
+#viewerAiBox { margin:0 1rem 1rem; background:linear-gradient(135deg,var(--navy),#1a1a6e); color:#e2e8f0; font-size:13px; border-radius:var(--radius-sm); padding:12px; display:none; white-space:pre-wrap; line-height:1.65; max-height:200px; overflow-y:auto; }
+#viewerAiBox.show { display:block; }
+
+/* Ask AI from viewer panel */
+#viewerAskPanel { margin: 0 1rem 1rem; display:none; flex-direction:column; gap:8px; }
+#viewerAskPanel.show { display:flex; }
+#viewerAskInput { width:100%; padding:9px 13px; font-size:13px; border:1.5px solid var(--border); border-radius:var(--radius-sm); font-family:'DM Sans',sans-serif; }
+#viewerAskInput:focus { outline:none; border-color:var(--navy); }
+.viewer-ask-row { display:flex; gap:8px; }
+#viewerAskResponse { background:linear-gradient(135deg,var(--navy),#1a1a6e); color:#e2e8f0; font-size:12px; border-radius:var(--radius-sm); padding:10px; white-space:pre-wrap; line-height:1.6; display:none; max-height:160px; overflow-y:auto; margin-top:4px; }
+#viewerAskResponse.show { display:block; }
 
 @media(max-width:900px){
   .quick-stats { grid-template-columns:repeat(2,1fr); }
@@ -285,10 +344,14 @@ body { font-family: 'DM Sans', sans-serif; background: #f3f2fa; }
         <div style="margin-bottom:14px"><label class="form-label">Task Title *</label><input type="text" name="task_title" required class="form-input" placeholder="Enter task title"></div>
         <div style="margin-bottom:14px"><label class="form-label">Description *</label><textarea name="description" rows="3" required class="form-input" placeholder="Task details..."></textarea></div>
 
-        <!-- AI assist for task creation -->
+        <!-- Jain AI assist for task creation -->
         <div class="ai-panel" style="margin-bottom:14px">
-          <div class="ai-panel-title"><span class="ai-spark">✦</span> Claude AI — Task Assistant</div>
-          <div style="font-size:11px;color:#94a3b8;margin-bottom:8px">Paste your task title above, then let Claude suggest a detailed description or break it into subtasks.</div>
+          <div class="ai-panel-title">
+            <span class="ai-spark">✦</span>
+            <span class="jain-ai-badge">✦ JAIN AI</span>
+            Task Assistant
+          </div>
+          <div style="font-size:11px;color:#94a3b8;margin-bottom:8px">Paste your task title above, then let Jain AI suggest a detailed description or break it into subtasks.</div>
           <button type="button" class="ai-btn" onclick="aiSuggestTaskDesc()"><span>✦</span> Suggest Description</button>
           <div class="ai-response-box" id="aiTaskDescBox"></div>
           <button type="button" id="fillDescBtn" onclick="fillTaskDesc()" style="display:none;margin-top:8px" class="ai-fill-btn"><i class="fas fa-magic"></i> Fill into form</button>
@@ -410,9 +473,13 @@ body { font-family: 'DM Sans', sans-serif; background: #f3f2fa; }
           </div>
           {% endif %}
 
-          <!-- ── AI Review assist ── -->
+          <!-- ── Jain AI Review assist ── -->
           <div class="ai-panel" style="margin:0 1.25rem 1rem;border-radius:var(--radius-sm)">
-            <div class="ai-panel-title"><span class="ai-spark">✦</span> Claude AI — Review Assistant</div>
+            <div class="ai-panel-title">
+              <span class="ai-spark">✦</span>
+              <span class="jain-ai-badge">✦ JAIN AI</span>
+              Review Assistant
+            </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
               <button class="ai-btn" onclick="aiAnalyzeTask('{{ task._id }}','{{ task.title|replace("'","\\'")|truncate(60) }}','{{ task.description|replace("'","\\'")|truncate(200) }}',{{ task.progress }},'{{ task.status }}')">
                 <span>✦</span> Analyze Progress
@@ -485,7 +552,7 @@ body { font-family: 'DM Sans', sans-serif; background: #f3f2fa; }
               <div style="display:flex;gap:8px;margin-bottom:8px">
                 <button onclick="viewFile('{{ doc.file_url }}','{{ doc.document_name }}')" class="btn-outline" style="font-size:12px;padding:6px 12px"><i class="fas fa-eye"></i> View</button>
                 <a href="{{ doc.file_url }}" download class="btn-outline" style="font-size:12px;padding:6px 12px"><i class="fas fa-download"></i> Download</a>
-                <button class="ai-btn" onclick="aiSummarizeForReview('{{ doc._id }}','{{ doc.document_name|replace("'","\\'")|truncate(60) }}','{{ doc.description|replace("'","\\'")|truncate(150) }}','{{ doc.file_url }}')"><span>✦</span> AI Summary</button>
+                <button class="ai-btn" onclick="aiSummarizeForReview('{{ doc._id }}','{{ doc.document_name|replace("'","\\'")|truncate(60) }}','{{ doc.description|replace("'","\\'")|truncate(150) }}','{{ doc.file_url }}')"><span class="jain-ai-badge" style="font-size:9px;padding:2px 7px">✦ JAIN AI</span> Summary</button>
               </div>
               <div class="ai-response-box" id="ai-pending-{{ doc._id }}" style="background:linear-gradient(135deg,var(--navy),#1a1a6e);color:#e2e8f0;font-size:12px;margin-bottom:8px"></div>
               {% endif %}
@@ -496,7 +563,7 @@ body { font-family: 'DM Sans', sans-serif; background: #f3f2fa; }
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
                 <label class="form-label" style="margin-bottom:0"><i class="fas fa-comment" style="color:var(--gold);margin-right:4px"></i>Feedback / Revision Instructions:</label>
                 <button type="button" class="ai-fill-btn" onclick="aiSuggestReviewFeedback('{{ doc._id }}','{{ doc.document_name|replace("'","\\'")|truncate(60) }}','{{ doc.description|replace("'","\\'")|truncate(150) }}','{{ doc.uploader_name }}')">
-                  <span>✦</span> Suggest with AI
+                  <span class="jain-ai-badge" style="font-size:9px;padding:2px 7px">✦ JAIN AI</span> Suggest
                 </button>
               </div>
               <textarea name="comments" id="comments-{{ doc._id }}" rows="3" required class="form-input" placeholder="Provide detailed feedback..."></textarea>
@@ -540,8 +607,10 @@ body { font-family: 'DM Sans', sans-serif; background: #f3f2fa; }
             <div style="font-size:12px;color:#94a3b8" id="memberEmail"></div>
             <div style="margin-top:4px" id="memberStatusBadge"></div>
           </div>
-          <!-- AI member insight button -->
-          <button class="ai-btn" style="margin-left:auto" onclick="aiMemberInsight()"><span>✦</span> AI Insight</button>
+          <!-- Jain AI member insight button -->
+          <button class="ai-btn" style="margin-left:auto" onclick="aiMemberInsight()">
+            <span class="jain-ai-badge" style="font-size:9px;padding:2px 7px">✦ JAIN AI</span> Insight
+          </button>
         </div>
         <div id="aiMemberBox" style="background:linear-gradient(135deg,var(--navy),#1a1a6e);border-radius:var(--radius-sm);padding:12px;margin-bottom:12px;font-size:13px;color:#e2e8f0;display:none;white-space:pre-wrap;line-height:1.6"></div>
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px" id="memberStats"></div>
@@ -574,7 +643,7 @@ body { font-family: 'DM Sans', sans-serif; background: #f3f2fa; }
               <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
                 <button onclick="viewFile('{{ share.file_url }}','{{ share.document_name }}')" class="btn-outline" style="font-size:11px;padding:4px 10px"><i class="fas fa-eye"></i> View</button>
                 <a href="{{ share.file_url }}" download class="btn-outline" style="font-size:11px;padding:4px 10px"><i class="fas fa-download"></i></a>
-                <button class="ai-btn" style="font-size:11px;padding:4px 10px" onclick="aiSummarizeForReview('share{{ loop.index }}','{{ share.document_name|replace("'","\\'")|truncate(60) }}','','{{ share.file_url }}')"><span>✦</span> Summary</button>
+                <button class="ai-btn" style="font-size:11px;padding:4px 10px" onclick="aiSummarizeForReview('share{{ loop.index }}','{{ share.document_name|replace("'","\\'")|truncate(60) }}','','{{ share.file_url }}')"><span class="jain-ai-badge" style="font-size:9px;padding:2px 6px">✦ JAIN AI</span></button>
                 <button class="ai-fill-btn" onclick="openShareCommentModal('{{ share._id }}','{{ share.document_name|replace("'","\\'")|truncate(50) }}')"><i class="fas fa-comment"></i> Comment</button>
               </div>
               <div class="ai-response-box" id="ai-pending-share{{ loop.index }}" style="background:linear-gradient(135deg,var(--navy),#1a1a6e);color:#e2e8f0;font-size:12px;margin-top:6px"></div>
@@ -612,27 +681,68 @@ body { font-family: 'DM Sans', sans-serif; background: #f3f2fa; }
   </div>
 </div>
 
-<!-- ── File viewer modal ── -->
+<!-- ════════════════════════════════════════
+     ENHANCED FILE VIEWER MODAL
+     Shows: Open · Summarize · Ask AI · Download
+════════════════════════════════════════ -->
 <div class="modal-overlay" id="fileModal">
   <div class="modal-box">
     <div class="modal-header">
-      <div class="modal-title"><i class="fas fa-file" id="fileIcon"></i><span id="fileTitle">File</span></div>
+      <div class="modal-title">
+        <i class="fas fa-file" id="fileIcon"></i>
+        <span id="fileTitle">File</span>
+        <span class="jain-ai-badge" style="margin-left:4px">✦ JAIN AI</span>
+      </div>
       <button class="modal-close" onclick="closeFile()"><i class="fas fa-times"></i></button>
     </div>
     <div class="modal-body">
-      <div id="pdfWrap" style="width:100%;height:500px"><object id="pdfObj" data="" type="application/pdf" style="width:100%;height:100%;border-radius:var(--radius-sm)"><p style="text-align:center;padding:2rem">PDF cannot display. <a id="pdfLink" href="#" target="_blank">Open</a></p></object></div>
-      <div id="imgWrap" style="display:none;height:500px;align-items:center;justify-content:center"><img id="imgView" src="" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:var(--radius-sm)"></div>
+      <div id="pdfWrap" style="width:100%;height:460px"><object id="pdfObj" data="" type="application/pdf" style="width:100%;height:100%;border-radius:var(--radius-sm)"><p style="text-align:center;padding:2rem">PDF cannot display. <a id="pdfLink" href="#" target="_blank">Open</a></p></object></div>
+      <div id="imgWrap" style="display:none;height:460px;align-items:center;justify-content:center"><img id="imgView" src="" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:var(--radius-sm)"></div>
       <div id="noPreview" style="display:none;height:300px;align-items:center;justify-content:center;flex-direction:column;background:var(--surface-2);border-radius:var(--radius);color:var(--text-muted)"><i class="fas fa-file" style="font-size:3rem;margin-bottom:1rem"></i><p>Preview not available</p></div>
     </div>
-    <div class="modal-footer">
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <a id="fileOpenLink" href="#" target="_blank" class="btn-outline" style="font-size:12px;padding:7px 14px"><i class="fas fa-external-link-alt"></i> Open</a>
-        <a id="fileDlLink" href="#" download class="btn-primary" style="font-size:12px;padding:7px 14px"><i class="fas fa-download"></i> Download</a>
-        <button class="ai-btn" id="viewerAiBtn" onclick="aiSummarizeViewer()"><span>✦</span> AI Summary</button>
+
+    <!-- ── Action bar ── -->
+    <div class="modal-footer" style="flex-direction:column;align-items:stretch;gap:10px;">
+      <div class="file-action-bar">
+        <!-- Open -->
+        <a id="fileOpenLink" href="#" target="_blank" class="file-action-btn open-btn">
+          <i class="fas fa-external-link-alt"></i> Open
+        </a>
+        <!-- Summarize with Jain AI -->
+        <button id="viewerSummarizeBtn" class="file-action-btn summarize-btn" onclick="aiSummarizeViewer()">
+          <span>✦</span> Summarize with Jain AI
+        </button>
+        <!-- Ask Jain AI -->
+        <button id="viewerAskToggleBtn" class="file-action-btn ask-btn" onclick="toggleViewerAsk()">
+          <i class="fas fa-comment-dots"></i> Ask Jain AI
+        </button>
+        <!-- Download -->
+        <a id="fileDlLink" href="#" download class="file-action-btn download-btn">
+          <i class="fas fa-download"></i> Download
+        </a>
+        <!-- Close -->
+        <button onclick="closeFile()" class="file-action-btn open-btn" style="margin-left:auto">
+          <i class="fas fa-times"></i> Close
+        </button>
       </div>
-      <button onclick="closeFile()" class="btn-outline" style="font-size:12px;padding:7px 14px">Close</button>
+
+      <!-- Jain AI Summary output -->
+      <div id="viewerAiBox"></div>
+
+      <!-- Ask Jain AI panel (toggle) -->
+      <div id="viewerAskPanel">
+        <div style="font-size:11px;font-weight:700;color:var(--navy);margin-bottom:6px;display:flex;align-items:center;gap:6px">
+          <span class="jain-ai-badge">✦ JAIN AI</span> Ask anything about this document
+        </div>
+        <div class="viewer-ask-row">
+          <input id="viewerAskInput" class="form-input" placeholder="e.g. What are the key action items?" style="flex:1" onkeydown="if(event.key==='Enter')sendViewerAsk()">
+          <button onclick="sendViewerAsk()" class="file-action-btn ask-btn" style="padding:9px 16px;white-space:nowrap">
+            <i class="fas fa-paper-plane"></i> Ask
+          </button>
+        </div>
+        <div id="viewerAskResponse"></div>
+      </div>
     </div>
-    <div id="viewerAiBox" class="ai-response-box" style="margin:0 1rem 1rem;background:linear-gradient(135deg,var(--navy),#1a1a6e);color:#e2e8f0;font-size:13px"></div>
   </div>
 </div>
 
@@ -714,23 +824,28 @@ body { font-family: 'DM Sans', sans-serif; background: #f3f2fa; }
   </div>
 </div>
 
-<!-- ── AI Chat ── -->
+<!-- ── Jain AI Global Chat ── -->
 <div class="ai-chat-overlay" id="aiChatOverlay">
   <div class="ai-chat-box">
     <div class="ai-chat-header">
-      <div class="ai-chat-title"><span style="color:var(--gold);font-size:18px">✦</span> Claude AI Assistant</div>
+      <div class="ai-chat-title">
+        <span class="jain-ai-badge" style="font-size:11px;padding:3px 10px">✦ JAIN AI</span>
+        Leadership Assistant
+      </div>
       <button onclick="closeAiChat()" style="background:rgba(255,255,255,.15);border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;color:#fff;font-size:14px"><i class="fas fa-times"></i></button>
     </div>
     <div class="ai-chat-messages" id="chatMessages"></div>
     <div class="ai-chat-input-row">
-      <input class="ai-chat-input" id="chatInput" placeholder="Ask Claude anything..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}">
+      <input class="ai-chat-input" id="chatInput" placeholder="Ask Jain AI anything..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}">
       <button class="ai-chat-send" onclick="sendChat()"><i class="fas fa-paper-plane"></i></button>
     </div>
   </div>
 </div>
 
-<!-- ── Floating AI button ── -->
-<button class="ai-float-btn" onclick="openGlobalChat()" title="Ask Claude AI"><span>✦</span></button>
+<!-- ── Floating Jain AI button ── -->
+<button class="ai-float-btn" onclick="openGlobalChat()" title="Ask Jain AI">
+  <span style="font-family:'Syne',sans-serif;font-size:11px;font-weight:800;letter-spacing:-.5px">AI</span>
+</button>
 
 <!-- ── Notifications ── -->
 <div id="notifContainer"></div>
@@ -757,23 +872,98 @@ function closeAllMenus(){document.querySelectorAll('.ddmenu.open').forEach(m=>m.
 function openModal(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';}
 function closeModal(id){document.getElementById(id).classList.remove('open');document.body.style.overflow='';}
 
-// ── File viewer ──
+// ══════════════════════════════════════════════════
+//  ENHANCED FILE VIEWER
+// ══════════════════════════════════════════════════
 let currentFileUrl='',currentFileName='';
+
 function viewFile(url,name){
-  currentFileUrl=url;currentFileName=name;
+  currentFileUrl=url; currentFileName=name;
   const ext=url.split('.').pop().toLowerCase().split('?')[0];
-  const isPdf=ext==='pdf';const isImg=['jpg','jpeg','png','gif','webp'].includes(ext);
+  const isPdf=ext==='pdf';
+  const isImg=['jpg','jpeg','png','gif','webp'].includes(ext);
+
   document.getElementById('fileTitle').textContent=name;
-  document.getElementById('fileOpenLink').href=url;document.getElementById('fileDlLink').href=url;
+  document.getElementById('fileOpenLink').href=url;
+  document.getElementById('fileDlLink').href=url;
+
   document.getElementById('pdfWrap').style.display=isPdf?'block':'none';
-  const iw=document.getElementById('imgWrap');iw.style.display=isImg?'flex':'none';
+  const iw=document.getElementById('imgWrap');
+  iw.style.display=isImg?'flex':'none';
   document.getElementById('noPreview').style.display=(!isPdf&&!isImg)?'flex':'none';
+
   if(isPdf){document.getElementById('pdfObj').data=url;document.getElementById('pdfLink').href=url;}
   if(isImg)document.getElementById('imgView').src=url;
-  document.getElementById('viewerAiBox').classList.remove('show');
-  document.getElementById('fileModal').classList.add('open');document.body.style.overflow='hidden';
+
+  // reset AI panels
+  const aib=document.getElementById('viewerAiBox');
+  aib.textContent=''; aib.classList.remove('show');
+  const askPanel=document.getElementById('viewerAskPanel');
+  askPanel.classList.remove('show');
+  document.getElementById('viewerAskInput').value='';
+  const askResp=document.getElementById('viewerAskResponse');
+  askResp.textContent=''; askResp.classList.remove('show');
+
+  // reset summarize btn
+  const sb=document.getElementById('viewerSummarizeBtn');
+  sb.disabled=false; sb.innerHTML='<span>✦</span> Summarize with Jain AI';
+
+  document.getElementById('fileModal').classList.add('open');
+  document.body.style.overflow='hidden';
 }
-function closeFile(){document.getElementById('fileModal').classList.remove('open');document.getElementById('pdfObj').data='';document.getElementById('imgView').src='';document.body.style.overflow='';}
+
+function closeFile(){
+  document.getElementById('fileModal').classList.remove('open');
+  document.getElementById('pdfObj').data='';
+  document.getElementById('imgView').src='';
+  document.body.style.overflow='';
+}
+
+// Toggle "Ask Jain AI" panel
+function toggleViewerAsk(){
+  const p=document.getElementById('viewerAskPanel');
+  if(p.classList.contains('show')){
+    p.classList.remove('show');
+  } else {
+    p.classList.add('show');
+    setTimeout(()=>document.getElementById('viewerAskInput').focus(),100);
+  }
+}
+
+// Summarize with Jain AI (from viewer)
+async function aiSummarizeViewer(){
+  if(!currentFileUrl){showNotif('No file loaded','warning');return;}
+  const btn=document.getElementById('viewerSummarizeBtn');
+  btn.disabled=true;
+  btn.innerHTML='<div class="thinking"><span></span><span></span><span></span></div> Jain AI is reading...';
+  const box=document.getElementById('viewerAiBox');
+  box.textContent='Jain AI is analysing the document...';
+  box.classList.add('show');
+  try{
+    const r=await fetch('/api/ai/summarize',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',
+      body:JSON.stringify({document_name:currentFileName,file_url:currentFileUrl})});
+    const d=await r.json();
+    box.textContent=d.success?d.summary:'Error: '+(d.error||'Jain AI unavailable');
+  }catch(err){box.textContent='Error: '+err.message;}
+  btn.disabled=false;
+  btn.innerHTML='<span>✦</span> Summarize with Jain AI';
+}
+
+// Ask Jain AI (from viewer)
+async function sendViewerAsk(){
+  const input=document.getElementById('viewerAskInput');
+  const q=input.value.trim();
+  if(!q){showNotif('Enter a question','warning');return;}
+  const resp=document.getElementById('viewerAskResponse');
+  resp.textContent='Jain AI is thinking...';
+  resp.classList.add('show');
+  try{
+    const r=await fetch('/api/ai/chat',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',
+      body:JSON.stringify({message:q+' (Context: document named "'+currentFileName+'")',task_title:'Document Q&A',task_desc:'User is viewing a document and asking questions about it.',history:[]})});
+    const d=await r.json();
+    resp.textContent=d.success?d.reply:'Error: '+(d.error||'Jain AI unavailable');
+  }catch(err){resp.textContent='Error: '+err.message;}
+}
 
 // ── Accept task ──
 async function acceptTask(id){
@@ -862,25 +1052,13 @@ async function submitShareComment(){
   }catch(err){showNotif(err.message,'error');}
 }
 
-// ── AI: summarize viewer ──
-async function aiSummarizeViewer(){
-  if(!currentFileUrl){showNotif('No file loaded','warning');return;}
-  const btn=document.getElementById('viewerAiBtn');btn.disabled=true;btn.innerHTML='<div class="thinking"><span></span><span></span><span></span></div>';
-  const box=document.getElementById('viewerAiBox');box.textContent='Analyzing document...';box.classList.add('show');
-  try{
-    const r=await fetch('/api/ai/summarize',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({document_name:currentFileName,file_url:currentFileUrl})});
-    const d=await r.json();box.textContent=d.success?d.summary:'Error: '+(d.error||'AI unavailable');
-  }catch(err){box.textContent='Error: '+err.message;}
-  btn.disabled=false;btn.innerHTML='<span>✦</span> AI Summary';
-}
-
 // ── AI: summarize for review ──
 async function aiSummarizeForReview(docId,name,desc,fileUrl){
   const box=document.getElementById('ai-pending-'+docId);if(!box)return;
-  box.textContent='✦ Analyzing with Claude...';box.classList.add('show');
+  box.textContent='✦ Jain AI is analysing...';box.classList.add('show');
   try{
     const r=await fetch('/api/ai/summarize',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({document_name:name,description:desc,file_url:fileUrl})});
-    const d=await r.json();box.textContent=d.success?d.summary:'Error: '+(d.error||'AI unavailable');
+    const d=await r.json();box.textContent=d.success?d.summary:'Error: '+(d.error||'Jain AI unavailable');
   }catch(err){box.textContent='Error: '+err.message;}
 }
 
@@ -888,16 +1066,16 @@ async function aiSummarizeForReview(docId,name,desc,fileUrl){
 let lastAiFeedback='',lastFeedbackDocId='';
 async function aiSuggestReviewFeedback(docId,name,desc,by){
   lastFeedbackDocId=docId;
-  showNotif('Claude is drafting feedback...','info');
+  showNotif('Jain AI is drafting feedback...','info');
   try{
     const r=await fetch('/api/ai/suggest-feedback',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({document_name:name,description:desc,submitted_by:by})});
     const d=await r.json();
     if(d.success){
       lastAiFeedback=d.feedback;
       document.getElementById('comments-'+docId).value=d.feedback;
-      showNotif('AI feedback drafted — review and edit before submitting','success');
-    }else throw new Error(d.error||'AI error');
-  }catch(err){showNotif('AI error: '+err.message,'error');}
+      showNotif('Jain AI drafted feedback — review before submitting','success');
+    }else throw new Error(d.error||'Jain AI error');
+  }catch(err){showNotif('Jain AI error: '+err.message,'error');}
 }
 
 // ── AI: suggest task description ──
@@ -906,12 +1084,12 @@ async function aiSuggestTaskDesc(){
   const title=document.querySelector('input[name="task_title"]').value.trim();
   if(!title){showNotif('Enter a task title first','warning');return;}
   const box=document.getElementById('aiTaskDescBox');const fillBtn=document.getElementById('fillDescBtn');
-  box.textContent='✦ Claude is drafting a description...';box.classList.add('show');fillBtn.style.display='none';
+  box.textContent='✦ Jain AI is drafting a description...';box.classList.add('show');fillBtn.style.display='none';
   try{
     const r=await fetch('/api/ai/suggest-task-desc',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({title})});
     const d=await r.json();
     if(d.success){lastAiDesc=d.description;box.textContent=d.description;fillBtn.style.display='inline-flex';}
-    else throw new Error(d.error||'AI error');
+    else throw new Error(d.error||'Jain AI error');
   }catch(err){box.textContent='Error: '+err.message;}
 }
 function fillTaskDesc(){
@@ -922,22 +1100,22 @@ function fillTaskDesc(){
 // ── AI: analyze task progress ──
 async function aiAnalyzeTask(id,title,desc,progress,status){
   const box=document.getElementById('ai-ltask-'+id);if(!box)return;
-  box.innerHTML='<div class="thinking"><span></span><span></span><span></span></div> Analyzing...';box.classList.add('show');
+  box.innerHTML='<div class="thinking"><span></span><span></span><span></span></div> Jain AI is analysing...';box.classList.add('show');
   try{
     const r=await fetch('/api/ai/analyze-task',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({title,description:desc,progress,status})});
-    const d=await r.json();box.textContent=d.success?d.analysis:'Error: '+(d.error||'AI unavailable');
+    const d=await r.json();box.textContent=d.success?d.analysis:'Error: '+(d.error||'Jain AI unavailable');
   }catch(err){box.textContent='Error: '+err.message;}
 }
 
 // ── AI: suggest rework feedback ──
 async function aiSuggestFeedback(id,title,desc,progress){
   const box=document.getElementById('ai-ltask-'+id);if(!box)return;
-  box.innerHTML='<div class="thinking"><span></span><span></span><span></span></div> Drafting rework feedback...';box.classList.add('show');
+  box.innerHTML='<div class="thinking"><span></span><span></span><span></span></div> Jain AI drafting feedback...';box.classList.add('show');
   try{
     const r=await fetch('/api/ai/suggest-rework-feedback',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({title,description:desc,progress})});
     const d=await r.json();
-    if(d.success){box.textContent=d.feedback;showNotif('AI drafted rework feedback — you can use it in the rework modal','info');}
-    else box.textContent='Error: '+(d.error||'AI unavailable');
+    if(d.success){box.textContent=d.feedback;showNotif('Jain AI drafted rework feedback — use it in the rework modal','info');}
+    else box.textContent='Error: '+(d.error||'Jain AI unavailable');
   }catch(err){box.textContent='Error: '+err.message;}
 }
 
@@ -945,10 +1123,10 @@ async function aiSuggestFeedback(id,title,desc,progress){
 let currentMemberData=null;
 async function aiMemberInsight(){
   if(!currentMemberData){showNotif('Load a member first','warning');return;}
-  const box=document.getElementById('aiMemberBox');box.style.display='block';box.textContent='✦ Generating insight...';
+  const box=document.getElementById('aiMemberBox');box.style.display='block';box.textContent='✦ Jain AI is generating insight...';
   try{
     const r=await fetch('/api/ai/member-insight',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(currentMemberData)});
-    const d=await r.json();box.textContent=d.success?d.insight:'Error: '+(d.error||'AI unavailable');
+    const d=await r.json();box.textContent=d.success?d.insight:'Error: '+(d.error||'Jain AI unavailable');
   }catch(err){box.textContent='Error: '+err.message;}
 }
 
@@ -984,11 +1162,11 @@ async function loadAnalytics(memberId){
   }catch(err){showNotif('Failed to load analytics','error');}
 }
 
-// ── AI global chat ──
+// ── Jain AI global chat ──
 let chatHistory=[];
 function openGlobalChat(){
   chatHistory=[];document.getElementById('chatMessages').innerHTML='';
-  addMsg('ai','Hi! I\'m Claude — your Jain University OOA leader assistant. Ask me about reviewing documents, giving feedback, team performance, or anything else.');
+  addMsg('ai','Hello! I\'m Jain AI — your Jain University OOA leadership assistant.\n\nI can help you review documents, draft feedback, analyze team performance, or answer any questions about your dashboard.');
   document.getElementById('aiChatOverlay').classList.add('open');document.body.style.overflow='hidden';
   document.getElementById('chatInput').focus();
 }
@@ -1002,7 +1180,7 @@ function addMsg(role,text){
 function addThinking(){
   const msgs=document.getElementById('chatMessages');const div=document.createElement('div');
   div.className='msg-thinking';div.id='thinking-msg';
-  div.innerHTML='<div class="thinking"><span></span><span></span><span></span></div><span style="font-size:12px;color:var(--text-muted);margin-left:6px">Claude is thinking...</span>';
+  div.innerHTML='<div class="thinking"><span></span><span></span><span></span></div><span style="font-size:12px;color:var(--text-muted);margin-left:6px">Jain AI is thinking...</span>';
   msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
 }
 function removeThinking(){document.getElementById('thinking-msg')?.remove();}
@@ -1015,7 +1193,7 @@ async function sendChat(){
     const d=await r.json();removeThinking();
     const reply=d.success?d.reply:'Sorry, I could not process that.';
     addMsg('ai',reply);chatHistory.push({role:'assistant',content:reply});
-  }catch(err){removeThinking();addMsg('ai','Error connecting to AI.');}
+  }catch(err){removeThinking();addMsg('ai','Error connecting to Jain AI.');}
 }
 
 // ── Notifs ──
@@ -1059,7 +1237,8 @@ window.loadAnalytics=loadAnalytics;window.aiMemberInsight=aiMemberInsight;
 window.aiAnalyzeTask=aiAnalyzeTask;window.aiSuggestFeedback=aiSuggestFeedback;
 window.aiSummarizeForReview=aiSummarizeForReview;window.aiSuggestReviewFeedback=aiSuggestReviewFeedback;
 window.aiSuggestTaskDesc=aiSuggestTaskDesc;window.fillTaskDesc=fillTaskDesc;
-window.aiSummarizeViewer=aiSummarizeViewer;window.openGlobalChat=openGlobalChat;window.closeAiChat=closeAiChat;window.sendChat=sendChat;
+window.aiSummarizeViewer=aiSummarizeViewer;window.toggleViewerAsk=toggleViewerAsk;window.sendViewerAsk=sendViewerAsk;
+window.openGlobalChat=openGlobalChat;window.closeAiChat=closeAiChat;window.sendChat=sendChat;
 window.openModal=openModal;window.closeModal=closeModal;
 window.showNotification=showNotif;
 </script>

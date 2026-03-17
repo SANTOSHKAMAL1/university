@@ -15,7 +15,7 @@ load_dotenv()
 
 # ── Flask & extensions ─────────────────────────────────────────────────
 from flask import (Flask, render_template, request, redirect, url_for,
-                   flash, session, send_from_directory, jsonify)
+                   flash, session, send_from_directory, jsonify, json as flask_json)
 from flask_pymongo import PyMongo
 from flask_mail import Mail, Message
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -37,12 +37,16 @@ from googleapiclient.http import MediaIoBaseUpload
 # ── APScheduler ────────────────────────────────────────────────────────
 from apscheduler.schedulers.background import BackgroundScheduler
 
-# ── Anthropic (Claude AI) ──────────────────────────────────────────────
+# ── Groq (Jain AI) ────────────────────────────────────────────────────
+from groq import Groq
+
+# ── PDF extraction ─────────────────────────────────────────────────────
 try:
     import fitz  # PyMuPDF
     PYMUPDF_AVAILABLE = True
 except ImportError:
     PYMUPDF_AVAILABLE = False
+    logging.warning("PyMuPDF not installed — PDF text extraction disabled. Run: pip install pymupdf")
 
 # ══════════════════════════════════════════════════════════════════════
 #  LOGGING
@@ -97,10 +101,11 @@ with app.app_context():
     except Exception as e:
         logger.error(f"❌ Mail config test failed: {e}")
 
-# ── AI config (Groq free tier — no billing required) ──────────────────
-GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
-GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
-GROQ_MODEL   = "llama3-70b-8192"   # Free, fast, very capable
+# ── Jain AI (Groq) client ──────────────────────────────────────────────
+_groq_key = os.getenv("GROQ_API_KEY", "").strip()
+if not _groq_key:
+    logger.warning("⚠️  GROQ_API_KEY not set — Jain AI features will return errors")
+ai_client = Groq(api_key=_groq_key)
 
 # ── Timezone ───────────────────────────────────────────────────────────
 IST = pytz.timezone('Asia/Kolkata')
@@ -214,7 +219,7 @@ def _allowed(filename):
     return allowed_file(filename)
 
 # ══════════════════════════════════════════════════════════════════════
-#  AUTH DECORATORS
+#  AUTH DECORATORS  ← MUST BE DEFINED BEFORE ANY ROUTE USES THEM
 # ══════════════════════════════════════════════════════════════════════
 def login_required(f):
     @wraps(f)
@@ -222,7 +227,7 @@ def login_required(f):
         if 'email' not in session:
             if request.path.startswith('/api/') or request.is_json or \
                request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return jsonify({'error': 'Not logged in'}), 401
+                return jsonify({'success': False, 'error': 'Not logged in'}), 401
             flash('Please log in to access this page', 'error')
             return redirect(url_for('login'))
         return f(*args, **kwargs)
@@ -233,7 +238,7 @@ def approval_required(f):
     def decorated(*args, **kwargs):
         if 'email' not in session:
             if request.path.startswith('/api/'):
-                return jsonify({'error': 'Not logged in'}), 401
+                return jsonify({'success': False, 'error': 'Not logged in'}), 401
             flash('Please log in to access this page', 'error')
             return redirect(url_for('login'))
         approved = session.get('approved', False)
@@ -244,7 +249,7 @@ def approval_required(f):
                 session['approved'] = approved
         if not approved:
             if request.path.startswith('/api/'):
-                return jsonify({'error': 'Account pending approval'}), 403
+                return jsonify({'success': False, 'error': 'Account pending approval'}), 403
             flash('⏳ Your account is pending admin approval.', 'warning')
             return redirect(url_for('home'))
         return f(*args, **kwargs)
@@ -331,6 +336,88 @@ def _track_activity(action_description=None):
             }
         }
     db.users.update_one({'email': email}, update)
+
+# ══════════════════════════════════════════════════════════════════════
+#  JAIN AI — HELPERS  (defined AFTER decorators, BEFORE routes)
+# ══════════════════════════════════════════════════════════════════════
+def extract_text_from_file(file_url: str, max_chars: int = 4000) -> str:
+    """Download a file and extract its text content."""
+    try:
+        response = http_requests.get(file_url, timeout=15)
+        response.raise_for_status()
+        content_type = response.headers.get("Content-Type", "")
+
+        if "pdf" in content_type or file_url.lower().endswith(".pdf"):
+            if PYMUPDF_AVAILABLE:
+                doc = fitz.open(stream=response.content, filetype="pdf")
+                text = "\n".join(page.get_text() for page in doc)
+                doc.close()
+                return text[:max_chars]
+            return ""
+
+        elif any(file_url.lower().endswith(ext) for ext in [".txt", ".csv", ".md"]):
+            return response.text[:max_chars]
+
+        elif file_url.lower().endswith(".docx"):
+            try:
+                from docx import Document
+                doc = Document(BytesIO(response.content))
+                return "\n".join(p.text for p in doc.paragraphs)[:max_chars]
+            except ImportError:
+                return ""
+
+        return ""
+    except Exception as e:
+        logger.error(f"[Jain AI] File extraction error: {e}")
+        return ""
+
+
+def call_claude(prompt: str, system: str = None, max_tokens: int = 1000) -> str:
+    """Call Groq (Jain AI) and return the text response."""
+    try:
+        messages = []
+        if system:
+            messages.append({"role": "system", "content": system})
+        messages.append({"role": "user", "content": prompt})
+        response = ai_client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=messages,
+            max_tokens=max_tokens,
+            temperature=0.7
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        err = str(e).lower()
+        if "auth" in err or "api key" in err or "unauthorized" in err:
+            raise Exception("Invalid GROQ_API_KEY — please check your .env file")
+        if "rate" in err:
+            raise Exception("Jain AI rate limit reached — please try again in a moment")
+        if "connect" in err:
+            raise Exception("Could not connect to Jain AI — check your internet connection")
+        raise Exception(f"Jain AI error: {str(e)}")
+
+
+def call_claude_chat(messages: list, system: str = None, max_tokens: int = 800) -> str:
+    """Multi-turn chat via Groq (Jain AI)."""
+    try:
+        groq_messages = []
+        if system:
+            groq_messages.append({"role": "system", "content": system})
+        groq_messages.extend(messages)
+        response = ai_client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=groq_messages,
+            max_tokens=max_tokens,
+            temperature=0.7
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        err = str(e).lower()
+        if "auth" in err or "api key" in err or "unauthorized" in err:
+            raise Exception("Invalid GROQ_API_KEY — please check your .env file")
+        if "rate" in err:
+            raise Exception("Jain AI rate limit reached — please try again in a moment")
+        raise Exception(f"Jain AI error: {str(e)}")
 
 # ══════════════════════════════════════════════════════════════════════
 #  GOOGLE DRIVE HELPERS
@@ -657,239 +744,29 @@ def send_event_reminders():
         logger.error(f"[REMINDER SYSTEM ERROR] {e}")
 
 # ══════════════════════════════════════════════════════════════════════
-#  ██████████  AI / CLAUDE ROUTES  ████████████████████████████████████
+#  ██████████  JAIN AI ROUTES  ████████████████████████████████████████
+#  All decorated with @login_required which is now defined above
 # ══════════════════════════════════════════════════════════════════════
-
-def extract_text_from_file(file_url: str, max_chars: int = 4000) -> str:
-    """Download a file and extract its text content."""
-    try:
-        response = http_requests.get(file_url, timeout=15)
-        response.raise_for_status()
-        content_type = response.headers.get("Content-Type", "")
-        if "pdf" in content_type or file_url.lower().endswith(".pdf"):
-            if PYMUPDF_AVAILABLE:
-                doc = fitz.open(stream=response.content, filetype="pdf")
-                text = "\n".join(page.get_text() for page in doc)
-                doc.close()
-                return text[:max_chars]
-            return ""
-        elif any(file_url.lower().endswith(ext) for ext in [".txt", ".csv", ".md"]):
-            return response.text[:max_chars]
-        elif file_url.lower().endswith(".docx"):
-            try:
-                from docx import Document
-                doc = Document(BytesIO(response.content))
-                return "\n".join(p.text for p in doc.paragraphs)[:max_chars]
-            except ImportError:
-                return ""
-        return ""
-    except Exception as e:
-        logger.error(f"[AI] File extraction error: {e}")
-        return ""
-
-
-# ── FREE AI HELPERS ────────────────────────────────────────────────────
-# Uses Groq (llama3-70b-8192) — completely FREE, no credit card needed.
-# Get key: https://console.groq.com  → sign up → API Keys → Create
-# Add to .env: GROQ_API_KEY=gsk_xxxxxxxxxxxxxxxxxxxx
-# Falls back to smart rule-based responses if no key is set.
-# ──────────────────────────────────────────────────────────────────────
-
-def call_groq(prompt: str, system: str = None, max_tokens: int = 800) -> str:
-    """Call Groq free API. Falls back to rule-based if key missing."""
-    if not GROQ_API_KEY:
-        return _rule_based_response(prompt)
-    messages = []
-    if system:
-        messages.append({"role": "system", "content": system})
-    messages.append({"role": "user", "content": prompt})
-    try:
-        resp = http_requests.post(
-            GROQ_API_URL,
-            headers={"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"},
-            json={"model": GROQ_MODEL, "messages": messages, "max_tokens": max_tokens, "temperature": 0.7},
-            timeout=30
-        )
-        resp.raise_for_status()
-        return resp.json()["choices"][0]["message"]["content"].strip()
-    except Exception as e:
-        logger.error(f"[Groq] error: {e}")
-        return _rule_based_response(prompt)
-
-
-def call_groq_chat(messages: list, system: str = None, max_tokens: int = 800) -> str:
-    """Multi-turn chat via Groq free API."""
-    if not GROQ_API_KEY:
-        last = messages[-1]["content"] if messages else ""
-        return _rule_based_response(last)
-    full = []
-    if system:
-        full.append({"role": "system", "content": system})
-    full.extend(messages)
-    try:
-        resp = http_requests.post(
-            GROQ_API_URL,
-            headers={"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"},
-            json={"model": GROQ_MODEL, "messages": full, "max_tokens": max_tokens, "temperature": 0.7},
-            timeout=30
-        )
-        resp.raise_for_status()
-        return resp.json()["choices"][0]["message"]["content"].strip()
-    except Exception as e:
-        logger.error(f"[Groq chat] error: {e}")
-        last = messages[-1]["content"] if messages else ""
-        return _rule_based_response(last)
-
-
-def _rule_based_response(prompt: str) -> str:
-    """Smart fallback when GROQ_API_KEY is not set."""
-    p = prompt.lower()
-
-    if any(w in p for w in ["summarize","summary","document name","pdf"]):
-        lines  = [l.strip() for l in prompt.split("\n") if l.strip()]
-        dn     = next((l for l in lines if "document name:" in l.lower()), "")
-        dname  = dn.replace("Document name:","").replace("document name:","").strip() or "this document"
-        return (f"Summary of {dname}\n\n"
-                "Main topic: Document submitted for OOA review.\n\n"
-                "Key points:\n"
-                "• Document received and queued for leader review\n"
-                "• Content should be checked against OOA submission guidelines\n"
-                "• Any required revisions will be communicated via the dashboard\n"
-                "• Approval or revision feedback will be sent by email notification\n\n"
-                "Action items: Monitor dashboard status. Respond to any revision requests promptly.\n\n"
-                "Note: Add GROQ_API_KEY to .env for AI-powered summaries (free at console.groq.com).")
-
-    if any(w in p for w in ["step","complete this task","how to","plan","due date","priority"]):
-        lines  = [l.strip() for l in prompt.split("\n") if l.strip()]
-        tl     = next((l for l in lines if l.lower().startswith("task:")), "")
-        tname  = tl.replace("Task:","").replace("task:","").strip() or "your task"
-        dl     = next((l for l in lines if "due" in l.lower()), "")
-        return (f"Step-by-step plan — {tname}\n\n"
-                "Day 1 — Understand & Plan:\n"
-                "• Read the task description carefully and note all requirements\n"
-                "• Identify resources, tools, or files you will need\n"
-                "• Break work into 3-4 sub-tasks and estimate time for each\n\n"
-                "Day 2 — Execute:\n"
-                "• Complete the highest-impact sub-task first\n"
-                "• Create a draft or initial version of the deliverable\n"
-                "• Review against the task checklist — nothing missing?\n\n"
-                "Day 3 — Review & Submit:\n"
-                "• Polish the deliverable and do a final quality check\n"
-                "• Attach all required files in the dashboard update\n"
-                "• Set progress to 100% and mark as Completed\n\n"
-                f"{('Due: ' + dl) if dl else 'Complete before the deadline shown on your task card.'}\n\n"
-                "Tip: Add GROQ_API_KEY to .env for personalized AI plans (free at console.groq.com).")
-
-    if any(w in p for w in ["feedback","review","submitted by","revision needed"]):
-        lines  = [l.strip() for l in prompt.split("\n") if l.strip()]
-        dl     = next((l for l in lines if "document:" in l.lower()), "")
-        dname  = dl.replace("Document:","").replace("document:","").strip() or "this document"
-        return (f"Feedback — {dname}\n\n"
-                "Initial review notes:\n\n"
-                "Strengths:\n"
-                "• Document submitted within expected timeline — good time management\n"
-                "• Submission follows the standard OOA document workflow\n\n"
-                "Points to verify before approval:\n"
-                "• Confirm all sections are complete with no placeholder or draft content\n"
-                "• Ensure all data, figures, and references are accurate and properly cited\n"
-                "• Check that the document fully addresses the original task requirements\n\n"
-                "Next steps: Address the above and resubmit if needed, or approve if all criteria are met.\n\n"
-                "Add GROQ_API_KEY to .env for AI-generated feedback (free at console.groq.com).")
-
-    if any(w in p for w in ["rework","not satisfactory","changes needed","rework instructions"]):
-        lines  = [l.strip() for l in prompt.split("\n") if l.strip()]
-        tl     = next((l for l in lines if "task:" in l.lower()), "")
-        tname  = tl.replace("Task:","").replace("task:","").strip() or "this task"
-        return (f"Rework instructions — {tname}\n\n"
-                "The submitted work needs revision before it can be accepted.\n\n"
-                "Required changes:\n"
-                "• Re-read the original task description and ensure all requirements are addressed\n"
-                "• Improve quality or completeness of the main deliverable\n"
-                "• Verify the output meets OOA standards for this type of task\n\n"
-                "How to resubmit:\n"
-                "1. Make the required changes to your work\n"
-                "2. Open the task in your dashboard and click Update Progress\n"
-                "3. Set status to In Progress, add a comment describing your changes\n"
-                "4. Attach updated files and mark Completed when done\n\n"
-                "Add GROQ_API_KEY to .env for AI rework feedback (free at console.groq.com).")
-
-    if any(w in p for w in ["task title","write a description","task description"]):
-        lines  = [l.strip() for l in prompt.split("\n") if l.strip()]
-        tl     = next((l for l in lines if "task title:" in l.lower()), "")
-        title  = tl.replace("Task title:","").replace("task title:","").strip() or "this task"
-        return (f"Suggested description for: {title}\n\n"
-                f"The assigned core team member is responsible for {title.lower()} in accordance with "
-                "Jain University OOA guidelines. This includes planning the approach, executing the work, "
-                "and delivering a complete, quality-checked output before the deadline. "
-                "All deliverables must be attached in the task dashboard update, and progress must be "
-                "logged at each stage. The task is considered complete only after the leader has reviewed "
-                "and accepted the final submission.\n\n"
-                "Add GROQ_API_KEY to .env for AI descriptions (free at console.groq.com).")
-
-    if any(w in p for w in ["progress","on track","risk","analyze","recommendation"]):
-        lines  = [l.strip() for l in prompt.split("\n") if l.strip()]
-        pl     = next((l for l in lines if "progress:" in l.lower()), "")
-        prog   = pl.replace("Current progress:","").replace("progress:","").strip() or "unknown"
-        ontrack = any(x in prog for x in ["100","90","80","70"])
-        return (f"Progress analysis (current: {prog})\n\n"
-                f"Status: {'On track — heading toward completion.' if ontrack else 'Needs attention — progress may be falling behind.'}\n\n"
-                "Assessment:\n"
-                f"• Progress at {prog} {'looks good' if ontrack else '— verify if timeline is still achievable'}\n"
-                "• Regular dashboard updates help leaders monitor completion accurately\n\n"
-                "Recommendation:\n"
-                f"{'Accept if deliverables look complete and quality is good.' if ontrack else 'Follow up with the member to understand blockers. Consider rescheduling if needed.'}\n\n"
-                "Add GROQ_API_KEY to .env for AI analysis (free at console.groq.com).")
-
-    if any(w in p for w in ["member","performance","insight","documents submitted"]):
-        lines  = [l.strip() for l in prompt.split("\n") if l.strip()]
-        nl     = next((l for l in lines if "member:" in l.lower()), "")
-        name   = nl.replace("Member:","").replace("member:","").strip().split("(")[0].strip() or "this member"
-        return (f"Performance insight — {name}\n\n"
-                "Summary:\n"
-                "• Actively participating in the OOA document submission workflow\n"
-                "• Submitting documents for leader review consistently\n\n"
-                "Areas for growth:\n"
-                "• Work on reducing revision requests by reviewing submission checklist before uploading\n"
-                "• Aim to increase first-time approval rate with higher-quality initial submissions\n\n"
-                "Leader recommendations:\n"
-                "• Schedule a brief 1-on-1 to discuss submission quality standards\n"
-                "• Recognize strong performance publicly to motivate the broader team\n\n"
-                "Add GROQ_API_KEY to .env for AI insights (free at console.groq.com).")
-
-    return ("I am your OOA dashboard AI assistant.\n\n"
-            "I can help with:\n"
-            "• Summarizing documents\n"
-            "• Creating step-by-step task plans\n"
-            "• Drafting document review feedback\n"
-            "• Analyzing task progress\n"
-            "• Generating member performance insights\n\n"
-            "To enable full AI features (free, no credit card):\n"
-            "1. Go to console.groq.com and sign up\n"
-            "2. Create an API key (it is free)\n"
-            "3. Add   GROQ_API_KEY=gsk_your_key   to your .env file\n"
-            "4. Restart your Flask server\n\n"
-            "How can I assist you today?")
-
-
-# ── 8 AI ROUTES ────────────────────────────────────────────────────────
 
 @app.route("/api/ai/summarize", methods=["POST"])
 @login_required
 def ai_summarize():
     try:
-        data        = request.get_json()
+        data        = request.get_json(force=True) or {}
         doc_name    = data.get("document_name", "Document")
         description = data.get("description", "")
         file_url    = data.get("file_url", "")
         file_text   = extract_text_from_file(file_url) if file_url else ""
         context     = file_text or description or "No content available."
-        prompt = (f"Summarize the following document for a Jain University OOA team member.\n\n"
+        prompt = (f"You are an assistant for a university student organisation (OOA, Jain University).\n"
+                  f"Summarize the following document concisely for a team member.\n\n"
                   f"Document name: {doc_name}\nContent:\n{context[:3000]}\n\n"
-                  f"Provide: 1) Main topic (1 sentence) 2) Key points (3-5 bullets) 3) Action items if any.\n"
-                  f"Be concise and professional. Plain text only.")
-        summary = call_groq(prompt, system="You are a helpful OOA assistant. Concise, plain text.", max_tokens=600)
+                  f"Provide:\n1. Main topic (1 sentence)\n2. Key points (3-5 bullet points)\n"
+                  f"3. Action items, if any\n\nBe concise and professional. Plain text only.")
+        summary = call_claude(prompt, max_tokens=800)
         return jsonify({"success": True, "summary": summary})
     except Exception as e:
+        logger.error(f"[Jain AI] summarize error: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 
@@ -897,17 +774,20 @@ def ai_summarize():
 @login_required
 def ai_task_help():
     try:
-        data        = request.get_json()
+        data        = request.get_json(force=True) or {}
         title       = data.get("title", "")
         description = data.get("description", "")
         due_date    = data.get("due_date", "")
         priority    = data.get("priority", "medium")
-        prompt = (f"A Jain University OOA core team member needs help with this task:\n\n"
-                  f"Task: {title}\nDescription: {description}\nDue: {due_date}\nPriority: {priority}\n\n"
-                  f"Give a practical step-by-step completion plan. Be specific and include time estimates. Plain text.")
-        help_text = call_groq(prompt, system="You are a practical task planning assistant. Plain text only.", max_tokens=700)
+        prompt = (f"You are a helpful assistant for a university student organisation (OOA, Jain University).\n"
+                  f"A core team member needs help completing this task:\n\n"
+                  f"Task: {title}\nDescription: {description}\nDue date: {due_date}\nPriority: {priority}\n\n"
+                  f"Give a clear, practical step-by-step plan to complete this task on time.\n"
+                  f"Be specific and actionable. Include time estimates if helpful. Plain text only.")
+        help_text = call_claude(prompt, max_tokens=900)
         return jsonify({"success": True, "help": help_text})
     except Exception as e:
+        logger.error(f"[Jain AI] task-help error: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 
@@ -915,23 +795,26 @@ def ai_task_help():
 @login_required
 def ai_chat():
     try:
-        data       = request.get_json()
+        data       = request.get_json(force=True) or {}
         message    = data.get("message", "")
         task_title = data.get("task_title", "")
         task_desc  = data.get("task_desc", "")
         history    = data.get("history", [])
-        system     = (f"You are a helpful AI assistant for Jain University OOA dashboard. "
-                      f"Help with tasks, documents, planning. Context: Task='{task_title}'. "
-                      f"Be concise and professional. Plain text, no markdown.")
-        msgs = []
+        system = (f"You are Jain AI, an AI assistant embedded in the Jain University OOA "
+                  f"(Office of Academics) dashboard. You help core team members and leaders "
+                  f"with tasks, document reviews, planning, and general questions.\n"
+                  f"Current context — Task: {task_title}. Description: {task_desc}.\n"
+                  f"Be concise, helpful, and professional. Use plain text without markdown.")
+        messages = []
         for h in history[-8:]:
-            if h.get("role") in ("user","assistant") and h.get("content"):
-                msgs.append({"role": h["role"], "content": h["content"]})
-        if not msgs or msgs[-1]["role"] != "user":
-            msgs.append({"role": "user", "content": message})
-        reply = call_groq_chat(msgs, system=system, max_tokens=700)
+            if h.get("role") in ("user", "assistant") and h.get("content"):
+                messages.append({"role": h["role"], "content": h["content"]})
+        if not messages or messages[-1]["role"] != "user":
+            messages.append({"role": "user", "content": message})
+        reply = call_claude_chat(messages, system=system, max_tokens=800)
         return jsonify({"success": True, "reply": reply})
     except Exception as e:
+        logger.error(f"[Jain AI] chat error: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 
@@ -939,17 +822,21 @@ def ai_chat():
 @login_required
 def ai_suggest_feedback():
     try:
-        data         = request.get_json()
+        data         = request.get_json(force=True) or {}
         doc_name     = data.get("document_name", "")
         description  = data.get("description", "")
         submitted_by = data.get("submitted_by", "a core member")
         prompt = (f"You are a Jain University OOA leader reviewing a submitted document.\n\n"
                   f"Document: {doc_name}\nSubmitted by: {submitted_by}\nDescription: {description}\n\n"
-                  f"Write professional constructive feedback (150-200 words). "
-                  f"Note strengths and improvements. Do NOT approve or reject. Plain text.")
-        feedback = call_groq(prompt, system="Professional university leader. Constructive feedback. Plain text.", max_tokens=500)
+                  f"Write professional, constructive feedback (150-200 words).\n"
+                  f"- Be specific and actionable\n"
+                  f"- Point out what is good and what needs improvement\n"
+                  f"- Do NOT approve or reject — only provide feedback\n"
+                  f"- Plain text, no markdown")
+        feedback = call_claude(prompt, max_tokens=600)
         return jsonify({"success": True, "feedback": feedback})
     except Exception as e:
+        logger.error(f"[Jain AI] suggest-feedback error: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 
@@ -957,13 +844,19 @@ def ai_suggest_feedback():
 @login_required
 def ai_suggest_task_desc():
     try:
-        data  = request.get_json()
+        data  = request.get_json(force=True) or {}
         title = data.get("title", "")
-        prompt = (f"Write a clear task description (3-5 sentences) for a Jain University OOA task titled: '{title}'.\n"
-                  f"Include: what to do, expected deliverables, quality standards. Specific enough to act on. Plain text.")
-        desc = call_groq(prompt, system="University team leader. Clear task descriptions. Plain text.", max_tokens=300)
-        return jsonify({"success": True, "description": desc})
+        prompt = (f"You are a Jain University OOA leader creating a task for a core team member.\n\n"
+                  f"Task title: {title}\n\n"
+                  f"Write a clear, detailed task description (3-5 sentences) that:\n"
+                  f"- Explains what needs to be done\n"
+                  f"- Mentions deliverables or outputs expected\n"
+                  f"- Notes quality standards or guidelines\n"
+                  f"- Is specific enough to act on\n\nPlain text only.")
+        description = call_claude(prompt, max_tokens=400)
+        return jsonify({"success": True, "description": description})
     except Exception as e:
+        logger.error(f"[Jain AI] suggest-task-desc error: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 
@@ -971,17 +864,22 @@ def ai_suggest_task_desc():
 @login_required
 def ai_analyze_task():
     try:
-        data        = request.get_json()
-        title       = data.get("title","")
-        description = data.get("description","")
-        progress    = data.get("progress",0)
-        status      = data.get("status","pending")
-        prompt = (f"Analyze this OOA task progress:\n\nTask: {title}\nDescription: {description}\n"
-                  f"Progress: {progress}%\nStatus: {status}\n\n"
-                  f"Give 100-150 word analysis: on track? risks? recommendation (accept/rework/follow-up)? Plain text.")
-        analysis = call_groq(prompt, system="Concise professional team leader. Plain text only.", max_tokens=400)
+        data        = request.get_json(force=True) or {}
+        title       = data.get("title", "")
+        description = data.get("description", "")
+        progress    = data.get("progress", 0)
+        status      = data.get("status", "pending")
+        prompt = (f"You are a Jain University OOA leader reviewing a task's progress.\n\n"
+                  f"Task: {title}\nDescription: {description}\n"
+                  f"Current progress: {progress}%\nStatus: {status}\n\n"
+                  f"Provide a brief progress analysis (100-150 words):\n"
+                  f"- Is the progress on track?\n"
+                  f"- Any risks or concerns?\n"
+                  f"- Recommendations (accept, request rework, follow up)?\n\nPlain text only.")
+        analysis = call_claude(prompt, max_tokens=500)
         return jsonify({"success": True, "analysis": analysis})
     except Exception as e:
+        logger.error(f"[Jain AI] analyze-task error: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 
@@ -989,16 +887,20 @@ def ai_analyze_task():
 @login_required
 def ai_suggest_rework_feedback():
     try:
-        data        = request.get_json()
-        title       = data.get("title","")
-        description = data.get("description","")
-        progress    = data.get("progress",100)
-        prompt = (f"Write rework instructions for this OOA task:\n\nTask: {title}\n"
-                  f"Description: {description}\nProgress: {progress}%\n\n"
-                  f"100-150 words: what was unsatisfactory, exact changes needed, respectful tone. Plain text.")
-        feedback = call_groq(prompt, system="Professional team leader. Constructive rework instructions. Plain text.", max_tokens=400)
+        data        = request.get_json(force=True) or {}
+        title       = data.get("title", "")
+        description = data.get("description", "")
+        progress    = data.get("progress", 100)
+        prompt = (f"You are a Jain University OOA leader requesting a rework on a completed task.\n\n"
+                  f"Task: {title}\nDescription: {description}\nProgress reported: {progress}%\n\n"
+                  f"Write specific, constructive rework instructions (100-150 words) that:\n"
+                  f"- Clearly explain what was not satisfactory\n"
+                  f"- State exactly what changes or additions are needed\n"
+                  f"- Are respectful and professional in tone\n\nPlain text only.")
+        feedback = call_claude(prompt, max_tokens=500)
         return jsonify({"success": True, "feedback": feedback})
     except Exception as e:
+        logger.error(f"[Jain AI] suggest-rework-feedback error: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 
@@ -1006,22 +908,26 @@ def ai_suggest_rework_feedback():
 @login_required
 def ai_member_insight():
     try:
-        data     = request.get_json()
-        name     = data.get("name","")
-        email    = data.get("email","")
-        total    = data.get("total_documents",0)
-        pending  = data.get("pending",0)
-        approved = data.get("approved",0)
-        revision = data.get("revision",0)
-        prompt = (f"Performance insight for OOA core member:\n\n"
-                  f"Member: {name} ({email})\nDocuments: {total} total, {approved} approved, "
-                  f"{pending} pending, {revision} revision\n\n"
-                  f"100-150 words: strengths, areas for improvement, 1-2 leader suggestions. Plain text.")
-        insight = call_groq(prompt, system="Professional academic leader. Performance insights. Plain text.", max_tokens=400)
+        data     = request.get_json(force=True) or {}
+        name     = data.get("name", "")
+        email    = data.get("email", "")
+        total    = data.get("total_documents", 0)
+        pending  = data.get("pending", 0)
+        approved = data.get("approved", 0)
+        revision = data.get("revision", 0)
+        prompt = (f"You are a Jain University OOA leader reviewing a core team member's performance.\n\n"
+                  f"Member: {name} ({email})\n"
+                  f"Documents submitted: {total}\nApproved: {approved}\n"
+                  f"Pending: {pending}\nNeeds revision: {revision}\n\n"
+                  f"Write a brief performance insight (100-150 words):\n"
+                  f"- Highlight strengths\n"
+                  f"- Note areas for improvement\n"
+                  f"- Give 1-2 concrete suggestions for the leader\n\nPlain text, professional tone.")
+        insight = call_claude(prompt, max_tokens=500)
         return jsonify({"success": True, "insight": insight})
     except Exception as e:
+        logger.error(f"[Jain AI] member-insight error: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
-
 
 # ══════════════════════════════════════════════════════════════════════
 #  AUTH ROUTES
@@ -1540,7 +1446,6 @@ def core_dashboard():
         completed_tasks    = len([t for t in my_tasks if t.get('status')=='completed'])
         high_priority_tasks= len([t for t in my_tasks if t.get('priority')=='high' and t.get('status')!='completed'])
         overdue_tasks      = len([t for t in my_tasks if t.get('due_date') and t.get('due_date') < now_naive and t.get('status')!='completed'])
-        five_min_ago_n = make_timezone_naive(now - timedelta(minutes=5))
         online_core = list(db.users.find({
             '$or':[{'user_type':'core'},{'special_role':'office_barrier'}],
             'approved': True, 'is_online': True}) or [])
@@ -1575,7 +1480,8 @@ def core_dashboard():
             if doc.get('reviewed_at'):
                 recent_activity.append({'type':'document','title':doc['document_name'],
                     'time':doc['reviewed_at'].strftime('%d %b, %I:%M %p'),
-                    'status':doc.get('status',''),'icon':'check-circle','color':'green' if doc['status']=='approved' else 'red'})
+                    'status':doc.get('status',''),'icon':'check-circle',
+                    'color':'green' if doc['status']=='approved' else 'red'})
         for task in my_tasks[:5]:
             if task.get('created_at'):
                 recent_activity.append({'type':'task','title':task['title'],
@@ -1715,7 +1621,6 @@ def leader_dashboard():
             logger.error(f"Assigned tasks error: {e}")
         core_members = list(db.users.find({
             '$or':[{'user_type':'core'},{'special_role':'office_barrier'}],'approved':True}))
-        five_min_n = make_timezone_naive(now_aware - timedelta(minutes=5))
         online_core = list(db.users.find({
             '$or':[{'user_type':'core'},{'special_role':'office_barrier'}],
             'approved':True,'is_online':True}))
@@ -2008,7 +1913,7 @@ def leader_request_rework(task_id):
             return jsonify({'error': 'Task not found'}), 404
         if str(task['assigned_by']) != str(user['_id']):
             return jsonify({'error': 'Not authorized'}), 403
-        data        = request.get_json()
+        data        = request.get_json(force=True) or {}
         comment     = data.get('comment', '').strip()
         new_due_date= data.get('new_due_date', '')
         if not comment:
@@ -2060,7 +1965,7 @@ def leader_reschedule_task(task_id):
             return jsonify({'error': 'Task not found'}), 404
         if str(task['assigned_by']) != str(user['_id']):
             return jsonify({'error': 'Not authorized'}), 403
-        data         = request.get_json()
+        data         = request.get_json(force=True) or {}
         new_due_date = data.get('new_due_date', '')
         reason       = data.get('reason', '').strip()
         if not new_due_date:
@@ -2105,7 +2010,7 @@ def leader_add_task_comment(task_id):
             return jsonify({'error': 'Task not found'}), 404
         if str(task['assigned_by']) != str(user['_id']):
             return jsonify({'error': 'Not authorized'}), 403
-        data    = request.get_json()
+        data    = request.get_json(force=True) or {}
         comment = data.get('comment', '').strip()
         if not comment:
             return jsonify({'error': 'Comment is required'}), 400
@@ -2138,7 +2043,7 @@ def leader_add_share_comment(share_id):
         return jsonify({'error': 'Access denied'}), 403
     try:
         user    = db.users.find_one({'email': session['email']})
-        data    = request.get_json()
+        data    = request.get_json(force=True) or {}
         comment = data.get('comment', '').strip()
         if not comment:
             return jsonify({'error': 'Comment is required'}), 400
@@ -2323,7 +2228,7 @@ def get_chat_messages():
 def send_chat_message():
     try:
         user       = db.users.find_one({'email': session['email']})
-        data       = request.get_json()
+        data       = request.get_json(force=True) or {}
         content    = data.get('content','').strip()
         receiver_id= data.get('receiver_id')
         file_url   = data.get('file_url')
@@ -2559,7 +2464,7 @@ def drive_create_folder():
     if 'drive_creds' not in session:
         return jsonify({'error': 'Not authenticated'}), 401
     try:
-        data        = request.get_json()
+        data        = request.get_json(force=True) or {}
         folder_name = data.get('folder_name')
         parent_id   = data.get('parent_id', 'root')
         if not folder_name:
@@ -2628,7 +2533,7 @@ def upload_file():
 @login_required
 def edit_file(file_id):
     try:
-        data = request.get_json()
+        data = request.get_json(force=True) or {}
         result = db.user_files.update_one(
             {'_id':ObjectId(file_id),'user_email':session['email']},
             {'$set':{'file_name':data.get('file_name',''),'description':data.get('description',''),
@@ -2677,7 +2582,7 @@ def download_file(file_id):
 @login_required
 def link_drive_file():
     try:
-        data          = request.get_json()
+        data          = request.get_json(force=True) or {}
         drive_file_id = data.get('drive_file_id')
         if not drive_file_id:
             return jsonify({'error': 'Drive file ID required'}), 400
@@ -2771,7 +2676,7 @@ def delete_public_file(file_id):
 @login_required
 def set_reminder():
     try:
-        data           = request.get_json()
+        data           = request.get_json(force=True) or {}
         event_id       = data.get('event_id')
         reminder_date  = data.get('reminder_date')
         reminder_time  = data.get('reminder_time')
@@ -2815,13 +2720,13 @@ def set_reminder():
         return jsonify({'success': True, 'message': f"{message}! Confirmation email sent."})
     except Exception as e:
         logger.error(f"set_reminder error: {e}", exc_info=True)
-        return jsonify({'error': str(e), 'success': False}), 500
+        return jsonify({'error': f'Server error: {str(e)}', 'success': False}), 500
 
 @app.route('/subscribe_to_event', methods=['POST'])
 @login_required
 def subscribe_to_event():
     try:
-        data     = request.get_json()
+        data     = request.get_json(force=True) or {}
         event_id = data.get('event_id')
         if not event_id:
             return jsonify({'error': 'Event ID required'}), 400
@@ -2887,7 +2792,7 @@ def delete_reminder(reminder_id):
 @app.route('/subscribe', methods=['POST'])
 def subscribe():
     try:
-        data  = request.get_json()
+        data  = request.get_json(force=True) or {}
         email = data.get('email')
         if not email:
             return jsonify({"message": "Email is required"}), 400
@@ -2905,7 +2810,7 @@ def subscribe():
 def user_preferences():
     if request.method == 'POST':
         try:
-            data = request.get_json()
+            data = request.get_json(force=True) or {}
             db.user_preferences.update_one({'email': session['email']},
                 {'$set': {'email_notifications': data.get('email_notifications', True),
                           'reminder_notifications': data.get('reminder_notifications', True),
@@ -2948,22 +2853,27 @@ def admin_dashboard():
     elif role_filter:
         query['special_role'] = role_filter
     if dept_filter:
-        query['$or'] = [{'department':{'$regex':dept_filter,'$options':'i'}},
-                        {'profile.department':{'$regex':dept_filter,'$options':'i'}}]
+        query['$or'] = [
+            {'department': {'$regex': dept_filter, '$options': 'i'}},
+            {'profile.department': {'$regex': dept_filter, '$options': 'i'}},
+        ]
     users_raw = list(db.users.find(query).sort('created_at', -1))
-    now   = datetime.utcnow()
+    now = datetime.utcnow()
     users = []
     for u in users_raw:
         u['_id'] = str(u['_id'])
-        last_seen = u.get('last_seen')
-        u['is_active_now'] = bool(last_seen and isinstance(last_seen, datetime) and (now - last_seen).total_seconds() < 900)
+        last_seen  = u.get('last_seen')
+        is_active  = bool(last_seen and isinstance(last_seen, datetime) and (now - last_seen).total_seconds() < 900)
+        u['is_active_now'] = is_active
         profile = u.get('profile', {}) or {}
         u['dept_display']     = u.get('department') or profile.get('department') or '—'
         u['location_display'] = u.get('location')   or profile.get('location')   or '—'
-        u['last_login_display'] = u['last_login'].strftime('%d %b %Y, %H:%M') if isinstance(u.get('last_login'), datetime) else '—'
-        u['last_seen_display']  = last_seen.strftime('%d %b %Y, %H:%M') if isinstance(last_seen, datetime) else '—'
-        u['changes_made']  = u.get('changes_made', 0)
-        u['total_logins']  = u.get('total_logins', 0)
+        u['last_login_display'] = (
+            u['last_login'].strftime('%d %b %Y, %H:%M') if isinstance(u.get('last_login'), datetime) else '—')
+        u['last_seen_display'] = (
+            last_seen.strftime('%d %b %Y, %H:%M') if isinstance(last_seen, datetime) else '—')
+        u['changes_made']   = u.get('changes_made', 0)
+        u['total_logins']   = u.get('total_logins', 0)
         if u.get('special_role') == 'leader':
             u['display_type'] = 'Leader'
         elif u.get('special_role') == 'office_barrier' or u.get('user_type') == 'core':
@@ -2972,7 +2882,8 @@ def admin_dashboard():
             u['display_type'] = 'Faculty'
         users.append(u)
     all_departments = sorted(set(d for d in (db.users.distinct('department') + db.users.distinct('profile.department')) if d))
-    return render_template('admin_dashboard.html',
+    return render_template(
+        'admin_dashboard.html',
         users=users,
         total_users=db.users.count_documents({}),
         pending_users=db.users.count_documents({'approved':{'$ne':True}}),
@@ -2981,7 +2892,8 @@ def admin_dashboard():
         pre_assigned_leaders=list(db.pre_assigned_roles.find({'role':'leader'}).sort('assigned_at',-1)),
         pre_assigned_core=list(db.pre_assigned_roles.find({'role':'core'}).sort('assigned_at',-1)),
         all_departments=all_departments,
-        **_get_user_info())
+        **_get_user_info()
+    )
 
 @app.route('/admin/users')
 def view_users():
@@ -3076,7 +2988,7 @@ def pre_assign_leader():
     if session.get('role') != 'admin':
         return jsonify({'error': 'Access denied'}), 403
     try:
-        data   = request.get_json()
+        data   = request.get_json(force=True) or {}
         email  = data.get('email')
         school = data.get('school', '')
         if not email or not email.endswith('@jainuniversity.ac.in'):
@@ -3103,7 +3015,7 @@ def pre_assign_core():
     if session.get('role') != 'admin':
         return jsonify({'error': 'Access denied'}), 403
     try:
-        data       = request.get_json()
+        data       = request.get_json(force=True) or {}
         email      = data.get('email')
         department = data.get('department', '')
         if not email or not email.endswith('@jainuniversity.ac.in'):
@@ -3534,7 +3446,7 @@ def newsletter_view(newsletter_id):
                                user_email=session.get('email'),
                                user_navbar=get_user_navbar(session.get('email','')) if session.get('email') else [])
     except Exception as e:
-        logger.error(f"newsletter_view error: {e}")
+        logger.error(f"newsletter_view error: {e}", exc_info=True)
         flash('Error loading newsletter', 'error')
         return redirect(url_for('newsletter_page'))
 
@@ -3550,7 +3462,7 @@ def newsletter_page():
                                user_email=session.get('email'),
                                user_navbar=get_user_navbar(session.get('email','')) if session.get('email') else [])
     except Exception as e:
-        logger.error(f"newsletter_page error: {e}")
+        logger.error(f"newsletter_page error: {e}", exc_info=True)
         return render_template('newsletter_page.html', records=[], user_logged_in='email' in session, user_email=session.get('email'))
 
 # ══════════════════════════════════════════════════════════════════════
@@ -3667,7 +3579,7 @@ def mark_notification_read(notification_id):
 #  DEPARTMENT REPOSITORY
 # ══════════════════════════════════════════════════════════════════════
 @app.route('/dept_repo')
-@_login_required
+@login_required
 def dept_repo():
     ui = _get_user_info()
     if not ui['approved']:
@@ -3780,7 +3692,7 @@ def core_repo_upload():
 @app.route('/core_repo_delete', methods=['POST'])
 @_core_required
 def core_repo_delete():
-    data   = request.get_json()
+    data   = request.get_json(force=True) or {}
     doc_id = data.get('doc_id')
     if not doc_id:
         return jsonify({'success': False, 'error': 'Missing document ID'})
@@ -3933,19 +3845,37 @@ def uploaded_file(filename):
         return "File not found", 404
 
 # ══════════════════════════════════════════════════════════════════════
-#  ERROR HANDLERS
+#  ERROR HANDLERS  ← JSON-safe for /api/ routes
 # ══════════════════════════════════════════════════════════════════════
+@app.errorhandler(401)
+def unauthorized(e):
+    if request.path.startswith('/api/'):
+        return jsonify({'success': False, 'error': 'Not logged in'}), 401
+    return redirect(url_for('login'))
+
+@app.errorhandler(403)
+def forbidden(e):
+    if request.path.startswith('/api/'):
+        return jsonify({'success': False, 'error': 'Access denied'}), 403
+    return redirect(url_for('home'))
+
 @app.errorhandler(404)
 def not_found_error(error):
+    if request.path.startswith('/api/'):
+        return jsonify({'success': False, 'error': 'Not found'}), 404
     return render_template('404.html'), 404
 
 @app.errorhandler(500)
 def internal_error(error):
     logger.error(f"Internal server error: {error}")
+    if request.path.startswith('/api/'):
+        return jsonify({'success': False, 'error': 'Internal server error'}), 500
     return render_template('500.html'), 500
 
 @app.errorhandler(413)
 def request_entity_too_large(error):
+    if request.path.startswith('/api/'):
+        return jsonify({'success': False, 'error': 'File too large. Maximum size is 50MB.'}), 413
     flash('File too large. Maximum size is 50MB.', 'error')
     return redirect(request.referrer or url_for('home'))
 
