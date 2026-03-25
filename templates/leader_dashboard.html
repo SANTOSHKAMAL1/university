@@ -1,1245 +1,1242 @@
-{% extends 'base_user.html' %}
-{% block title %}Leader Dashboard - Jain University{% endblock %}
-{% block page_title %}OOA-Leadership Board{% endblock %}
-{% block page_subtitle %}Review documents, assign tasks, track analytics, and collaborate with core team{% endblock %}
+{% extends "base_user.html" %}
+
+{% block title %}Leader Dashboard — Jain University OOA{% endblock %}
+{% block page_title %}Leader Dashboard{% endblock %}
+{% block page_subtitle %}Manage documents, tasks, and core team performance{% endblock %}
 
 {% block content %}
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+{# ── Inject live stats for Jain AI docked bar ── #}
+<script>
+window.DASH_STATS = {
+    pending_review:  {{ pending_count | default(0) }},
+    total_assigned:  {{ my_assigned_documents | length if my_assigned_documents else 0 }},
+    total_tasks:     {{ assigned_tasks | length if assigned_tasks else 0 }},
+    core_members:    {{ core_members | length if core_members else 0 }},
+    online_members:  {{ online_core | length if online_core else 0 }},
+    today_shared:    {{ today_shared_count | default(0) }},
+    accepted_tasks:  {{ assigned_tasks | selectattr('status','equalto','accepted') | list | length if assigned_tasks else 0 }},
+    completed_tasks: {{ assigned_tasks | selectattr('status','equalto','completed') | list | length if assigned_tasks else 0 }},
+    rework_tasks:    {{ assigned_tasks | selectattr('status','equalto','rework') | list | length if assigned_tasks else 0 }},
+    overdue_tasks:   0
+};
+(function(){
+    var now = Date.now();
+    var overdue = 0;
+    {% for task in assigned_tasks %}
+    {% if task.due_date %}
+    if (new Date("{{ task.due_date.strftime('%Y-%m-%d') }}").getTime() < now &&
+        "{{ task.status }}" !== "completed" &&
+        "{{ task.status }}" !== "accepted") { overdue++; }
+    {% endif %}
+    {% endfor %}
+    window.DASH_STATS.overdue_tasks = overdue;
+    if (typeof buildStatsPills === 'function') buildStatsPills();
+})();
+</script>
 
 <style>
-:root {
-  --navy: #04043a;
-  --navy-mid: #0a0a5c;
-  --gold: #eab308;
-  --gold-light: #fef3c7;
-  --surface: #ffffff;
-  --surface-2: #f8f7ff;
-  --border: rgba(4,4,58,0.10);
-  --text-main: #04043a;
-  --text-muted: #64748b;
-  --radius: 14px;
-  --radius-sm: 8px;
-  --shadow: 0 2px 16px rgba(4,4,58,0.07);
-  --shadow-lg: 0 8px 40px rgba(4,4,58,0.13);
-}
+    /* ── QUICK STATS ── */
+    .quick-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+    .stat-card {
+        background:#fff; border-radius:14px; padding:18px;
+        box-shadow:0 2px 10px rgba(10,25,41,.06);
+        border:1px solid rgba(197,165,114,.2);
+        display:flex; align-items:center; gap:14px;
+        transition:all .3s; position:relative; overflow:hidden;
+    }
+    .stat-card:hover { box-shadow:0 6px 20px rgba(10,25,41,.1); transform:translateY(-2px); border-color:var(--jain-gold); }
+    .stat-card::after { content:''; position:absolute; bottom:0; left:0; right:0; height:3px; background:var(--jain-gold); transform:scaleX(0); transition:transform .3s; }
+    .stat-card:hover::after { transform:scaleX(1); }
+    .stat-icon { width:52px; height:52px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+    .stat-num  { font-size:28px; font-weight:800; color:var(--jain-navy); font-family:'Syne',sans-serif; line-height:1; }
+    .stat-lbl  { font-size:12px; color:#6b7280; font-weight:500; margin-top:3px; }
+    .stat-sub  { font-size:10px; color:#9ca3af; margin-top:1px; }
 
-* { box-sizing: border-box; }
-body { font-family: 'DM Sans', sans-serif; background: #f3f2fa; }
+    /* ── TABS ── */
+    .tab-nav { display:flex; gap:4px; background:#fff; padding:6px; border-radius:14px; box-shadow:0 2px 8px rgba(10,25,41,.06); margin-bottom:20px; flex-wrap:wrap; border:1px solid rgba(197,165,114,.2); }
+    .tab-btn { padding:9px 18px; border-radius:9px; font-size:13px; font-weight:500; cursor:pointer; transition:all .2s; color:#6b7280; background:none; border:none; display:flex; align-items:center; gap:7px; white-space:nowrap; }
+    .tab-btn:hover  { background:#f9fafb; color:var(--jain-navy); }
+    .tab-btn.active { background:var(--jain-navy); color:var(--jain-gold); font-weight:600; }
+    .tab-btn .badge { background:rgba(239,68,68,.9); color:#fff; border-radius:20px; font-size:10px; padding:1px 6px; font-weight:700; }
+    .tab-content { display:none; }
+    .tab-content.active { display:block; animation:fadeIn .25s ease; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
 
-.leader-wrap { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
+    /* ── SECTION CARDS ── */
+    .section-card { background:#fff; border-radius:14px; box-shadow:0 2px 10px rgba(10,25,41,.06); border:1px solid rgba(197,165,114,.2); overflow:hidden; }
+    .section-header { padding:16px 20px; border-bottom:1px solid #f0f0f0; display:flex; align-items:center; justify-content:space-between; background:linear-gradient(135deg,var(--jain-navy) 0%,#1a1a6e 100%); }
+    .section-title { color:#fff; font-size:15px; font-weight:700; display:flex; align-items:center; gap:8px; font-family:'Playfair Display',serif; }
+    .section-title i { color:var(--jain-gold); }
+    .section-body { padding:20px; }
 
-/* ── Quick stats ── */
-.quick-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 1.5rem; }
-.qs-card {
-  background: var(--surface); border-radius: var(--radius); padding: 1.1rem 1.25rem;
-  border: 1px solid var(--border); box-shadow: var(--shadow); border-left-width: 4px;
-  display: flex; align-items: center; justify-content: space-between;
-}
-.qs-card .num { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 700; color: var(--navy); }
-.qs-card .lbl { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; margin-top: 3px; }
-.qs-icon { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 17px; }
+    /* ── DOCUMENT CARDS ── */
+    .doc-card { background:#f8f9fc; border:1px solid #e5e7eb; border-radius:12px; padding:16px; margin-bottom:12px; transition:all .2s; }
+    .doc-card:hover { border-color:var(--jain-gold); background:#fff; box-shadow:0 4px 12px rgba(10,25,41,.07); }
+    .doc-meta { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+    .doc-badge { padding:3px 10px; border-radius:20px; font-size:10px; font-weight:600; }
+    .badge-pending  { background:#fef9c3; color:#854d0e; }
+    .badge-approved { background:#dcfce7; color:#166534; }
+    .badge-revision { background:#fce7f3; color:#9d174d; }
+    .badge-rejected { background:#fee2e2; color:#991b1b; }
+    .badge-accepted { background:#dbeafe; color:#1e40af; }
+    .badge-rework   { background:#fde68a; color:#92400e; }
+    .badge-high     { background:#fee2e2; color:#991b1b; }
+    .badge-medium   { background:#fef9c3; color:#854d0e; }
+    .badge-low      { background:#d1fae5; color:#065f46; }
 
-/* ── Tab shell ── */
-.tab-shell { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 1.5rem; overflow: hidden; }
-.tab-nav { display: flex; border-bottom: 1px solid var(--border); background: #fafafa; overflow-x: auto; }
-.tab-btn { padding: 13px 18px; font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap; border: none; background: none; color: var(--text-muted); display: flex; align-items: center; gap: 7px; border-bottom: 2px solid transparent; transition: all .18s; font-family: 'DM Sans', sans-serif; }
-.tab-btn.active { color: var(--navy); border-bottom-color: var(--gold); background: var(--surface); }
-.tab-btn:hover:not(.active) { color: var(--navy); background: #f0effa; }
-.tab-badge { background: var(--navy); color: #fff; font-size: 10px; padding: 2px 7px; border-radius: 20px; }
-.tab-content { display: none; padding: 1.5rem; }
-.tab-content.active { display: block; }
+    /* ── FORM STYLES ── */
+    .form-group { margin-bottom:16px; }
+    .form-label { font-size:13px; font-weight:600; color:var(--jain-navy); margin-bottom:5px; display:block; }
+    .form-control { width:100%; padding:9px 12px; border:1px solid #e5e7eb; border-radius:8px; font-size:13px; font-family:'Inter',sans-serif; transition:all .2s; }
+    .form-control:focus { outline:none; border-color:var(--jain-gold); box-shadow:0 0 0 3px rgba(197,165,114,.12); }
+    .form-select { appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:36px; }
+    .btn-primary { background:var(--jain-navy); color:#fff; border:none; border-radius:8px; padding:9px 18px; font-size:13px; font-weight:600; cursor:pointer; transition:all .2s; display:inline-flex; align-items:center; gap:7px; }
+    .btn-primary:hover { background:var(--jain-navy-light); transform:translateY(-1px); box-shadow:0 4px 12px rgba(10,25,41,.2); }
+    .btn-gold { background:var(--jain-gold); color:var(--jain-navy); }
+    .btn-gold:hover { background:#e5c56a; }
+    .btn-sm { padding:6px 12px; font-size:11px; }
+    .btn-danger { background:#ef4444; border:none; border-radius:6px; color:#fff; padding:6px 12px; font-size:11px; cursor:pointer; font-weight:600; }
+    .btn-danger:hover { background:#dc2626; }
 
-/* ── Cards ── */
-.card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 1.25rem; box-shadow: var(--shadow); }
-.card-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--navy); display: flex; align-items: center; gap: 8px; margin-bottom: 1rem; }
+    /* ── TASK CARD ── */
+    .task-card { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:16px; margin-bottom:12px; transition:all .2s; }
+    .task-card:hover { border-color:var(--jain-gold); box-shadow:0 4px 16px rgba(10,25,41,.08); }
+    .task-card.overdue { border-left:4px solid #ef4444; }
+    .task-card.urgent  { border-left:4px solid #f59e0b; }
+    .task-card.normal  { border-left:4px solid #22c55e; }
+    .progress-bar-wrap { background:#f3f4f6; border-radius:20px; height:6px; margin:8px 0; }
+    .progress-bar-fill { height:6px; border-radius:20px; background:linear-gradient(90deg,var(--jain-navy),var(--jain-gold)); transition:width .5s; }
 
-/* ── Forms ── */
-.form-label { font-size: 12px; font-weight: 600; color: var(--navy); margin-bottom: 6px; display: block; letter-spacing: .02em; }
-.form-input { width: 100%; padding: 10px 14px; font-size: 13px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text-main); font-family: 'DM Sans',sans-serif; transition: border-color .15s; }
-.form-input:focus { outline: none; border-color: var(--navy); }
-.form-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    /* ── MEMBER CARD ── */
+    .member-card { background:#f8f9fc; border:1px solid #e5e7eb; border-radius:12px; padding:14px; display:flex; align-items:center; gap:12px; transition:all .2s; cursor:pointer; }
+    .member-card:hover { border-color:var(--jain-gold); background:#fff; box-shadow:0 2px 8px rgba(10,25,41,.06); }
+    .member-avatar { width:42px; height:42px; border-radius:50%; background:var(--jain-navy); color:var(--jain-gold); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:16px; flex-shrink:0; }
+    .online-dot { width:9px; height:9px; background:#22c55e; border-radius:50%; border:2px solid #fff; position:absolute; bottom:0; right:0; }
 
-/* ── Buttons ── */
-.btn-primary { background: var(--navy); color: #fff; padding: 11px 22px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: background .15s; font-family: 'DM Sans',sans-serif; text-decoration: none; }
-.btn-primary:hover { background: #1e3c72; }
-.btn-success { background: #16a34a; color: #fff; padding: 8px 16px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 600; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: background .15s; font-family: 'DM Sans',sans-serif; }
-.btn-success:hover { background: #15803d; }
-.btn-danger { background: #dc2626; color: #fff; padding: 8px 16px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 600; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: background .15s; font-family: 'DM Sans',sans-serif; }
-.btn-danger:hover { background: #b91c1c; }
-.btn-warn { background: #f97316; color: #fff; padding: 8px 16px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 600; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: background .15s; font-family: 'DM Sans',sans-serif; }
-.btn-warn:hover { background: #ea580c; }
-.btn-outline { background: transparent; color: var(--navy); padding: 8px 16px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 500; border: 1.5px solid var(--border); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all .15s; font-family: 'DM Sans',sans-serif; text-decoration: none; }
-.btn-outline:hover { border-color: var(--navy); background: var(--surface-2); }
-.btn-gold { background: var(--gold); color: var(--navy); padding: 8px 16px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 700; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all .15s; font-family: 'DM Sans',sans-serif; }
-.btn-gold:hover { background: #ca9a00; }
+    /* ── AI PANEL (per task) ── */
+    .ai-task-panel { background:linear-gradient(135deg,#0a1929 0%,#1a1a6e 100%); border-radius:10px; padding:14px; margin-top:10px; display:none; }
+    .ai-task-panel.open { display:block; }
+    .ai-task-panel .ai-label { color:var(--jain-gold); font-size:11px; font-weight:700; margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+    .ai-response { background:rgba(255,255,255,.1); border-radius:8px; padding:10px; color:#fff; font-size:12px; line-height:1.65; min-height:40px; white-space:pre-wrap; }
+    .ai-input-row { display:flex; gap:8px; margin-top:8px; }
+    .ai-input-row input { flex:1; background:rgba(255,255,255,.12); border:1px solid rgba(197,165,114,.35); border-radius:6px; padding:7px 10px; color:#fff; font-size:12px; }
+    .ai-input-row input::placeholder { color:rgba(255,255,255,.4); }
+    .ai-input-row button { background:var(--jain-gold); color:var(--jain-navy); border:none; border-radius:6px; padding:7px 14px; font-size:11px; font-weight:700; cursor:pointer; }
 
-/* ── Badges ── */
-.badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-.badge-pending { background: #fef9c3; color: #854d0e; }
-.badge-approved { background: #dcfce7; color: #166534; }
-.badge-revision { background: #ffedd5; color: #9a3412; }
-.badge-rejected { background: #fee2e2; color: #991b1b; }
-.badge-progress { background: #dbeafe; color: #1e40af; }
-.badge-rework { background: #ffedd5; color: #9a3412; }
-.badge-accepted { background: #d1fae5; color: #065f46; }
-.badge-completed { background: #dcfce7; color: #166534; }
-.badge-high { background: #fee2e2; color: #991b1b; }
-.badge-medium { background: #fef9c3; color: #854d0e; }
-.badge-low { background: #dcfce7; color: #166534; }
+    /* ── FILE VIEWER MODAL ── */
+    #fileViewerModal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:9800; align-items:center; justify-content:center; padding:1rem; }
+    #fileViewerModal.open { display:flex; }
+    .viewer-box { background:#fff; border-radius:14px; width:100%; max-width:900px; max-height:90vh; overflow:hidden; display:flex; flex-direction:column; }
+    .viewer-header { background:var(--jain-navy); padding:14px 18px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+    .viewer-body { flex:1; overflow:hidden; }
+    .viewer-body iframe, .viewer-body img { width:100%; height:100%; border:none; object-fit:contain; }
+    .viewer-actions { padding:12px 18px; border-top:1px solid #e5e7eb; display:flex; gap:8px; flex-wrap:wrap; background:#f9fafb; flex-shrink:0; }
 
-/* ── Progress ── */
-.prog-wrap { background: #e5e7eb; border-radius: 4px; height: 6px; overflow: hidden; }
-.prog-fill { height: 100%; border-radius: 4px; transition: width .4s; }
+    /* ── MODALS ── */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:9900; align-items:center; justify-content:center; padding:1rem; backdrop-filter:blur(4px); }
+    .modal-overlay.open { display:flex; }
+    .modal-box { background:#fff; border-radius:14px; width:100%; max-width:520px; box-shadow:0 20px 60px rgba(10,25,41,.25); overflow:hidden; animation:popIn .25s ease; }
+    .modal-header { background:var(--jain-navy); padding:14px 18px; display:flex; align-items:center; justify-content:space-between; }
+    .modal-title { color:#fff; font-size:14px; font-weight:700; display:flex; align-items:center; gap:8px; }
+    .modal-title i { color:var(--jain-gold); }
+    .modal-body { padding:20px; }
+    .modal-footer { padding:14px 20px; border-top:1px solid #e5e7eb; display:flex; gap:8px; justify-content:flex-end; background:#f9fafb; }
+    .close-btn { background:rgba(255,255,255,.15); border:none; border-radius:50%; width:28px; height:28px; cursor:pointer; color:#fff; display:flex; align-items:center; justify-content:center; font-size:14px; transition:background .2s; }
+    .close-btn:hover { background:rgba(255,255,255,.3); }
 
-/* ── Task cards ── */
-.task-card { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); margin-bottom: 12px; overflow: hidden; transition: box-shadow .15s; }
-.task-card:hover { box-shadow: var(--shadow); }
-.task-card-head { padding: 1rem 1.25rem; }
-.task-card.high .task-card-head { border-left: 4px solid #ef4444; }
-.task-card.medium .task-card-head { border-left: 4px solid #f59e0b; }
-.task-card.low .task-card-head { border-left: 4px solid #22c55e; }
-
-/* ── Pending doc card ── */
-.pending-card { border-left: 4px solid var(--gold); background: #fffbeb; border-radius: var(--radius); padding: 1.25rem; margin-bottom: 14px; border: 1px solid #fde68a; }
-
-/* ── Member card ── */
-.member-card { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; text-align: center; cursor: pointer; transition: all .15s; background: var(--surface); }
-.member-card:hover { border-color: var(--gold); box-shadow: var(--shadow); }
-.member-avatar { width: 48px; height: 48px; background: linear-gradient(135deg,var(--navy),#1a1a6e); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-family: 'Syne',sans-serif; font-size: 18px; font-weight: 700; margin: 0 auto 8px; position: relative; }
-.online-dot { position: absolute; bottom: 2px; right: 2px; width: 11px; height: 11px; background: #22c55e; border: 2px solid var(--surface); border-radius: 50%; }
-
-/* ── Jain AI Panel ── */
-.ai-panel { background: linear-gradient(135deg,var(--navy) 0%,#1a1a6e 100%); border-radius: var(--radius-sm); padding: 1rem 1.25rem; margin-top: 10px; color: #fff; }
-.ai-panel-title { font-family: 'Syne',sans-serif; font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
-.ai-spark { color: var(--gold); }
-.ai-btn { background: var(--gold); color: var(--navy); padding: 7px 13px; border-radius: var(--radius-sm); font-size: 11px; font-weight: 700; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: all .15s; font-family: 'DM Sans',sans-serif; }
-.ai-btn:hover { background: #fbbf24; transform: translateY(-1px); }
-.ai-btn:disabled { opacity: .6; cursor: not-allowed; transform: none; }
-.ai-response-box { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: var(--radius-sm); padding: 12px; margin-top: 8px; font-size: 12px; line-height: 1.65; color: #e2e8f0; display: none; white-space: pre-wrap; max-height: 220px; overflow-y: auto; }
-.ai-response-box.show { display: block; }
-.ai-fill-btn { font-size:11px; color: #7c3aed; background: #f5f3ff; border: 1px solid #ede9fe; border-radius: 6px; padding: 4px 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; font-family: 'DM Sans',sans-serif; font-weight:600; }
-.ai-fill-btn:hover { background: #ede9fe; }
-
-/* ── Jain AI Chat ── */
-.ai-chat-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:99999; align-items:flex-end; justify-content:flex-end; padding:1.5rem; backdrop-filter:blur(3px); }
-.ai-chat-overlay.open { display:flex; }
-.ai-chat-box { background:var(--surface); border-radius:var(--radius); box-shadow:var(--shadow-lg); width:420px; max-height:600px; display:flex; flex-direction:column; border:1px solid var(--border); animation:slideUp .25s ease; }
-@keyframes slideUp { from{transform:translateY(30px);opacity:0} to{transform:translateY(0);opacity:1} }
-.ai-chat-header { background:linear-gradient(135deg,var(--navy),#1a1a6e); padding:1rem 1.25rem; border-radius:var(--radius) var(--radius) 0 0; display:flex; align-items:center; justify-content:space-between; }
-.ai-chat-title { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; color:#fff; display:flex; align-items:center; gap:8px; }
-.ai-chat-messages { flex:1; overflow-y:auto; padding:1rem; display:flex; flex-direction:column; gap:10px; min-height:200px; }
-.msg-user {
-  background:var(--navy); color:#fff;
-  padding:9px 13px; border-radius:12px 12px 3px 12px;
-  font-size:13px; line-height:1.5;
-  max-width:85%; width:fit-content;
-  margin-left:auto; margin-right:0;
-  align-self:flex-end;
-  word-break:break-word;
-}
-.msg-ai {
-  background:var(--surface-2); color:var(--text-main);
-  padding:9px 13px; border-radius:12px 12px 12px 3px;
-  font-size:13px; line-height:1.6;
-  border:1px solid var(--border); white-space:pre-wrap;
-  max-width:90%; width:fit-content;
-  margin-left:0; margin-right:auto;
-  align-self:flex-start;
-  word-break:break-word;
-}
-.msg-thinking { color:var(--text-muted); font-size:12px; align-self:flex-start; margin-left:0; margin-right:auto; display:flex; gap:4px; align-items:center; }
-.ai-chat-input-row { padding:.75rem 1rem; border-top:1px solid var(--border); display:flex; gap:8px; }
-.ai-chat-input { flex:1; padding:9px 13px; font-size:13px; border:1.5px solid var(--border); border-radius:var(--radius-sm); font-family:'DM Sans',sans-serif; background:var(--surface); color:var(--text-main); }
-.ai-chat-input:focus { outline:none; border-color:var(--navy); }
-.ai-chat-send { background:var(--navy); color:#fff; border:none; border-radius:var(--radius-sm); padding:9px 14px; cursor:pointer; }
-.ai-chat-send:hover { background:#1e3c72; }
-
-/* ── Floating Jain AI button ── */
-.ai-float-btn { position:fixed; bottom:2rem; right:2rem; z-index:9999; background:var(--navy); color:#fff; border:3px solid var(--gold); border-radius:50%; width:58px; height:58px; font-size:20px; cursor:pointer; box-shadow:0 4px 20px rgba(4,4,58,.35); display:flex; align-items:center; justify-content:center; transition:all .2s; }
-.ai-float-btn:hover { transform:scale(1.1); }
-
-/* ── File viewer modal ── */
-.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:50000; align-items:center; justify-content:center; padding:1rem; backdrop-filter:blur(4px); }
-.modal-overlay.open { display:flex; }
-.modal-box { background:var(--surface); border-radius:var(--radius); box-shadow:var(--shadow-lg); width:100%; max-width:900px; max-height:92vh; display:flex; flex-direction:column; }
-.modal-header { padding:1rem 1.25rem; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
-.modal-title { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; color:var(--navy); display:flex; align-items:center; gap:8px; }
-.modal-close { background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:18px; padding:4px; border-radius:6px; }
-.modal-close:hover { background:var(--surface-2); }
-.modal-body { flex:1; overflow:hidden; padding:1rem; min-height:0; }
-.modal-footer { padding:.75rem 1.25rem; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
-
-/* ── Enhanced file viewer action bar ── */
-.file-action-bar {
-  display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
-}
-.file-action-btn {
-  display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px;
-  border-radius: var(--radius-sm); font-size: 12px; font-weight: 600;
-  cursor: pointer; border: none; font-family: 'DM Sans', sans-serif;
-  transition: all .15s; text-decoration: none;
-}
-.file-action-btn.open-btn { background: var(--surface-2); color: var(--navy); border: 1.5px solid var(--border); }
-.file-action-btn.open-btn:hover { border-color: var(--navy); background: #ebebfa; }
-.file-action-btn.summarize-btn { background: linear-gradient(135deg,var(--navy),#1a1a6e); color: #fff; }
-.file-action-btn.summarize-btn:hover { opacity: .88; transform: translateY(-1px); }
-.file-action-btn.summarize-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
-.file-action-btn.ask-btn { background: var(--gold); color: var(--navy); }
-.file-action-btn.ask-btn:hover { background: #d97706; transform: translateY(-1px); }
-.file-action-btn.download-btn { background: #16a34a; color: #fff; }
-.file-action-btn.download-btn:hover { background: #15803d; }
-
-/* Jain AI badge in modal */
-.jain-ai-badge {
-  display: inline-flex; align-items: center; gap: 5px;
-  background: linear-gradient(135deg,var(--navy),#1a1a6e);
-  color: var(--gold); font-size: 10px; font-weight: 800;
-  padding: 3px 9px; border-radius: 20px; font-family: 'Syne',sans-serif;
-  letter-spacing: .04em;
-}
-
-/* ── Modals ── */
-.gen-modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:99998; align-items:center; justify-content:center; padding:1rem; backdrop-filter:blur(4px); }
-.gen-modal-overlay.open { display:flex; }
-.gen-modal-box { background:var(--surface); border-radius:var(--radius); box-shadow:var(--shadow-lg); width:100%; max-width:480px; overflow:hidden; animation:slideUp .25s ease; }
-.gen-modal-header { padding:1rem 1.25rem; display:flex; align-items:center; justify-content:space-between; }
-.gen-modal-body { padding:1.25rem; }
-.gen-modal-close { background:rgba(255,255,255,.15); border:none; border-radius:50%; width:28px; height:28px; cursor:pointer; color:#fff; font-size:14px; display:flex; align-items:center; justify-content:center; }
-
-/* ── Dropdown menu ── */
-.ddmenu { position:absolute; right:0; top:36px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); box-shadow:var(--shadow-lg); z-index:1000; width:220px; overflow:hidden; display:none; }
-.ddmenu.open { display:block; }
-.ddmenu-item { display:flex; align-items:center; gap:8px; padding:9px 14px; font-size:12px; cursor:pointer; color:var(--text-main); text-decoration:none; background:none; border:none; width:100%; text-align:left; font-family:'DM Sans',sans-serif; }
-.ddmenu-item:hover { background:var(--surface-2); }
-
-/* ── Scroll ── */
-.scroll-list { max-height:600px; overflow-y:auto; padding-right:4px; }
-.scroll-list::-webkit-scrollbar { width:4px; }
-.scroll-list::-webkit-scrollbar-track { background:transparent; }
-.scroll-list::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
-
-/* ── Notifs ── */
-#notifContainer { position:fixed; top:1rem; right:1rem; z-index:999999; display:flex; flex-direction:column; gap:8px; pointer-events:none; }
-.notif { pointer-events:all; background:var(--surface); border-radius:var(--radius-sm); box-shadow:var(--shadow-lg); padding:12px 16px; display:flex; align-items:flex-start; gap:10px; max-width:320px; animation:notifIn .3s ease; border-left:4px solid; }
-.notif.success { border-left-color:#22c55e; }
-.notif.error { border-left-color:#ef4444; }
-.notif.info { border-left-color:#3b82f6; }
-.notif.warning { border-left-color:#f59e0b; }
-@keyframes notifIn { from{transform:translateX(110%);opacity:0} to{transform:translateX(0);opacity:1} }
-@keyframes notifOut { from{transform:translateX(0);opacity:1} to{transform:translateX(110%);opacity:0} }
-
-/* ── Thinking ── */
-.thinking { display:inline-flex; gap:4px; align-items:center; }
-.thinking span { width:6px; height:6px; border-radius:50%; background:var(--gold); animation:blink 1s infinite; }
-.thinking span:nth-child(2){animation-delay:.2s}
-.thinking span:nth-child(3){animation-delay:.4s}
-@keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
-
-/* ── Update history ── */
-.update-item { display:flex; align-items:flex-start; gap:8px; padding:8px 10px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); margin-bottom:6px; font-size:12px; }
-.update-dot { width:16px; height:16px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px; }
-
-/* Viewer AI response */
-#viewerAiBox { margin:0 1rem 1rem; background:linear-gradient(135deg,var(--navy),#1a1a6e); color:#e2e8f0; font-size:13px; border-radius:var(--radius-sm); padding:12px; display:none; white-space:pre-wrap; line-height:1.65; max-height:200px; overflow-y:auto; }
-#viewerAiBox.show { display:block; }
-
-/* Ask AI from viewer panel */
-#viewerAskPanel { margin: 0 1rem 1rem; display:none; flex-direction:column; gap:8px; }
-#viewerAskPanel.show { display:flex; }
-#viewerAskInput { width:100%; padding:9px 13px; font-size:13px; border:1.5px solid var(--border); border-radius:var(--radius-sm); font-family:'DM Sans',sans-serif; }
-#viewerAskInput:focus { outline:none; border-color:var(--navy); }
-.viewer-ask-row { display:flex; gap:8px; }
-#viewerAskResponse { background:linear-gradient(135deg,var(--navy),#1a1a6e); color:#e2e8f0; font-size:12px; border-radius:var(--radius-sm); padding:10px; white-space:pre-wrap; line-height:1.6; display:none; max-height:160px; overflow-y:auto; margin-top:4px; }
-#viewerAskResponse.show { display:block; }
-
-@media(max-width:900px){
-  .quick-stats { grid-template-columns:repeat(2,1fr); }
-  .form-grid2 { grid-template-columns:1fr; }
-  .ai-chat-box { width:100%; max-width:100%; }
-  .ai-float-btn { bottom:1rem; right:1rem; }
-}
+    @media(max-width:768px) {
+        .quick-stats { grid-template-columns:repeat(2,1fr); }
+        .tab-nav { overflow-x:auto; }
+    }
+    @media(max-width:480px) {
+        .quick-stats { grid-template-columns:1fr; }
+    }
 </style>
 
-<div class="leader-wrap">
-
-  <!-- ── Quick stats ── -->
-  <div class="quick-stats">
-    <div class="qs-card" style="border-left-color:var(--navy)">
-      <div><div class="num">{{ my_assigned_documents|length }}</div><div class="lbl">Assigned Docs</div></div>
-      <div class="qs-icon" style="background:#e0e0f0"><i class="fas fa-file-alt" style="color:var(--navy)"></i></div>
-    </div>
-    <div class="qs-card" style="border-left-color:var(--gold)">
-      <div><div class="num">{{ pending_count }}</div><div class="lbl">Pending Reviews</div></div>
-      <div class="qs-icon" style="background:var(--gold-light)"><i class="fas fa-clock" style="color:#d97706"></i></div>
-    </div>
-    <div class="qs-card" style="border-left-color:#16a34a">
-      <div><div class="num">{{ core_members|length }}</div><div class="lbl">Core Team <span style="color:#16a34a;font-size:10px">• {{ online_core|length }} online</span></div></div>
-      <div class="qs-icon" style="background:#dcfce7"><i class="fas fa-users" style="color:#16a34a"></i></div>
-    </div>
-    <div class="qs-card" style="border-left-color:#8b5cf6">
-      <div><div class="num">{{ today_shared_count }}</div><div class="lbl">Shared Today</div></div>
-      <div class="qs-icon" style="background:#f5f3ff"><i class="fas fa-share-alt" style="color:#8b5cf6"></i></div>
-    </div>
-  </div>
-
-  <!-- ── Tab shell ── -->
-  <div class="tab-shell">
-    <div class="tab-nav">
-      <button class="tab-btn active" id="btn-share" onclick="switchTab('share')"><i class="fas fa-share-alt" style="color:var(--gold)"></i> Share</button>
-      <button class="tab-btn" id="btn-assign" onclick="switchTab('assign')"><i class="fas fa-tasks" style="color:#22c55e"></i> Create Task</button>
-      <button class="tab-btn" id="btn-assigned" onclick="switchTab('assigned')">
-        <i class="fas fa-clipboard-list" style="color:#6366f1"></i> Assigned Tasks
-        {% if assigned_tasks %}<span class="tab-badge">{{ assigned_tasks|length }}</span>{% endif %}
-      </button>
-      <button class="tab-btn" id="btn-pending" onclick="switchTab('pending')">
-        <i class="fas fa-clock" style="color:var(--gold)"></i> Pending Review
-        {% if pending_count > 0 %}<span class="tab-badge" style="background:var(--gold);color:var(--navy)">{{ pending_count }}</span>{% endif %}
-      </button>
-      <button class="tab-btn" id="btn-analytics" onclick="switchTab('analytics')"><i class="fas fa-chart-line" style="color:#8b5cf6"></i> Analytics</button>
-      <button class="tab-btn" id="btn-shared" onclick="switchTab('shared')"><i class="fas fa-share-alt" style="color:#3b82f6"></i> Shared Docs</button>
-      <button class="tab-btn" id="btn-members" onclick="switchTab('members')"><i class="fas fa-users" style="color:#6366f1"></i> Team</button>
-    </div>
-
-    <!-- ── Share tab ── -->
-    <div class="tab-content active" id="tab-share">
-      <div class="card-title"><i class="fas fa-share-alt" style="color:var(--gold)"></i> Share Document with Team</div>
-      <form action="{{ url_for('share_document_leader') }}" method="POST" enctype="multipart/form-data" style="max-width:680px">
-        <div style="margin-bottom:14px"><label class="form-label">Select Document (Optional)</label>
-          <select name="document_id" class="form-input">
-            <option value="">Choose a document (optional)...</option>
-            {% for doc in my_assigned_documents %}
-            <option value="{{ doc._id }}">{{ doc.document_name }} ({{ doc.submitted_at.strftime('%d %b') }})</option>
-            {% endfor %}
-          </select>
+<!-- ══════════════════════════════════════════
+     QUICK STATS
+══════════════════════════════════════════ -->
+<div class="quick-stats">
+    <div class="stat-card">
+        <div class="stat-icon" style="background:#dbeafe">
+            <i class="fas fa-file-alt" style="color:#1e40af"></i>
         </div>
-        <div style="margin-bottom:14px"><label class="form-label"><i class="fas fa-paperclip" style="margin-right:4px;color:var(--text-muted)"></i>Attach File (Optional)</label>
-          <input type="file" name="share_file" id="shareFile" class="form-input" accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.xlsx,.csv" onchange="document.getElementById('shareFileName').textContent=this.files[0]?this.files[0].name:'No file'">
-          <span id="shareFileName" style="font-size:11px;color:var(--text-muted);margin-top:4px;display:block">No file chosen</span>
+        <div>
+            <div class="stat-num">{{ pending_count | default(0) }}</div>
+            <div class="stat-lbl">Pending Review</div>
+            <div class="stat-sub">Documents awaiting your review</div>
         </div>
-        <div style="margin-bottom:14px"><label class="form-label">Share With</label>
-          <div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;max-height:180px;overflow-y:auto">
-            <div style="font-size:11px;font-weight:700;color:#a16207;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Leaders</div>
-            {% for leader in leaders %}
-            <label style="display:flex;align-items:center;gap:8px;padding:5px 4px;cursor:pointer;border-radius:5px;font-size:13px" class="hover-row">
-              <input type="checkbox" name="leaders" value="{{ leader._id }}" style="accent-color:var(--gold)">{{ leader.email.split('@')[0] }}
-            </label>
-            {% endfor %}
-            <div style="font-size:11px;font-weight:700;color:#1d4ed8;text-transform:uppercase;letter-spacing:.04em;margin:8px 0 6px">Core Team</div>
-            {% for member in core_members %}
-            <label style="display:flex;align-items:center;gap:8px;padding:5px 4px;cursor:pointer;border-radius:5px;font-size:13px">
-              <input type="checkbox" name="core_members" value="{{ member._id }}" style="accent-color:#3b82f6">{{ member.email.split('@')[0] }}
-            </label>
-            {% endfor %}
-          </div>
-        </div>
-        <div style="margin-bottom:14px"><label class="form-label">Message (Optional)</label><textarea name="message" rows="2" class="form-input" placeholder="Add a note..."></textarea></div>
-        <button type="submit" class="btn-primary" style="width:100%;justify-content:center;padding:13px"><i class="fas fa-paper-plane"></i> Share Document</button>
-      </form>
     </div>
-
-    <!-- ── Assign tab ── -->
-    <div class="tab-content" id="tab-assign">
-      <div class="card-title"><i class="fas fa-tasks" style="color:#22c55e"></i> Assign Task to Core Member</div>
-      <form action="{{ url_for('assign_task') }}" method="POST" enctype="multipart/form-data" style="max-width:680px">
-        <div style="margin-bottom:14px"><label class="form-label">Task Title *</label><input type="text" name="task_title" required class="form-input" placeholder="Enter task title"></div>
-        <div style="margin-bottom:14px"><label class="form-label">Description *</label><textarea name="description" rows="3" required class="form-input" placeholder="Task details..."></textarea></div>
-
-        <!-- Jain AI assist for task creation -->
-        <div class="ai-panel" style="margin-bottom:14px">
-          <div class="ai-panel-title">
-            <span class="ai-spark">✦</span>
-            <span class="jain-ai-badge">✦ JAIN AI</span>
-            Task Assistant
-          </div>
-          <div style="font-size:11px;color:#94a3b8;margin-bottom:8px">Paste your task title above, then let Jain AI suggest a detailed description or break it into subtasks.</div>
-          <button type="button" class="ai-btn" onclick="aiSuggestTaskDesc()"><span>✦</span> Suggest Description</button>
-          <div class="ai-response-box" id="aiTaskDescBox"></div>
-          <button type="button" id="fillDescBtn" onclick="fillTaskDesc()" style="display:none;margin-top:8px" class="ai-fill-btn"><i class="fas fa-magic"></i> Fill into form</button>
+    <div class="stat-card">
+        <div class="stat-icon" style="background:#fef9c3">
+            <i class="fas fa-tasks" style="color:#854d0e"></i>
         </div>
-
-        <div class="form-grid2" style="margin-bottom:14px">
-          <div><label class="form-label">Due Date *</label><input type="date" name="due_date" id="assignDue" required class="form-input"><p style="font-size:11px;color:var(--text-muted);margin-top:3px">Today or future dates only</p></div>
-          <div><label class="form-label">Priority</label>
-            <select name="priority" class="form-input">
-              <option value="high">🔴 High</option>
-              <option value="medium" selected>🟡 Medium</option>
-              <option value="low">🟢 Low</option>
-            </select>
-          </div>
+        <div>
+            <div class="stat-num">{{ assigned_tasks | length if assigned_tasks else 0 }}</div>
+            <div class="stat-lbl">Tasks Assigned</div>
+            <div class="stat-sub">
+                {{ assigned_tasks | selectattr('status','equalto','completed') | list | length if assigned_tasks else 0 }} completed
+            </div>
         </div>
-        <div style="margin-bottom:14px"><label class="form-label">Assign to Core Member *</label>
-          <select name="assigned_to" required class="form-input">
-            <option value="">Select member...</option>
-            {% for member in core_members %}<option value="{{ member._id }}">{{ member.email.split('@')[0] }} ({{ member.email }})</option>{% endfor %}
-          </select>
-        </div>
-        <div style="margin-bottom:14px"><label class="form-label"><i class="fas fa-paperclip" style="margin-right:4px;color:var(--text-muted)"></i>Attach Document (Optional)</label>
-          <input type="file" name="task_file" id="taskFile" class="form-input" accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.xlsx,.csv" onchange="document.getElementById('taskFileName').textContent=this.files[0]?this.files[0].name:'No file'">
-          <span id="taskFileName" style="font-size:11px;color:var(--text-muted);margin-top:4px;display:block">No file chosen</span>
-        </div>
-        <button type="submit" class="btn-success" style="width:100%;justify-content:center;padding:13px;font-size:14px"><i class="fas fa-plus-circle"></i> Assign Task</button>
-      </form>
     </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background:#dcfce7">
+            <i class="fas fa-users" style="color:#166534"></i>
+        </div>
+        <div>
+            <div class="stat-num">{{ core_members | length if core_members else 0 }}</div>
+            <div class="stat-lbl">Core Members</div>
+            <div class="stat-sub">{{ online_core | length if online_core else 0 }} online now</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background:#f3e8ff">
+            <i class="fas fa-share-alt" style="color:#6b21a8"></i>
+        </div>
+        <div>
+            <div class="stat-num">{{ today_shared_count | default(0) }}</div>
+            <div class="stat-lbl">Shared Today</div>
+            <div class="stat-sub">Documents received today</div>
+        </div>
+    </div>
+</div>
 
-    <!-- ── Assigned tasks tab ── -->
-    <div class="tab-content" id="tab-assigned">
-      <div class="card-title">
-        <div style="width:30px;height:30px;background:#6366f1;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;"><i class="fas fa-clipboard-list" style="color:#fff;font-size:13px"></i></div>
-        Assigned Tasks Progress
-        {% if assigned_tasks %}<span class="tab-badge">{{ assigned_tasks|length }}</span>{% endif %}
-      </div>
+<!-- ══════════════════════════════════════════
+     TAB NAVIGATION
+══════════════════════════════════════════ -->
+<div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('share')" id="tab-share">
+        <i class="fas fa-upload"></i> Share Document
+    </button>
+    <button class="tab-btn" onclick="switchTab('create_task')" id="tab-create_task">
+        <i class="fas fa-plus-circle"></i> Create Task
+    </button>
+    <button class="tab-btn" onclick="switchTab('tasks')" id="tab-tasks">
+        <i class="fas fa-clipboard-list"></i> Assigned Tasks
+        {% set active_tasks = assigned_tasks | rejectattr('status','equalto','accepted') | list if assigned_tasks else [] %}
+        {% if active_tasks %}
+        <span class="badge">{{ active_tasks | length }}</span>
+        {% endif %}
+    </button>
+    <button class="tab-btn" onclick="switchTab('review')" id="tab-review">
+        <i class="fas fa-eye"></i> Pending Review
+        {% if pending_count > 0 %}
+        <span class="badge">{{ pending_count }}</span>
+        {% endif %}
+    </button>
+    <button class="tab-btn" onclick="switchTab('analytics')" id="tab-analytics">
+        <i class="fas fa-chart-bar"></i> Analytics
+    </button>
+    <button class="tab-btn" onclick="switchTab('shared_docs')" id="tab-shared_docs">
+        <i class="fas fa-inbox"></i> Received Docs
+        {% if shared_documents %}
+        <span class="badge">{{ shared_documents | length }}</span>
+        {% endif %}
+    </button>
+    <button class="tab-btn" onclick="switchTab('team')" id="tab-team">
+        <i class="fas fa-users"></i> Team
+    </button>
+</div>
 
-      {% if assigned_tasks %}
-      <div class="scroll-list">
-        {% for task in assigned_tasks %}
-        <div class="task-card {{ task.priority }}" id="ltask-{{ task._id }}">
-          <div class="task-card-head">
-            <div style="display:flex;align-items:flex-start;justify-content:space-between">
-              <div style="flex:1">
-                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px">
-                  <span style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--navy)">{{ task.title }}</span>
-                  <span class="badge badge-{{ task.status|replace('_','-') }}">
-                    {% if task.status=='rework' %}🔄 Rework{% elif task.status=='accepted' %}✅ Accepted{% elif task.status=='completed' %}🏁 Completed{% elif task.status=='in_progress' %}⚡ In Progress{% else %}⏳ Pending{% endif %}
-                  </span>
-                  <span class="badge badge-{{ task.priority }}">{{ task.priority|upper }}</span>
+<!-- ══════════════════════════════════════════════════════
+     TAB: SHARE DOCUMENT
+══════════════════════════════════════════════════════ -->
+<div class="tab-content active" id="content-share">
+    <div class="section-card">
+        <div class="section-header">
+            <span class="section-title"><i class="fas fa-share-alt"></i> Share Document with Team</span>
+        </div>
+        <div class="section-body">
+            <form action="{{ url_for('share_document_leader') }}" method="POST" enctype="multipart/form-data">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="form-group">
+                        <label class="form-label">Document (from submissions)</label>
+                        <select name="document_id" class="form-control form-select">
+                            <option value="">— Select submitted document or upload below —</option>
+                            {% for doc in my_assigned_documents %}
+                            <option value="{{ doc._id }}">{{ doc.document_name }} ({{ doc.status }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Or Upload New File</label>
+                        <input type="file" name="share_file" class="form-control" accept=".pdf,.docx,.txt,.png,.jpg,.jpeg">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Share with Leaders</label>
+                        {% for leader in leaders %}
+                        {% if leader.email != session.email %}
+                        <label class="flex items-center gap-2 mb-1 cursor-pointer">
+                            <input type="checkbox" name="leaders" value="{{ leader._id }}" class="w-4 h-4">
+                            <span class="text-sm">{{ leader.email.split('@')[0] }}</span>
+                            <span class="text-xs text-green-500" title="Online">{% if leader.is_online %}●{% endif %}</span>
+                        </label>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Share with Core Members</label>
+                        {% for member in core_members %}
+                        <label class="flex items-center gap-2 mb-1 cursor-pointer">
+                            <input type="checkbox" name="core_members" value="{{ member._id }}" class="w-4 h-4">
+                            <span class="text-sm">{{ member.email.split('@')[0] }}</span>
+                            <span class="text-xs text-green-500" title="Online">{% if member.is_online %}●{% endif %}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                    <div class="form-group md:col-span-2">
+                        <label class="form-label">Message / Context</label>
+                        <textarea name="message" class="form-control" rows="3" placeholder="Optional message for recipients…"></textarea>
+                    </div>
                 </div>
-                <p style="font-size:12px;color:var(--text-muted);margin-bottom:6px">{{ task.description }}</p>
-                <div style="display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--text-muted)">
-                  <span><i class="fas fa-user" style="margin-right:4px;color:#6366f1"></i>{{ task.assigned_to_name }}</span>
-                  <span><i class="fas fa-calendar" style="margin-right:4px;color:#ef4444"></i>Due: {{ task.due_date.strftime('%d %b %Y') }}</span>
-                </div>
-              </div>
-              <div style="position:relative;margin-left:10px" id="tmenu-wrap-{{ task._id }}">
-                <button onclick="toggleMenu('{{ task._id }}')" class="btn-outline" style="padding:6px 10px;font-size:13px;border-radius:50%;width:32px;height:32px;justify-content:center"><i class="fas fa-ellipsis-v"></i></button>
-                <div class="ddmenu" id="tmenu-{{ task._id }}">
-                  {% if task.has_attachment and task.attachment_url %}
-                  <button onclick="viewFile('{{ task.attachment_url }}','{{ task.attachment_name }}');closeMenu('{{ task._id }}')" class="ddmenu-item"><i class="fas fa-eye" style="color:#3b82f6"></i>View Attachment</button>
-                  <a href="{{ task.attachment_url }}" download onclick="closeMenu('{{ task._id }}')" class="ddmenu-item"><i class="fas fa-download" style="color:var(--text-muted)"></i>Download</a>
-                  {% endif %}
-                  <button onclick="openCommentModal('{{ task._id }}','{{ task.title|replace("'","\\'")|truncate(50) }}');closeMenu('{{ task._id }}')" class="ddmenu-item"><i class="fas fa-comment" style="color:#8b5cf6"></i>Add Comment</button>
-                  {% if task.status=='completed' %}
-                  <div style="height:1px;background:var(--border);margin:4px 0"></div>
-                  <button onclick="openReworkModal('{{ task._id }}','{{ task.title|replace("'","\\'")|truncate(50) }}');closeMenu('{{ task._id }}')" class="ddmenu-item"><i class="fas fa-redo" style="color:#f97316"></i>Request Rework</button>
-                  {% endif %}
-                  <div style="height:1px;background:var(--border);margin:4px 0"></div>
-                  <button onclick="openRescheduleModal('{{ task._id }}','{{ task.title|replace("'","\\'")|truncate(50) }}','{{ task.due_date.strftime('%Y-%m-%d') }}');closeMenu('{{ task._id }}')" class="ddmenu-item"><i class="fas fa-calendar-alt" style="color:#f97316"></i>Reschedule</button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Progress bar -->
-            <div style="margin-top:10px">
-              <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;"><span style="color:var(--text-muted);font-weight:500">Progress</span><span style="font-weight:700;color:var(--navy)">{{ task.progress }}%</span></div>
-              <div class="prog-wrap"><div class="prog-fill" style="width:{{ task.progress }}%;background:{% if task.progress>=100 %}#22c55e{% elif task.progress>=60 %}#3b82f6{% elif task.progress>=30 %}#f59e0b{% else %}#ef4444{% endif %}"></div></div>
-            </div>
-          </div>
-
-          {% if task.has_attachment and task.attachment_url %}
-          <div style="padding:8px 1.25rem;background:#eff6ff;border-top:1px solid #bfdbfe;display:flex;align-items:center;gap:8px">
-            <button onclick="viewFile('{{ task.attachment_url }}','{{ task.attachment_name or 'Attachment' }}')" style="background:none;border:none;color:#1d4ed8;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px"><i class="fas fa-paperclip"></i>{{ task.attachment_name or 'Attachment' }}</button>
-            <a href="{{ task.attachment_url }}" download style="color:var(--text-muted);font-size:12px"><i class="fas fa-download"></i></a>
-          </div>
-          {% endif %}
-
-          {% if task.updates and task.updates|length > 0 %}
-          <div style="padding:10px 1.25rem;background:var(--surface-2);border-top:1px solid var(--border)">
-            <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px"><i class="fas fa-history" style="margin-right:4px"></i>Updates <span style="background:#e5e7eb;color:#6b7280;padding:1px 6px;border-radius:10px;font-weight:600">{{ task.updates|length }}</span></div>
-            <div style="max-height:220px;overflow-y:auto">
-              {% for update in task.updates|reverse %}
-              <div class="update-item">
-                <div class="update-dot" style="background:{% if update.status=='completed' %}#dcfce7{% elif update.status=='in_progress' %}#dbeafe{% elif update.status=='rework' %}#ffedd5{% else %}#fef9c3{% endif %}">
-                  <div style="width:6px;height:6px;border-radius:50%;background:{% if update.status=='completed' %}#22c55e{% elif update.status=='in_progress' %}#3b82f6{% elif update.status=='rework' %}#f97316{% else %}#eab308{% endif %}"></div>
-                </div>
-                <div style="flex:1;min-width:0">
-                  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-                    <span style="font-weight:600;text-transform:capitalize;font-size:12px">{{ update.status|replace('_',' ') }}</span>
-                    <span style="font-size:10px;color:var(--text-muted);white-space:nowrap">{% if update.timestamp is string %}{{ update.timestamp }}{% else %}{{ update.timestamp.strftime('%d %b, %I:%M %p') }}{% endif %}</span>
-                  </div>
-                  <div style="display:flex;align-items:center;gap:6px;margin:3px 0">
-                    <div class="prog-wrap" style="flex:1"><div class="prog-fill" style="width:{{ update.progress }}%;background:#6366f1"></div></div>
-                    <span style="font-size:10px;color:#6366f1;font-weight:600">{{ update.progress }}%</span>
-                  </div>
-                  {% if update.comment %}<div style="font-size:11px;color:var(--text-muted);font-style:italic">"{{ update.comment }}"</div>{% endif %}
-                  {% if update.attachment_url %}
-                  <div style="margin-top:4px;display:flex;gap:6px">
-                    <button onclick="viewFile('{{ update.attachment_url }}','{{ update.attachment_name or 'Attachment' }}')" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px"><i class="fas fa-paperclip"></i>{{ update.attachment_name or 'View' }}</button>
-                    <a href="{{ update.attachment_url }}" download style="background:#f3f4f6;border:1px solid #e5e7eb;color:#6b7280;border-radius:4px;padding:2px 8px;font-size:11px;display:flex;align-items:center;gap:4px"><i class="fas fa-download"></i></a>
-                  </div>
-                  {% endif %}
-                </div>
-              </div>
-              {% endfor %}
-            </div>
-          </div>
-          {% endif %}
-
-          <!-- ── Jain AI Review assist ── -->
-          <div class="ai-panel" style="margin:0 1.25rem 1rem;border-radius:var(--radius-sm)">
-            <div class="ai-panel-title">
-              <span class="ai-spark">✦</span>
-              <span class="jain-ai-badge">✦ JAIN AI</span>
-              Review Assistant
-            </div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <button class="ai-btn" onclick="aiAnalyzeTask('{{ task._id }}','{{ task.title|replace("'","\\'")|truncate(60) }}','{{ task.description|replace("'","\\'")|truncate(200) }}',{{ task.progress }},'{{ task.status }}')">
-                <span>✦</span> Analyze Progress
-              </button>
-              {% if task.status=='completed' %}
-              <button class="ai-btn" onclick="aiSuggestFeedback('{{ task._id }}','{{ task.title|replace("'","\\'")|truncate(60) }}','{{ task.description|replace("'","\\'")|truncate(200) }}',{{ task.progress }})">
-                <i class="fas fa-comment"></i> Draft Rework Feedback
-              </button>
-              {% endif %}
-            </div>
-            <div class="ai-response-box" id="ai-ltask-{{ task._id }}"></div>
-          </div>
-
-          <!-- ── Review actions ── -->
-          {% if task.status=='completed' %}
-          <div style="padding:10px 1.25rem 1rem;background:#f0fdf4;border-top:1px solid #bbf7d0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-            <span style="font-size:12px;font-weight:600;color:#15803d"><i class="fas fa-check-circle" style="margin-right:5px"></i>Task completed — review required</span>
-            <div style="display:flex;gap:8px">
-              <button onclick="acceptTask('{{ task._id }}')" class="btn-success" style="font-size:12px;padding:7px 14px"><i class="fas fa-thumbs-up"></i> Accept</button>
-              <button onclick="openReworkModal('{{ task._id }}','{{ task.title|replace("'","\\'")|truncate(50) }}')" class="btn-warn" style="font-size:12px;padding:7px 14px"><i class="fas fa-redo"></i> Rework</button>
-            </div>
-          </div>
-          {% elif task.status=='accepted' %}
-          <div style="padding:8px 1.25rem;background:#f0fdf4;border-top:1px solid #bbf7d0">
-            <span style="font-size:12px;font-weight:600;color:#15803d"><i class="fas fa-star" style="margin-right:5px;color:var(--gold)"></i>Task accepted and closed</span>
-          </div>
-          {% elif task.status=='rework' %}
-          <div style="padding:8px 1.25rem;background:#fff7ed;border-top:1px solid #fed7aa">
-            <span style="font-size:12px;font-weight:600;color:#c2410c"><i class="fas fa-sync" style="margin-right:5px"></i>Rework requested — awaiting core team update</span>
-          </div>
-          {% endif %}
-        </div>
-        {% endfor %}
-      </div>
-      {% else %}
-      <div style="text-align:center;padding:3rem;background:var(--surface-2);border-radius:var(--radius)">
-        <i class="fas fa-tasks" style="font-size:2.5rem;color:#d1d5db;margin-bottom:12px;display:block"></i>
-        <div style="font-size:14px;color:var(--text-muted);margin-bottom:8px">No tasks assigned yet</div>
-        <button onclick="switchTab('assign')" class="btn-outline" style="font-size:12px"><i class="fas fa-plus"></i> Create a task</button>
-      </div>
-      {% endif %}
-    </div>
-
-    <!-- ── Pending review tab ── -->
-    <div class="tab-content" id="tab-pending">
-      <div class="card-title">
-        <div style="width:30px;height:30px;background:var(--gold);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;"><i class="fas fa-clock" style="color:var(--navy);font-size:13px"></i></div>
-        Pending Reviews
-        {% if pending_count > 0 %}<span class="tab-badge" style="background:var(--gold);color:var(--navy)">{{ pending_count }}</span>{% endif %}
-      </div>
-
-      {% set pending_docs = my_assigned_documents|selectattr('status','equalto','pending')|list %}
-      {% if pending_docs %}
-      <div class="scroll-list">
-        {% for doc in pending_docs %}
-        <div class="pending-card">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px">
-            <div style="flex:1">
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
-                <i class="fas fa-file-alt" style="color:var(--gold);font-size:16px"></i>
-                <span style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--navy)">{{ doc.document_name }}</span>
-              </div>
-              <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px">{{ doc.description }}</p>
-              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;background:var(--surface);padding:10px;border-radius:var(--radius-sm);margin-bottom:8px;font-size:12px">
-                <div><div style="color:var(--text-muted);font-weight:500;margin-bottom:2px">Submitted by</div><div style="font-weight:600">{{ doc.uploader_name }}</div><div style="color:var(--text-muted)">{{ doc.uploader_email }}</div></div>
-                <div><div style="color:var(--text-muted);font-weight:500;margin-bottom:2px">Date</div><div style="font-weight:600">{{ doc.submitted_at.strftime('%d %b %Y') }}</div></div>
-                <div><div style="color:var(--text-muted);font-weight:500;margin-bottom:2px">In Queue</div><div style="font-weight:600">{{ doc.time_in_queue }}</div></div>
-              </div>
-              {% if doc.file_url %}
-              <div style="display:flex;gap:8px;margin-bottom:8px">
-                <button onclick="viewFile('{{ doc.file_url }}','{{ doc.document_name }}')" class="btn-outline" style="font-size:12px;padding:6px 12px"><i class="fas fa-eye"></i> View</button>
-                <a href="{{ doc.file_url }}" download class="btn-outline" style="font-size:12px;padding:6px 12px"><i class="fas fa-download"></i> Download</a>
-                <button class="ai-btn" onclick="aiSummarizeForReview('{{ doc._id }}','{{ doc.document_name|replace("'","\\'")|truncate(60) }}','{{ doc.description|replace("'","\\'")|truncate(150) }}','{{ doc.file_url }}')"><span class="jain-ai-badge" style="font-size:9px;padding:2px 7px">✦ JAIN AI</span> Summary</button>
-              </div>
-              <div class="ai-response-box" id="ai-pending-{{ doc._id }}" style="background:linear-gradient(135deg,var(--navy),#1a1a6e);color:#e2e8f0;font-size:12px;margin-bottom:8px"></div>
-              {% endif %}
-            </div>
-          </div>
-          <form action="{{ url_for('review_document', document_id=doc._id) }}" method="POST">
-            <div style="margin-bottom:10px">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-                <label class="form-label" style="margin-bottom:0"><i class="fas fa-comment" style="color:var(--gold);margin-right:4px"></i>Feedback / Revision Instructions:</label>
-                <button type="button" class="ai-fill-btn" onclick="aiSuggestReviewFeedback('{{ doc._id }}','{{ doc.document_name|replace("'","\\'")|truncate(60) }}','{{ doc.description|replace("'","\\'")|truncate(150) }}','{{ doc.uploader_name }}')">
-                  <span class="jain-ai-badge" style="font-size:9px;padding:2px 7px">✦ JAIN AI</span> Suggest
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-paper-plane"></i> Share Document
                 </button>
-              </div>
-              <textarea name="comments" id="comments-{{ doc._id }}" rows="3" required class="form-input" placeholder="Provide detailed feedback..."></textarea>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#eff6ff;border-radius:var(--radius-sm);border:1px solid #bfdbfe;margin-bottom:12px">
-              <input type="checkbox" name="send_reply" id="sendReply{{ loop.index }}" checked style="accent-color:var(--navy)">
-              <label for="sendReply{{ loop.index }}" style="font-size:12px;font-weight:500;cursor:pointer"><i class="fas fa-envelope" style="color:#3b82f6;margin-right:4px"></i>Send email reply to submitter</label>
-            </div>
-            <div style="display:flex;gap:10px">
-              <button type="submit" name="status" value="approved" class="btn-success" style="flex:1;justify-content:center;padding:11px"><i class="fas fa-check-circle"></i> Approve</button>
-              <button type="submit" name="status" value="revision" class="btn-warn" style="flex:1;justify-content:center;padding:11px"><i class="fas fa-edit"></i> Revision</button>
-              <button type="submit" name="status" value="rejected" class="btn-danger" style="flex:1;justify-content:center;padding:11px"><i class="fas fa-times-circle"></i> Reject</button>
-            </div>
-          </form>
+            </form>
         </div>
-        {% endfor %}
-      </div>
-      {% else %}
-      <div style="text-align:center;padding:3rem;background:var(--surface-2);border-radius:var(--radius)">
-        <i class="fas fa-check-double" style="font-size:2.5rem;color:#22c55e;margin-bottom:12px;display:block"></i>
-        <div style="font-size:14px;color:var(--text-muted)">No pending documents to review</div>
-      </div>
-      {% endif %}
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     TAB: CREATE TASK
+══════════════════════════════════════════════════════ -->
+<div class="tab-content" id="content-create_task">
+    <div class="section-card">
+        <div class="section-header">
+            <span class="section-title"><i class="fas fa-tasks"></i> Assign Task to Core Member</span>
+        </div>
+        <div class="section-body">
+            <form action="{{ url_for('assign_task') }}" method="POST" enctype="multipart/form-data">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="form-group md:col-span-2">
+                        <label class="form-label">Task Title</label>
+                        <div class="flex gap-2">
+                            <input type="text" name="task_title" class="form-control" id="taskTitleInput" placeholder="Enter task title…" required>
+                            <button type="button" onclick="aiSuggestTaskDesc()" class="btn-primary btn-sm" style="white-space:nowrap">
+                                <i class="fas fa-robot"></i> AI Suggest
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group md:col-span-2">
+                        <label class="form-label">Description</label>
+                        <textarea name="description" class="form-control" id="taskDescInput" rows="3" placeholder="Task description…" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Assign To</label>
+                        <select name="assigned_to" class="form-control form-select" required>
+                            <option value="">— Select core member —</option>
+                            {% for member in core_members %}
+                            <option value="{{ member._id }}">{{ member.email.split('@')[0] }}{% if member.is_online %} ●{% endif %}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Due Date</label>
+                        <input type="date" name="due_date" class="form-control" min="{{ now.strftime('%Y-%m-%d') }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Priority</label>
+                        <select name="priority" class="form-control form-select">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Attachment (Optional)</label>
+                        <input type="file" name="task_file" class="form-control">
+                    </div>
+                </div>
+                <!-- AI task-desc suggestion result -->
+                <div id="aiTaskDescResult" style="display:none" class="ai-task-panel open mb-4">
+                    <div class="ai-label"><i class="fas fa-robot"></i> Jain AI Suggestion</div>
+                    <div class="ai-response" id="aiTaskDescText"></div>
+                    <div style="display:flex;gap:8px;margin-top:8px">
+                        <button type="button" onclick="applyAiDesc()" class="btn-primary btn-sm btn-gold"><i class="fas fa-check"></i> Use This</button>
+                        <button type="button" onclick="document.getElementById('aiTaskDescResult').style.display='none'" class="btn-primary btn-sm" style="background:#6b7280"><i class="fas fa-times"></i> Dismiss</button>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-paper-plane"></i> Assign Task
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     TAB: ASSIGNED TASKS
+══════════════════════════════════════════════════════ -->
+<div class="tab-content" id="content-tasks">
+    {% if assigned_tasks %}
+    <div class="flex items-center justify-between mb-3">
+        <p class="text-sm text-gray-500">{{ assigned_tasks | length }} task(s) assigned by you</p>
+        <div class="flex gap-2">
+            <select id="taskStatusFilter" class="form-control form-select" style="width:150px;font-size:12px" onchange="filterTasks()">
+                <option value="">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="in_progress">In Progress</option>
+                <option value="completed">Completed</option>
+                <option value="accepted">Accepted</option>
+                <option value="rework">Rework</option>
+            </select>
+        </div>
+    </div>
+    <div id="taskList">
+    {% for task in assigned_tasks %}
+    {% set is_overdue = task.due_date and task.due_date < now and task.status not in ['completed','accepted'] %}
+    <div class="task-card {% if is_overdue %}overdue{% elif task.priority == 'high' %}urgent{% else %}normal{% endif %}"
+         data-status="{{ task.status }}">
+        <div class="flex items-start justify-between gap-3">
+            <div style="flex:1;min-width:0">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <h3 class="font-bold text-sm" style="color:var(--jain-navy)">{{ task.title }}</h3>
+                    <span class="doc-badge badge-{{ task.status }}">{{ task.status | replace('_',' ') | title }}</span>
+                    <span class="doc-badge badge-{{ task.priority }}">{{ task.priority | title }}</span>
+                    {% if is_overdue %}<span class="doc-badge badge-rejected">⚠ Overdue</span>{% endif %}
+                </div>
+                <p class="text-xs text-gray-500 mt-1">Assigned to: <strong>{{ task.assigned_to_name }}</strong> &bull; Due: {{ task.due_date_str }}</p>
+                <p class="text-xs text-gray-600 mt-1">{{ task.description | truncate(120) }}</p>
+                <!-- Progress bar -->
+                <div class="progress-bar-wrap">
+                    <div class="progress-bar-fill" style="width:{{ task.progress }}%"></div>
+                </div>
+                <p class="text-xs text-gray-400">Progress: {{ task.progress }}%</p>
+                <!-- Latest update -->
+                {% if task.updates %}
+                {% set last_update = task.updates[-1] %}
+                <div class="mt-2 text-xs bg-blue-50 p-2 rounded-lg text-blue-700">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    <strong>Latest:</strong> {{ last_update.comment | truncate(80) if last_update.comment else 'Status updated' }}
+                    {% if last_update.attachment_url %}
+                    <a href="{{ last_update.attachment_url }}" target="_blank" class="ml-2 underline">
+                        <i class="fas fa-paperclip"></i> Attachment
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+            <!-- Actions -->
+            <div class="flex flex-col gap-2" style="flex-shrink:0">
+                {% if task.status in ['completed','in_progress'] %}
+                <button onclick="acceptTask('{{ task._id }}')" class="btn-primary btn-sm btn-gold">
+                    <i class="fas fa-check-double"></i> Accept
+                </button>
+                <button onclick="openReworkModal('{{ task._id }}','{{ task.title | replace("'","") }}')" class="btn-primary btn-sm" style="background:#f59e0b">
+                    <i class="fas fa-redo"></i> Rework
+                </button>
+                {% endif %}
+                {% if task.status not in ['accepted'] %}
+                <button onclick="openRescheduleModal('{{ task._id }}')" class="btn-primary btn-sm" style="background:#6b7280">
+                    <i class="fas fa-calendar-alt"></i> Reschedule
+                </button>
+                {% endif %}
+                <button onclick="openCommentModal('{{ task._id }}')" class="btn-primary btn-sm" style="background:#8b5cf6">
+                    <i class="fas fa-comment"></i> Comment
+                </button>
+                <button onclick="toggleAiTaskPanel('ai-task-{{ task._id }}')" class="btn-primary btn-sm" style="background:#1a1a6e;font-size:10px">
+                    <i class="fas fa-robot"></i> AI
+                </button>
+            </div>
+        </div>
+
+        <!-- AI task analysis panel -->
+        <div class="ai-task-panel" id="ai-task-{{ task._id }}">
+            <div class="ai-label"><i class="fas fa-robot"></i> Jain AI — Task Analysis</div>
+            <div class="ai-response" id="ai-task-result-{{ task._id }}">Click a button to get AI insights.</div>
+            <div class="flex gap-2 mt-2 flex-wrap">
+                <button onclick="aiAnalyzeTask('{{ task._id }}','{{ task.title | replace("'","\\'")|replace('"','') }}','{{ task.description | replace("'","\\'")|replace('"','') | truncate(100) }}',{{ task.progress }},'{{ task.status }}')"
+                    class="btn-primary btn-sm btn-gold"><i class="fas fa-chart-line"></i> Analyze Progress</button>
+                <button onclick="aiSuggestRework('{{ task._id }}','{{ task.title | replace("'","\\'")|replace('"','') }}','{{ task.description | replace("'","\\'")|replace('"','') | truncate(100) }}',{{ task.progress }})"
+                    class="btn-primary btn-sm" style="background:#f59e0b"><i class="fas fa-robot"></i> Draft Rework Feedback</button>
+            </div>
+            <div class="ai-input-row">
+                <input type="text" id="ai-task-chat-{{ task._id }}" placeholder="Ask AI about this task…" onkeydown="if(event.key==='Enter')sendAiTaskChat('{{ task._id }}')">
+                <button onclick="sendAiTaskChat('{{ task._id }}')">Ask</button>
+            </div>
+        </div>
+
+        <!-- Leader comments -->
+        {% if task.leader_comments %}
+        <div class="mt-3">
+            {% for comment in task.leader_comments[-2:] %}
+            <div class="text-xs bg-purple-50 p-2 rounded-lg text-purple-700 mb-1">
+                <i class="fas fa-comment mr-1"></i> <strong>{{ comment.commented_by }}</strong>: {{ comment.comment | truncate(100) }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-12 text-gray-400">
+        <i class="fas fa-clipboard-list text-4xl mb-3 opacity-40 block"></i>
+        <p class="text-sm">No tasks assigned yet. Create one in the "Create Task" tab.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     TAB: PENDING REVIEW
+══════════════════════════════════════════════════════ -->
+<div class="tab-content" id="content-review">
+    {% if my_assigned_documents %}
+    {% for doc in my_assigned_documents %}
+    <div class="doc-card">
+        <div class="flex items-start justify-between gap-3">
+            <div style="flex:1;min-width:0">
+                <h3 class="font-bold text-sm" style="color:var(--jain-navy)">{{ doc.document_name }}</h3>
+                <p class="text-xs text-gray-500 mt-1">From: <strong>{{ doc.uploader_name }}</strong> ({{ doc.uploader_email }})</p>
+                {% if doc.description %}
+                <p class="text-xs text-gray-600 mt-1">{{ doc.description | truncate(120) }}</p>
+                {% endif %}
+                <div class="doc-meta">
+                    <span class="doc-badge badge-{{ doc.status }}">{{ doc.status | title }}</span>
+                    <span class="doc-badge" style="background:#f3f4f6;color:#6b7280">
+                        <i class="far fa-clock mr-1"></i>{{ doc.submitted_at.strftime('%d %b %Y, %I:%M %p') if doc.submitted_at else '—' }}
+                    </span>
+                    {% if doc.time_in_queue %}
+                    <span class="doc-badge" style="background:#fce7f3;color:#9d174d">In queue: {{ doc.time_in_queue }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="flex flex-col gap-2" style="flex-shrink:0">
+                {% if doc.file_url %}
+                <button onclick="openViewer('{{ doc.file_url }}','{{ doc.document_name | replace("'","") }}')" class="btn-primary btn-sm">
+                    <i class="fas fa-eye"></i> View
+                </button>
+                {% endif %}
+                <button onclick="openAiPanel();document.getElementById('aiBarInput').value='Suggest feedback for document: {{ doc.document_name | replace("'","") }}';" class="btn-primary btn-sm" style="background:#1a1a6e">
+                    <i class="fas fa-robot"></i> AI Feedback
+                </button>
+            </div>
+        </div>
+
+        <!-- Review form -->
+        {% if doc.status == 'pending' %}
+        <form action="{{ url_for('review_document', document_id=doc._id) }}" method="POST" class="mt-3 pt-3" style="border-top:1px solid #f0f0f0">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div class="form-group">
+                    <label class="form-label">Decision</label>
+                    <select name="status" class="form-control form-select" required>
+                        <option value="">— Select —</option>
+                        <option value="approved">✅ Approve</option>
+                        <option value="revision">🔄 Request Revision</option>
+                        <option value="rejected">❌ Reject</option>
+                    </select>
+                </div>
+                <div class="form-group md:col-span-2">
+                    <label class="form-label">Comments</label>
+                    <input type="text" name="comments" class="form-control" id="comments-{{ doc._id }}" placeholder="Review comments…">
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <button type="submit" class="btn-primary btn-sm"><i class="fas fa-check"></i> Submit Review</button>
+                <label class="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+                    <input type="checkbox" name="send_reply" checked class="w-3 h-3"> Notify submitter by email
+                </label>
+            </div>
+        </form>
+        {% elif doc.comments %}
+        <div class="mt-2 text-xs bg-gray-50 p-2 rounded-lg text-gray-600">
+            <i class="fas fa-comment mr-1"></i> <strong>Your comment:</strong> {{ doc.comments | truncate(100) }}
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="text-center py-12 text-gray-400">
+        <i class="fas fa-inbox text-4xl mb-3 opacity-40 block"></i>
+        <p class="text-sm">No documents pending review. 🎉</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     TAB: ANALYTICS
+══════════════════════════════════════════════════════ -->
+<div class="tab-content" id="content-analytics">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <!-- Task Overview -->
+        <div class="section-card">
+            <div class="section-header">
+                <span class="section-title"><i class="fas fa-chart-pie"></i> Task Overview</span>
+            </div>
+            <div class="section-body">
+                <canvas id="taskChart" height="200"></canvas>
+            </div>
+        </div>
+        <!-- Document Funnel -->
+        <div class="section-card">
+            <div class="section-header">
+                <span class="section-title"><i class="fas fa-chart-bar"></i> Document Funnel</span>
+            </div>
+            <div class="section-body">
+                {% set total = my_assigned_documents | length if my_assigned_documents else 0 %}
+                {% set approved = my_assigned_documents | selectattr('status','equalto','approved') | list | length if my_assigned_documents else 0 %}
+                {% set pending  = my_assigned_documents | selectattr('status','equalto','pending')  | list | length if my_assigned_documents else 0 %}
+                {% set revision = my_assigned_documents | selectattr('status','equalto','revision') | list | length if my_assigned_documents else 0 %}
+                {% set rejected = my_assigned_documents | selectattr('status','equalto','rejected') | list | length if my_assigned_documents else 0 %}
+                <div class="space-y-3">
+                    {% for lbl,val,clr in [('Total Assigned',total,'#3b82f6'),('Approved',approved,'#22c55e'),('Pending',pending,'#f59e0b'),('Revision',revision,'#ec4899'),('Rejected',rejected,'#ef4444')] %}
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="font-medium text-gray-700">{{ lbl }}</span>
+                            <span class="font-bold" style="color:{{ clr }}">{{ val }}</span>
+                        </div>
+                        <div style="background:#f3f4f6;border-radius:20px;height:7px">
+                            <div style="height:7px;border-radius:20px;background:{{ clr }};width:{{ (val/total*100)|int if total else 0 }}%;transition:width .5s"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- ── Analytics tab ── -->
-    <div class="tab-content" id="tab-analytics">
-      <div class="card-title"><div style="width:30px;height:30px;background:#8b5cf6;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;"><i class="fas fa-chart-line" style="color:#fff;font-size:13px"></i></div> Core Team Analytics</div>
-      <div style="margin-bottom:14px;max-width:400px">
-        <label class="form-label">Select Core Member</label>
-        <select id="memberSelector" class="form-input" onchange="loadAnalytics(this.value)">
-          <option value="">Choose a member...</option>
-          {% for member in core_members %}<option value="{{ member._id }}">{{ member.email.split('@')[0] }} ({{ member.email }})</option>{% endfor %}
-        </select>
-      </div>
-      <div id="analyticsPanel" style="display:none">
-        <div style="background:linear-gradient(135deg,var(--navy),#1a1a6e);border-radius:var(--radius);padding:1.25rem;margin-bottom:14px;display:flex;align-items:center;gap:14px">
-          <div style="width:52px;height:52px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:var(--navy)" id="memberInitial">?</div>
-          <div>
-            <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:700;color:#fff" id="memberName"></div>
-            <div style="font-size:12px;color:#94a3b8" id="memberEmail"></div>
-            <div style="margin-top:4px" id="memberStatusBadge"></div>
-          </div>
-          <!-- Jain AI member insight button -->
-          <button class="ai-btn" style="margin-left:auto" onclick="aiMemberInsight()">
-            <span class="jain-ai-badge" style="font-size:9px;padding:2px 7px">✦ JAIN AI</span> Insight
-          </button>
+    <!-- Member Performance -->
+    <div class="section-card mt-5">
+        <div class="section-header">
+            <span class="section-title"><i class="fas fa-user-chart"></i> Core Member Performance</span>
         </div>
-        <div id="aiMemberBox" style="background:linear-gradient(135deg,var(--navy),#1a1a6e);border-radius:var(--radius-sm);padding:12px;margin-bottom:12px;font-size:13px;color:#e2e8f0;display:none;white-space:pre-wrap;line-height:1.6"></div>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px" id="memberStats"></div>
-        <div style="margin-bottom:14px"><div style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:8px">Recent Activity</div><div id="activityTimeline" class="scroll-list" style="max-height:160px"></div></div>
-        <div><div style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:8px">Documents</div>
-          <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px" id="docsTable">
-            <thead><tr style="background:var(--surface-2)"><th style="padding:8px 12px;text-align:left;font-weight:600;color:var(--text-muted);border-bottom:1px solid var(--border)">Document</th><th style="padding:8px 12px;text-align:left;font-weight:600;color:var(--text-muted);border-bottom:1px solid var(--border)">Submitted</th><th style="padding:8px 12px;text-align:left;font-weight:600;color:var(--text-muted);border-bottom:1px solid var(--border)">Status</th><th style="padding:8px 12px;text-align:left;font-weight:600;color:var(--text-muted);border-bottom:1px solid var(--border)">Actions</th></tr></thead>
-            <tbody id="docsTableBody"></tbody>
-          </table></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── Shared docs tab ── -->
-    <div class="tab-content" id="tab-shared">
-      <div class="card-title"><div style="width:30px;height:30px;background:#3b82f6;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;"><i class="fas fa-share-alt" style="color:#fff;font-size:13px"></i></div> Documents Shared With Me</div>
-      {% if shared_documents %}
-      <div class="scroll-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;max-height:none">
-        {% for share in shared_documents %}
-        <div style="border:1px solid var(--border);border-radius:var(--radius);padding:12px;background:var(--surface);transition:all .15s" id="share-{{ share._id }}">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between">
-            <div style="flex:1">
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-                <i class="fas fa-file-{% if share.file_url and share.file_url.endswith('.pdf') %}pdf text-red-500{% else %}alt{% endif %}" style="color:{% if share.file_url and share.file_url.endswith('.pdf') %}#dc2626{% else %}#3b82f6{% endif %};font-size:14px"></i>
-                <span style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--navy)">{{ share.document_name }}</span>
-              </div>
-              {% if share.message %}<p style="font-size:12px;color:var(--text-muted);margin-bottom:5px">{{ share.message }}</p>{% endif %}
-              <div style="font-size:11px;color:var(--text-muted)"><i class="fas fa-user" style="margin-right:4px"></i>{{ share.sender_name }} · {{ share.shared_at.strftime('%d %b %Y, %I:%M %p') }}</div>
-              {% if share.file_url %}
-              <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
-                <button onclick="viewFile('{{ share.file_url }}','{{ share.document_name }}')" class="btn-outline" style="font-size:11px;padding:4px 10px"><i class="fas fa-eye"></i> View</button>
-                <a href="{{ share.file_url }}" download class="btn-outline" style="font-size:11px;padding:4px 10px"><i class="fas fa-download"></i></a>
-                <button class="ai-btn" style="font-size:11px;padding:4px 10px" onclick="aiSummarizeForReview('share{{ loop.index }}','{{ share.document_name|replace("'","\\'")|truncate(60) }}','','{{ share.file_url }}')"><span class="jain-ai-badge" style="font-size:9px;padding:2px 6px">✦ JAIN AI</span></button>
-                <button class="ai-fill-btn" onclick="openShareCommentModal('{{ share._id }}','{{ share.document_name|replace("'","\\'")|truncate(50) }}')"><i class="fas fa-comment"></i> Comment</button>
-              </div>
-              <div class="ai-response-box" id="ai-pending-share{{ loop.index }}" style="background:linear-gradient(135deg,var(--navy),#1a1a6e);color:#e2e8f0;font-size:12px;margin-top:6px"></div>
-              {% endif %}
-              {% if share.leader_comment %}<div style="margin-top:8px;background:#f5f3ff;border:1px solid #ede9fe;border-radius:6px;padding:7px 10px;font-size:12px;color:#6d28d9"><i class="fas fa-comment" style="margin-right:4px"></i>{{ share.leader_comment }}</div>{% endif %}
+        <div class="section-body">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3" id="memberPerfGrid">
+                {% for member in core_members %}
+                <div class="member-card" onclick="loadMemberAnalytics('{{ member._id }}','{{ member.email.split('@')[0] }}')">
+                    <div class="relative">
+                        <div class="member-avatar">{{ member.email[0].upper() }}</div>
+                        {% if member.is_online %}<div class="online-dot"></div>{% endif %}
+                    </div>
+                    <div style="flex:1;min-width:0">
+                        <div class="font-bold text-sm" style="color:var(--jain-navy)">{{ member.email.split('@')[0] }}</div>
+                        <div class="text-xs text-gray-500">{{ member.doc_count }} docs submitted</div>
+                        <div class="text-xs text-gray-400">{{ member.last_seen_formatted }}</div>
+                    </div>
+                    <button onclick="event.stopPropagation();loadMemberAnalytics('{{ member._id }}','{{ member.email.split('@')[0] }}')" class="btn-primary btn-sm">
+                        <i class="fas fa-chart-line"></i>
+                    </button>
+                </div>
+                {% endfor %}
             </div>
-          </div>
+            <!-- Member detail panel -->
+            <div id="memberDetailPanel" style="display:none" class="mt-5 p-5 bg-gray-50 rounded-xl border border-gray-200">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-bold text-base" id="memberDetailName" style="color:var(--jain-navy)"></h3>
+                    <button onclick="document.getElementById('memberDetailPanel').style.display='none'" class="text-gray-400 hover:text-gray-600 text-sm"><i class="fas fa-times"></i></button>
+                </div>
+                <div id="memberDetailContent"></div>
+            </div>
         </div>
-        {% endfor %}
-      </div>
-      {% else %}
-      <div style="text-align:center;padding:3rem;background:var(--surface-2);border-radius:var(--radius)">
-        <i class="fas fa-share-alt" style="font-size:2.5rem;color:#d1d5db;margin-bottom:12px;display:block"></i>
-        <div style="font-size:14px;color:var(--text-muted)">No documents shared with you yet</div>
-      </div>
-      {% endif %}
     </div>
+</div>
 
-    <!-- ── Team tab ── -->
-    <div class="tab-content" id="tab-members">
-      <div class="card-title"><div style="width:30px;height:30px;background:#6366f1;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;"><i class="fas fa-users" style="color:#fff;font-size:13px"></i></div> Core Team Members ({{ core_members|length }})</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px">
+<!-- ══════════════════════════════════════════════════════
+     TAB: RECEIVED DOCUMENTS
+══════════════════════════════════════════════════════ -->
+<div class="tab-content" id="content-shared_docs">
+    {% if shared_documents %}
+    {% for share in shared_documents %}
+    <div class="doc-card">
+        <div class="flex items-start justify-between gap-3">
+            <div style="flex:1;min-width:0">
+                <h3 class="font-bold text-sm" style="color:var(--jain-navy)">{{ share.document_name }}</h3>
+                <p class="text-xs text-gray-500 mt-1">From: <strong>{{ share.sender_name }}</strong></p>
+                {% if share.message %}
+                <p class="text-xs text-gray-600 mt-1 italic">{{ share.message | truncate(120) }}</p>
+                {% endif %}
+                <div class="doc-meta">
+                    <span class="doc-badge" style="background:#f3f4f6;color:#6b7280">
+                        <i class="far fa-clock mr-1"></i>{{ share.shared_at.strftime('%d %b %Y, %I:%M %p') if share.shared_at else '—' }}
+                    </span>
+                </div>
+            </div>
+            <div class="flex flex-col gap-2" style="flex-shrink:0">
+                {% if share.file_url %}
+                <button onclick="openViewer('{{ share.file_url }}','{{ share.document_name | replace("'","") }}')" class="btn-primary btn-sm">
+                    <i class="fas fa-eye"></i> View
+                </button>
+                <a href="{{ share.file_url }}" download class="btn-primary btn-sm" style="text-align:center;text-decoration:none">
+                    <i class="fas fa-download"></i> Download
+                </a>
+                {% endif %}
+                <button onclick="openShareCommentModal('{{ share._id }}')" class="btn-primary btn-sm" style="background:#8b5cf6">
+                    <i class="fas fa-comment"></i> Comment
+                </button>
+            </div>
+        </div>
+        {% if share.leader_comment %}
+        <div class="mt-2 text-xs bg-purple-50 p-2 rounded-lg text-purple-700">
+            <i class="fas fa-comment mr-1"></i> <strong>Your comment:</strong> {{ share.leader_comment | truncate(100) }}
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="text-center py-12 text-gray-400">
+        <i class="fas fa-inbox text-4xl mb-3 opacity-40 block"></i>
+        <p class="text-sm">No documents received yet.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     TAB: TEAM
+══════════════════════════════════════════════════════ -->
+<div class="tab-content" id="content-team">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         {% for member in core_members %}
-        <div class="member-card" onclick="switchTab('analytics');loadAnalytics('{{ member._id }}')">
-          <div class="member-avatar">{{ member.email[0]|upper }}{% if member.is_online %}<div class="online-dot"></div>{% endif %}</div>
-          <div style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:2px">{{ member.email.split('@')[0] }}</div>
-          <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ member.email }}</div>
-          <span class="badge badge-progress" style="font-size:10px;margin-bottom:5px">{{ member.doc_count|default(0) }} docs</span><br>
-          {% if member.is_online %}<span style="display:inline-flex;align-items:center;gap:4px;background:#dcfce7;color:#166534;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600"><span style="width:5px;height:5px;border-radius:50%;background:#22c55e"></span>Online</span>
-          {% else %}<span style="font-size:10px;color:var(--text-muted)">{{ member.last_seen_formatted }}</span>{% endif %}
+        <div class="member-card">
+            <div class="relative">
+                <div class="member-avatar">{{ member.email[0].upper() }}</div>
+                {% if member.is_online %}<div class="online-dot"></div>{% endif %}
+            </div>
+            <div style="flex:1;min-width:0">
+                <div class="font-bold text-sm" style="color:var(--jain-navy)">{{ member.email.split('@')[0] }}</div>
+                <div class="text-xs text-gray-500">{{ member.email }}</div>
+                <div class="text-xs mt-1">
+                    <span class="{% if member.is_online %}text-green-600{% else %}text-gray-400{% endif %}">
+                        {% if member.is_online %}● Online{% else %}Last seen {{ member.last_seen_formatted }}{% endif %}
+                    </span>
+                </div>
+            </div>
+            <div class="flex flex-col gap-2">
+                <button onclick="aiMemberInsight('{{ member._id }}','{{ member.email.split('@')[0] }}','{{ member.email }}')" class="btn-primary btn-sm" style="background:#1a1a6e">
+                    <i class="fas fa-robot"></i> AI Insight
+                </button>
+            </div>
         </div>
         {% endfor %}
-      </div>
     </div>
-  </div>
 </div>
 
-<!-- ════════════════════════════════════════
-     ENHANCED FILE VIEWER MODAL
-     Shows: Open · Summarize · Ask AI · Download
-════════════════════════════════════════ -->
-<div class="modal-overlay" id="fileModal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <div class="modal-title">
-        <i class="fas fa-file" id="fileIcon"></i>
-        <span id="fileTitle">File</span>
-        <span class="jain-ai-badge" style="margin-left:4px">✦ JAIN AI</span>
-      </div>
-      <button class="modal-close" onclick="closeFile()"><i class="fas fa-times"></i></button>
-    </div>
-    <div class="modal-body">
-      <div id="pdfWrap" style="width:100%;height:460px"><object id="pdfObj" data="" type="application/pdf" style="width:100%;height:100%;border-radius:var(--radius-sm)"><p style="text-align:center;padding:2rem">PDF cannot display. <a id="pdfLink" href="#" target="_blank">Open</a></p></object></div>
-      <div id="imgWrap" style="display:none;height:460px;align-items:center;justify-content:center"><img id="imgView" src="" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:var(--radius-sm)"></div>
-      <div id="noPreview" style="display:none;height:300px;align-items:center;justify-content:center;flex-direction:column;background:var(--surface-2);border-radius:var(--radius);color:var(--text-muted)"><i class="fas fa-file" style="font-size:3rem;margin-bottom:1rem"></i><p>Preview not available</p></div>
-    </div>
-
-    <!-- ── Action bar ── -->
-    <div class="modal-footer" style="flex-direction:column;align-items:stretch;gap:10px;">
-      <div class="file-action-bar">
-        <!-- Open -->
-        <a id="fileOpenLink" href="#" target="_blank" class="file-action-btn open-btn">
-          <i class="fas fa-external-link-alt"></i> Open
-        </a>
-        <!-- Summarize with Jain AI -->
-        <button id="viewerSummarizeBtn" class="file-action-btn summarize-btn" onclick="aiSummarizeViewer()">
-          <span>✦</span> Summarize with Jain AI
-        </button>
-        <!-- Ask Jain AI -->
-        <button id="viewerAskToggleBtn" class="file-action-btn ask-btn" onclick="toggleViewerAsk()">
-          <i class="fas fa-comment-dots"></i> Ask Jain AI
-        </button>
-        <!-- Download -->
-        <a id="fileDlLink" href="#" download class="file-action-btn download-btn">
-          <i class="fas fa-download"></i> Download
-        </a>
-        <!-- Close -->
-        <button onclick="closeFile()" class="file-action-btn open-btn" style="margin-left:auto">
-          <i class="fas fa-times"></i> Close
-        </button>
-      </div>
-
-      <!-- Jain AI Summary output -->
-      <div id="viewerAiBox"></div>
-
-      <!-- Ask Jain AI panel (toggle) -->
-      <div id="viewerAskPanel">
-        <div style="font-size:11px;font-weight:700;color:var(--navy);margin-bottom:6px;display:flex;align-items:center;gap:6px">
-          <span class="jain-ai-badge">✦ JAIN AI</span> Ask anything about this document
+<!-- ══════════════════════════════════════════════════════
+     FILE VIEWER MODAL
+══════════════════════════════════════════════════════ -->
+<div id="fileViewerModal">
+    <div class="viewer-box">
+        <div class="viewer-header">
+            <span class="section-title" id="viewerTitle"><i class="fas fa-file-alt"></i> Document Viewer</span>
+            <button class="close-btn" onclick="closeViewer()"><i class="fas fa-times"></i></button>
         </div>
-        <div class="viewer-ask-row">
-          <input id="viewerAskInput" class="form-input" placeholder="e.g. What are the key action items?" style="flex:1" onkeydown="if(event.key==='Enter')sendViewerAsk()">
-          <button onclick="sendViewerAsk()" class="file-action-btn ask-btn" style="padding:9px 16px;white-space:nowrap">
-            <i class="fas fa-paper-plane"></i> Ask
-          </button>
+        <div class="viewer-body" id="viewerBody" style="height:60vh"></div>
+        <div class="viewer-actions">
+            <a id="viewerOpenLink" href="#" target="_blank" class="btn-primary btn-sm"><i class="fas fa-external-link-alt"></i> Open</a>
+            <a id="viewerDownloadLink" href="#" download class="btn-primary btn-sm btn-gold"><i class="fas fa-download"></i> Download</a>
+            <button onclick="aiSummarizeViewer()" class="btn-primary btn-sm" style="background:#1a1a6e"><i class="fas fa-robot"></i> Summarize with AI</button>
+            <button onclick="toggleViewerAsk()" class="btn-primary btn-sm" style="background:#8b5cf6"><i class="fas fa-comment"></i> Ask AI</button>
         </div>
-        <div id="viewerAskResponse"></div>
-      </div>
+        <!-- Inline AI chat for viewer -->
+        <div id="viewerAskPanel" style="display:none;padding:12px 18px;background:#f8f8ff;border-top:1px solid #e5e7eb">
+            <div id="viewerAiResponse" style="font-size:12px;line-height:1.65;color:#374151;min-height:30px;margin-bottom:8px;white-space:pre-wrap"></div>
+            <div class="flex gap-2">
+                <input type="text" id="viewerAskInput" class="form-control" style="font-size:12px" placeholder="Ask about this document…" onkeydown="if(event.key==='Enter')sendViewerAsk()">
+                <button onclick="sendViewerAsk()" class="btn-primary btn-sm"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 
-<!-- ── Rework modal ── -->
-<div class="gen-modal-overlay" id="reworkModal">
-  <div class="gen-modal-box">
-    <div class="gen-modal-header" style="background:linear-gradient(135deg,#f97316,#ea580c)">
-      <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px"><div style="width:28px;height:28px;background:rgba(255,255,255,.2);border-radius:6px;display:flex;align-items:center;justify-content:center"><i class="fas fa-redo" style="font-size:13px"></i></div> Request Rework</div>
-      <button class="gen-modal-close" onclick="closeModal('reworkModal')"><i class="fas fa-times"></i></button>
+<!-- ══════════════════════════════════════════════════════
+     REWORK MODAL
+══════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="reworkModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <span class="modal-title"><i class="fas fa-redo"></i> Request Rework</span>
+            <button class="close-btn" onclick="closeReworkModal()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <p class="text-sm text-gray-600 mb-4">Task: <strong id="reworkTaskTitle"></strong></p>
+            <div class="form-group">
+                <label class="form-label">Rework Instructions <span style="color:#ef4444">*</span></label>
+                <textarea id="reworkComment" class="form-control" rows="4" placeholder="What needs to be improved or redone?"></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label">New Due Date (optional)</label>
+                <input type="date" id="reworkDueDate" class="form-control" min="{{ now.strftime('%Y-%m-%d') }}">
+            </div>
+            <!-- AI suggestion -->
+            <button onclick="aiSuggestReworkFromModal()" class="btn-primary btn-sm" style="background:#1a1a6e;margin-bottom:12px">
+                <i class="fas fa-robot"></i> AI Draft Feedback
+            </button>
+            <div id="reworkAiResult" style="display:none;font-size:12px;background:#f8f8ff;border:1px solid #e5e7eb;border-radius:8px;padding:10px;margin-bottom:12px;white-space:pre-wrap;line-height:1.65"></div>
+        </div>
+        <div class="modal-footer">
+            <button onclick="submitRework()" class="btn-primary"><i class="fas fa-paper-plane"></i> Request Rework</button>
+            <button onclick="closeReworkModal()" class="btn-primary" style="background:#6b7280">Cancel</button>
+        </div>
     </div>
-    <div class="gen-modal-body">
-      <input type="hidden" id="reworkTaskId">
-      <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:14px"><p style="font-size:13px;font-weight:600;color:#9a3412" id="reworkTaskTitle"></p></div>
-      <div style="margin-bottom:12px"><label class="form-label">Rework Instructions *</label><textarea id="reworkComment" rows="4" class="form-input" placeholder="Describe what needs to be fixed..."></textarea></div>
-      <div style="margin-bottom:14px"><label class="form-label">New Due Date (Optional)</label><input type="date" id="reworkNewDate" class="form-input"><p style="font-size:11px;color:var(--text-muted);margin-top:3px">Today or future dates only</p></div>
-      <div style="display:flex;gap:10px">
-        <button onclick="submitRework()" id="reworkSubmitBtn" class="btn-warn" style="flex:1;justify-content:center;padding:11px"><i class="fas fa-redo"></i> Send for Rework</button>
-        <button onclick="closeModal('reworkModal')" class="btn-outline" style="padding:11px 18px">Cancel</button>
-      </div>
-    </div>
-  </div>
 </div>
 
-<!-- ── Reschedule modal ── -->
-<div class="gen-modal-overlay" id="rescheduleModal">
-  <div class="gen-modal-box">
-    <div class="gen-modal-header" style="background:linear-gradient(135deg,#f97316,#ea580c)">
-      <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff"><i class="fas fa-calendar-alt" style="margin-right:8px"></i>Reschedule Due Date</div>
-      <button class="gen-modal-close" onclick="closeModal('rescheduleModal')"><i class="fas fa-times"></i></button>
+<!-- ══════════════════════════════════════════════════════
+     RESCHEDULE MODAL
+══════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="rescheduleModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <span class="modal-title"><i class="fas fa-calendar-alt"></i> Reschedule Task</span>
+            <button class="close-btn" onclick="closeRescheduleModal()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label">New Due Date <span style="color:#ef4444">*</span></label>
+                <input type="date" id="newDueDate" class="form-control" min="{{ now.strftime('%Y-%m-%d') }}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Reason (optional)</label>
+                <textarea id="rescheduleReason" class="form-control" rows="3" placeholder="Why is this being rescheduled?"></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button onclick="submitReschedule()" class="btn-primary"><i class="fas fa-calendar-check"></i> Reschedule</button>
+            <button onclick="closeRescheduleModal()" class="btn-primary" style="background:#6b7280">Cancel</button>
+        </div>
     </div>
-    <div class="gen-modal-body">
-      <input type="hidden" id="rescheduleTaskId">
-      <p style="font-size:13px;font-weight:600;color:var(--text-main);margin-bottom:12px" id="rescheduleTaskTitle"></p>
-      <div style="margin-bottom:12px"><label class="form-label">New Due Date *</label><input type="date" id="rescheduleNewDate" class="form-input"></div>
-      <div style="margin-bottom:14px"><label class="form-label">Reason (Optional)</label><textarea id="rescheduleReason" rows="2" class="form-input" placeholder="Reason for rescheduling..."></textarea></div>
-      <div style="display:flex;gap:10px">
-        <button onclick="submitReschedule()" class="btn-warn" style="flex:1;justify-content:center;padding:11px"><i class="fas fa-calendar-check"></i> Update Date</button>
-        <button onclick="closeModal('rescheduleModal')" class="btn-outline" style="padding:11px 18px">Cancel</button>
-      </div>
-    </div>
-  </div>
 </div>
 
-<!-- ── Task comment modal ── -->
-<div class="gen-modal-overlay" id="commentModal">
-  <div class="gen-modal-box">
-    <div class="gen-modal-header" style="background:linear-gradient(135deg,#7c3aed,#6d28d9)">
-      <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff"><i class="fas fa-comment" style="margin-right:8px"></i>Add Comment</div>
-      <button class="gen-modal-close" onclick="closeModal('commentModal')"><i class="fas fa-times"></i></button>
+<!-- ══════════════════════════════════════════════════════
+     TASK COMMENT MODAL
+══════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="commentModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <span class="modal-title"><i class="fas fa-comment"></i> Add Comment to Task</span>
+            <button class="close-btn" onclick="closeCommentModal()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label">Comment</label>
+                <textarea id="taskCommentText" class="form-control" rows="4" placeholder="Your comment…"></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button onclick="submitComment()" class="btn-primary"><i class="fas fa-paper-plane"></i> Add Comment</button>
+            <button onclick="closeCommentModal()" class="btn-primary" style="background:#6b7280">Cancel</button>
+        </div>
     </div>
-    <div class="gen-modal-body">
-      <input type="hidden" id="commentTaskId">
-      <p style="font-size:13px;font-weight:600;margin-bottom:12px" id="commentTaskTitle"></p>
-      <textarea id="commentText" rows="4" class="form-input" placeholder="Add your comment..." style="margin-bottom:14px"></textarea>
-      <div style="display:flex;gap:10px">
-        <button onclick="submitComment()" style="flex:1;justify-content:center;padding:11px;background:#7c3aed;color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif"><i class="fas fa-paper-plane"></i> Submit</button>
-        <button onclick="closeModal('commentModal')" class="btn-outline" style="padding:11px 18px">Cancel</button>
-      </div>
-    </div>
-  </div>
 </div>
 
-<!-- ── Share comment modal ── -->
-<div class="gen-modal-overlay" id="shareCommentModal">
-  <div class="gen-modal-box">
-    <div class="gen-modal-header" style="background:linear-gradient(135deg,#0284c7,#0369a1)">
-      <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff"><i class="fas fa-comment" style="margin-right:8px"></i>Comment on Shared Doc</div>
-      <button class="gen-modal-close" onclick="closeModal('shareCommentModal')"><i class="fas fa-times"></i></button>
+<!-- ══════════════════════════════════════════════════════
+     SHARE COMMENT MODAL
+══════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="shareCommentModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <span class="modal-title"><i class="fas fa-comment"></i> Comment on Received Document</span>
+            <button class="close-btn" onclick="closeShareCommentModal()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label">Your Comment</label>
+                <textarea id="shareCommentText" class="form-control" rows="4" placeholder="Your notes about this document…"></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button onclick="submitShareComment()" class="btn-primary"><i class="fas fa-save"></i> Save Comment</button>
+            <button onclick="closeShareCommentModal()" class="btn-primary" style="background:#6b7280">Cancel</button>
+        </div>
     </div>
-    <div class="gen-modal-body">
-      <input type="hidden" id="shareCommentDocId">
-      <p style="font-size:13px;font-weight:600;margin-bottom:12px" id="shareCommentDocTitle"></p>
-      <textarea id="shareCommentText" rows="4" class="form-input" placeholder="Add your comment..." style="margin-bottom:14px"></textarea>
-      <div style="display:flex;gap:10px">
-        <button onclick="submitShareComment()" style="flex:1;justify-content:center;padding:11px;background:#0284c7;color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif"><i class="fas fa-paper-plane"></i> Save</button>
-        <button onclick="closeModal('shareCommentModal')" class="btn-outline" style="padding:11px 18px">Cancel</button>
-      </div>
-    </div>
-  </div>
 </div>
+{% endblock %}
 
-<!-- ── Jain AI Global Chat ── -->
-<div class="ai-chat-overlay" id="aiChatOverlay">
-  <div class="ai-chat-box">
-    <div class="ai-chat-header">
-      <div class="ai-chat-title">
-        <span class="jain-ai-badge" style="font-size:11px;padding:3px 10px">✦ JAIN AI</span>
-        Leadership Assistant
-      </div>
-      <button onclick="closeAiChat()" style="background:rgba(255,255,255,.15);border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;color:#fff;font-size:14px"><i class="fas fa-times"></i></button>
-    </div>
-    <div class="ai-chat-messages" id="chatMessages"></div>
-    <div class="ai-chat-input-row">
-      <input class="ai-chat-input" id="chatInput" placeholder="Ask Jain AI anything..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}">
-      <button class="ai-chat-send" onclick="sendChat()"><i class="fas fa-paper-plane"></i></button>
-    </div>
-  </div>
-</div>
-
-<!-- ── Floating Jain AI button ── -->
-<button class="ai-float-btn" onclick="openGlobalChat()" title="Ask Jain AI">
-  <span style="font-family:'Syne',sans-serif;font-size:11px;font-weight:800;letter-spacing:-.5px">AI</span>
-</button>
-
-<!-- ── Notifications ── -->
-<div id="notifContainer"></div>
-
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+/* ── LEADER DASHBOARD JS ── */
 
-// ── Tabs ──
-function switchTab(name){
-  document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(e=>e.classList.remove('active'));
-  document.getElementById('tab-'+name).classList.add('active');
-  document.getElementById('btn-'+name).classList.add('active');
-  localStorage.setItem('leaderTab',name);
-  closeAllMenus();
+// ── Tab switching ──
+function switchTab(tab) {
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('content-' + tab)?.classList.add('active');
+    document.getElementById('tab-' + tab)?.classList.add('active');
+    if (tab === 'analytics') initCharts();
 }
 
-// ── Dropdown menus ──
-function toggleMenu(id){closeAllMenus();document.getElementById('tmenu-'+id).classList.toggle('open');}
-function closeMenu(id){document.getElementById('tmenu-'+id)?.classList.remove('open');}
-function closeAllMenus(){document.querySelectorAll('.ddmenu.open').forEach(m=>m.classList.remove('open'));}
-
-// ── Generic modal helpers ──
-function openModal(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';}
-function closeModal(id){document.getElementById(id).classList.remove('open');document.body.style.overflow='';}
-
-// ══════════════════════════════════════════════════
-//  ENHANCED FILE VIEWER
-// ══════════════════════════════════════════════════
-let currentFileUrl='',currentFileName='';
-
-function viewFile(url,name){
-  currentFileUrl=url; currentFileName=name;
-  const ext=url.split('.').pop().toLowerCase().split('?')[0];
-  const isPdf=ext==='pdf';
-  const isImg=['jpg','jpeg','png','gif','webp'].includes(ext);
-
-  document.getElementById('fileTitle').textContent=name;
-  document.getElementById('fileOpenLink').href=url;
-  document.getElementById('fileDlLink').href=url;
-
-  document.getElementById('pdfWrap').style.display=isPdf?'block':'none';
-  const iw=document.getElementById('imgWrap');
-  iw.style.display=isImg?'flex':'none';
-  document.getElementById('noPreview').style.display=(!isPdf&&!isImg)?'flex':'none';
-
-  if(isPdf){document.getElementById('pdfObj').data=url;document.getElementById('pdfLink').href=url;}
-  if(isImg)document.getElementById('imgView').src=url;
-
-  // reset AI panels
-  const aib=document.getElementById('viewerAiBox');
-  aib.textContent=''; aib.classList.remove('show');
-  const askPanel=document.getElementById('viewerAskPanel');
-  askPanel.classList.remove('show');
-  document.getElementById('viewerAskInput').value='';
-  const askResp=document.getElementById('viewerAskResponse');
-  askResp.textContent=''; askResp.classList.remove('show');
-
-  // reset summarize btn
-  const sb=document.getElementById('viewerSummarizeBtn');
-  sb.disabled=false; sb.innerHTML='<span>✦</span> Summarize with Jain AI';
-
-  document.getElementById('fileModal').classList.add('open');
-  document.body.style.overflow='hidden';
-}
-
-function closeFile(){
-  document.getElementById('fileModal').classList.remove('open');
-  document.getElementById('pdfObj').data='';
-  document.getElementById('imgView').src='';
-  document.body.style.overflow='';
-}
-
-// Toggle "Ask Jain AI" panel
-function toggleViewerAsk(){
-  const p=document.getElementById('viewerAskPanel');
-  if(p.classList.contains('show')){
-    p.classList.remove('show');
-  } else {
-    p.classList.add('show');
-    setTimeout(()=>document.getElementById('viewerAskInput').focus(),100);
-  }
-}
-
-// Summarize with Jain AI (from viewer)
-async function aiSummarizeViewer(){
-  if(!currentFileUrl){showNotif('No file loaded','warning');return;}
-  const btn=document.getElementById('viewerSummarizeBtn');
-  btn.disabled=true;
-  btn.innerHTML='<div class="thinking"><span></span><span></span><span></span></div> Jain AI is reading...';
-  const box=document.getElementById('viewerAiBox');
-  box.textContent='Jain AI is analysing the document...';
-  box.classList.add('show');
-  try{
-    const r=await fetch('/api/ai/summarize',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',
-      body:JSON.stringify({document_name:currentFileName,file_url:currentFileUrl})});
-    const d=await r.json();
-    box.textContent=d.success?d.summary:'Error: '+(d.error||'Jain AI unavailable');
-  }catch(err){box.textContent='Error: '+err.message;}
-  btn.disabled=false;
-  btn.innerHTML='<span>✦</span> Summarize with Jain AI';
-}
-
-// Ask Jain AI (from viewer)
-async function sendViewerAsk(){
-  const input=document.getElementById('viewerAskInput');
-  const q=input.value.trim();
-  if(!q){showNotif('Enter a question','warning');return;}
-  const resp=document.getElementById('viewerAskResponse');
-  resp.textContent='Jain AI is thinking...';
-  resp.classList.add('show');
-  try{
-    const r=await fetch('/api/ai/chat',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',
-      body:JSON.stringify({message:q+' (Context: document named "'+currentFileName+'")',task_title:'Document Q&A',task_desc:'User is viewing a document and asking questions about it.',history:[]})});
-    const d=await r.json();
-    resp.textContent=d.success?d.reply:'Error: '+(d.error||'Jain AI unavailable');
-  }catch(err){resp.textContent='Error: '+err.message;}
-}
-
-// ── Accept task ──
-async function acceptTask(id){
-  if(!confirm('Accept this task as completed?'))return;
-  try{
-    const r=await fetch('/api/leader/accept_task/'+id,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({status:'accepted'})});
-    const d=await r.json();
-    if(d.success){showNotif('Task accepted!','success');setTimeout(()=>location.reload(),1400);}else throw new Error(d.error);
-  }catch(err){showNotif(err.message,'error');}
-}
-
-// ── Rework modal ──
-function openReworkModal(id,title){
-  document.getElementById('reworkTaskId').value=id;
-  document.getElementById('reworkTaskTitle').textContent=title;
-  document.getElementById('reworkComment').value='';
-  document.getElementById('reworkNewDate').value='';
-  document.getElementById('reworkNewDate').min=today();
-  openModal('reworkModal');
-}
-async function submitRework(){
-  const id=document.getElementById('reworkTaskId').value;
-  const comment=document.getElementById('reworkComment').value.trim();
-  const newDate=document.getElementById('reworkNewDate').value;
-  if(!comment){showNotif('Enter rework instructions','warning');return;}
-  if(newDate&&newDate<today()){showNotif('Date cannot be in the past','error');return;}
-  const btn=document.getElementById('reworkSubmitBtn');btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Sending...';btn.disabled=true;
-  try{
-    const r=await fetch('/api/leader/request_rework/'+id,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({comment,new_due_date:newDate})});
-    const d=await r.json();
-    if(d.success){showNotif('Rework requested','success');closeModal('reworkModal');setTimeout(()=>location.reload(),1400);}else throw new Error(d.error);
-  }catch(err){showNotif(err.message,'error');btn.innerHTML='<i class="fas fa-redo"></i> Send for Rework';btn.disabled=false;}
-}
-
-// ── Reschedule ──
-function openRescheduleModal(id,title,cur){
-  document.getElementById('rescheduleTaskId').value=id;
-  document.getElementById('rescheduleTaskTitle').textContent='Task: '+title;
-  document.getElementById('rescheduleNewDate').min=today();document.getElementById('rescheduleNewDate').value='';
-  document.getElementById('rescheduleReason').value='';openModal('rescheduleModal');
-}
-async function submitReschedule(){
-  const id=document.getElementById('rescheduleTaskId').value;
-  const nd=document.getElementById('rescheduleNewDate').value;
-  const reason=document.getElementById('rescheduleReason').value.trim();
-  if(!nd){showNotif('Select a new date','warning');return;}
-  if(nd<today()){showNotif('Date cannot be in the past','error');return;}
-  try{
-    const r=await fetch('/api/leader/reschedule_task/'+id,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({new_due_date:nd,reason})});
-    const d=await r.json();
-    if(d.success){showNotif('Rescheduled','success');closeModal('rescheduleModal');setTimeout(()=>location.reload(),1400);}else throw new Error(d.error);
-  }catch(err){showNotif(err.message,'error');}
-}
-
-// ── Task comment ──
-function openCommentModal(id,title){
-  document.getElementById('commentTaskId').value=id;
-  document.getElementById('commentTaskTitle').textContent='Task: '+title;
-  document.getElementById('commentText').value='';openModal('commentModal');
-}
-async function submitComment(){
-  const id=document.getElementById('commentTaskId').value;
-  const comment=document.getElementById('commentText').value.trim();
-  if(!comment){showNotif('Enter a comment','warning');return;}
-  try{
-    const r=await fetch('/api/leader/add_task_comment/'+id,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({comment})});
-    const d=await r.json();
-    if(d.success){showNotif('Comment added','success');closeModal('commentModal');}else throw new Error(d.error);
-  }catch(err){showNotif(err.message,'error');}
-}
-
-// ── Share comment ──
-function openShareCommentModal(id,name){
-  document.getElementById('shareCommentDocId').value=id;
-  document.getElementById('shareCommentDocTitle').textContent='Document: '+name;
-  document.getElementById('shareCommentText').value='';openModal('shareCommentModal');
-}
-async function submitShareComment(){
-  const id=document.getElementById('shareCommentDocId').value;
-  const comment=document.getElementById('shareCommentText').value.trim();
-  if(!comment){showNotif('Enter a comment','warning');return;}
-  try{
-    const r=await fetch('/api/leader/add_share_comment/'+id,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({comment})});
-    const d=await r.json();
-    if(d.success){showNotif('Comment saved','success');closeModal('shareCommentModal');setTimeout(()=>location.reload(),1000);}else throw new Error(d.error);
-  }catch(err){showNotif(err.message,'error');}
-}
-
-// ── AI: summarize for review ──
-async function aiSummarizeForReview(docId,name,desc,fileUrl){
-  const box=document.getElementById('ai-pending-'+docId);if(!box)return;
-  box.textContent='✦ Jain AI is analysing...';box.classList.add('show');
-  try{
-    const r=await fetch('/api/ai/summarize',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({document_name:name,description:desc,file_url:fileUrl})});
-    const d=await r.json();box.textContent=d.success?d.summary:'Error: '+(d.error||'Jain AI unavailable');
-  }catch(err){box.textContent='Error: '+err.message;}
-}
-
-// ── AI: suggest review feedback ──
-let lastAiFeedback='',lastFeedbackDocId='';
-async function aiSuggestReviewFeedback(docId,name,desc,by){
-  lastFeedbackDocId=docId;
-  showNotif('Jain AI is drafting feedback...','info');
-  try{
-    const r=await fetch('/api/ai/suggest-feedback',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({document_name:name,description:desc,submitted_by:by})});
-    const d=await r.json();
-    if(d.success){
-      lastAiFeedback=d.feedback;
-      document.getElementById('comments-'+docId).value=d.feedback;
-      showNotif('Jain AI drafted feedback — review before submitting','success');
-    }else throw new Error(d.error||'Jain AI error');
-  }catch(err){showNotif('Jain AI error: '+err.message,'error');}
-}
-
-// ── AI: suggest task description ──
-let lastAiDesc='';
-async function aiSuggestTaskDesc(){
-  const title=document.querySelector('input[name="task_title"]').value.trim();
-  if(!title){showNotif('Enter a task title first','warning');return;}
-  const box=document.getElementById('aiTaskDescBox');const fillBtn=document.getElementById('fillDescBtn');
-  box.textContent='✦ Jain AI is drafting a description...';box.classList.add('show');fillBtn.style.display='none';
-  try{
-    const r=await fetch('/api/ai/suggest-task-desc',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({title})});
-    const d=await r.json();
-    if(d.success){lastAiDesc=d.description;box.textContent=d.description;fillBtn.style.display='inline-flex';}
-    else throw new Error(d.error||'Jain AI error');
-  }catch(err){box.textContent='Error: '+err.message;}
-}
-function fillTaskDesc(){
-  if(lastAiDesc)document.querySelector('textarea[name="description"]').value=lastAiDesc;
-  showNotif('Description filled — review before submitting','success');
-}
-
-// ── AI: analyze task progress ──
-async function aiAnalyzeTask(id,title,desc,progress,status){
-  const box=document.getElementById('ai-ltask-'+id);if(!box)return;
-  box.innerHTML='<div class="thinking"><span></span><span></span><span></span></div> Jain AI is analysing...';box.classList.add('show');
-  try{
-    const r=await fetch('/api/ai/analyze-task',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({title,description:desc,progress,status})});
-    const d=await r.json();box.textContent=d.success?d.analysis:'Error: '+(d.error||'Jain AI unavailable');
-  }catch(err){box.textContent='Error: '+err.message;}
-}
-
-// ── AI: suggest rework feedback ──
-async function aiSuggestFeedback(id,title,desc,progress){
-  const box=document.getElementById('ai-ltask-'+id);if(!box)return;
-  box.innerHTML='<div class="thinking"><span></span><span></span><span></span></div> Jain AI drafting feedback...';box.classList.add('show');
-  try{
-    const r=await fetch('/api/ai/suggest-rework-feedback',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({title,description:desc,progress})});
-    const d=await r.json();
-    if(d.success){box.textContent=d.feedback;showNotif('Jain AI drafted rework feedback — use it in the rework modal','info');}
-    else box.textContent='Error: '+(d.error||'Jain AI unavailable');
-  }catch(err){box.textContent='Error: '+err.message;}
-}
-
-// ── AI: member insight ──
-let currentMemberData=null;
-async function aiMemberInsight(){
-  if(!currentMemberData){showNotif('Load a member first','warning');return;}
-  const box=document.getElementById('aiMemberBox');box.style.display='block';box.textContent='✦ Jain AI is generating insight...';
-  try{
-    const r=await fetch('/api/ai/member-insight',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(currentMemberData)});
-    const d=await r.json();box.textContent=d.success?d.insight:'Error: '+(d.error||'Jain AI unavailable');
-  }catch(err){box.textContent='Error: '+err.message;}
-}
-
-// ── Analytics ──
-async function loadAnalytics(memberId){
-  if(!memberId)return;
-  document.getElementById('analyticsPanel').style.display='block';
-  document.getElementById('memberSelector').value=memberId;
-  try{
-    const r=await fetch('/api/core-member/analytics/'+memberId);
-    const data=await r.json();currentMemberData=data;
-    document.getElementById('memberInitial').textContent=data.email.charAt(0).toUpperCase();
-    document.getElementById('memberName').textContent=data.name;
-    document.getElementById('memberEmail').textContent=data.email;
-    document.getElementById('memberStatusBadge').innerHTML=data.is_online?
-      '<span style="display:inline-flex;align-items:center;gap:4px;background:#dcfce7;color:#166534;font-size:11px;padding:3px 8px;border-radius:10px;font-weight:600"><span style="width:5px;height:5px;border-radius:50%;background:#22c55e"></span>Online</span>':
-      '<span style="font-size:11px;color:#94a3b8">'+data.last_seen+'</span>';
-    const ms=document.getElementById('memberStats');
-    ms.innerHTML=['<div style="background:#f8f7ff;border-radius:var(--radius-sm);padding:10px;text-align:center"><div style="font-family:Syne,sans-serif;font-size:1.5rem;font-weight:700;color:var(--navy)">'+data.total_documents+'</div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em">Total</div></div>',
-      '<div style="background:#fef9c3;border-radius:var(--radius-sm);padding:10px;text-align:center"><div style="font-family:Syne,sans-serif;font-size:1.5rem;font-weight:700;color:#92400e">'+data.pending+'</div><div style="font-size:11px;color:#a16207;text-transform:uppercase;letter-spacing:.04em">Pending</div></div>',
-      '<div style="background:#dcfce7;border-radius:var(--radius-sm);padding:10px;text-align:center"><div style="font-family:Syne,sans-serif;font-size:1.5rem;font-weight:700;color:#166534">'+data.approved+'</div><div style="font-size:11px;color:#15803d;text-transform:uppercase;letter-spacing:.04em">Approved</div></div>',
-      '<div style="background:#ffedd5;border-radius:var(--radius-sm);padding:10px;text-align:center"><div style="font-family:Syne,sans-serif;font-size:1.5rem;font-weight:700;color:#9a3412">'+data.revision+'</div><div style="font-size:11px;color:#c2410c;text-transform:uppercase;letter-spacing:.04em">Revision</div></div>'
-    ].join('');
-    const tl=document.getElementById('activityTimeline');tl.innerHTML='';
-    data.recent_activity.forEach(a=>{tl.innerHTML+='<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)"><div style="width:26px;height:26px;border-radius:50%;background:#e5e7eb;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas fa-'+a.icon+'" style="font-size:11px;color:#6b7280"></i></div><div><div style="font-size:12px;font-weight:500">'+a.description+'</div><div style="font-size:11px;color:var(--text-muted)">'+a.time+'</div></div></div>';});
-    const tb=document.getElementById('docsTableBody');tb.innerHTML='';
-    data.documents.forEach(doc=>{
-      const sc={approved:'badge-approved',revision:'badge-revision',rejected:'badge-rejected',pending:'badge-pending'};
-      const actions=doc.file_url?`<button onclick="viewFile('${doc.file_url}','${doc.name}')" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer;margin-right:4px"><i class="fas fa-eye"></i></button><a href="${doc.file_url}" download style="background:#f3f4f6;border:1px solid #e5e7eb;color:#6b7280;border-radius:4px;padding:2px 8px;font-size:11px"><i class="fas fa-download"></i></a>`:'';
-      tb.innerHTML+=`<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 12px;font-size:12px">${doc.name}</td><td style="padding:8px 12px;font-size:12px">${doc.submitted}</td><td style="padding:8px 12px"><span class="badge ${sc[doc.status]||'badge-pending'}" style="font-size:10px">${doc.status}</span></td><td style="padding:8px 12px">${actions}</td></tr>`;
+// ── Task filter ──
+function filterTasks() {
+    const val = document.getElementById('taskStatusFilter').value;
+    document.querySelectorAll('.task-card').forEach(card => {
+        card.style.display = (!val || card.dataset.status === val) ? '' : 'none';
     });
-    document.getElementById('aiMemberBox').style.display='none';
-  }catch(err){showNotif('Failed to load analytics','error');}
 }
 
-// ── Jain AI global chat ──
-let chatHistory=[];
-function openGlobalChat(){
-  chatHistory=[];document.getElementById('chatMessages').innerHTML='';
-  addMsg('ai','Hello! I\'m Jain AI — your Jain University OOA leadership assistant.\n\nI can help you review documents, draft feedback, analyze team performance, or answer any questions about your dashboard.');
-  document.getElementById('aiChatOverlay').classList.add('open');document.body.style.overflow='hidden';
-  document.getElementById('chatInput').focus();
+// ── File Viewer ──
+let currentViewerUrl = '';
+function openViewer(url, name) {
+    currentViewerUrl = url;
+    document.getElementById('viewerTitle').innerHTML = `<i class="fas fa-file-alt" style="color:var(--jain-gold)"></i> ${name}`;
+    document.getElementById('viewerOpenLink').href = url;
+    document.getElementById('viewerDownloadLink').href = url;
+    const body = document.getElementById('viewerBody');
+    const ext = url.split('.').pop().toLowerCase();
+    if (ext === 'pdf') {
+        body.innerHTML = `<iframe src="${url}" style="width:100%;height:60vh;border:none"></iframe>`;
+    } else if (['png','jpg','jpeg','gif','webp'].includes(ext)) {
+        body.innerHTML = `<img src="${url}" style="max-width:100%;max-height:60vh;object-fit:contain;margin:auto;display:block;padding:1rem">`;
+    } else {
+        body.innerHTML = `<div style="padding:2rem;text-align:center">
+            <i class="fas fa-file-alt" style="font-size:4rem;color:var(--jain-gold);margin-bottom:1rem;display:block"></i>
+            <p style="color:#6b7280">Preview not available. Use Open or Download.</p>
+        </div>`;
+    }
+    document.getElementById('fileViewerModal').classList.add('open');
 }
-function closeAiChat(){document.getElementById('aiChatOverlay').classList.remove('open');document.body.style.overflow='';}
+function closeViewer() {
+    document.getElementById('fileViewerModal').classList.remove('open');
+    document.getElementById('viewerBody').innerHTML = '';
+    document.getElementById('viewerAskPanel').style.display = 'none';
+}
+function toggleViewerAsk() {
+    const p = document.getElementById('viewerAskPanel');
+    p.style.display = p.style.display === 'none' ? 'block' : 'none';
+}
+async function aiSummarizeViewer() {
+    if (!currentViewerUrl) return;
+    const btn = event.target;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Summarizing…';
+    try {
+        const r = await fetch('/api/ai/summarize', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ document_name: document.getElementById('viewerTitle').innerText, file_url: currentViewerUrl })
+        });
+        const d = await r.json();
+        document.getElementById('viewerAskPanel').style.display = 'block';
+        document.getElementById('viewerAiResponse').textContent = d.success ? d.summary : d.error;
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-robot"></i> Summarize with AI';
+    }
+}
+let viewerChatHistory = [];
+async function sendViewerAsk() {
+    const inp = document.getElementById('viewerAskInput');
+    const msg = inp.value.trim();
+    if (!msg) return;
+    inp.value = '';
+    const res = document.getElementById('viewerAiResponse');
+    res.textContent = 'Thinking…';
+    viewerChatHistory.push({ role: 'user', content: msg });
+    try {
+        const r = await fetch('/api/ai/chat', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: msg, task_title: 'Document Review', task_desc: 'Reviewing document', history: viewerChatHistory.slice(-6) })
+        });
+        const d = await r.json();
+        const reply = d.success ? d.reply : d.error;
+        res.textContent = reply;
+        viewerChatHistory.push({ role: 'assistant', content: reply });
+    } catch (e) { res.textContent = 'Error — please try again.'; }
+}
 
-function addMsg(role,text){
-  const msgs=document.getElementById('chatMessages');
-  const div=document.createElement('div');div.className=role==='user'?'msg-user':'msg-ai';div.textContent=text;
-  msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
-}
-function addThinking(){
-  const msgs=document.getElementById('chatMessages');const div=document.createElement('div');
-  div.className='msg-thinking';div.id='thinking-msg';
-  div.innerHTML='<div class="thinking"><span></span><span></span><span></span></div><span style="font-size:12px;color:var(--text-muted);margin-left:6px">Jain AI is thinking...</span>';
-  msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
-}
-function removeThinking(){document.getElementById('thinking-msg')?.remove();}
-
-async function sendChat(){
-  const input=document.getElementById('chatInput');const text=input.value.trim();if(!text)return;
-  input.value='';addMsg('user',text);chatHistory.push({role:'user',content:text});addThinking();
-  try{
-    const r=await fetch('/api/ai/chat',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({message:text,task_title:'Leader Dashboard',task_desc:'University OOA leadership tasks',history:chatHistory.slice(-8)})});
-    const d=await r.json();removeThinking();
-    const reply=d.success?d.reply:'Sorry, I could not process that.';
-    addMsg('ai',reply);chatHistory.push({role:'assistant',content:reply});
-  }catch(err){removeThinking();addMsg('ai','Error connecting to Jain AI.');}
+// ── Task Actions ──
+async function acceptTask(taskId) {
+    if (!confirm('Accept this task as complete?')) return;
+    showLoading('Accepting task…');
+    try {
+        const r = await fetch(`/api/leader/accept_task/${taskId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+        const d = await r.json();
+        hideLoading();
+        if (d.success) { showToast('Task accepted! 🎉', 'success'); setTimeout(() => location.reload(), 1000); }
+        else { showToast(d.error || 'Failed to accept task', 'error'); }
+    } catch (e) { hideLoading(); showToast('Request failed', 'error'); }
 }
 
-// ── Notifs ──
-function showNotif(msg,type='info'){
-  const icons={success:'fa-check-circle',error:'fa-times-circle',warning:'fa-exclamation-triangle',info:'fa-info-circle'};
-  const n=document.createElement('div');n.className='notif '+type;
-  n.innerHTML=`<i class="fas ${icons[type]||icons.info}" style="font-size:16px;flex-shrink:0;margin-top:2px"></i><div style="font-size:13px;color:var(--text-main)">${msg}</div><button onclick="this.parentElement.remove()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);margin-left:auto;font-size:14px"><i class="fas fa-times"></i></button>`;
-  document.getElementById('notifContainer').appendChild(n);
-  setTimeout(()=>{n.style.animation='notifOut .3s ease forwards';setTimeout(()=>n.remove(),300);},5000);
+// ── Rework Modal ──
+let _currentReworkId = '', _currentReworkTitle = '';
+function openReworkModal(id, title) {
+    _currentReworkId = id;
+    _currentReworkTitle = title;
+    document.getElementById('reworkTaskTitle').textContent = title;
+    document.getElementById('reworkComment').value = '';
+    document.getElementById('reworkDueDate').value = '';
+    document.getElementById('reworkAiResult').style.display = 'none';
+    document.getElementById('reworkModal').classList.add('open');
+}
+function closeReworkModal() { document.getElementById('reworkModal').classList.remove('open'); }
+async function submitRework() {
+    const comment = document.getElementById('reworkComment').value.trim();
+    const newDueDate = document.getElementById('reworkDueDate').value;
+    if (!comment) { showToast('Please enter rework instructions', 'warning'); return; }
+    showLoading('Requesting rework…');
+    try {
+        const r = await fetch(`/api/leader/request_rework/${_currentReworkId}`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ comment, new_due_date: newDueDate })
+        });
+        const d = await r.json();
+        hideLoading();
+        if (d.success) { showToast('Rework requested', 'success'); closeReworkModal(); setTimeout(() => location.reload(), 1000); }
+        else { showToast(d.error || 'Failed to request rework', 'error'); }
+    } catch (e) { hideLoading(); showToast('Request failed', 'error'); }
+}
+async function aiSuggestReworkFromModal() {
+    const taskDesc = document.getElementById('reworkComment').value || 'Task needs improvement';
+    const resEl = document.getElementById('reworkAiResult');
+    resEl.style.display = 'block';
+    resEl.textContent = 'Drafting feedback…';
+    try {
+        const r = await fetch('/api/ai/suggest-rework-feedback', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: _currentReworkTitle, description: taskDesc, progress: 100 })
+        });
+        const d = await r.json();
+        resEl.textContent = d.success ? d.feedback : d.error;
+        if (d.success && !document.getElementById('reworkComment').value.trim()) {
+            document.getElementById('reworkComment').value = d.feedback;
+        }
+    } catch (e) { resEl.textContent = 'AI unavailable.'; }
 }
 
-// ── Keyboard & click-outside ──
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeFile();closeAiChat();['reworkModal','rescheduleModal','commentModal','shareCommentModal'].forEach(closeModal);}});
-document.getElementById('fileModal').addEventListener('click',e=>{if(e.target===document.getElementById('fileModal'))closeFile();});
-document.getElementById('aiChatOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('aiChatOverlay'))closeAiChat();});
-['reworkModal','rescheduleModal','commentModal','shareCommentModal'].forEach(id=>{
-  document.getElementById(id).addEventListener('click',e=>{if(e.target===document.getElementById(id))closeModal(id);});
+// ── Reschedule Modal ──
+let _currentRescheduleId = '';
+function openRescheduleModal(id) {
+    _currentRescheduleId = id;
+    document.getElementById('newDueDate').value = '';
+    document.getElementById('rescheduleReason').value = '';
+    document.getElementById('rescheduleModal').classList.add('open');
+}
+function closeRescheduleModal() { document.getElementById('rescheduleModal').classList.remove('open'); }
+async function submitReschedule() {
+    const newDueDate = document.getElementById('newDueDate').value;
+    const reason = document.getElementById('rescheduleReason').value;
+    if (!newDueDate) { showToast('Please select a new due date', 'warning'); return; }
+    showLoading('Rescheduling…');
+    try {
+        const r = await fetch(`/api/leader/reschedule_task/${_currentRescheduleId}`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ new_due_date: newDueDate, reason })
+        });
+        const d = await r.json();
+        hideLoading();
+        if (d.success) { showToast('Task rescheduled', 'success'); closeRescheduleModal(); setTimeout(() => location.reload(), 1000); }
+        else { showToast(d.error || 'Failed to reschedule', 'error'); }
+    } catch (e) { hideLoading(); showToast('Request failed', 'error'); }
+}
+
+// ── Comment Modal ──
+let _currentCommentTaskId = '';
+function openCommentModal(id) {
+    _currentCommentTaskId = id;
+    document.getElementById('taskCommentText').value = '';
+    document.getElementById('commentModal').classList.add('open');
+}
+function closeCommentModal() { document.getElementById('commentModal').classList.remove('open'); }
+async function submitComment() {
+    const comment = document.getElementById('taskCommentText').value.trim();
+    if (!comment) { showToast('Please enter a comment', 'warning'); return; }
+    showLoading('Adding comment…');
+    try {
+        const r = await fetch(`/api/leader/add_task_comment/${_currentCommentTaskId}`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ comment })
+        });
+        const d = await r.json();
+        hideLoading();
+        if (d.success) { showToast('Comment added', 'success'); closeCommentModal(); setTimeout(() => location.reload(), 1000); }
+        else { showToast(d.error || 'Failed to add comment', 'error'); }
+    } catch (e) { hideLoading(); showToast('Request failed', 'error'); }
+}
+
+// ── Share Comment Modal ──
+let _currentShareId = '';
+function openShareCommentModal(id) {
+    _currentShareId = id;
+    document.getElementById('shareCommentText').value = '';
+    document.getElementById('shareCommentModal').classList.add('open');
+}
+function closeShareCommentModal() { document.getElementById('shareCommentModal').classList.remove('open'); }
+async function submitShareComment() {
+    const comment = document.getElementById('shareCommentText').value.trim();
+    if (!comment) { showToast('Please enter a comment', 'warning'); return; }
+    showLoading('Saving comment…');
+    try {
+        const r = await fetch(`/api/leader/add_share_comment/${_currentShareId}`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ comment })
+        });
+        const d = await r.json();
+        hideLoading();
+        if (d.success) { showToast('Comment saved', 'success'); closeShareCommentModal(); setTimeout(() => location.reload(), 1000); }
+        else { showToast(d.error || 'Failed to save comment', 'error'); }
+    } catch (e) { hideLoading(); showToast('Request failed', 'error'); }
+}
+
+// ── AI Helpers ──
+function toggleAiTaskPanel(id) {
+    document.getElementById(id)?.classList.toggle('open');
+}
+async function aiAnalyzeTask(id, title, desc, progress, status) {
+    const box = document.getElementById(`ai-task-result-${id}`);
+    if (!box) return;
+    box.textContent = 'Analyzing…';
+    try {
+        const r = await fetch('/api/ai/analyze-task', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, description: desc, progress, status })
+        });
+        const d = await r.json();
+        box.textContent = d.success ? d.analysis : d.error;
+    } catch (e) { box.textContent = 'AI unavailable.'; }
+}
+async function aiSuggestRework(id, title, desc, progress) {
+    const box = document.getElementById(`ai-task-result-${id}`);
+    if (!box) return;
+    box.textContent = 'Drafting feedback…';
+    try {
+        const r = await fetch('/api/ai/suggest-rework-feedback', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, description: desc, progress })
+        });
+        const d = await r.json();
+        box.textContent = d.success ? d.feedback : d.error;
+    } catch (e) { box.textContent = 'AI unavailable.'; }
+}
+const _aiTaskHistory = {};
+async function sendAiTaskChat(id) {
+    const inp = document.getElementById(`ai-task-chat-${id}`);
+    const box = document.getElementById(`ai-task-result-${id}`);
+    const msg = inp.value.trim();
+    if (!msg) return;
+    inp.value = '';
+    box.textContent = 'Thinking…';
+    if (!_aiTaskHistory[id]) _aiTaskHistory[id] = [];
+    _aiTaskHistory[id].push({ role: 'user', content: msg });
+    try {
+        const r = await fetch('/api/ai/chat', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: msg, task_title: 'Task Review', task_desc: '', history: _aiTaskHistory[id].slice(-6) })
+        });
+        const d = await r.json();
+        const reply = d.success ? d.reply : d.error;
+        box.textContent = reply;
+        _aiTaskHistory[id].push({ role: 'assistant', content: reply });
+    } catch (e) { box.textContent = 'Error.'; }
+}
+
+// ── AI: Suggest Task Description ──
+async function aiSuggestTaskDesc() {
+    const title = document.getElementById('taskTitleInput').value.trim();
+    if (!title) { showToast('Enter a task title first', 'warning'); return; }
+    document.getElementById('aiTaskDescResult').style.display = 'none';
+    const btn = event.target;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    try {
+        const r = await fetch('/api/ai/suggest-task-desc', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title })
+        });
+        const d = await r.json();
+        if (d.success) {
+            document.getElementById('aiTaskDescText').textContent = d.description;
+            document.getElementById('aiTaskDescResult').style.display = 'block';
+        } else { showToast(d.error || 'AI failed', 'error'); }
+    } catch (e) { showToast('AI unavailable', 'error'); }
+    finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-robot"></i> AI Suggest';
+    }
+}
+function applyAiDesc() {
+    document.getElementById('taskDescInput').value = document.getElementById('aiTaskDescText').textContent;
+    document.getElementById('aiTaskDescResult').style.display = 'none';
+    showToast('Description applied!', 'success');
+}
+
+// ── AI: Member Insight ──
+async function aiMemberInsight(id, name, email) {
+    showLoading('Loading insight…');
+    try {
+        const r = await fetch(`/api/core-member/analytics/${id}`);
+        const data = await r.json();
+        if (data.error) { hideLoading(); showToast(data.error, 'error'); return; }
+        const insightR = await fetch('/api/ai/member-insight', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, total_documents: data.total_documents, pending: data.pending, approved: data.approved, revision: data.revision })
+        });
+        const insightD = await insightR.json();
+        hideLoading();
+        document.getElementById('memberDetailName').textContent = `${name} — AI Performance Insight`;
+        document.getElementById('memberDetailContent').innerHTML = `
+            <div style="background:linear-gradient(135deg,#0a1929,#1a1a6e);border-radius:10px;padding:14px;margin-bottom:12px">
+                <div style="color:var(--jain-gold);font-size:11px;font-weight:700;margin-bottom:6px"><i class="fas fa-robot" style="margin-right:4px"></i>JAIN AI INSIGHT</div>
+                <p style="color:#fff;font-size:12px;line-height:1.65;white-space:pre-wrap">${insightD.success ? insightD.insight : insightD.error}</p>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+                ${[['Total',data.total_documents,'#3b82f6'],['Approved',data.approved,'#22c55e'],['Pending',data.pending,'#f59e0b'],['Revision',data.revision,'#ec4899']].map(([l,v,c])=>`
+                <div style="background:${c}15;border-radius:8px;padding:10px;text-align:center">
+                    <div style="font-size:20px;font-weight:800;color:${c}">${v}</div>
+                    <div style="font-size:10px;color:#6b7280">${l}</div>
+                </div>`).join('')}
+            </div>`;
+        document.getElementById('memberDetailPanel').style.display = 'block';
+        document.getElementById('memberDetailPanel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } catch (e) { hideLoading(); showToast('Error loading analytics', 'error'); }
+}
+
+async function loadMemberAnalytics(id, name) {
+    showLoading('Loading analytics…');
+    try {
+        const r = await fetch(`/api/core-member/analytics/${id}`);
+        const data = await r.json();
+        hideLoading();
+        if (data.error) { showToast(data.error, 'error'); return; }
+        document.getElementById('memberDetailName').textContent = `${name} — Performance Summary`;
+        document.getElementById('memberDetailContent').innerHTML = `
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px">
+                ${[['Total',data.total_documents,'#3b82f6'],['Approved',data.approved,'#22c55e'],['Pending',data.pending,'#f59e0b'],['Revision',data.revision,'#ec4899']].map(([l,v,c])=>`
+                <div style="background:${c}15;border-radius:8px;padding:10px;text-align:center">
+                    <div style="font-size:20px;font-weight:800;color:${c}">${v}</div>
+                    <div style="font-size:10px;color:#6b7280">${l}</div>
+                </div>`).join('')}
+            </div>
+            ${data.recent_activity.map(a=>`<div style="font-size:12px;padding:6px 0;border-bottom:1px solid #f5f5f5;color:#374151"><i class="fas fa-circle" style="font-size:6px;color:#3b82f6;margin-right:6px"></i>${a.description} <span style="color:#9ca3af">${a.time}</span></div>`).join('')}
+            <button onclick="aiMemberInsight('${id}','${name}','${data.email}')" class="btn-primary btn-sm" style="background:#1a1a6e;margin-top:10px"><i class="fas fa-robot"></i> AI Insight</button>`;
+        document.getElementById('memberDetailPanel').style.display = 'block';
+        document.getElementById('memberDetailPanel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } catch (e) { hideLoading(); showToast('Error loading analytics', 'error'); }
+}
+
+// ── Charts ──
+let _chartsInit = false;
+function initCharts() {
+    if (_chartsInit) return;
+    _chartsInit = true;
+    const ctx = document.getElementById('taskChart');
+    if (!ctx) return;
+    const tasks = {
+        pending:    {{ assigned_tasks | selectattr('status','equalto','pending')    | list | length if assigned_tasks else 0 }},
+        inProgress: {{ assigned_tasks | selectattr('status','equalto','in_progress')| list | length if assigned_tasks else 0 }},
+        completed:  {{ assigned_tasks | selectattr('status','equalto','completed')  | list | length if assigned_tasks else 0 }},
+        accepted:   {{ assigned_tasks | selectattr('status','equalto','accepted')   | list | length if assigned_tasks else 0 }},
+        rework:     {{ assigned_tasks | selectattr('status','equalto','rework')     | list | length if assigned_tasks else 0 }},
+    };
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Pending', 'In Progress', 'Completed', 'Accepted', 'Rework'],
+            datasets: [{ data: Object.values(tasks), backgroundColor: ['#f59e0b','#3b82f6','#22c55e','#10b981','#ef4444'], borderWidth: 0, hoverOffset: 6 }]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } } }
+    });
+}
+
+// ── Close modals on backdrop click ──
+document.addEventListener('DOMContentLoaded', function () {
+    ['reworkModal','rescheduleModal','commentModal','shareCommentModal'].forEach(id => {
+        document.getElementById(id)?.addEventListener('click', function (e) {
+            if (e.target === this) this.classList.remove('open');
+        });
+    });
+    document.getElementById('fileViewerModal')?.addEventListener('click', function (e) {
+        if (e.target === this) closeViewer();
+    });
+    // Handle URL hash tabs on load
+    const h = window.location.hash.replace('#', '');
+    if (h) switchTab(h);
 });
-document.addEventListener('click',e=>{if(!e.target.closest('[id^="tmenu-wrap-"]'))closeAllMenus();});
-
-// ── Init ──
-document.addEventListener('DOMContentLoaded',()=>{
-  const t=today();['assignDue','reworkNewDate','rescheduleNewDate'].forEach(id=>{const el=document.getElementById(id);if(el)el.min=t;});
-  const saved=localStorage.getItem('leaderTab')||'share';switchTab(saved);
-
-  const af=document.querySelector('form[action*="assign_task"]');
-  if(af)af.addEventListener('submit',e=>{const d=document.getElementById('assignDue').value;if(d&&d<today()){e.preventDefault();showNotif('Due date cannot be in the past','error');}});
-
-  setInterval(()=>{
-    fetch('/api/activity/status',{credentials:'same-origin'}).then(r=>r.json()).then(d=>{if(d.updated_tasks>0)showNotif(d.updated_tasks+' task(s) updated','info');}).catch(()=>{});
-  },30000);
-});
-
-window.switchTab=switchTab;window.viewFile=viewFile;window.closeFile=closeFile;
-window.acceptTask=acceptTask;window.openReworkModal=openReworkModal;window.submitRework=submitRework;
-window.openRescheduleModal=openRescheduleModal;window.submitReschedule=submitReschedule;
-window.openCommentModal=openCommentModal;window.submitComment=submitComment;
-window.openShareCommentModal=openShareCommentModal;window.submitShareComment=submitShareComment;
-window.toggleMenu=toggleMenu;window.closeMenu=closeMenu;
-window.loadAnalytics=loadAnalytics;window.aiMemberInsight=aiMemberInsight;
-window.aiAnalyzeTask=aiAnalyzeTask;window.aiSuggestFeedback=aiSuggestFeedback;
-window.aiSummarizeForReview=aiSummarizeForReview;window.aiSuggestReviewFeedback=aiSuggestReviewFeedback;
-window.aiSuggestTaskDesc=aiSuggestTaskDesc;window.fillTaskDesc=fillTaskDesc;
-window.aiSummarizeViewer=aiSummarizeViewer;window.toggleViewerAsk=toggleViewerAsk;window.sendViewerAsk=sendViewerAsk;
-window.openGlobalChat=openGlobalChat;window.closeAiChat=closeAiChat;window.sendChat=sendChat;
-window.openModal=openModal;window.closeModal=closeModal;
-window.showNotification=showNotif;
 </script>
 {% endblock %}

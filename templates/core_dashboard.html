@@ -1,1096 +1,799 @@
-{% extends 'base_user.html' %}
-{% block title %}Core Team Dashboard - Jain University{% endblock %}
+{% extends "base_user.html" %}
+
+{% block title %}Core Dashboard — Jain University OOA{% endblock %}
 {% block page_title %}Core Team Dashboard{% endblock %}
-{% block page_subtitle %}Document Management & Team Collaboration{% endblock %}
+{% block page_subtitle %}Manage your documents, tasks, and contributions{% endblock %}
 
 {% block content %}
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+{# ── Inject live stats for Jain AI docked bar ── #}
+<script>
+window.DASH_STATS = {
+    total_tasks:      {{ total_tasks      | default(0) }},
+    pending_tasks:    {{ pending_tasks    | default(0) }},
+    in_progress:      {{ in_progress_tasks| default(0) }},
+    completed_tasks:  {{ completed_tasks  | default(0) }},
+    overdue_tasks:    {{ overdue_tasks    | default(0) }},
+    high_priority:    {{ high_priority_tasks | default(0) }},
+    total_docs:       {{ total_docs       | default(0) }},
+    pending_docs:     {{ pending_count    | default(0) }},
+    approved_docs:    {{ approved_count   | default(0) }},
+    revision_docs:    {{ revision_count   | default(0) }},
+    rejected_docs:    {{ rejected_count   | default(0) }},
+    docs_today:       {{ docs_today       | default(0) }},
+    docs_this_week:   {{ docs_this_week   | default(0) }},
+    docs_this_month:  {{ docs_this_month  | default(0) }}
+};
+(function(){
+    if (typeof buildStatsPills === 'function') buildStatsPills();
+})();
+</script>
 
 <style>
-:root {
-  --navy: #04043a;
-  --navy-mid: #0a0a5c;
-  --gold: #eab308;
-  --gold-light: #fef3c7;
-  --surface: #ffffff;
-  --surface-2: #f8f7ff;
-  --border: rgba(4,4,58,0.10);
-  --text-main: #04043a;
-  --text-muted: #64748b;
-  --radius: 14px;
-  --radius-sm: 8px;
-  --shadow: 0 2px 16px rgba(4,4,58,0.07);
-  --shadow-lg: 0 8px 40px rgba(4,4,58,0.13);
-}
+    /* ── QUICK STATS ── */
+    .quick-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+    .stat-card {
+        background:#fff; border-radius:14px; padding:18px;
+        box-shadow:0 2px 10px rgba(10,25,41,.06);
+        border:1px solid rgba(197,165,114,.2);
+        display:flex; align-items:center; gap:14px;
+        transition:all .3s; position:relative; overflow:hidden;
+    }
+    .stat-card:hover { box-shadow:0 6px 20px rgba(10,25,41,.1); transform:translateY(-2px); border-color:var(--jain-gold); }
+    .stat-card::after { content:''; position:absolute; bottom:0; left:0; right:0; height:3px; background:var(--jain-gold); transform:scaleX(0); transition:transform .3s; }
+    .stat-card:hover::after { transform:scaleX(1); }
+    .stat-icon { width:52px; height:52px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+    .stat-num  { font-size:28px; font-weight:800; color:var(--jain-navy); font-family:'Syne',sans-serif; line-height:1; }
+    .stat-lbl  { font-size:12px; color:#6b7280; font-weight:500; margin-top:3px; }
+    .stat-sub  { font-size:10px; color:#9ca3af; margin-top:1px; }
 
-* { box-sizing: border-box; }
-body { font-family: 'DM Sans', sans-serif; background: #f3f2fa; }
+    /* ── ANALYTICS ROW ── */
+    .analytics-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px; }
+    .mini-card { background:#fff; border-radius:12px; padding:16px; box-shadow:0 2px 8px rgba(10,25,41,.05); border:1px solid rgba(197,165,114,.18); }
+    .mini-card .heading { font-size:12px; font-weight:700; color:var(--jain-navy); margin-bottom:10px; display:flex; align-items:center; gap:6px; }
+    .mini-bar-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+    .mini-bar-label { font-size:11px; color:#6b7280; width:80px; flex-shrink:0; }
+    .mini-bar-track { flex:1; background:#f3f4f6; border-radius:20px; height:6px; }
+    .mini-bar-fill  { height:6px; border-radius:20px; transition:width .5s; }
+    .mini-bar-val   { font-size:11px; font-weight:600; color:var(--jain-navy); width:22px; text-align:right; flex-shrink:0; }
 
-.core-wrap { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
+    /* ── TABS ── */
+    .tab-nav { display:flex; gap:4px; background:#fff; padding:6px; border-radius:14px; box-shadow:0 2px 8px rgba(10,25,41,.06); margin-bottom:20px; flex-wrap:wrap; border:1px solid rgba(197,165,114,.2); }
+    .tab-btn { padding:9px 18px; border-radius:9px; font-size:13px; font-weight:500; cursor:pointer; transition:all .2s; color:#6b7280; background:none; border:none; display:flex; align-items:center; gap:7px; white-space:nowrap; }
+    .tab-btn:hover  { background:#f9fafb; color:var(--jain-navy); }
+    .tab-btn.active { background:var(--jain-navy); color:var(--jain-gold); font-weight:600; }
+    .tab-btn .badge { background:rgba(239,68,68,.9); color:#fff; border-radius:20px; font-size:10px; padding:1px 6px; font-weight:700; }
+    .tab-content { display:none; }
+    .tab-content.active { display:block; animation:fadeIn .25s ease; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
 
-/* ── Stats grid ── */
-.stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 1.5rem; }
-.stat-card {
-  background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border);
-  padding: 1.1rem 1.25rem; box-shadow: var(--shadow);
-}
-.stat-card .num { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 700; line-height: 1; }
-.stat-card .lbl { font-size: 11px; color: var(--text-muted); margin-top: 4px; font-weight: 500; letter-spacing:.03em; text-transform:uppercase; }
-.stat-card .bar { height: 3px; border-radius: 3px; margin-top: 12px; }
+    /* ── SECTION CARDS ── */
+    .section-card { background:#fff; border-radius:14px; box-shadow:0 2px 10px rgba(10,25,41,.06); border:1px solid rgba(197,165,114,.2); overflow:hidden; }
+    .section-header { padding:16px 20px; border-bottom:1px solid #f0f0f0; display:flex; align-items:center; justify-content:space-between; background:linear-gradient(135deg,var(--jain-navy) 0%,#1a1a6e 100%); }
+    .section-title { color:#fff; font-size:15px; font-weight:700; display:flex; align-items:center; gap:8px; font-family:'Playfair Display',serif; }
+    .section-title i { color:var(--jain-gold); }
+    .section-body { padding:20px; }
 
-/* ── Analytics row ── */
-.analytics-row { display: grid; grid-template-columns: 1fr 320px; gap: 14px; margin-bottom: 1.5rem; }
-.analytics-card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 1.25rem; box-shadow: var(--shadow); }
-.card-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--navy); display: flex; align-items: center; gap: 8px; margin-bottom: 1rem; }
-.doc-counts { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 1rem; }
-.count-pill { border-radius: var(--radius-sm); padding: 10px; text-align: center; }
-.count-pill .n { font-family:'Syne',sans-serif; font-size:1.4rem; font-weight:700; line-height:1; }
-.count-pill .l { font-size:10px; text-transform:uppercase; letter-spacing:.04em; margin-top:4px; font-weight:500; }
-.status-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
-.status-pill { border-radius: var(--radius-sm); padding: 8px 10px; display:flex; align-items:center; gap:6px; }
-.dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+    /* ── FORM ── */
+    .form-group { margin-bottom:16px; }
+    .form-label { font-size:13px; font-weight:600; color:var(--jain-navy); margin-bottom:5px; display:block; }
+    .form-control { width:100%; padding:9px 12px; border:1px solid #e5e7eb; border-radius:8px; font-size:13px; font-family:'Inter',sans-serif; transition:all .2s; }
+    .form-control:focus { outline:none; border-color:var(--jain-gold); box-shadow:0 0 0 3px rgba(197,165,114,.12); }
+    .form-select { appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:36px; }
+    .btn-primary { background:var(--jain-navy); color:#fff; border:none; border-radius:8px; padding:9px 18px; font-size:13px; font-weight:600; cursor:pointer; transition:all .2s; display:inline-flex; align-items:center; gap:7px; }
+    .btn-primary:hover { background:var(--jain-navy-light); transform:translateY(-1px); box-shadow:0 4px 12px rgba(10,25,41,.2); }
+    .btn-gold { background:var(--jain-gold); color:var(--jain-navy); }
+    .btn-gold:hover { background:#e5c56a; }
+    .btn-sm { padding:6px 12px; font-size:11px; }
+    .btn-danger { background:#ef4444; border:none; border-radius:6px; color:#fff; padding:6px 12px; font-size:11px; cursor:pointer; font-weight:600; }
 
-/* ── Tab nav ── */
-.tab-shell { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 1.5rem; overflow: hidden; }
-.tab-nav { display: flex; border-bottom: 1px solid var(--border); background: #fafafa; overflow-x: auto; }
-.tab-btn {
-  padding: 13px 20px; font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap;
-  border: none; background: none; color: var(--text-muted); display: flex; align-items: center; gap: 7px;
-  border-bottom: 2px solid transparent; transition: all .18s; font-family: 'DM Sans', sans-serif;
-  position: relative;
-}
-.tab-btn.active { color: var(--navy); border-bottom-color: var(--gold); background: var(--surface); }
-.tab-btn:hover:not(.active) { color: var(--navy); background: #f0effa; }
-.tab-badge { background: var(--navy); color: #fff; font-size: 10px; padding: 2px 7px; border-radius: 20px; }
-.tab-content { display: none; padding: 1.5rem; }
-.tab-content.active { display: block; }
+    /* ── BADGES ── */
+    .doc-badge { padding:3px 10px; border-radius:20px; font-size:10px; font-weight:600; }
+    .badge-pending   { background:#fef9c3; color:#854d0e; }
+    .badge-approved  { background:#dcfce7; color:#166534; }
+    .badge-revision  { background:#fce7f3; color:#9d174d; }
+    .badge-rejected  { background:#fee2e2; color:#991b1b; }
+    .badge-accepted  { background:#dbeafe; color:#1e40af; }
+    .badge-rework    { background:#fde68a; color:#92400e; }
+    .badge-high      { background:#fee2e2; color:#991b1b; }
+    .badge-medium    { background:#fef9c3; color:#854d0e; }
+    .badge-low       { background:#d1fae5; color:#065f46; }
+    .badge-in_progress { background:#e0f2fe; color:#0369a1; }
+    .badge-completed { background:#dcfce7; color:#166534; }
 
-/* ── Forms ── */
-.form-label { font-size: 12px; font-weight: 600; color: var(--navy); margin-bottom: 6px; display: block; letter-spacing:.02em; }
-.form-input {
-  width: 100%; padding: 10px 14px; font-size: 13px; border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm); background: var(--surface); color: var(--text-main);
-  font-family: 'DM Sans',sans-serif; transition: border-color .15s;
-}
-.form-input:focus { outline: none; border-color: var(--navy); }
-.form-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.form-grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+    /* ── TASK CARD ── */
+    .task-card { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:16px; margin-bottom:12px; transition:all .2s; }
+    .task-card:hover { border-color:var(--jain-gold); box-shadow:0 4px 16px rgba(10,25,41,.08); }
+    .task-card.overdue { border-left:4px solid #ef4444; }
+    .task-card.urgent  { border-left:4px solid #f59e0b; }
+    .task-card.normal  { border-left:4px solid #22c55e; }
+    .progress-bar-wrap { background:#f3f4f6; border-radius:20px; height:6px; margin:8px 0; }
+    .progress-bar-fill { height:6px; border-radius:20px; background:linear-gradient(90deg,var(--jain-navy),var(--jain-gold)); transition:width .5s; }
 
-/* ── Reviewer cards ── */
-.reviewer-card {
-  display: flex; align-items: center; gap: 8px; padding: 9px 11px;
-  border: 1.5px solid var(--border); border-radius: var(--radius-sm);
-  cursor: pointer; transition: all .15s;
-}
-.reviewer-card:hover { border-color: var(--gold); background: var(--gold-light); }
-.reviewer-card input[type=checkbox] { accent-color: var(--navy); }
+    /* ── DOC CARD ── */
+    .doc-card { background:#f8f9fc; border:1px solid #e5e7eb; border-radius:12px; padding:16px; margin-bottom:12px; transition:all .2s; }
+    .doc-card:hover { border-color:var(--jain-gold); background:#fff; box-shadow:0 4px 12px rgba(10,25,41,.07); }
+    .doc-meta { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
 
-/* ── Buttons ── */
-.btn-primary { background: var(--navy); color: #fff; padding: 11px 22px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: background .15s; font-family: 'DM Sans',sans-serif; }
-.btn-primary:hover { background: #1e3c72; }
-.btn-gold { background: var(--gold); color: var(--navy); padding: 8px 16px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 700; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all .15s; font-family: 'DM Sans',sans-serif; }
-.btn-gold:hover { background: #ca9a00; }
-.btn-outline { background: transparent; color: var(--navy); padding: 8px 16px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 500; border: 1.5px solid var(--border); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all .15s; font-family: 'DM Sans',sans-serif; }
-.btn-outline:hover { border-color: var(--navy); background: var(--surface-2); }
+    /* ── AI PANEL ── */
+    .ai-task-panel { background:linear-gradient(135deg,#0a1929 0%,#1a1a6e 100%); border-radius:10px; padding:14px; margin-top:10px; display:none; }
+    .ai-task-panel.open { display:block; }
+    .ai-label { color:var(--jain-gold); font-size:11px; font-weight:700; margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+    .ai-response { background:rgba(255,255,255,.1); border-radius:8px; padding:10px; color:#fff; font-size:12px; line-height:1.65; min-height:40px; white-space:pre-wrap; }
+    .ai-input-row { display:flex; gap:8px; margin-top:8px; }
+    .ai-input-row input { flex:1; background:rgba(255,255,255,.12); border:1px solid rgba(197,165,114,.35); border-radius:6px; padding:7px 10px; color:#fff; font-size:12px; }
+    .ai-input-row input::placeholder { color:rgba(255,255,255,.4); }
+    .ai-input-row button { background:var(--jain-gold); color:var(--jain-navy); border:none; border-radius:6px; padding:7px 14px; font-size:11px; font-weight:700; cursor:pointer; }
 
-/* ── Task cards ── */
-.task-card { border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1rem 1.25rem; background: var(--surface); margin-bottom: 12px; transition: box-shadow .15s; }
-.task-card:hover { box-shadow: var(--shadow); }
-.task-card.high { border-left: 4px solid #ef4444; }
-.task-card.medium { border-left: 4px solid #f59e0b; }
-.task-card.low { border-left: 4px solid #22c55e; }
-.task-card.rework { border-left: 4px solid #f97316; }
-.task-card.accepted { border-left: 4px solid #10b981; }
+    /* ── ACTIVITY FEED ── */
+    .activity-item { display:flex; gap:10px; padding:10px 0; border-bottom:1px solid #f5f5f5; }
+    .activity-icon { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; }
+    .activity-time { font-size:10px; color:#9ca3af; margin-top:2px; }
 
-/* ── Status badges ── */
-.badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-.badge-pending { background: #fef9c3; color: #854d0e; }
-.badge-approved { background: #dcfce7; color: #166534; }
-.badge-revision { background: #ffedd5; color: #9a3412; }
-.badge-rejected { background: #fee2e2; color: #991b1b; }
-.badge-progress { background: #dbeafe; color: #1e40af; }
-.badge-rework { background: #ffedd5; color: #9a3412; }
-.badge-accepted { background: #d1fae5; color: #065f46; }
-.badge-completed { background: #dcfce7; color: #166534; }
-.badge-high { background: #fee2e2; color: #991b1b; }
-.badge-medium { background: #fef9c3; color: #854d0e; }
-.badge-low { background: #dcfce7; color: #166534; }
+    /* ── TASK UPDATE MODAL ── */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:9900; align-items:center; justify-content:center; padding:1rem; backdrop-filter:blur(4px); }
+    .modal-overlay.open { display:flex; }
+    .modal-box { background:#fff; border-radius:14px; width:100%; max-width:520px; box-shadow:0 20px 60px rgba(10,25,41,.25); overflow:hidden; animation:popIn .25s ease; }
+    @keyframes popIn { from{transform:scale(.92);opacity:0} to{transform:scale(1);opacity:1} }
+    .modal-header { background:var(--jain-navy); padding:14px 18px; display:flex; align-items:center; justify-content:space-between; }
+    .modal-title  { color:#fff; font-size:14px; font-weight:700; display:flex; align-items:center; gap:8px; }
+    .modal-title i { color:var(--jain-gold); }
+    .modal-body   { padding:20px; }
+    .modal-footer { padding:14px 20px; border-top:1px solid #e5e7eb; display:flex; gap:8px; justify-content:flex-end; background:#f9fafb; }
+    .close-btn { background:rgba(255,255,255,.15); border:none; border-radius:50%; width:28px; height:28px; cursor:pointer; color:#fff; display:flex; align-items:center; justify-content:center; font-size:14px; }
+    .close-btn:hover { background:rgba(255,255,255,.3); }
 
-/* ── Progress bar ── */
-.prog-wrap { background: #e5e7eb; border-radius: 4px; height: 6px; overflow: hidden; }
-.prog-fill { height: 100%; border-radius: 4px; transition: width .4s; }
+    /* ── VIEWER MODAL ── */
+    #fileViewerModal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:9800; align-items:center; justify-content:center; padding:1rem; }
+    #fileViewerModal.open { display:flex; }
+    .viewer-box { background:#fff; border-radius:14px; width:100%; max-width:900px; max-height:90vh; overflow:hidden; display:flex; flex-direction:column; }
+    .viewer-header { background:var(--jain-navy); padding:14px 18px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+    .viewer-body { flex:1; overflow:hidden; }
+    .viewer-actions { padding:12px 18px; border-top:1px solid #e5e7eb; display:flex; gap:8px; flex-wrap:wrap; background:#f9fafb; flex-shrink:0; }
 
-/* ── Doc cards ── */
-.doc-card { border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; background: var(--surface); margin-bottom: 10px; transition: all .15s; }
-.doc-card:hover { border-color: var(--gold); box-shadow: var(--shadow); }
-
-/* ── Activity feed ── */
-.activity-item { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
-.activity-item:last-child { border-bottom: none; }
-.activity-icon { width: 30px; height: 30px; border-radius: 50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-
-/* ── Jain AI Panel ── */
-.ai-panel { background: linear-gradient(135deg, var(--navy) 0%, #1a1a6e 100%); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1rem; color: #fff; }
-.ai-panel-title { font-family: 'Syne',sans-serif; font-size: 15px; font-weight: 700; display:flex; align-items:center; gap:8px; margin-bottom: .75rem; }
-.ai-spark { color: var(--gold); font-size: 18px; }
-.ai-btn { background: var(--gold); color: var(--navy); padding: 8px 16px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 700; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: all .15s; font-family: 'DM Sans',sans-serif; }
-.ai-btn:hover { background: #fbbf24; transform: translateY(-1px); }
-.ai-btn:disabled { opacity:.6; cursor:not-allowed; transform:none; }
-.ai-response-box { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: var(--radius-sm); padding: 12px; margin-top: 10px; font-size: 13px; line-height: 1.65; color: #e2e8f0; display: none; white-space: pre-wrap; max-height: 240px; overflow-y: auto; }
-.ai-response-box.show { display: block; }
-
-/* Jain AI badge */
-.jain-ai-badge {
-  display: inline-flex; align-items: center; gap: 5px;
-  background: linear-gradient(135deg,var(--navy),#1a1a6e);
-  color: var(--gold); font-size: 10px; font-weight: 800;
-  padding: 3px 9px; border-radius: 20px; font-family: 'Syne',sans-serif;
-  letter-spacing: .04em;
-}
-
-/* ── Jain AI Chat Modal ── */
-.ai-chat-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 99999; align-items: flex-end; justify-content: flex-end; padding: 1.5rem; backdrop-filter: blur(3px); }
-.ai-chat-overlay.open { display: flex; }
-.ai-chat-box { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow-lg); width: 420px; max-height: 600px; display: flex; flex-direction: column; border: 1px solid var(--border); animation: slideUp .25s ease; }
-@keyframes slideUp { from{transform:translateY(30px);opacity:0} to{transform:translateY(0);opacity:1} }
-.ai-chat-header { background: linear-gradient(135deg,var(--navy),#1a1a6e); padding: 1rem 1.25rem; border-radius: var(--radius) var(--radius) 0 0; display:flex; align-items:center; justify-content:space-between; }
-.ai-chat-title { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; color:#fff; display:flex; align-items:center; gap:8px; }
-.ai-chat-messages { flex:1; overflow-y:auto; padding:1rem; display:flex; flex-direction:column; gap:10px; min-height:200px; }
-.msg-user {
-  background: var(--navy); color:#fff;
-  padding:9px 13px; border-radius:12px 12px 3px 12px;
-  font-size:13px; line-height:1.5;
-  max-width:85%; width:fit-content;
-  margin-left:auto; margin-right:0;
-  align-self:flex-end;
-  word-break:break-word;
-}
-.msg-ai {
-  background: var(--surface-2); color: var(--text-main);
-  padding:9px 13px; border-radius:12px 12px 12px 3px;
-  font-size:13px; line-height:1.6;
-  border:1px solid var(--border); white-space:pre-wrap;
-  max-width:90%; width:fit-content;
-  margin-left:0; margin-right:auto;
-  align-self:flex-start;
-  word-break:break-word;
-}
-.msg-thinking { color: var(--text-muted); font-size:12px; align-self:flex-start; margin-left:0; margin-right:auto; display:flex; gap:4px; align-items:center; }
-.ai-chat-input-row { padding:.75rem 1rem; border-top:1px solid var(--border); display:flex; gap:8px; }
-.ai-chat-input { flex:1; padding:9px 13px; font-size:13px; border:1.5px solid var(--border); border-radius: var(--radius-sm); font-family:'DM Sans',sans-serif; background:var(--surface); color:var(--text-main); }
-.ai-chat-input:focus { outline:none; border-color:var(--navy); }
-.ai-chat-send { background:var(--navy); color:#fff; border:none; border-radius:var(--radius-sm); padding:9px 14px; cursor:pointer; font-size:15px; }
-.ai-chat-send:hover { background:#1e3c72; }
-
-/* ── Floating Jain AI button ── */
-.ai-float-btn { position: fixed; bottom: 2rem; right: 2rem; z-index: 9999; background: var(--navy); color: #fff; border: 3px solid var(--gold); border-radius: 50%; width: 58px; height: 58px; cursor: pointer; box-shadow: 0 4px 20px rgba(4,4,58,.35); display:flex; align-items:center; justify-content:center; transition: all .2s; }
-.ai-float-btn:hover { transform: scale(1.1); background:#1e3c72; }
-
-/* ── Enhanced File viewer modal ── */
-.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:50000; align-items:center; justify-content:center; padding:1rem; backdrop-filter:blur(4px); }
-.modal-overlay.open { display:flex; }
-.modal-box { background:var(--surface); border-radius:var(--radius); box-shadow:var(--shadow-lg); width:100%; max-width:900px; max-height:92vh; display:flex; flex-direction:column; }
-.modal-header { padding:1rem 1.25rem; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
-.modal-title { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; color:var(--navy); display:flex; align-items:center; gap:8px; }
-.modal-close { background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:18px; padding:4px; border-radius:6px; }
-.modal-close:hover { background:var(--surface-2); color:var(--text-main); }
-.modal-body { flex:1; overflow:hidden; padding:1rem; min-height:0; }
-.modal-footer { padding:.75rem 1.25rem; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:10px; }
-
-/* Enhanced action bar */
-.file-action-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-.file-action-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 600; cursor: pointer; border: none; font-family: 'DM Sans', sans-serif; transition: all .15s; text-decoration: none; }
-.file-action-btn.open-btn { background: var(--surface-2); color: var(--navy); border: 1.5px solid var(--border); }
-.file-action-btn.open-btn:hover { border-color: var(--navy); }
-.file-action-btn.summarize-btn { background: linear-gradient(135deg,var(--navy),#1a1a6e); color: #fff; }
-.file-action-btn.summarize-btn:hover { opacity: .88; transform: translateY(-1px); }
-.file-action-btn.summarize-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
-.file-action-btn.ask-btn { background: var(--gold); color: var(--navy); }
-.file-action-btn.ask-btn:hover { background: #d97706; transform: translateY(-1px); }
-.file-action-btn.download-btn { background: #16a34a; color: #fff; }
-.file-action-btn.download-btn:hover { background: #15803d; }
-
-/* AI output in viewer */
-#viewerAiBox { background:linear-gradient(135deg,var(--navy),#1a1a6e); color:#e2e8f0; font-size:13px; border-radius:var(--radius-sm); padding:12px; display:none; white-space:pre-wrap; line-height:1.65; max-height:180px; overflow-y:auto; }
-#viewerAiBox.show { display:block; }
-
-/* Ask AI from viewer */
-#viewerAskPanel { display:none; flex-direction:column; gap:8px; }
-#viewerAskPanel.show { display:flex; }
-#viewerAskInput { width:100%; padding:9px 13px; font-size:13px; border:1.5px solid var(--border); border-radius:var(--radius-sm); font-family:'DM Sans',sans-serif; }
-#viewerAskInput:focus { outline:none; border-color:var(--navy); }
-.viewer-ask-row { display:flex; gap:8px; }
-#viewerAskResponse { background:linear-gradient(135deg,var(--navy),#1a1a6e); color:#e2e8f0; font-size:12px; border-radius:var(--radius-sm); padding:10px; white-space:pre-wrap; line-height:1.6; display:none; max-height:150px; overflow-y:auto; margin-top:4px; }
-#viewerAskResponse.show { display:block; }
-
-/* ── Task update modal ── */
-.task-modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:99999; align-items:center; justify-content:center; padding:1rem; backdrop-filter:blur(4px); }
-.task-modal-overlay.open { display:flex; }
-.task-modal-box { background:var(--surface); border-radius:var(--radius); box-shadow:var(--shadow-lg); width:100%; max-width:480px; overflow:hidden; animation:slideUp .25s ease; }
-.task-modal-header { background:linear-gradient(135deg,var(--navy),#1a1a6e); padding:1rem 1.25rem; display:flex; align-items:center; justify-content:space-between; }
-.task-modal-title { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; color:#fff; display:flex; align-items:center; gap:8px; }
-.task-modal-body { padding:1.5rem; }
-
-/* ── Notifs ── */
-#notifContainer { position:fixed; top:1rem; right:1rem; z-index:999999; display:flex; flex-direction:column; gap:8px; pointer-events:none; }
-.notif { pointer-events:all; background:var(--surface); border-radius:var(--radius-sm); box-shadow:var(--shadow-lg); padding:12px 16px; display:flex; align-items:flex-start; gap:10px; max-width:320px; animation:notifIn .3s ease; border-left:4px solid; }
-.notif.success { border-left-color:#22c55e; }
-.notif.error { border-left-color:#ef4444; }
-.notif.info { border-left-color:#3b82f6; }
-.notif.warning { border-left-color:#f59e0b; }
-@keyframes notifIn { from{transform:translateX(110%);opacity:0} to{transform:translateX(0);opacity:1} }
-@keyframes notifOut { from{transform:translateX(0);opacity:1} to{transform:translateX(110%);opacity:0} }
-
-/* ── Progress slider ── */
-#progressSlider { width:100%; accent-color:var(--navy); }
-
-/* ── Scrollable lists ── */
-.scroll-list { max-height:560px; overflow-y:auto; padding-right:4px; }
-.scroll-list::-webkit-scrollbar { width:4px; }
-.scroll-list::-webkit-scrollbar-track { background:transparent; }
-.scroll-list::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
-
-@media(max-width:900px) {
-  .analytics-row { grid-template-columns:1fr; }
-  .stats-grid { grid-template-columns:repeat(2,1fr); }
-  .form-grid2 { grid-template-columns:1fr; }
-  .form-grid3 { grid-template-columns:repeat(2,1fr); }
-  .ai-chat-box { width:100%; max-width:100%; }
-  .ai-float-btn { bottom:1rem; right:1rem; }
-}
-
-/* Rework alert */
-.rework-alert { background:#fff7ed; border-left:4px solid #f97316; border-radius:0 var(--radius-sm) var(--radius-sm) 0; padding:10px 14px; margin-bottom:10px; }
-.accepted-alert { background:#f0fdf4; border-left:4px solid #22c55e; border-radius:0 var(--radius-sm) var(--radius-sm) 0; padding:10px 14px; margin-bottom:10px; }
-.leader-comment-box { background:#f5f3ff; border:1px solid #ede9fe; border-radius:var(--radius-sm); padding:8px 12px; margin-bottom:6px; }
-
-/* Thinking dots */
-.thinking { display:inline-flex; gap:4px; align-items:center; padding:4px 0; }
-.thinking span { width:6px; height:6px; border-radius:50%; background:var(--gold); animation:blink 1s infinite; }
-.thinking span:nth-child(2){animation-delay:.2s}
-.thinking span:nth-child(3){animation-delay:.4s}
-@keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
+    @media(max-width:768px) {
+        .quick-stats  { grid-template-columns:repeat(2,1fr); }
+        .analytics-row{ grid-template-columns:1fr; }
+    }
+    @media(max-width:480px) {
+        .quick-stats  { grid-template-columns:1fr; }
+    }
 </style>
 
-<div class="core-wrap">
-
-  <!-- ── Stats ── -->
-  <div class="stats-grid">
+<!-- ══════════════════════════════════════════
+     QUICK STATS
+══════════════════════════════════════════ -->
+<div class="quick-stats">
     <div class="stat-card">
-      <div class="num" style="color:#3b82f6">{{ docs_today|default(0) }}</div>
-      <div class="lbl">Today</div>
-      <div class="bar" style="background:#dbeafe;"><div style="width:60%;height:100%;background:#3b82f6;border-radius:3px;"></div></div>
-    </div>
-    <div class="stat-card">
-      <div class="num" style="color:#8b5cf6">{{ docs_this_week|default(0) }}</div>
-      <div class="lbl">This Week</div>
-      <div class="bar" style="background:#ede9fe;"><div style="width:40%;height:100%;background:#8b5cf6;border-radius:3px;"></div></div>
-    </div>
-    <div class="stat-card">
-      <div class="num" style="color:#f59e0b">{{ total_tasks|default(0) }}</div>
-      <div class="lbl">My Tasks</div>
-      <div class="bar" style="background:#fef3c7;"><div style="width:{{ (completed_tasks/total_tasks*100)|int if total_tasks and total_tasks > 0 else 0 }}%;height:100%;background:#f59e0b;border-radius:3px;"></div></div>
-    </div>
-    <div class="stat-card">
-      <div class="num" style="color:#10b981">{{ approved_count|default(0) }}</div>
-      <div class="lbl">Approved</div>
-      <div class="bar" style="background:#dcfce7;"><div style="width:70%;height:100%;background:#10b981;border-radius:3px;"></div></div>
-    </div>
-  </div>
-
-  <!-- ── Analytics ── -->
-  <div class="analytics-row">
-    <div class="analytics-card">
-      <div class="card-title"><i class="fas fa-chart-line" style="color:var(--gold)"></i> Document Analytics</div>
-      <div class="doc-counts">
-        <div class="count-pill" style="background:#eff6ff"><div class="n" style="color:#1d4ed8">{{ docs_today|default(0) }}</div><div class="l" style="color:#3b82f6">Today</div></div>
-        <div class="count-pill" style="background:#f5f3ff"><div class="n" style="color:#6d28d9">{{ docs_this_week|default(0) }}</div><div class="l" style="color:#8b5cf6">Week</div></div>
-        <div class="count-pill" style="background:#fdf4ff"><div class="n" style="color:#a21caf">{{ docs_this_month|default(0) }}</div><div class="l" style="color:#c026d3">Month</div></div>
-        <div class="count-pill" style="background:#fef3c7"><div class="n" style="color:#92400e">{{ total_docs|default(0) }}</div><div class="l" style="color:#d97706">Total</div></div>
-      </div>
-      <div class="status-row">
-        <div class="status-pill" style="background:#dcfce7"><div class="dot" style="background:#22c55e"></div><div><div style="font-size:11px;font-weight:600;color:#166534">Approved</div><div style="font-size:16px;font-weight:700;color:#15803d">{{ approved_count|default(0) }}</div></div></div>
-        <div class="status-pill" style="background:#fef9c3"><div class="dot" style="background:#eab308"></div><div><div style="font-size:11px;font-weight:600;color:#854d0e">Pending</div><div style="font-size:16px;font-weight:700;color:#a16207">{{ pending_count|default(0) }}</div></div></div>
-        <div class="status-pill" style="background:#ffedd5"><div class="dot" style="background:#f97316"></div><div><div style="font-size:11px;font-weight:600;color:#9a3412">Revision</div><div style="font-size:16px;font-weight:700;color:#c2410c">{{ revision_count|default(0) }}</div></div></div>
-        <div class="status-pill" style="background:#fee2e2"><div class="dot" style="background:#ef4444"></div><div><div style="font-size:11px;font-weight:600;color:#991b1b">Rejected</div><div style="font-size:16px;font-weight:700;color:#dc2626">{{ rejected_count|default(0) }}</div></div></div>
-      </div>
-    </div>
-    <div class="analytics-card">
-      <div class="card-title"><i class="fas fa-tasks" style="color:#22c55e"></i> Task Analytics</div>
-      <div style="margin-bottom:12px">
-        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;"><span style="color:var(--text-muted)">Completed</span><span style="font-weight:600">{{ completed_tasks|default(0) }}/{{ total_tasks|default(0) }}</span></div>
-        <div class="prog-wrap"><div class="prog-fill" style="width:{{ (completed_tasks/total_tasks*100)|int if total_tasks and total_tasks > 0 else 0 }}%;background:#22c55e;"></div></div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
-        <div class="count-pill" style="background:#fef9c3;text-align:center"><div class="n" style="color:#92400e">{{ pending_tasks|default(0) }}</div><div class="l" style="color:#a16207">Pending</div></div>
-        <div class="count-pill" style="background:#dbeafe;text-align:center"><div class="n" style="color:#1e3a8a">{{ in_progress_tasks|default(0) }}</div><div class="l" style="color:#1d4ed8">In Progress</div></div>
-      </div>
-      <div style="border-top:1px solid var(--border);padding-top:10px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><span style="font-size:12px;color:#dc2626;font-weight:600"><i class="fas fa-exclamation-triangle" style="margin-right:4px"></i>High Priority</span><span style="font-size:18px;font-weight:700;color:#dc2626">{{ high_priority_tasks|default(0) }}</span></div>
-        <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:12px;color:#d97706;font-weight:600"><i class="fas fa-clock" style="margin-right:4px"></i>Overdue</span><span style="font-size:18px;font-weight:700;color:#d97706">{{ overdue_tasks|default(0) }}</span></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── Tab shell ── -->
-  <div class="tab-shell">
-    <div class="tab-nav">
-      <button class="tab-btn active" id="btn-upload" onclick="switchTab('upload')"><i class="fas fa-cloud-upload-alt"></i> Share Document</button>
-      <button class="tab-btn" id="btn-tasks" onclick="switchTab('tasks')">
-        <i class="fas fa-tasks"></i> My Tasks
-        {% if total_tasks and total_tasks > 0 %}<span class="tab-badge">{{ total_tasks }}</span>{% endif %}
-      </button>
-      <button class="tab-btn" id="btn-documents" onclick="switchTab('documents')">
-        <i class="fas fa-folder-open"></i> My Documents
-        {% if total_docs and total_docs > 0 %}<span class="tab-badge">{{ total_docs }}</span>{% endif %}
-      </button>
-      <button class="tab-btn" id="btn-activity" onclick="switchTab('activity')"><i class="fas fa-history"></i> Activity</button>
-    </div>
-
-    <!-- ── Upload tab ── -->
-    <div class="tab-content active" id="tab-upload">
-      <div style="max-width:720px">
-        <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:700;color:var(--navy);margin-bottom:1.25rem;display:flex;align-items:center;gap:10px;">
-          <div style="width:34px;height:34px;background:var(--gold);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;"><i class="fas fa-cloud-upload-alt" style="color:var(--navy);"></i></div>
-          Upload Document for Review
+        <div class="stat-icon" style="background:#fef9c3">
+            <i class="fas fa-tasks" style="color:#854d0e"></i>
         </div>
-        <form action="{{ url_for('upload_document') }}" method="POST" enctype="multipart/form-data">
-          <div class="form-grid2" style="margin-bottom:14px">
-            <div><label class="form-label">Document Name *</label><input type="text" name="document_name" required class="form-input" placeholder="Enter document name"></div>
-            <div><label class="form-label">Select File *</label><input type="file" name="file" required class="form-input" accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.gif,.xlsx,.csv,.xls"></div>
-          </div>
-          <div style="margin-bottom:14px"><label class="form-label">Description / Message</label><textarea name="description" rows="3" class="form-input" placeholder="Describe the document and add any message for the reviewers..."></textarea></div>
-
-          <label class="form-label" style="margin-bottom:10px">Assign to Reviewers</label>
-          <div style="margin-bottom:12px">
-            <div style="font-size:11px;font-weight:700;color:#a16207;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;"><i class="fas fa-crown" style="margin-right:4px"></i>Leaders</div>
-            <div class="form-grid3">
-              {% for leader in leaders %}
-              <label class="reviewer-card">
-                <input type="checkbox" name="assigned_users" value="{{ leader._id }}" class="leader-cb">
-                <div><div style="font-size:12px;font-weight:600">{{ leader.email.split('@')[0] }}</div><span class="badge badge-medium" style="font-size:10px;margin-top:2px">Leader</span></div>
-              </label>
-              {% endfor %}
-            </div>
-          </div>
-          <div style="margin-bottom:14px">
-            <div style="font-size:11px;font-weight:700;color:#1d4ed8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;"><i class="fas fa-users" style="margin-right:4px"></i>Core Team</div>
-            <div class="form-grid3">
-              {% for member in core_members %}{% if member._id != user._id %}
-              <label class="reviewer-card">
-                <input type="checkbox" name="assigned_users" value="{{ member._id }}" class="core-cb">
-                <div><div style="font-size:12px;font-weight:600">{{ member.email.split('@')[0] }}</div><span class="badge badge-progress" style="font-size:10px;margin-top:2px">Core</span></div>
-              </label>
-              {% endif %}{% endfor %}
-            </div>
-          </div>
-          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;padding:10px;background:var(--surface-2);border-radius:var(--radius-sm);">
-            <button type="button" onclick="selLeaders()" class="btn-outline" style="font-size:11px;padding:5px 12px"><i class="fas fa-crown"></i> All Leaders</button>
-            <button type="button" onclick="selCore()" class="btn-outline" style="font-size:11px;padding:5px 12px"><i class="fas fa-users"></i> All Core</button>
-            <button type="button" onclick="selAll()" class="btn-outline" style="font-size:11px;padding:5px 12px"><i class="fas fa-check-double"></i> Everyone</button>
-            <button type="button" onclick="selNone()" class="btn-outline" style="font-size:11px;padding:5px 12px"><i class="fas fa-times"></i> Clear</button>
-            <span id="selCount" style="font-size:12px;color:var(--text-muted);align-self:center;margin-left:4px">0 selected</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--gold-light);border-radius:var(--radius-sm);border:1px solid #fde68a;margin-bottom:14px">
-            <input type="checkbox" name="notify_users" id="notify_users" checked style="accent-color:var(--navy)">
-            <label for="notify_users" style="font-size:12px;font-weight:500;cursor:pointer"><i class="fas fa-envelope" style="color:var(--gold);margin-right:5px"></i>Send email notification to reviewers</label>
-          </div>
-          <button type="submit" class="btn-primary" style="width:100%;justify-content:center;padding:13px"><i class="fas fa-upload"></i> Submit Document for Review</button>
-        </form>
-      </div>
+        <div>
+            <div class="stat-num">{{ total_tasks | default(0) }}</div>
+            <div class="stat-lbl">Total Tasks</div>
+            <div class="stat-sub">{{ high_priority_tasks | default(0) }} high priority</div>
+        </div>
     </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background:#fee2e2">
+            <i class="fas fa-exclamation-triangle" style="color:#991b1b"></i>
+        </div>
+        <div>
+            <div class="stat-num">{{ overdue_tasks | default(0) }}</div>
+            <div class="stat-lbl">Overdue</div>
+            <div class="stat-sub">{{ pending_tasks | default(0) }} pending</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background:#dbeafe">
+            <i class="fas fa-file-upload" style="color:#1e40af"></i>
+        </div>
+        <div>
+            <div class="stat-num">{{ total_docs | default(0) }}</div>
+            <div class="stat-lbl">Documents Submitted</div>
+            <div class="stat-sub">{{ approved_count | default(0) }} approved</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background:#dcfce7">
+            <i class="fas fa-check-circle" style="color:#166534"></i>
+        </div>
+        <div>
+            <div class="stat-num">{{ completed_tasks | default(0) }}</div>
+            <div class="stat-lbl">Completed Tasks</div>
+            <div class="stat-sub">{{ in_progress_tasks | default(0) }} in progress</div>
+        </div>
+    </div>
+</div>
 
-    <!-- ── Tasks tab ── -->
-    <div class="tab-content" id="tab-tasks">
-      <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:700;color:var(--navy);margin-bottom:1.25rem;display:flex;align-items:center;gap:10px;">
-        <div style="width:34px;height:34px;background:#22c55e;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;"><i class="fas fa-tasks" style="color:#fff;"></i></div>
-        My Assigned Tasks
-        {% if total_tasks and total_tasks > 0 %}<span class="tab-badge">{{ total_tasks }}</span>{% endif %}
-      </div>
-
-      {% if my_tasks and my_tasks|length > 0 %}
-      <div class="scroll-list">
-        {% for task in my_tasks %}
-        <div class="task-card {{ 'rework' if task.status == 'rework' else ('accepted' if task.status == 'accepted' else task.priority) }}" id="task-{{ task._id }}">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px">
-            <div style="flex:1">
-              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
-                <span style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--navy)">{{ task.title }}</span>
-                <span class="badge badge-{{ task.priority }}">{{ task.priority|upper }}</span>
-                <span class="badge badge-{{ task.status|replace('_','-') }}">
-                  {% if task.status=='rework' %}🔄 Rework
-                  {% elif task.status=='accepted' %}✅ Accepted
-                  {% elif task.status=='completed' %}🏁 Completed
-                  {% elif task.status=='in_progress' %}⚡ In Progress
-                  {% else %}⏳ {{ task.status|replace('_',' ')|title }}{% endif %}
-                </span>
-              </div>
-              <div style="font-size:12px;color:var(--text-muted)">Assigned by: <strong>{{ task.assigned_by_name }}</strong></div>
-            </div>
-          </div>
-          <p style="font-size:13px;color:#475569;margin-bottom:10px">{{ task.description }}</p>
-
-          {% if task.status=='rework' %}
-          <div class="rework-alert">
-            <div style="font-size:12px;font-weight:700;color:#c2410c;margin-bottom:3px"><i class="fas fa-exclamation-triangle" style="margin-right:5px"></i>Rework Requested</div>
-            {% if task.rework_comment %}<div style="font-size:12px;color:#9a3412">{{ task.rework_comment }}</div>{% endif %}
-          </div>
-          {% endif %}
-          {% if task.status=='accepted' %}
-          <div class="accepted-alert">
-            <div style="font-size:12px;font-weight:700;color:#15803d"><i class="fas fa-star" style="margin-right:5px"></i>Task Accepted — Great work!</div>
-          </div>
-          {% endif %}
-
-          {% if task.leader_comments and task.leader_comments|length > 0 %}
-          <div style="margin-bottom:10px">
-            <div style="font-size:11px;font-weight:700;color:#6d28d9;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px"><i class="fas fa-comments" style="margin-right:4px"></i>Leader Comments</div>
-            {% for lc in task.leader_comments[-2:] %}
-            <div class="leader-comment-box">
-              <div style="font-size:12px;color:#5b21b6">"{{ lc.comment }}"</div>
-              <div style="font-size:11px;color:#7c3aed;margin-top:3px">— {{ lc.commented_by }} · {% if lc.timestamp is string %}{{ lc.timestamp }}{% else %}{{ lc.timestamp.strftime('%d %b, %I:%M %p') }}{% endif %}</div>
-            </div>
-            {% endfor %}
-          </div>
-          {% endif %}
-
-          {% if task.has_attachment and task.attachment_url %}
-          <div style="margin-bottom:10px">
-            <button onclick="viewFile('{{ task.attachment_url }}','{{ task.attachment_name or task.title }}')" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:5px">
-              <i class="fas fa-paperclip"></i>{{ task.attachment_name or 'Attachment' }}
+<!-- ══════════════════════════════════════════
+     ANALYTICS ROW
+══════════════════════════════════════════ -->
+<div class="analytics-row">
+    <!-- Doc analytics -->
+    <div class="mini-card">
+        <div class="heading"><i class="fas fa-file-alt" style="color:var(--jain-gold)"></i>Document Analytics</div>
+        {% set total_d = total_docs | default(1) %}
+        {% for lbl,val,clr in [('Pending',pending_count|default(0),'#f59e0b'),('Approved',approved_count|default(0),'#22c55e'),('Revision',revision_count|default(0),'#ec4899'),('Rejected',rejected_count|default(0),'#ef4444')] %}
+        <div class="mini-bar-row">
+            <div class="mini-bar-label">{{ lbl }}</div>
+            <div class="mini-bar-track"><div class="mini-bar-fill" style="width:{{ (val/total_d*100)|int if total_d else 0 }}%;background:{{ clr }}"></div></div>
+            <div class="mini-bar-val">{{ val }}</div>
+        </div>
+        {% endfor %}
+        <div style="display:flex;gap:8px;margin-top:10px;font-size:10px;color:#9ca3af">
+            <span>Today: <strong>{{ docs_today | default(0) }}</strong></span>
+            <span>Week: <strong>{{ docs_this_week | default(0) }}</strong></span>
+            <span>Month: <strong>{{ docs_this_month | default(0) }}</strong></span>
+        </div>
+    </div>
+    <!-- Task analytics -->
+    <div class="mini-card">
+        <div class="heading"><i class="fas fa-tasks" style="color:var(--jain-gold)"></i>Task Analytics</div>
+        {% set total_t = total_tasks | default(1) %}
+        {% for lbl,val,clr in [('Pending',pending_tasks|default(0),'#f59e0b'),('In Progress',in_progress_tasks|default(0),'#3b82f6'),('Completed',completed_tasks|default(0),'#22c55e'),('Overdue',overdue_tasks|default(0),'#ef4444')] %}
+        <div class="mini-bar-row">
+            <div class="mini-bar-label">{{ lbl }}</div>
+            <div class="mini-bar-track"><div class="mini-bar-fill" style="width:{{ (val/total_t*100)|int if total_t else 0 }}%;background:{{ clr }}"></div></div>
+            <div class="mini-bar-val">{{ val }}</div>
+        </div>
+        {% endfor %}
+        <div style="margin-top:10px">
+            <button onclick="openAiPanel();document.getElementById('aiBarInput').value='My dashboard stats: total tasks {{ total_tasks }}, pending {{ pending_tasks }}, overdue {{ overdue_tasks }}, completed {{ completed_tasks }}. Give me a quick performance summary and top 2 priorities.';"
+                class="btn-primary btn-sm" style="background:#1a1a6e;font-size:10px;width:100%;justify-content:center">
+                <i class="fas fa-robot"></i> Get AI Summary
             </button>
-          </div>
-          {% endif %}
+        </div>
+    </div>
+</div>
 
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;background:var(--surface-2);padding:10px;border-radius:var(--radius-sm);margin-bottom:10px;font-size:12px">
-            <div><div style="color:var(--text-muted);font-weight:500;margin-bottom:2px">Due Date</div><div style="font-weight:600">{{ task.due_date_str }}</div></div>
-            <div><div style="color:var(--text-muted);font-weight:500;margin-bottom:2px">Priority</div><span class="badge badge-{{ task.priority }}">{{ task.priority|upper }}</span></div>
-            <div>
-              <div style="color:var(--text-muted);font-weight:500;margin-bottom:2px">Progress</div>
-              <div class="prog-wrap" style="margin-top:4px"><div class="prog-fill" style="width:{{ task.progress }}%;background:{% if task.status=='accepted' %}#10b981{% elif task.status=='rework' %}#f97316{% elif task.priority=='high' %}#ef4444{% elif task.priority=='medium' %}#f59e0b{% else %}#22c55e{% endif %}"></div></div>
-              <div style="font-size:11px;color:var(--text-muted);margin-top:2px;text-align:right">{{ task.progress }}%</div>
-            </div>
-          </div>
+<!-- ══════════════════════════════════════════
+     TAB NAVIGATION
+══════════════════════════════════════════ -->
+<div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('share')" id="tab-share">
+        <i class="fas fa-upload"></i> Share Document
+    </button>
+    <button class="tab-btn" onclick="switchTab('tasks')" id="tab-tasks">
+        <i class="fas fa-clipboard-list"></i> My Tasks
+        {% if pending_tasks > 0 %}<span class="badge">{{ pending_tasks }}</span>{% endif %}
+    </button>
+    <button class="tab-btn" onclick="switchTab('docs')" id="tab-docs">
+        <i class="fas fa-file-alt"></i> My Documents
+        {% if pending_count > 0 %}<span class="badge">{{ pending_count }}</span>{% endif %}
+    </button>
+    <button class="tab-btn" onclick="switchTab('activity')" id="tab-activity">
+        <i class="fas fa-history"></i> Activity
+    </button>
+</div>
 
-          <!-- ── Jain AI Help panel per task ── -->
-          <div class="ai-panel" style="margin-bottom:10px">
-            <div class="ai-panel-title">
-              <span class="jain-ai-badge">✦ JAIN AI</span>
-              Task Help
-            </div>
-            <div style="font-size:12px;color:#94a3b8;margin-bottom:10px">Get a step-by-step plan, ask for clarification, or get ideas from Jain AI.</div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <button class="ai-btn" onclick="aiTaskHelp('{{ task._id }}','{{ task.title|replace("'","\\'")|truncate(60) }}','{{ task.description|replace("'","\\'")|truncate(200) }}','{{ task.due_date_str }}','{{ task.priority }}')">
-                <span>✦</span> How to complete this task
-              </button>
-              <button class="ai-btn" onclick="aiTaskChat('{{ task._id }}','{{ task.title|replace("'","\\'")|truncate(60) }}','{{ task.description|replace("'","\\'")|truncate(200) }}')">
-                <i class="fas fa-comment-dots"></i> Ask Jain AI
-              </button>
-            </div>
-            <div class="ai-response-box" id="ai-task-{{ task._id }}"></div>
-          </div>
+<!-- ══════════════════════════════════════════════════════
+     TAB: SHARE DOCUMENT
+══════════════════════════════════════════════════════ -->
+<div class="tab-content active" id="content-share">
+    <div class="section-card">
+        <div class="section-header">
+            <span class="section-title"><i class="fas fa-upload"></i> Submit Document for Review</span>
+        </div>
+        <div class="section-body">
+            <form action="{{ url_for('upload_document') }}" method="POST" enctype="multipart/form-data">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="form-group md:col-span-2">
+                        <label class="form-label">Document Name <span style="color:#ef4444">*</span></label>
+                        <input type="text" name="document_name" class="form-control" placeholder="e.g. Q1 Report, Event Plan" required>
+                    </div>
+                    <div class="form-group md:col-span-2">
+                        <label class="form-label">Description</label>
+                        <textarea name="description" class="form-control" rows="3" placeholder="Brief description of the document…"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">File <span style="color:#ef4444">*</span></label>
+                        <input type="file" name="file" class="form-control" accept=".pdf,.docx,.txt,.png,.jpg,.jpeg" required>
+                        <p class="text-xs text-gray-400 mt-1">PDF, DOCX, TXT, PNG, JPG (max 50MB)</p>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Assign Reviewers</label>
+                        {% for member in core_members %}
+                        {% if member.email != session.email %}
+                        <label class="flex items-center gap-2 mb-1 cursor-pointer">
+                            <input type="checkbox" name="assigned_users" value="{{ member._id }}" class="w-4 h-4">
+                            <span class="text-sm">{{ member.email.split('@')[0] }}</span>
+                        </label>
+                        {% endif %}
+                        {% endfor %}
+                        {% for leader in leaders %}
+                        <label class="flex items-center gap-2 mb-1 cursor-pointer">
+                            <input type="checkbox" name="assigned_users" value="{{ leader._id }}" checked class="w-4 h-4">
+                            <span class="text-sm">👑 {{ leader.email.split('@')[0] }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                    <div class="form-group md:col-span-2">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" name="notify_users" checked class="w-4 h-4">
+                            <span class="text-sm text-gray-700">Notify reviewers by email</span>
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-paper-plane"></i> Submit Document
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
 
-          {% if task.updates and task.updates|length > 0 %}
-          <div style="border-top:1px solid var(--border);padding-top:10px;margin-bottom:10px">
-            <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px"><i class="fas fa-history" style="margin-right:4px"></i>Update History</div>
-            {% for update in task.updates[-3:]|reverse %}
-            <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;font-size:12px">
-              <div style="width:18px;height:18px;border-radius:50%;background:#e5e7eb;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px"><div style="width:6px;height:6px;border-radius:50%;background:#6b7280"></div></div>
-              <div>
-                <span style="font-weight:600;text-transform:capitalize">{{ update.status|replace('_',' ') }}</span> — {{ update.progress }}%
-                {% if update.comment %}: "{{ update.comment }}"{% endif %}
-                {% if update.attachment_url %}<button onclick="viewFile('{{ update.attachment_url }}','{{ update.attachment_name or 'Attachment' }}')" style="margin-left:6px;background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:4px;padding:2px 6px;font-size:11px;cursor:pointer">View</button>{% endif %}
-                <div style="color:var(--text-muted);margin-top:2px">{% if update.timestamp is string %}{{ update.timestamp }}{% else %}{{ update.timestamp.strftime('%d %b %I:%M %p') }}{% endif %}</div>
-              </div>
+<!-- ══════════════════════════════════════════════════════
+     TAB: MY TASKS
+══════════════════════════════════════════════════════ -->
+<div class="tab-content" id="content-tasks">
+    {% if my_tasks %}
+    <div class="flex items-center justify-between mb-3">
+        <p class="text-sm text-gray-500">{{ my_tasks | length }} task(s) assigned to you</p>
+        <select id="taskFilter" class="form-control form-select" style="width:150px;font-size:12px" onchange="filterMyTasks()">
+            <option value="">All Tasks</option>
+            <option value="pending">Pending</option>
+            <option value="in_progress">In Progress</option>
+            <option value="completed">Completed</option>
+            <option value="rework">Rework</option>
+            <option value="accepted">Accepted</option>
+        </select>
+    </div>
+    <div id="myTaskList">
+    {% for task in my_tasks %}
+    {% set is_overdue = task.due_date and task.due_date < now and task.status not in ['completed','accepted'] %}
+    <div class="task-card {% if is_overdue %}overdue{% elif task.priority == 'high' %}urgent{% else %}normal{% endif %}"
+         data-status="{{ task.status }}">
+        <div class="flex items-start justify-between gap-3">
+            <div style="flex:1;min-width:0">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <h3 class="font-bold text-sm" style="color:var(--jain-navy)">{{ task.title }}</h3>
+                    <span class="doc-badge badge-{{ task.status }}">{{ task.status | replace('_',' ') | title }}</span>
+                    <span class="doc-badge badge-{{ task.priority }}">{{ task.priority | title }}</span>
+                    {% if is_overdue %}<span class="doc-badge badge-rejected">⚠ Overdue</span>{% endif %}
+                </div>
+                <p class="text-xs text-gray-500 mt-1">From: <strong>{{ task.assigned_by_name }}</strong> &bull; Due: {{ task.due_date_str }}</p>
+                <p class="text-xs text-gray-600 mt-1">{{ task.description | truncate(120) }}</p>
+                <!-- Progress bar -->
+                <div class="progress-bar-wrap">
+                    <div class="progress-bar-fill" style="width:{{ task.progress }}%"></div>
+                </div>
+                <p class="text-xs text-gray-400">Progress: {{ task.progress }}%</p>
+                <!-- Rework comment -->
+                {% if task.status == 'rework' and task.rework_comment %}
+                <div class="mt-2 p-2 bg-yellow-50 rounded-lg border border-yellow-200 text-xs text-yellow-800">
+                    <i class="fas fa-redo mr-1"></i><strong>Rework needed:</strong> {{ task.rework_comment | truncate(150) }}
+                </div>
+                {% endif %}
+                <!-- Attachment -->
+                {% if task.attachment_url %}
+                <div class="mt-2 text-xs text-blue-600">
+                    <a href="{{ task.attachment_url }}" target="_blank"><i class="fas fa-paperclip mr-1"></i>Task attachment</a>
+                </div>
+                {% endif %}
+                <!-- Latest update -->
+                {% if task.updates %}
+                {% set last = task.updates[-1] %}
+                <div class="mt-2 text-xs bg-blue-50 p-2 rounded-lg text-blue-700">
+                    <i class="fas fa-info-circle mr-1"></i>Last: {{ last.comment | truncate(80) if last.comment else 'Updated' }}
+                    {% if last.attachment_url %}<a href="{{ last.attachment_url }}" target="_blank" class="ml-2 underline"><i class="fas fa-paperclip"></i></a>{% endif %}
+                </div>
+                {% endif %}
+                <!-- Leader comments -->
+                {% if task.leader_comments %}
+                {% for comment in task.leader_comments[-2:] %}
+                <div class="mt-1 text-xs bg-purple-50 p-2 rounded-lg text-purple-700">
+                    <i class="fas fa-comment mr-1"></i><strong>{{ comment.commented_by }}</strong>: {{ comment.comment | truncate(100) }}
+                </div>
+                {% endfor %}
+                {% endif %}
+            </div>
+            <!-- Actions -->
+            <div class="flex flex-col gap-2" style="flex-shrink:0">
+                {% if task.status not in ['accepted'] %}
+                <button onclick="openUpdateModal('{{ task._id }}',{{ task.progress }},'{{ task.status }}')" class="btn-primary btn-sm btn-gold">
+                    <i class="fas fa-edit"></i> Update
+                </button>
+                {% endif %}
+                <button onclick="toggleAiPanel_core('ai-core-{{ task._id }}')" class="btn-primary btn-sm" style="background:#1a1a6e;font-size:10px">
+                    <i class="fas fa-robot"></i> AI Help
+                </button>
+            </div>
+        </div>
+
+        <!-- AI Help Panel -->
+        <div class="ai-task-panel" id="ai-core-{{ task._id }}">
+            <div class="ai-label"><i class="fas fa-robot"></i> Jain AI — Task Help</div>
+            <div class="ai-response" id="ai-core-result-{{ task._id }}">Click a button to get AI guidance.</div>
+            <div class="flex gap-2 mt-2 flex-wrap">
+                <button onclick="aiTaskHelp('{{ task._id }}','{{ task.title | replace("'","\\'")|replace('"','') }}','{{ task.description | replace("'","\\'")|replace('"','') | truncate(100) }}','{{ task.due_date_str }}','{{ task.priority }}')"
+                    class="btn-primary btn-sm btn-gold"><i class="fas fa-lightbulb"></i> How to Complete</button>
+            </div>
+            <div class="ai-input-row">
+                <input type="text" id="ai-core-chat-{{ task._id }}" placeholder="Ask AI about this task…" onkeydown="if(event.key==='Enter')sendAiCoreChat('{{ task._id }}')">
+                <button onclick="sendAiCoreChat('{{ task._id }}')">Ask</button>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-12 text-gray-400">
+        <i class="fas fa-clipboard-check text-4xl mb-3 opacity-40 block"></i>
+        <p class="text-sm">No tasks assigned to you yet.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     TAB: MY DOCUMENTS
+══════════════════════════════════════════════════════ -->
+<div class="tab-content" id="content-docs">
+    {% if my_documents %}
+    <div class="flex items-center justify-between mb-3">
+        <p class="text-sm text-gray-500">{{ my_documents | length }} document(s) submitted</p>
+        <select id="docFilter" class="form-control form-select" style="width:150px;font-size:12px" onchange="filterMyDocs()">
+            <option value="">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="revision">Revision</option>
+            <option value="rejected">Rejected</option>
+        </select>
+    </div>
+    <div id="myDocList">
+    {% for doc in my_documents %}
+    <div class="doc-card" data-status="{{ doc.status }}">
+        <div class="flex items-start justify-between gap-3">
+            <div style="flex:1;min-width:0">
+                <h3 class="font-bold text-sm" style="color:var(--jain-navy)">{{ doc.document_name }}</h3>
+                {% if doc.description %}
+                <p class="text-xs text-gray-600 mt-1">{{ doc.description | truncate(100) }}</p>
+                {% endif %}
+                <div class="doc-meta">
+                    <span class="doc-badge badge-{{ doc.status }}">{{ doc.status | title }}</span>
+                    <span class="doc-badge" style="background:#f3f4f6;color:#6b7280">
+                        <i class="far fa-clock mr-1"></i>{{ doc.submitted_at.strftime('%d %b %Y, %I:%M %p') if doc.submitted_at else '—' }}
+                    </span>
+                </div>
+                {% if doc.comments %}
+                <div class="mt-2 text-xs {% if doc.status=='approved' %}bg-green-50 text-green-700{% elif doc.status=='rejected' %}bg-red-50 text-red-700{% else %}bg-blue-50 text-blue-700{% endif %} p-2 rounded-lg">
+                    <i class="fas fa-comment mr-1"></i><strong>Reviewer comment:</strong> {{ doc.comments | truncate(120) }}
+                </div>
+                {% endif %}
+            </div>
+            <div class="flex flex-col gap-2" style="flex-shrink:0">
+                {% if doc.file_url %}
+                <button onclick="openViewer('{{ doc.file_url }}','{{ doc.document_name | replace("'","") }}')" class="btn-primary btn-sm">
+                    <i class="fas fa-eye"></i> View
+                </button>
+                <a href="{{ doc.file_url }}" download class="btn-primary btn-sm" style="text-align:center;text-decoration:none">
+                    <i class="fas fa-download"></i> Download
+                </a>
+                {% endif %}
+                <button onclick="aiSummarizeDoc('{{ doc._id }}','{{ doc.document_name | replace("'","") }}')" class="btn-primary btn-sm" style="background:#1a1a6e;font-size:10px">
+                    <i class="fas fa-robot"></i> Summarize
+                </button>
+            </div>
+        </div>
+        <!-- AI summary result -->
+        <div id="ai-doc-{{ doc._id }}" style="display:none;margin-top:10px;padding:10px;background:linear-gradient(135deg,#0a1929,#1a1a6e);border-radius:8px">
+            <div class="ai-label"><i class="fas fa-robot"></i> Jain AI Summary</div>
+            <div style="color:#fff;font-size:12px;line-height:1.65;white-space:pre-wrap" id="ai-doc-text-{{ doc._id }}"></div>
+        </div>
+    </div>
+    {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-12 text-gray-400">
+        <i class="fas fa-file-upload text-4xl mb-3 opacity-40 block"></i>
+        <p class="text-sm">No documents submitted yet. Use "Share Document" tab to submit.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     TAB: ACTIVITY
+══════════════════════════════════════════════════════ -->
+<div class="tab-content" id="content-activity">
+    <div class="section-card">
+        <div class="section-header">
+            <span class="section-title"><i class="fas fa-history"></i> Recent Activity</span>
+        </div>
+        <div class="section-body">
+            {% if recent_activity %}
+            {% for act in recent_activity %}
+            <div class="activity-item">
+                <div class="activity-icon" style="background:{% if act.color=='blue' %}#dbeafe{% elif act.color=='green' %}#dcfce7{% elif act.color=='red' %}#fee2e2{% else %}#f3e8ff{% endif %}">
+                    <i class="fas fa-{{ act.icon }}" style="color:{% if act.color=='blue' %}#1e40af{% elif act.color=='green' %}#166534{% elif act.color=='red' %}#991b1b{% else %}#6b21a8{% endif %}; font-size:13px"></i>
+                </div>
+                <div style="flex:1;min-width:0">
+                    <p class="text-xs font-medium" style="color:var(--jain-navy)">{{ act.title | truncate(60) }}</p>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span class="doc-badge badge-{{ act.status }}" style="font-size:9px">{{ act.status | title }}</span>
+                        <span class="activity-time"><i class="far fa-clock mr-1"></i>{{ act.time }}</span>
+                    </div>
+                </div>
             </div>
             {% endfor %}
-          </div>
-          {% endif %}
-
-          <div style="display:flex;justify-content:flex-end;gap:8px">
-            {% if task.status in ['rework','pending','in_progress'] %}
-            <button onclick="openUpdateModal('{{ task._id }}',{{ task.progress }},'{{ task.status }}')" class="btn-primary" style="font-size:12px;padding:8px 16px"><i class="fas fa-edit"></i> Update Progress</button>
-            {% elif task.status=='completed' %}
-            <span class="badge badge-approved" style="padding:8px 14px;font-size:12px"><i class="fas fa-check-circle" style="margin-right:5px"></i>Awaiting Review</span>
-            {% elif task.status=='accepted' %}
-            <span class="badge badge-accepted" style="padding:8px 14px;font-size:12px"><i class="fas fa-star" style="margin-right:5px"></i>Task Accepted & Closed</span>
-            {% endif %}
-          </div>
-        </div>
-        {% endfor %}
-      </div>
-      {% else %}
-      <div style="text-align:center;padding:3rem;background:var(--surface-2);border-radius:var(--radius)">
-        <i class="fas fa-tasks" style="font-size:2.5rem;color:#d1d5db;margin-bottom:12px;display:block"></i>
-        <div style="font-size:14px;color:var(--text-muted)">No tasks assigned yet</div>
-        <div style="font-size:12px;color:#94a3b8;margin-top:4px">Tasks assigned by leaders will appear here</div>
-      </div>
-      {% endif %}
-    </div>
-
-    <!-- ── Documents tab ── -->
-    <div class="tab-content" id="tab-documents">
-      <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:700;color:var(--navy);margin-bottom:1.25rem;display:flex;align-items:center;gap:10px;">
-        <div style="width:34px;height:34px;background:#3b82f6;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;"><i class="fas fa-folder-open" style="color:#fff;"></i></div>
-        My Uploaded Documents
-        {% if total_docs and total_docs > 0 %}<span class="tab-badge">{{ total_docs }}</span>{% endif %}
-      </div>
-      {% if my_documents and my_documents|length > 0 %}
-      <div class="scroll-list">
-        {% for doc in my_documents %}
-        <div class="doc-card">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between">
-            <div style="flex:1">
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-                <i class="fas fa-file-alt" style="color:var(--navy);font-size:16px"></i>
-                <span style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--navy)">{{ doc.document_name }}</span>
-                <span class="badge badge-{{ doc.status }}">{{ doc.status|upper }}</span>
-              </div>
-              <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px">{{ doc.description }}</p>
-              <div style="display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--text-muted)">
-                <span><i class="fas fa-calendar" style="margin-right:4px"></i>{{ doc.submitted_at.strftime('%d %b %Y, %I:%M %p') }}</span>
-                {% if doc.reviewed_at %}<span><i class="fas fa-check" style="margin-right:4px;color:#22c55e"></i>Reviewed: {{ doc.reviewed_at.strftime('%d %b %Y') }}</span>{% endif %}
-              </div>
-              {% if doc.comments %}
-              <div style="margin-top:10px;background:#fef9c3;border-left:3px solid var(--gold);padding:8px 12px;border-radius:0 var(--radius-sm) var(--radius-sm) 0">
-                <div style="font-size:11px;font-weight:700;color:#92400e;margin-bottom:3px">Reviewer's Response:</div>
-                <div style="font-size:12px;color:#78350f">{{ doc.comments }}</div>
-              </div>
-              {% endif %}
-
-              <!-- Jain AI summarize per doc -->
-              <div style="margin-top:10px;display:flex;gap:8px;align-items:center">
-                <button class="ai-btn" style="font-size:11px;padding:5px 12px" onclick="aiSummarizeDoc('{{ doc._id }}','{{ doc.document_name|replace("'","\\'")|truncate(60) }}','{{ doc.description|replace("'","\\'")|truncate(150) }}','{{ doc.file_url or '' }}')">
-                  <span class="jain-ai-badge" style="font-size:9px;padding:2px 7px">✦ JAIN AI</span> Summary
-                </button>
-                <span id="ai-doc-status-{{ doc._id }}" style="font-size:11px;color:var(--text-muted)"></span>
-              </div>
-              <div class="ai-response-box" id="ai-doc-{{ doc._id }}" style="margin-top:8px;font-size:12px;color:#e2e8f0;background:linear-gradient(135deg,var(--navy),#1a1a6e)"></div>
-            </div>
-            {% if doc.file_url %}
-            <div style="margin-left:12px;display:flex;flex-direction:column;gap:6px">
-              <button onclick="viewFile('{{ doc.file_url }}','{{ doc.document_name }}')" class="btn-outline" style="font-size:11px;padding:5px 10px"><i class="fas fa-eye"></i> View</button>
-              <a href="{{ doc.file_url }}" download class="btn-outline" style="font-size:11px;padding:5px 10px;text-decoration:none;text-align:center"><i class="fas fa-download"></i> DL</a>
+            {% else %}
+            <div class="text-center py-8 text-gray-400">
+                <i class="fas fa-history text-3xl mb-2 opacity-40 block"></i>
+                <p class="text-sm">No recent activity.</p>
             </div>
             {% endif %}
-          </div>
         </div>
-        {% endfor %}
-      </div>
-      {% else %}
-      <div style="text-align:center;padding:3rem;background:var(--surface-2);border-radius:var(--radius)">
-        <i class="fas fa-file-upload" style="font-size:2.5rem;color:#d1d5db;margin-bottom:12px;display:block"></i>
-        <div style="font-size:14px;color:var(--text-muted)">No documents uploaded yet</div>
-      </div>
-      {% endif %}
     </div>
+</div>
 
-    <!-- ── Activity tab ── -->
-    <div class="tab-content" id="tab-activity">
-      <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:700;color:var(--navy);margin-bottom:1.25rem;display:flex;align-items:center;gap:10px;">
-        <i class="fas fa-history" style="color:#8b5cf6;font-size:18px"></i> Recent Activity
-      </div>
-      <div class="scroll-list">
-        {% if recent_activity and recent_activity|length > 0 %}
-          {% for activity in recent_activity %}
-          <div class="activity-item">
-            <div class="activity-icon" style="background:#{{ 'dcfce7' if activity.color=='green' else ('fef9c3' if activity.color=='yellow' else ('dbeafe' if activity.color=='blue' else 'f3e8ff')) }}">
-              <i class="fas fa-{{ activity.icon }}" style="font-size:12px;color:#{{ '166534' if activity.color=='green' else ('854d0e' if activity.color=='yellow' else ('1d4ed8' if activity.color=='blue' else '7c3aed')) }}"></i>
+<!-- ══════════════════════════════════════════════════════
+     TASK UPDATE MODAL
+══════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="updateModal">
+    <div class="modal-box" style="max-width:540px">
+        <div class="modal-header">
+            <span class="modal-title"><i class="fas fa-edit"></i> Update Task Progress</span>
+            <button class="close-btn" onclick="closeUpdateModal()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label">Status</label>
+                <select id="updateStatus" class="form-control form-select">
+                    <option value="in_progress">In Progress</option>
+                    <option value="completed">Completed</option>
+                </select>
             </div>
-            <div style="flex:1">
-              <div style="font-size:13px;font-weight:500;color:var(--text-main)">{{ activity.title }}</div>
-              <div style="display:flex;align-items:center;gap:8px;margin-top:3px">
-                <span style="font-size:11px;color:var(--text-muted)">{{ activity.time }}</span>
-                {% if activity.status %}<span class="badge badge-{{ activity.status }}" style="font-size:10px">{{ activity.status }}</span>{% endif %}
-              </div>
+            <div class="form-group">
+                <label class="form-label">Progress: <strong id="progressDisplay">0%</strong></label>
+                <input type="range" id="progressSlider" min="0" max="100" value="0"
+                    oninput="document.getElementById('progressDisplay').textContent=this.value+'%'"
+                    class="w-full" style="accent-color:var(--jain-gold)">
             </div>
-          </div>
-          {% endfor %}
-        {% else %}
-        <div style="text-align:center;padding:3rem;color:var(--text-muted)">
-          <i class="fas fa-inbox" style="font-size:2rem;margin-bottom:8px;display:block;opacity:.4"></i>No recent activity
+            <div class="form-group">
+                <label class="form-label">Comment (optional)</label>
+                <textarea id="updateComment" class="form-control" rows="3" placeholder="Brief update about your progress…"></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Attachment (optional)</label>
+                <input type="file" id="updateFile" class="form-control" accept=".pdf,.docx,.txt,.png,.jpg,.jpeg">
+                <p class="text-xs text-gray-400 mt-1">Attach completed work or supporting document</p>
+            </div>
         </div>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-
-  <!-- ── Shared docs ── -->
-  {% if recent_shares and recent_shares|length > 0 %}
-  <div class="analytics-card">
-    <div class="card-title"><div style="width:30px;height:30px;background:#8b5cf6;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;"><i class="fas fa-share-alt" style="color:#fff;font-size:13px"></i></div> Recent Document Shares</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px">
-      {% for share in recent_shares %}
-      <div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px">
-        <div style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:3px">{{ share.document_name }}</div>
-        <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px"><i class="fas fa-user" style="margin-right:4px"></i>{{ share.sender_name }} · {{ share.shared_at.strftime('%d %b %Y, %I:%M %p') }}</div>
-        {% if share.file_url %}
-        <div style="display:flex;gap:6px">
-          <button onclick="viewFile('{{ share.file_url }}','{{ share.document_name }}')" class="btn-outline" style="font-size:11px;padding:4px 10px"><i class="fas fa-eye"></i> View</button>
-          <a href="{{ share.file_url }}" download class="btn-outline" style="font-size:11px;padding:4px 10px;text-decoration:none"><i class="fas fa-download"></i></a>
-          <button class="ai-btn" style="font-size:11px;padding:4px 10px" onclick="aiSummarizeDoc('share-{{ loop.index }}','{{ share.document_name|replace("'","\\'")|truncate(60) }}','','{{ share.file_url }}')">
-            <span class="jain-ai-badge" style="font-size:9px;padding:2px 6px">✦ JAIN AI</span>
-          </button>
+        <div class="modal-footer">
+            <button onclick="submitUpdate()" class="btn-primary"><i class="fas fa-paper-plane"></i> Update Task</button>
+            <button onclick="closeUpdateModal()" class="btn-primary" style="background:#6b7280">Cancel</button>
         </div>
-        <div class="ai-response-box" id="ai-doc-share-{{ loop.index }}" style="margin-top:8px;font-size:12px;color:#e2e8f0;background:linear-gradient(135deg,var(--navy),#1a1a6e)"></div>
-        {% endif %}
-      </div>
-      {% endfor %}
     </div>
-  </div>
-  {% endif %}
 </div>
 
-<!-- ════════════════════════════════════════
-     ENHANCED FILE VIEWER MODAL
-     Open · Summarize with Jain AI · Ask Jain AI · Download
-════════════════════════════════════════ -->
-<div class="modal-overlay" id="fileModal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <div class="modal-title">
-        <i class="fas fa-file" id="fileIcon"></i>
-        <span id="fileTitle">File</span>
-        <span class="jain-ai-badge" style="margin-left:4px">✦ JAIN AI</span>
-      </div>
-      <button class="modal-close" onclick="closeFile()"><i class="fas fa-times"></i></button>
-    </div>
-
-    <div class="modal-body">
-      <div id="pdfWrap" style="width:100%;height:460px"><object id="pdfObj" data="" type="application/pdf" style="width:100%;height:100%;border-radius:var(--radius-sm)"><p style="text-align:center;padding:2rem;color:var(--text-muted)">PDF cannot be displayed. <a id="pdfLink" href="#" target="_blank">Open in new tab</a></p></object></div>
-      <div id="imgWrap" style="display:none;height:460px;align-items:center;justify-content:center"><img id="imgView" src="" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:var(--radius-sm)"></div>
-      <div id="noPreview" style="display:none;height:300px;align-items:center;justify-content:center;flex-direction:column;background:var(--surface-2);border-radius:var(--radius);color:var(--text-muted)"><i class="fas fa-file" style="font-size:3rem;margin-bottom:1rem"></i><p>Preview not available</p></div>
-    </div>
-
-    <!-- ── Action bar ── -->
-    <div class="modal-footer">
-      <div class="file-action-bar">
-        <!-- Open -->
-        <a id="fileOpenLink" href="#" target="_blank" class="file-action-btn open-btn">
-          <i class="fas fa-external-link-alt"></i> Open
-        </a>
-        <!-- Summarize with Jain AI -->
-        <button id="viewerSummarizeBtn" class="file-action-btn summarize-btn" onclick="aiSummarizeViewer()">
-          <span>✦</span> Summarize with Jain AI
-        </button>
-        <!-- Ask Jain AI -->
-        <button id="viewerAskToggleBtn" class="file-action-btn ask-btn" onclick="toggleViewerAsk()">
-          <i class="fas fa-comment-dots"></i> Ask Jain AI
-        </button>
-        <!-- Download -->
-        <a id="fileDlLink" href="#" download class="file-action-btn download-btn">
-          <i class="fas fa-download"></i> Download
-        </a>
-        <!-- Close -->
-        <button onclick="closeFile()" class="file-action-btn open-btn" style="margin-left:auto">
-          <i class="fas fa-times"></i> Close
-        </button>
-      </div>
-
-      <!-- Jain AI Summary output -->
-      <div id="viewerAiBox"></div>
-
-      <!-- Ask Jain AI panel (toggle) -->
-      <div id="viewerAskPanel">
-        <div style="font-size:11px;font-weight:700;color:var(--navy);margin-bottom:6px;display:flex;align-items:center;gap:6px">
-          <span class="jain-ai-badge">✦ JAIN AI</span> Ask anything about this document
+<!-- ══════════════════════════════════════════════════════
+     FILE VIEWER MODAL
+══════════════════════════════════════════════════════ -->
+<div id="fileViewerModal">
+    <div class="viewer-box">
+        <div class="viewer-header">
+            <span class="section-title" id="viewerTitle"><i class="fas fa-file-alt"></i> Document Viewer</span>
+            <button class="close-btn" onclick="closeViewer()"><i class="fas fa-times"></i></button>
         </div>
-        <div class="viewer-ask-row">
-          <input id="viewerAskInput" class="form-input" placeholder="e.g. What are the key action items?" style="flex:1" onkeydown="if(event.key==='Enter')sendViewerAsk()">
-          <button onclick="sendViewerAsk()" class="file-action-btn ask-btn" style="padding:9px 16px;white-space:nowrap">
-            <i class="fas fa-paper-plane"></i> Ask
-          </button>
+        <div class="viewer-body" id="viewerBody" style="height:60vh"></div>
+        <div class="viewer-actions">
+            <a id="viewerOpenLink"     href="#" target="_blank" class="btn-primary btn-sm"><i class="fas fa-external-link-alt"></i> Open</a>
+            <a id="viewerDownloadLink" href="#" download       class="btn-primary btn-sm btn-gold"><i class="fas fa-download"></i> Download</a>
+            <button onclick="aiSummarizeViewer()" class="btn-primary btn-sm" style="background:#1a1a6e"><i class="fas fa-robot"></i> Summarize</button>
+            <button onclick="toggleViewerAsk()" class="btn-primary btn-sm" style="background:#8b5cf6"><i class="fas fa-comment"></i> Ask AI</button>
         </div>
-        <div id="viewerAskResponse"></div>
-      </div>
+        <div id="viewerAskPanel" style="display:none;padding:12px 18px;background:#f8f8ff;border-top:1px solid #e5e7eb">
+            <div id="viewerAiResponse" style="font-size:12px;line-height:1.65;color:#374151;min-height:30px;margin-bottom:8px;white-space:pre-wrap"></div>
+            <div class="flex gap-2">
+                <input type="text" id="viewerAskInput" class="form-control" style="font-size:12px" placeholder="Ask about this document…" onkeydown="if(event.key==='Enter')sendViewerAsk()">
+                <button onclick="sendViewerAsk()" class="btn-primary btn-sm"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
+{% endblock %}
 
-<!-- ── Task update modal ── -->
-<div class="task-modal-overlay" id="updateModal">
-  <div class="task-modal-box">
-    <div class="task-modal-header">
-      <div class="task-modal-title"><div style="width:28px;height:28px;background:var(--gold);border-radius:6px;display:flex;align-items:center;justify-content:center;"><i class="fas fa-edit" style="color:var(--navy);font-size:13px"></i></div> Update Task Progress</div>
-      <button onclick="closeUpdateModal()" style="background:rgba(255,255,255,.15);border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;color:#fff;font-size:14px;display:flex;align-items:center;justify-content:center"><i class="fas fa-times"></i></button>
-    </div>
-    <div class="task-modal-body">
-      <form id="updateForm" enctype="multipart/form-data">
-        <input type="hidden" id="updateTaskId">
-        <div style="margin-bottom:16px">
-          <label class="form-label">Progress</label>
-          <input type="range" id="progressSlider" name="progress" min="0" max="100" value="0" oninput="updateProgress(this.value)" style="width:100%;margin-bottom:6px">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <span style="font-size:12px;color:var(--text-muted)">0%</span>
-            <span id="progressBadge" style="background:var(--navy);color:#fff;padding:3px 14px;border-radius:20px;font-size:14px;font-weight:700">0%</span>
-            <span style="font-size:12px;color:var(--text-muted)">100%</span>
-          </div>
-        </div>
-        <div style="margin-bottom:14px">
-          <label class="form-label">Status</label>
-          <select id="statusSelect" name="status" class="form-input">
-            <option value="pending">⏳ Pending</option>
-            <option value="in_progress">🔄 In Progress</option>
-            <option value="completed">✅ Completed</option>
-          </select>
-        </div>
-        <div style="margin-bottom:14px">
-          <label class="form-label">Attachment <span style="font-weight:400;color:var(--text-muted)">(Optional)</span></label>
-          <input type="file" name="attachment" id="attachFile" accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.gif,.xlsx,.csv,.xls" class="form-input" onchange="fileChosen(this)">
-        </div>
-        <div style="margin-bottom:16px">
-          <label class="form-label">Comment <span style="font-weight:400;color:var(--text-muted)">(Optional)</span></label>
-          <textarea id="commentText" name="comment" rows="3" class="form-input" placeholder="Add a note about your progress..."></textarea>
-        </div>
-        <div style="display:flex;gap:10px">
-          <button type="submit" id="updateSubmitBtn" class="btn-primary" style="flex:1;justify-content:center"><i class="fas fa-save"></i> Save Update</button>
-          <button type="button" onclick="closeUpdateModal()" class="btn-outline" style="padding:11px 18px">Cancel</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-
-<!-- ── Jain AI Chat modal ── -->
-<div class="ai-chat-overlay" id="aiChatOverlay">
-  <div class="ai-chat-box">
-    <div class="ai-chat-header">
-      <div class="ai-chat-title">
-        <span class="jain-ai-badge" style="font-size:11px;padding:3px 10px">✦ JAIN AI</span>
-        Core Team Assistant
-      </div>
-      <button onclick="closeAiChat()" style="background:rgba(255,255,255,.15);border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;color:#fff;font-size:14px"><i class="fas fa-times"></i></button>
-    </div>
-    <div class="ai-chat-messages" id="chatMessages"></div>
-    <div class="ai-chat-input-row">
-      <input class="ai-chat-input" id="chatInput" placeholder="Ask Jain AI anything..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}">
-      <button class="ai-chat-send" onclick="sendChat()"><i class="fas fa-paper-plane"></i></button>
-    </div>
-  </div>
-</div>
-
-<!-- ── Floating Jain AI button ── -->
-<button class="ai-float-btn" onclick="openGlobalChat()" title="Ask Jain AI">
-  <span style="font-family:'Syne',sans-serif;font-size:11px;font-weight:800;letter-spacing:-.5px">AI</span>
-</button>
-
-<!-- ── Notifications ── -->
-<div id="notifContainer"></div>
-
+{% block scripts %}
 <script>
-// ── Tab switching ──
-function switchTab(name) {
-  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-  document.getElementById('tab-'+name).classList.add('active');
-  document.getElementById('btn-'+name).classList.add('active');
-  sessionStorage.setItem('coreTab', name);
+/* ─────────────────────────────────────────────────────────
+   CORE DASHBOARD JS
+───────────────────────────────────────────────────────── */
+
+function switchTab(tab) {
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b    => b.classList.remove('active'));
+    document.getElementById('content-' + tab)?.classList.add('active');
+    document.getElementById('tab-' + tab)?.classList.add('active');
 }
 
-// ── Checkbox helpers ──
-function updateSelCount(){
-  const n = document.querySelectorAll('input[name="assigned_users"]:checked').length;
-  document.getElementById('selCount').textContent = n+' selected';
+function filterMyTasks() {
+    const val = document.getElementById('taskFilter').value;
+    document.querySelectorAll('#myTaskList .task-card').forEach(card => {
+        card.style.display = (!val || card.dataset.status === val) ? '' : 'none';
+    });
 }
-function selLeaders(){document.querySelectorAll('.leader-cb').forEach(c=>c.checked=true);updateSelCount();}
-function selCore(){document.querySelectorAll('.core-cb').forEach(c=>c.checked=true);updateSelCount();}
-function selAll(){document.querySelectorAll('input[name="assigned_users"]').forEach(c=>c.checked=true);updateSelCount();}
-function selNone(){document.querySelectorAll('input[name="assigned_users"]').forEach(c=>c.checked=false);updateSelCount();}
-
-// ── Progress slider ──
-function updateProgress(v){
-  document.getElementById('progressBadge').textContent=v+'%';
-  const pct=((v-0)/100)*100;
-  document.getElementById('progressSlider').style.background=`linear-gradient(to right,#04043a ${pct}%,#e5e7eb ${pct}%)`;
-  const sel=document.getElementById('statusSelect');
-  if(v>=100)sel.value='completed';
-  else if(v>0&&sel.value==='pending')sel.value='in_progress';
-}
-
-function fileChosen(input){
-  if(input.files[0]) showNotif('File selected: '+input.files[0].name,'info');
+function filterMyDocs() {
+    const val = document.getElementById('docFilter').value;
+    document.querySelectorAll('#myDocList .doc-card').forEach(card => {
+        card.style.display = (!val || card.dataset.status === val) ? '' : 'none';
+    });
 }
 
 // ── Task update modal ──
-function openUpdateModal(id, progress, status){
-  document.getElementById('updateTaskId').value=id;
-  const s=document.getElementById('progressSlider');
-  s.value=progress;updateProgress(progress);
-  const stat=status==='rework'?'in_progress':status;
-  document.getElementById('statusSelect').value=stat;
-  document.getElementById('commentText').value='';
-  document.getElementById('attachFile').value='';
-  const btn=document.getElementById('updateSubmitBtn');
-  btn.innerHTML='<i class="fas fa-save"></i> Save Update';btn.disabled=false;
-  document.getElementById('updateModal').classList.add('open');
-  document.body.style.overflow='hidden';
+let _updateTaskId = '';
+function openUpdateModal(id, progress, status) {
+    _updateTaskId = id;
+    document.getElementById('progressSlider').value = progress;
+    document.getElementById('progressDisplay').textContent = progress + '%';
+    document.getElementById('updateStatus').value = status === 'completed' ? 'completed' : 'in_progress';
+    document.getElementById('updateComment').value = '';
+    document.getElementById('updateFile').value = '';
+    document.getElementById('updateModal').classList.add('open');
 }
-function closeUpdateModal(){
-  document.getElementById('updateModal').classList.remove('open');
-  document.body.style.overflow='';
+function closeUpdateModal() { document.getElementById('updateModal').classList.remove('open'); }
+
+async function submitUpdate() {
+    showLoading();
+    const status   = document.getElementById('updateStatus').value;
+    const progress = parseInt(document.getElementById('progressSlider').value);
+    const comment  = document.getElementById('updateComment').value.trim();
+    const fileEl   = document.getElementById('updateFile');
+    const hasFile  = fileEl.files && fileEl.files[0];
+    
+    try {
+        let r;
+        if (hasFile) {
+            const fd = new FormData();
+            fd.append('progress', progress);
+            fd.append('status', status);
+            fd.append('comment', comment);
+            fd.append('attachment', fileEl.files[0]);
+            r = await fetch(`/api/update_task_progress/${_updateTaskId}`, { method:'POST', body: fd });
+        } else {
+            r = await fetch(`/api/update_task_progress/${_updateTaskId}`, {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ progress, status, comment })
+            });
+        }
+        const d = await r.json();
+        
+        hideLoading();
+        if (d.success) {
+            showNotif('Task updated' + (hasFile ? ' with attachment' : ''), 'success');
+            closeUpdateModal();
+            setTimeout(() => location.reload(), 1000);
+        } else { hideLoading(); showNotif(d.error || 'Failed to update task', 'error'); }
+    } catch(e) {  showNotif('Request failed', 'error'); }
 }
 
-document.getElementById('updateForm').addEventListener('submit', async function(e){
-  e.preventDefault();
-  const id=document.getElementById('updateTaskId').value;
-  const btn=document.getElementById('updateSubmitBtn');
-  btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Saving...';btn.disabled=true;
-  const fd=new FormData();
-  fd.append('progress',document.getElementById('progressSlider').value);
-  fd.append('status',document.getElementById('statusSelect').value);
-  fd.append('comment',document.getElementById('commentText').value.trim());
-  const f=document.getElementById('attachFile').files[0];
-  if(f)fd.append('attachment',f);
-  try{
-    const r=await fetch('/api/update_task_progress/'+id,{method:'POST',body:fd,credentials:'same-origin'});
-    if(r.redirected){window.location.href=r.url;return;}
-    const d=await r.json();
-    if(d.success){showNotif(d.message||'Task updated!','success');closeUpdateModal();setTimeout(()=>location.reload(),1400);}
-    else throw new Error(d.error||'Failed');
-  }catch(err){
-    showNotif(err.message,'error');
-    btn.innerHTML='<i class="fas fa-save"></i> Save Update';btn.disabled=false;
-  }
+// ── File Viewer ──
+let currentViewerUrl = '';
+function openViewer(url, name) {
+    currentViewerUrl = url;
+    document.getElementById('viewerTitle').innerHTML = `<i class="fas fa-file-alt" style="color:var(--jain-gold)"></i> ${name}`;
+    document.getElementById('viewerOpenLink').href     = url;
+    document.getElementById('viewerDownloadLink').href = url;
+    const body = document.getElementById('viewerBody');
+    const ext  = url.split('.').pop().toLowerCase();
+    if (ext === 'pdf') {
+        body.innerHTML = `<iframe src="${url}" style="width:100%;height:60vh;border:none"></iframe>`;
+    } else if (['png','jpg','jpeg','gif','webp'].includes(ext)) {
+        body.innerHTML = `<img src="${url}" style="max-width:100%;max-height:60vh;object-fit:contain;margin:auto;display:block;padding:1rem">`;
+    } else {
+        body.innerHTML = `<div style="padding:2rem;text-align:center"><i class="fas fa-file-alt" style="font-size:4rem;color:var(--jain-gold);margin-bottom:1rem;display:block"></i><p style="color:#6b7280">Preview not available. Use Open or Download.</p></div>`;
+    }
+    document.getElementById('fileViewerModal').classList.add('open');
+}
+function closeViewer() {
+    document.getElementById('fileViewerModal').classList.remove('open');
+    document.getElementById('viewerBody').innerHTML = '';
+    document.getElementById('viewerAskPanel').style.display = 'none';
+}
+function toggleViewerAsk() {
+    const p = document.getElementById('viewerAskPanel');
+    p.style.display = p.style.display === 'none' ? 'block' : 'none';
+}
+async function aiSummarizeViewer() {
+    if (!currentViewerUrl) return;
+    document.getElementById('viewerAskPanel').style.display = 'block';
+    document.getElementById('viewerAiResponse').textContent = 'Summarizing…';
+    try {
+        const r = await fetch('/api/ai/summarize', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ document_name: document.getElementById('viewerTitle').innerText, file_url: currentViewerUrl })
+        });
+        const d = await r.json();
+        document.getElementById('viewerAiResponse').textContent = d.success ? d.summary : d.error;
+    } catch(e) { document.getElementById('viewerAiResponse').textContent = 'AI unavailable.'; }
+}
+let viewerChatHistory = [];
+async function sendViewerAsk() {
+    const inp = document.getElementById('viewerAskInput');
+    const msg = inp.value.trim();
+    if (!msg) return;
+    inp.value = '';
+    document.getElementById('viewerAiResponse').textContent = 'Thinking…';
+    viewerChatHistory.push({ role:'user', content: msg });
+    try {
+        const r = await fetch('/api/ai/chat', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ message: msg, task_title: 'Document', task_desc: '', history: viewerChatHistory.slice(-6) })
+        });
+        const d = await r.json();
+        const reply = d.success ? d.reply : d.error;
+        document.getElementById('viewerAiResponse').textContent = reply;
+        viewerChatHistory.push({ role:'assistant', content: reply });
+    } catch(e) { document.getElementById('viewerAiResponse').textContent = 'Error.'; }
+}
+
+// ── AI helpers ──
+function toggleAiPanel_core(id) {
+    document.getElementById(id)?.classList.toggle('open');
+}
+
+async function aiTaskHelp(id, title, desc, due, priority) {
+    const box = document.getElementById(`ai-core-result-${id}`);
+    if (!box) return;
+    box.textContent = 'Getting help…';
+    try {
+        const r = await fetch('/api/ai/task-help', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ title, description: desc, due_date: due, priority })
+        });
+        const d = await r.json();
+        box.textContent = d.success ? d.help : d.error;
+    } catch(e) { box.textContent = 'AI unavailable.'; }
+}
+
+const _aiCoreChatHistory = {};
+async function sendAiCoreChat(id) {
+    const inp = document.getElementById(`ai-core-chat-${id}`);
+    const box = document.getElementById(`ai-core-result-${id}`);
+    const msg = inp.value.trim();
+    if (!msg) return;
+    inp.value = '';
+    box.textContent = 'Thinking…';
+    if (!_aiCoreChatHistory[id]) _aiCoreChatHistory[id] = [];
+    _aiCoreChatHistory[id].push({ role:'user', content: msg });
+    try {
+        const r = await fetch('/api/ai/chat', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ message: msg, task_title: 'Core Task Help', task_desc: '', history: _aiCoreChatHistory[id].slice(-6) })
+        });
+        const d = await r.json();
+        const reply = d.success ? d.reply : d.error;
+        box.textContent = reply;
+        _aiCoreChatHistory[id].push({ role:'assistant', content: reply });
+    } catch(e) { box.textContent = 'Error.'; }
+}
+
+async function aiSummarizeDoc(id, name) {
+    const panel = document.getElementById(`ai-doc-${id}`);
+    const text  = document.getElementById(`ai-doc-text-${id}`);
+    panel.style.display = 'block';
+    text.textContent    = 'Summarizing…';
+    try {
+        const r = await fetch('/api/ai/summarize', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ document_name: name, description: 'Core team submission for review' })
+        });
+        const d = await r.json();
+        text.textContent = d.success ? d.summary : d.error;
+    } catch(e) { text.textContent = 'AI unavailable.'; }
+}
+
+// Close modals on backdrop
+['updateModal'].forEach(id => {
+    document.getElementById(id)?.addEventListener('click', function(e) {
+        if (e.target === this) this.classList.remove('open');
+    });
+});
+document.getElementById('fileViewerModal')?.addEventListener('click', function(e) {
+    if (e.target === this) closeViewer();
 });
 
-// ══════════════════════════════════════════════════
-//  ENHANCED FILE VIEWER
-// ══════════════════════════════════════════════════
-let currentFileUrl='', currentFileName='';
-
-function viewFile(url, name){
-  currentFileUrl=url; currentFileName=name;
-  const ext=url.split('.').pop().toLowerCase().split('?')[0];
-  const isPdf=ext==='pdf';
-  const isImg=['jpg','jpeg','png','gif','webp'].includes(ext);
-
-  document.getElementById('fileTitle').textContent=name;
-  document.getElementById('fileOpenLink').href=url;
-  document.getElementById('fileDlLink').href=url;
-
-  if(isPdf) document.getElementById('fileIcon').className='fas fa-file-pdf';
-  else if(isImg) document.getElementById('fileIcon').className='fas fa-file-image';
-  else document.getElementById('fileIcon').className='fas fa-file';
-
-  document.getElementById('pdfWrap').style.display=isPdf?'block':'none';
-  const imgWrap=document.getElementById('imgWrap');
-  imgWrap.style.display=isImg?'flex':'none';
-  document.getElementById('noPreview').style.display=(!isPdf&&!isImg)?'flex':'none';
-
-  if(isPdf){document.getElementById('pdfObj').data=url;document.getElementById('pdfLink').href=url;}
-  if(isImg)document.getElementById('imgView').src=url;
-
-  // reset AI panels
-  const aib=document.getElementById('viewerAiBox');
-  aib.textContent=''; aib.classList.remove('show');
-  const askPanel=document.getElementById('viewerAskPanel');
-  askPanel.classList.remove('show');
-  document.getElementById('viewerAskInput').value='';
-  const askResp=document.getElementById('viewerAskResponse');
-  askResp.textContent=''; askResp.classList.remove('show');
-
-  // reset summarize btn
-  const sb=document.getElementById('viewerSummarizeBtn');
-  sb.disabled=false; sb.innerHTML='<span>✦</span> Summarize with Jain AI';
-
-  document.getElementById('fileModal').classList.add('open');
-  document.body.style.overflow='hidden';
-}
-
-function closeFile(){
-  document.getElementById('fileModal').classList.remove('open');
-  document.getElementById('pdfObj').data='';
-  document.getElementById('imgView').src='';
-  document.body.style.overflow='';
-}
-
-// Toggle Ask Jain AI panel
-function toggleViewerAsk(){
-  const p=document.getElementById('viewerAskPanel');
-  if(p.classList.contains('show')){
-    p.classList.remove('show');
-  } else {
-    p.classList.add('show');
-    setTimeout(()=>document.getElementById('viewerAskInput').focus(),100);
-  }
-}
-
-// Summarize with Jain AI
-async function aiSummarizeViewer(){
-  if(!currentFileUrl){showNotif('No file loaded','warning');return;}
-  const btn=document.getElementById('viewerSummarizeBtn');
-  btn.disabled=true;
-  btn.innerHTML='<div class="thinking"><span></span><span></span><span></span></div> Jain AI is reading...';
-  const box=document.getElementById('viewerAiBox');
-  box.textContent='Jain AI is analysing the document...';
-  box.classList.add('show');
-  try{
-    const r=await fetch('/api/ai/summarize',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',
-      body:JSON.stringify({document_name:currentFileName,file_url:currentFileUrl})});
-    const d=await r.json();
-    box.textContent=d.success?d.summary:'Error: '+(d.error||'Jain AI unavailable');
-  }catch(err){box.textContent='Error: '+err.message;}
-  btn.disabled=false;
-  btn.innerHTML='<span>✦</span> Summarize with Jain AI';
-}
-
-// Ask Jain AI from viewer
-async function sendViewerAsk(){
-  const input=document.getElementById('viewerAskInput');
-  const q=input.value.trim();
-  if(!q){showNotif('Enter a question','warning');return;}
-  const resp=document.getElementById('viewerAskResponse');
-  resp.textContent='Jain AI is thinking...';
-  resp.classList.add('show');
-  try{
-    const r=await fetch('/api/ai/chat',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',
-      body:JSON.stringify({message:q+' (Context: document named "'+currentFileName+'")',task_title:'Document Q&A',task_desc:'User is viewing a document and asking questions.',history:[]})});
-    const d=await r.json();
-    resp.textContent=d.success?d.reply:'Error: '+(d.error||'Jain AI unavailable');
-  }catch(err){resp.textContent='Error: '+err.message;}
-}
-
-// ── AI summarize doc card ──
-async function aiSummarizeDoc(docId, name, desc, fileUrl){
-  const box=document.getElementById('ai-doc-'+docId)||document.getElementById('ai-doc-share-'+docId.replace('share-',''));
-  if(!box)return;
-  box.textContent='✦ Jain AI is analysing...';box.classList.add('show');
-  try{
-    const r=await fetch('/api/ai/summarize',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',
-      body:JSON.stringify({document_name:name,description:desc,file_url:fileUrl})});
-    const d=await r.json();
-    box.textContent=d.success?d.summary:'Error: '+(d.error||'Jain AI unavailable');
-  }catch(err){box.textContent='Error: '+err.message;}
-}
-
-// ── AI task help ──
-async function aiTaskHelp(id, title, desc, due, priority){
-  const box=document.getElementById('ai-task-'+id);
-  if(!box)return;
-  const btns=box.previousElementSibling.querySelectorAll('.ai-btn');
-  btns.forEach(b=>{b.disabled=true;});
-  box.innerHTML='<div class="thinking"><span></span><span></span><span></span></div> Jain AI is generating a plan...';
-  box.classList.add('show');
-  try{
-    const r=await fetch('/api/ai/task-help',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',
-      body:JSON.stringify({title,description:desc,due_date:due,priority})});
-    const d=await r.json();
-    box.textContent=d.success?d.help:'Error: '+(d.error||'Jain AI unavailable');
-  }catch(err){box.textContent='Error: '+err.message;}
-  btns.forEach(b=>{b.disabled=false;});
-}
-
-// ── AI task chat ──
-let chatContext=null;
-function aiTaskChat(id, title, desc){
-  chatContext={title,desc,history:[]};
-  document.getElementById('chatMessages').innerHTML='';
-  addMsg('ai','Hello! I\'m Jain AI.\n\nI can help you with: "'+title+'"\n\nAsk me anything — for a breakdown, ideas, advice, or help with any step.');
-  document.getElementById('aiChatOverlay').classList.add('open');
-  document.body.style.overflow='hidden';
-  document.getElementById('chatInput').focus();
-}
-
-function openGlobalChat(){
-  chatContext={title:'General Assistant',desc:'Help the user with tasks, documents, or general OOA questions.',history:[]};
-  document.getElementById('chatMessages').innerHTML='';
-  addMsg('ai','Hello! I\'m Jain AI — your Jain University OOA assistant.\n\nI can help with your tasks, documents, or anything else on the portal!');
-  document.getElementById('aiChatOverlay').classList.add('open');
-  document.body.style.overflow='hidden';
-  document.getElementById('chatInput').focus();
-}
-
-function closeAiChat(){
-  document.getElementById('aiChatOverlay').classList.remove('open');
-  document.body.style.overflow='';
-}
-
-function addMsg(role, text){
-  const msgs=document.getElementById('chatMessages');
-  const div=document.createElement('div');
-  div.className=role==='user'?'msg-user':'msg-ai';
-  div.textContent=text;
-  msgs.appendChild(div);
-  msgs.scrollTop=msgs.scrollHeight;
-}
-
-function addThinking(){
-  const msgs=document.getElementById('chatMessages');
-  const div=document.createElement('div');
-  div.className='msg-thinking';div.id='thinking-msg';
-  div.innerHTML='<div class="thinking"><span></span><span></span><span></span></div><span style="font-size:12px;color:var(--text-muted);margin-left:6px">Jain AI is thinking...</span>';
-  msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
-}
-
-function removeThinking(){
-  const t=document.getElementById('thinking-msg');
-  if(t)t.remove();
-}
-
-async function sendChat(){
-  const input=document.getElementById('chatInput');
-  const text=input.value.trim();
-  if(!text||!chatContext)return;
-  input.value='';
-  addMsg('user',text);
-  chatContext.history.push({role:'user',content:text});
-  addThinking();
-  try{
-    const r=await fetch('/api/ai/chat',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',
-      body:JSON.stringify({message:text,task_title:chatContext.title,task_desc:chatContext.desc,history:chatContext.history.slice(-8)})});
-    const d=await r.json();
-    removeThinking();
-    const reply=d.success?d.reply:'Sorry, I could not process that request.';
-    addMsg('ai',reply);
-    chatContext.history.push({role:'assistant',content:reply});
-  }catch(err){
-    removeThinking();
-    addMsg('ai','Error connecting to Jain AI. Please try again.');
-  }
-}
-
-// ── Notifications ──
-function showNotif(msg,type='info'){
-  const icons={success:'fa-check-circle',error:'fa-times-circle',warning:'fa-exclamation-triangle',info:'fa-info-circle'};
-  const n=document.createElement('div');
-  n.className='notif '+type;
-  n.innerHTML=`<i class="fas ${icons[type]||icons.info}" style="font-size:16px;flex-shrink:0;margin-top:2px"></i><div style="font-size:13px;color:var(--text-main)">${msg}</div><button onclick="this.parentElement.remove()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);margin-left:auto;padding:0;font-size:14px"><i class="fas fa-times"></i></button>`;
-  document.getElementById('notifContainer').appendChild(n);
-  setTimeout(()=>{n.style.animation='notifOut .3s ease forwards';setTimeout(()=>n.remove(),300);},4500);
-}
-
-// ── Keyboard & click outside ──
-document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){closeFile();closeUpdateModal();closeAiChat();}
-});
-document.getElementById('fileModal').addEventListener('click',e=>{if(e.target===document.getElementById('fileModal'))closeFile();});
-document.getElementById('updateModal').addEventListener('click',e=>{if(e.target===document.getElementById('updateModal'))closeUpdateModal();});
-document.getElementById('aiChatOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('aiChatOverlay'))closeAiChat();});
-
-// ── Init ──
-document.addEventListener('DOMContentLoaded',()=>{
-  document.querySelectorAll('input[name="assigned_users"]').forEach(c=>c.addEventListener('change',updateSelCount));
-  const saved=sessionStorage.getItem('coreTab')||'upload';
-  switchTab(saved);
-  setInterval(()=>{
-    fetch('/api/activity/status',{credentials:'same-origin'}).then(r=>r.json()).then(d=>{
-      if(d.new_tasks>0)showNotif('You have '+d.new_tasks+' new task(s)','info');
-      if(d.new_documents>0)showNotif(d.new_documents+' new document(s) shared','success');
-      if(d.overdue_tasks>0)showNotif('You have '+d.overdue_tasks+' overdue task(s)','warning');
-    }).catch(()=>{});
-  },30000);
-});
-
-window.switchTab=switchTab;
-window.openUpdateModal=openUpdateModal;
-window.closeUpdateModal=closeUpdateModal;
-window.viewFile=viewFile;
-window.closeFile=closeFile;
-window.toggleViewerAsk=toggleViewerAsk;
-window.sendViewerAsk=sendViewerAsk;
-window.selLeaders=selLeaders;window.selCore=selCore;window.selAll=selAll;window.selNone=selNone;
-window.aiTaskHelp=aiTaskHelp;window.aiTaskChat=aiTaskChat;window.aiSummarizeDoc=aiSummarizeDoc;
-window.aiSummarizeViewer=aiSummarizeViewer;window.openGlobalChat=openGlobalChat;window.closeAiChat=closeAiChat;window.sendChat=sendChat;
-window.showNotification=showNotif;
+// Handle hash on load
+(function(){
+    const h = window.location.hash.replace('#','');
+    if (h) switchTab(h);
+})();
 </script>
 {% endblock %}

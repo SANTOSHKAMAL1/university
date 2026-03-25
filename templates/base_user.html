@@ -9,1616 +9,680 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap');
-        
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&display=swap');
         :root {
-            --jain-navy: #0A1929;          /* Deep Navy Blue - primary */
-            --jain-navy-light: #1E3A5F;     /* Lighter Navy for hover */
-            --jain-gold: #C5A572;           /* Antique Gold - accent */
-            --jain-gold-light: #E8D5B5;     /* Light gold for hover states */
-            --jain-gold-dark: #A67C4E;       /* Darker gold for text */
-            --jain-cream: #FAF7F2;           /* Light cream background */
-            --jain-text: #1A2B3C;            /* Dark blue-gray for text */
-            --header-bg: #0A1929;             /* Navy header */
-            --header-text: #FFFFFF;            /* White text in header */
-            --header-hover: #1E3A5F;           /* Navy hover */
-            --header-active: #C5A572;          /* Gold active state */
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #eef2f6 100%);
-            color: var(--jain-text);
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-        
-        h1, h2, h3, h4, h5, h6 {
-            font-family: 'Playfair Display', serif;
-        }
-        
-        /* Top Navigation Styles */
-        .top-nav {
-            background: var(--header-bg);
-            color: var(--header-text);
-            box-shadow: 0 4px 20px rgba(10, 25, 41, 0.15);
-            position: sticky;
-            top: 0;
-            z-index: 50;
-            animation: slideDown 0.6s ease;
-        }
-        
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .nav-container {
-            max-width: 1600px;
-            margin: 0 auto;
-            padding: 0 24px;
-        }
-        
-        .logo-area {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .logo-icon {
-            background: var(--jain-gold);
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--jain-navy);
-            font-size: 20px;
-            transition: all 0.3s ease;
-        }
-        
-        .logo-icon:hover {
-            transform: rotate(5deg) scale(1.05);
-            box-shadow: 0 4px 12px rgba(197, 165, 114, 0.3);
-        }
-        
-        .logo-text h1 {
-            color: var(--jain-gold);
-            font-weight: 700;
-            font-size: 1.1rem;
-            line-height: 1.3;
-        }
-        
-        .logo-text p {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 0.65rem;
-        }
-        
-        .nav-menu {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            margin: 0 24px;
-        }
-        
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            border-radius: 8px;
-            color: rgba(255, 255, 255, 0.8);
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: 500;
-            transition: all 0.2s ease;
-            white-space: nowrap;
-        }
-        
-        .nav-item:hover {
-            background: var(--header-hover);
-            color: white;
-            transform: translateY(-1px);
-        }
-        
-        .nav-item.active {
-            background: var(--header-active);
-            color: var(--jain-navy);
-            font-weight: 600;
-        }
-        
-        .nav-item.active i {
-            color: var(--jain-navy);
-        }
-        
-        .nav-item i {
-            font-size: 14px;
-            color: var(--jain-gold);
-        }
-        
-        .nav-item:hover i {
-            color: white;
-        }
-        
-        .nav-item.active i {
-            color: var(--jain-navy);
-        }
-        
-        /* User Menu */
-        .user-menu {
-            position: relative;
-            margin-left: auto;
-        }
-        
-        .user-menu-btn {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 6px 12px 6px 8px;
-            border-radius: 40px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(197, 165, 114, 0.3);
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        
-        .user-menu-btn:hover {
-            background: var(--header-hover);
-            border-color: var(--jain-gold);
-        }
-        
-        .user-avatar {
-            background: var(--jain-gold);
-            color: var(--jain-navy);
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 15px;
-        }
-        
-        .user-info {
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .user-name {
-            color: white;
-            font-weight: 600;
-            font-size: 13px;
-        }
-        
-        .user-role {
-            color: var(--jain-gold);
-            font-size: 10px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        
-        .user-dropdown {
-            position: absolute;
-            top: 100%;
-            right: 0;
-            width: 280px;
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(10, 25, 41, 0.2);
-            margin-top: 12px;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(-10px);
-            transition: all 0.3s ease;
-            z-index: 100;
-            border: 1px solid var(--jain-gold);
-            overflow: hidden;
-        }
-        
-        .user-dropdown.active {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
-        
-        .dropdown-header {
-            background: var(--jain-navy);
-            color: white;
-            padding: 16px;
-            border-bottom: 1px solid rgba(197, 165, 114, 0.3);
-        }
-        
-        .dropdown-header .user-name-lg {
-            font-weight: 600;
-            font-size: 14px;
-            margin-bottom: 4px;
-        }
-        
-        .dropdown-header .user-email {
-            font-size: 11px;
-            opacity: 0.8;
-        }
-        
-        .dropdown-menu {
-            padding: 8px;
-        }
-        
-        .dropdown-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 12px;
-            border-radius: 8px;
-            color: var(--jain-text);
-            text-decoration: none;
-            font-size: 13px;
-            transition: all 0.2s ease;
-        }
-        
-        .dropdown-item:hover {
-            background: #f5f5f5;
-            color: var(--jain-navy);
-            transform: translateX(4px);
-        }
-        
-        .dropdown-item i {
-            color: var(--jain-gold);
-            width: 18px;
-            font-size: 14px;
-        }
-        
-        .dropdown-divider {
-            height: 1px;
-            background: #e5e7eb;
-            margin: 8px 0;
-        }
-        
-        /* Action Buttons */
-        .action-btn {
-            position: relative;
-            padding: 8px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            transition: all 0.2s ease;
-            border: 1px solid transparent;
-        }
-        
-        .action-btn:hover {
-            background: var(--header-hover);
-            border-color: var(--jain-gold);
-            transform: scale(1.05);
-        }
-        
-        .notification-badge {
-            position: absolute;
-            top: 2px;
-            right: 2px;
-            width: 8px;
-            height: 8px;
-            background: #ef4444;
-            border-radius: 50%;
-            border: 2px solid var(--jain-navy);
-            animation: pulse 1s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-        }
-        
-        .notification-dropdown {
-            position: absolute;
-            top: 100%;
-            right: 0;
-            width: 360px;
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(10, 25, 41, 0.2);
-            margin-top: 12px;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(-10px);
-            transition: all 0.3s ease;
-            z-index: 100;
-            border: 1px solid var(--jain-gold);
-            max-height: 480px;
-            overflow-y: auto;
-        }
-        
-        .notification-dropdown.active {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
-        
-        .notification-header {
-            padding: 14px 18px;
-            border-bottom: 1px solid #f0f0f0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--jain-navy);
-            color: white;
-            border-radius: 16px 16px 0 0;
-        }
-        
-        .notification-header h3 {
-            font-weight: 600;
-            font-size: 14px;
-        }
-        
-        .notification-header span {
-            background: var(--jain-gold);
-            color: var(--jain-navy);
-            padding: 2px 8px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-        
-        .notification-item {
-            padding: 14px 18px;
-            border-bottom: 1px solid #f0f0f0;
-            display: flex;
-            gap: 10px;
-            transition: all 0.2s ease;
-            cursor: pointer;
-        }
-        
-        .notification-item:hover {
-            background: #f9fafb;
-            transform: translateX(4px);
-        }
-        
-        .notification-item.unread {
-            background: #F5E6D3;
-        }
-        
-        .notification-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
-            background: #f3f4f6;
-            color: var(--jain-navy);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-        }
-        
-        .notification-content {
-            flex: 1;
-        }
-        
-        .notification-title {
-            font-weight: 600;
-            color: var(--jain-navy);
-            margin-bottom: 2px;
-            font-size: 13px;
-        }
-        
-        .notification-message {
-            color: #6b7280;
-            font-size: 12px;
-            margin-bottom: 2px;
-        }
-        
-        .notification-time {
-            color: #9ca3af;
-            font-size: 10px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        
-        .view-all-btn {
-            display: block;
-            padding: 12px;
-            text-align: center;
-            color: var(--jain-navy);
-            font-weight: 600;
-            font-size: 13px;
-            text-decoration: none;
-            border-top: 1px solid #f0f0f0;
-            transition: all 0.2s ease;
-        }
-        
-        .view-all-btn:hover {
-            background: #F5E6D3;
-            color: var(--jain-navy);
-        }
-        
-        /* Search Bar */
-        .search-container {
-            position: relative;
-            margin-right: 16px;
-        }
-        
-        .search-bar {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(197, 165, 114, 0.3);
-            border-radius: 40px;
-            padding: 8px 16px 8px 40px;
-            font-size: 13px;
-            width: 260px;
-            transition: all 0.3s ease;
-            color: white;
-        }
-        
-        .search-bar::placeholder {
-            color: rgba(255, 255, 255, 0.5);
-        }
-        
-        .search-bar:focus {
-            outline: none;
-            background: rgba(255, 255, 255, 0.15);
-            width: 320px;
-            border-color: var(--jain-gold);
-        }
-        
-        .search-icon {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 13px;
-        }
-        
-        /* Main Content Area */
-        .main-content {
-            min-height: 100vh;
-            padding: 24px 32px;
-            max-width: 1600px;
-            margin: 0 auto;
-        }
-        
-        /* Page Header */
-        .page-header {
-            margin-bottom: 24px;
-        }
-        
-        .page-title {
-            color: var(--jain-navy);
-            font-size: 28px;
-            font-weight: 700;
-            font-family: 'Playfair Display', serif;
-            margin-bottom: 4px;
-        }
-        
-        .page-subtitle {
-            color: #6b7280;
-            font-size: 14px;
-        }
-        
-        /* Alert Messages */
-        .alert {
-            animation: slideInAlert 0.4s ease;
-            border-radius: 12px;
-            margin-bottom: 20px;
-        }
-        
-        @keyframes slideInAlert {
-            from {
-                opacity: 0;
-                transform: translateY(-20px) scale(0.95);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-        
-        .alert-success {
-            background: #ecfdf5;
-            border: 1px solid #a7f3d0;
-            color: #065f46;
-        }
-        
-        .alert-error {
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            color: #991b1b;
-        }
-        
-        .alert-info {
-            background: #eff6ff;
-            border: 1px solid #bfdbfe;
-            color: #1e40af;
-        }
-        
-        .alert-warning {
-            background: #fffbeb;
-            border: 1px solid #fde68a;
-            color: #92400e;
-        }
-        
-        /* Footer */
-        .footer {
-            background: white;
-            border-top: 1px solid rgba(197, 165, 114, 0.2);
-            padding: 16px 32px;
-            margin-top: 40px;
-        }
-        
-        .footer a {
-            color: #6b7280;
-            transition: all 0.2s ease;
-        }
-        
-        .footer a:hover {
-            color: var(--jain-navy);
-        }
-        
-        /* Jain University decorative elements */
-        .jain-divider {
-            height: 2px;
-            background: linear-gradient(90deg, transparent, var(--jain-gold), var(--jain-navy), var(--jain-gold), transparent);
-            margin: 16px 0;
-        }
-        
-        .jain-card {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 4px 12px rgba(10, 25, 41, 0.05);
-            border: 1px solid rgba(197, 165, 114, 0.2);
-            transition: all 0.3s ease;
-        }
-        
-        .jain-card:hover {
-            box-shadow: 0 8px 24px rgba(10, 25, 41, 0.1);
-            border-color: var(--jain-gold);
-            transform: translateY(-2px);
-        }
-        
-        .jain-button {
-            background: var(--jain-navy);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-weight: 500;
-            font-size: 13px;
-            transition: all 0.2s ease;
-            border: 1px solid var(--jain-gold);
-        }
-        
-        .jain-button:hover {
-            background: var(--jain-navy-light);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(10, 25, 41, 0.2);
-        }
-        
-        /* Loading Spinner */
-        .spinner {
-            border: 3px solid #f3f4f6;
-            border-top: 3px solid var(--jain-gold);
-            border-radius: 50%;
-            width: 36px;
-            height: 36px;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        /* Mobile Menu */
-        .mobile-menu-btn {
-            display: none;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(197, 165, 114, 0.3);
-            border-radius: 8px;
-            padding: 8px;
-            color: white;
-            cursor: pointer;
-        }
-        
-        @media (max-width: 1024px) {
-            .nav-menu {
-                display: none;
-                position: absolute;
-                top: 100%;
-                left: 0;
-                right: 0;
-                background: var(--jain-navy);
-                flex-direction: column;
-                padding: 16px;
-                margin: 0;
-                border-top: 1px solid rgba(197, 165, 114, 0.2);
-                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-            }
-            
-            .nav-menu.active {
-                display: flex;
-            }
-            
-            .nav-item {
-                width: 100%;
-            }
-            
-            .mobile-menu-btn {
-                display: block;
-            }
-            
-            .search-bar {
-                width: 200px;
-            }
-            
-            .search-bar:focus {
-                width: 240px;
-            }
-            
-            .notification-dropdown {
-                width: 320px;
-                right: -80px;
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .main-content {
-                padding: 16px;
-            }
-            
-            .logo-text h1 {
-                font-size: 0.9rem;
-            }
-            
-            .user-name {
-                display: none;
-            }
-            
-            .search-bar {
-                width: 160px;
-            }
-            
-            .search-bar:focus {
-                width: 200px;
-            }
-        }
+            --jain-navy:#0A1929;--jain-navy-light:#1E3A5F;--jain-gold:#C5A572;
+            --jain-gold-light:#E8D5B5;--jain-text:#1A2B3C;
+            --header-hover:#1E3A5F;--header-active:#C5A572;--ai-bar-h:54px;
+        }
+        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+             background:linear-gradient(135deg,#f5f7fa 0%,#eef2f6 100%);
+             color:var(--jain-text);-webkit-font-smoothing:antialiased;
+             padding-bottom:calc(var(--ai-bar-h) + 12px)}
+        h1,h2,h3,h4,h5,h6{font-family:'Playfair Display',serif}
+
+        /* === TOP NAV === */
+        .top-nav{background:var(--jain-navy);box-shadow:0 4px 20px rgba(10,25,41,.2);
+                 position:sticky;top:0;z-index:9000;animation:slideDown .5s ease}
+        @keyframes slideDown{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:translateY(0)}}
+        .nav-container{max-width:1600px;margin:0 auto;padding:0 20px}
+        .logo-area{display:flex;align-items:center;gap:12px;text-decoration:none;flex-shrink:0}
+        .logo-icon{background:var(--jain-gold);width:40px;height:40px;border-radius:10px;
+                   display:flex;align-items:center;justify-content:center;
+                   color:var(--jain-navy);font-size:20px;transition:all .3s}
+        .logo-icon:hover{transform:rotate(5deg) scale(1.05)}
+        .logo-text h1{color:var(--jain-gold);font-weight:700;font-size:1.05rem;
+                      line-height:1.2;font-family:'Syne',sans-serif}
+        .logo-text p{color:rgba(255,255,255,.6);font-size:.63rem}
+        .nav-menu{display:flex;align-items:center;gap:2px;margin:0 14px}
+        .nav-item{display:flex;align-items:center;gap:7px;padding:7px 12px;border-radius:8px;
+                  color:rgba(255,255,255,.78);text-decoration:none;font-size:12.5px;
+                  font-weight:500;transition:all .18s;white-space:nowrap}
+        .nav-item:hover{background:var(--header-hover);color:#fff;transform:translateY(-1px)}
+        .nav-item.active{background:var(--header-active);color:var(--jain-navy);font-weight:600}
+        .nav-item i{font-size:13px;color:var(--jain-gold)}
+        .nav-item:hover i,.nav-item.active i{color:var(--jain-navy)}
+        .nav-item.active i{color:var(--jain-navy)}
+
+        /* icon buttons */
+        .nav-icon-btn{position:relative;width:38px;height:38px;border-radius:50%;
+                      background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.13);
+                      color:rgba(255,255,255,.85);display:flex;align-items:center;
+                      justify-content:center;cursor:pointer;font-size:15px;
+                      transition:all .18s;flex-shrink:0}
+        .nav-icon-btn:hover{background:rgba(255,255,255,.2);border-color:var(--jain-gold);color:var(--jain-gold)}
+        .nav-badge-dot{position:absolute;top:5px;right:5px;width:8px;height:8px;
+                       background:#ef4444;border-radius:50%;border:2px solid var(--jain-navy);
+                       animation:pulse 1.4s infinite}
+        .nav-badge-num{position:absolute;top:2px;right:2px;min-width:17px;height:17px;
+                       background:#ef4444;color:#fff;border-radius:20px;font-size:9px;
+                       font-weight:700;line-height:17px;text-align:center;padding:0 3px;
+                       border:2px solid var(--jain-navy)}
+        @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.28)}}
+
+        /* shared dropdown */
+        .nav-dropdown{position:absolute;top:calc(100% + 10px);right:0;background:#fff;
+                      border-radius:14px;box-shadow:0 20px 60px rgba(10,25,41,.22);
+                      border:1px solid rgba(197,165,114,.45);opacity:0;visibility:hidden;
+                      transform:translateY(-8px);transition:all .22s ease;z-index:10000}
+        .nav-dropdown.open{opacity:1;visibility:visible;transform:translateY(0)}
+        .drop-hdr{padding:13px 16px;background:var(--jain-navy);border-radius:14px 14px 0 0;
+                  color:#fff;display:flex;justify-content:space-between;align-items:center}
+        .drop-hdr h3{font-size:13px;font-weight:600;display:flex;align-items:center;gap:7px;font-family:'Inter',sans-serif}
+        .drop-count{background:var(--jain-gold);color:var(--jain-navy);padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
+        /* notifications */
+        .notif-item{padding:11px 15px;border-bottom:1px solid #f3f4f6;display:flex;gap:10px;cursor:pointer;transition:all .18s}
+        .notif-item:hover{background:#fafafa;transform:translateX(3px)}
+        .notif-item.unread{background:#fef9f0}
+        .notif-icon{width:34px;height:34px;border-radius:8px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--jain-navy);flex-shrink:0}
+        .notif-title{font-weight:600;color:var(--jain-navy);font-size:12px;margin-bottom:1px}
+        .notif-msg{color:#6b7280;font-size:11px;margin-bottom:1px}
+        .notif-time{color:#9ca3af;font-size:10px}
+        .drop-footer{display:block;padding:11px;text-align:center;color:var(--jain-navy);font-weight:600;font-size:12px;text-decoration:none;border-top:1px solid #f3f4f6;transition:background .18s}
+        .drop-footer:hover{background:#fef9f0}
+        /* messages dropdown */
+        .msg-list{max-height:300px;overflow-y:auto}
+        .msg-item{padding:10px 14px;border-bottom:1px solid #f3f4f6;display:flex;gap:10px;cursor:pointer;transition:background .18s}
+        .msg-item:hover{background:#f9fafb}
+        .msg-item.unread{background:#eff6ff}
+        .msg-avatar{width:34px;height:34px;border-radius:50%;background:var(--jain-navy);color:var(--jain-gold);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0}
+        .msg-sender{font-size:12px;font-weight:600;color:var(--jain-navy)}
+        .msg-preview{font-size:11px;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px}
+        .msg-ts{font-size:10px;color:#9ca3af;white-space:nowrap}
+        .msg-input-row{padding:10px 13px;border-top:1px solid #f3f4f6;display:flex;gap:8px;background:#fafafa;border-radius:0 0 14px 14px}
+        .msg-quick-input{flex:1;padding:7px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:12px;font-family:'Inter',sans-serif}
+        .msg-quick-input:focus{outline:none;border-color:var(--jain-gold)}
+        .msg-send-btn{padding:7px 13px;background:var(--jain-navy);color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer;transition:background .18s}
+        .msg-send-btn:hover{background:var(--jain-navy-light)}
+        .no-msgs{padding:2rem;text-align:center;color:#9ca3af;font-size:12px}
+        .no-msgs i{font-size:2rem;display:block;margin-bottom:7px;opacity:.35}
+        /* user menu */
+        .user-menu-btn{display:flex;align-items:center;gap:10px;padding:5px 10px 5px 6px;border-radius:40px;background:rgba(255,255,255,.1);border:1px solid rgba(197,165,114,.28);cursor:pointer;transition:all .18s}
+        .user-menu-btn:hover{background:var(--header-hover);border-color:var(--jain-gold)}
+        .user-avatar{background:var(--jain-gold);color:var(--jain-navy);width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
+        .user-name-txt{color:#fff;font-weight:600;font-size:13px}
+        .user-role-txt{color:var(--jain-gold);font-size:10px;display:flex;align-items:center;gap:3px}
+        .user-drop-hdr{background:var(--jain-navy);padding:14px 15px;border-radius:14px 14px 0 0}
+        .user-drop-hdr .dn{color:#fff;font-size:13px;font-weight:600;margin-bottom:2px}
+        .user-drop-hdr .de{color:rgba(255,255,255,.6);font-size:11px}
+        .user-drop-hdr .dm{color:var(--jain-gold);font-size:10px;margin-top:3px}
+        .drop-menu{padding:7px}
+        .drop-item{display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:8px;color:var(--jain-text);text-decoration:none;font-size:13px;transition:all .18s;cursor:pointer;background:none;border:none;width:100%;text-align:left;font-family:'Inter',sans-serif}
+        .drop-item:hover{background:#f5f5f5;transform:translateX(3px)}
+        .drop-item i{color:var(--jain-gold);width:17px;font-size:13px}
+        .drop-divider{height:1px;background:#e5e7eb;margin:5px 0}
+        /* search */
+        .search-wrap{position:relative}
+        .search-bar{background:rgba(255,255,255,.1);border:1px solid rgba(197,165,114,.28);border-radius:30px;padding:7px 14px 7px 36px;font-size:12.5px;width:210px;transition:all .28s;color:#fff}
+        .search-bar::placeholder{color:rgba(255,255,255,.42)}
+        .search-bar:focus{outline:none;width:270px;background:rgba(255,255,255,.16);border-color:var(--jain-gold)}
+        .search-icon-abs{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.4);font-size:12px;pointer-events:none}
+        .mobile-menu-btn{display:none;background:rgba(255,255,255,.1);border:1px solid rgba(197,165,114,.28);border-radius:8px;padding:8px;color:#fff;cursor:pointer}
+
+        /* === MAIN === */
+        .main-content{min-height:100vh;padding:24px 32px;max-width:1600px;margin:0 auto}
+        .page-header{margin-bottom:22px}
+        .page-title{color:var(--jain-navy);font-size:26px;font-weight:700;margin-bottom:3px}
+        .page-subtitle{color:#6b7280;font-size:13.5px}
+        .alert{animation:alertIn .38s ease;border-radius:11px;margin-bottom:14px}
+        @keyframes alertIn{from{opacity:0;transform:translateY(-14px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+        .alert-success{background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46}
+        .alert-error{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
+        .alert-info{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af}
+        .alert-warning{background:#fffbeb;border:1px solid #fde68a;color:#92400e}
+        .footer{background:#fff;border-top:1px solid rgba(197,165,114,.18);padding:13px 30px;margin-top:32px}
+        .footer a{color:#6b7280;font-size:12px;text-decoration:none;transition:color .18s}
+        .footer a:hover{color:var(--jain-navy)}
+        .jain-divider{height:2px;background:linear-gradient(90deg,transparent,var(--jain-gold),var(--jain-navy),var(--jain-gold),transparent);margin:14px 0}
+        .jain-card{background:#fff;border-radius:12px;padding:18px;box-shadow:0 4px 12px rgba(10,25,41,.05);border:1px solid rgba(197,165,114,.18);transition:all .28s}
+        .jain-card:hover{box-shadow:0 8px 24px rgba(10,25,41,.1);border-color:var(--jain-gold);transform:translateY(-2px)}
+        .spinner{border:3px solid #f3f4f6;border-top:3px solid var(--jain-gold);border-radius:50%;width:34px;height:34px;animation:spin 1s linear infinite}
+        @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+
+        @media(max-width:1100px){
+            .nav-menu{display:none;position:absolute;top:100%;left:0;right:0;background:var(--jain-navy);flex-direction:column;padding:12px;z-index:8999;border-top:1px solid rgba(197,165,114,.2);box-shadow:0 18px 36px rgba(0,0,0,.18)}
+            .nav-menu.open{display:flex}
+            .nav-item{width:100%}
+            .mobile-menu-btn{display:flex;align-items:center;justify-content:center}
+            .search-bar{width:150px}
+        }
+        @media(max-width:768px){
+            .main-content{padding:14px}
+            .search-bar{width:120px}
+            .user-name-txt,.user-role-txt{display:none}
+        }
+
+        /* === TEAM CHAT === */
+        .team-chat-btn{position:fixed;bottom:calc(var(--ai-bar-h) + 14px);right:20px;width:48px;height:48px;border-radius:50%;background:var(--jain-navy);color:var(--jain-gold);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 14px rgba(10,25,41,.3);transition:all .25s;z-index:8200;border:2px solid var(--jain-gold)}
+        .team-chat-btn:hover{transform:scale(1.1)}
+        .team-chat-popup{position:fixed;bottom:calc(var(--ai-bar-h) + 70px);right:20px;width:340px;height:450px;background:#fff;border-radius:14px;box-shadow:0 12px 44px rgba(10,25,41,.22);display:flex;flex-direction:column;z-index:8200;border:1px solid var(--jain-gold);opacity:0;visibility:hidden;transform:translateY(18px);transition:all .28s}
+        .team-chat-popup.open{opacity:1;visibility:visible;transform:translateY(0)}
+        .tchat-header{padding:12px 15px;background:var(--jain-navy);color:#fff;border-radius:14px 14px 0 0;display:flex;justify-content:space-between;align-items:center}
+        .tchat-header h3{font-size:13px;font-weight:600;display:flex;align-items:center;gap:7px;font-family:'Inter',sans-serif}
+        .tchat-messages{flex:1;overflow-y:auto;padding:13px;background:#f9fafb}
+        .tchat-input-row{padding:10px;border-top:1px solid #e5e7eb;display:flex;gap:7px}
+        .tchat-input{flex:1;padding:7px 11px;border:1px solid #e5e7eb;border-radius:8px;font-size:12px;font-family:'Inter',sans-serif}
+        .tchat-input:focus{outline:none;border-color:var(--jain-gold)}
+        .tchat-send{padding:7px 13px;background:var(--jain-navy);color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer}
+        .tc-msg{margin-bottom:9px;display:flex;flex-direction:column}
+        .tc-msg.sent{align-items:flex-end}
+        .tc-msg.recv{align-items:flex-start}
+        .tc-bubble{max-width:80%;padding:7px 11px;border-radius:10px;font-size:12px;line-height:1.45}
+        .tc-msg.sent .tc-bubble{background:var(--jain-gold);color:var(--jain-navy);border-bottom-right-radius:3px}
+        .tc-msg.recv .tc-bubble{background:#fff;color:var(--jain-text);border:1px solid #e5e7eb;border-bottom-left-radius:3px}
+        .tc-time{font-size:9px;color:#9ca3af;margin-top:2px;padding:0 3px}
+
+        /* === JAIN AI BAR === */
+        #jainAiBar{position:fixed;bottom:0;left:0;right:0;z-index:8500;height:var(--ai-bar-h);background:linear-gradient(90deg,#0A1929 0%,#1a1a6e 55%,#0A1929 100%);border-top:2px solid var(--jain-gold);box-shadow:0 -4px 22px rgba(4,4,58,.28);display:flex;align-items:center;gap:10px;padding:0 16px}
+        .ai-bar-brand{font-family:'Syne',sans-serif;font-size:12px;font-weight:800;color:var(--jain-gold);white-space:nowrap;display:flex;align-items:center;gap:6px;flex-shrink:0}
+        .ai-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;animation:pulse 1.4s infinite}
+        .ai-bar-input{flex:1;min-width:0;background:rgba(255,255,255,.1);border:1px solid rgba(197,165,114,.35);border-radius:30px;padding:7px 16px;color:#fff;font-size:13px;font-family:'Inter',sans-serif;transition:all .2s}
+        .ai-bar-input::placeholder{color:rgba(255,255,255,.42)}
+        .ai-bar-input:focus{outline:none;background:rgba(255,255,255,.18);border-color:var(--jain-gold)}
+        .ai-bar-btn{background:var(--jain-gold);color:var(--jain-navy);border:none;border-radius:30px;padding:7px 15px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;transition:all .15s;display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0}
+        .ai-bar-btn:hover{background:#dab96a;transform:translateY(-1px)}
+        .ai-bar-btn.sec{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.22);font-family:'Inter',sans-serif}
+        .ai-bar-btn.sec:hover{background:rgba(255,255,255,.22)}
+
+        /* === AI PANEL === */
+        #jainAiPanel{position:fixed;bottom:var(--ai-bar-h);left:0;right:0;z-index:8400;background:#fff;border-top:1px solid #e5e7eb;box-shadow:0 -8px 40px rgba(10,25,41,.18);transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;max-height:500px}
+        #jainAiPanel.open{transform:translateY(0)}
+        .ai-panel-hdr{background:var(--jain-navy);padding:9px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+        .ai-panel-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px}
+        .ai-panel-title .gold{color:var(--jain-gold)}
+        .ai-panel-acts{display:flex;gap:6px}
+        .ai-act-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:6px;padding:5px 10px;font-size:11px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px;font-family:'Inter',sans-serif}
+        .ai-act-btn:hover{background:rgba(255,255,255,.22)}
+        .ai-act-btn.gold{background:var(--jain-gold);color:var(--jain-navy);border-color:var(--jain-gold);font-weight:700}
+        .ai-act-btn.gold:hover{background:#dab96a}
+        .ai-stats-row{display:flex;gap:6px;flex-wrap:wrap;padding:8px 16px;background:#f8f7ff;border-bottom:1px solid #e5e7eb;flex-shrink:0}
+        .ai-stat-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;font-family:'Inter',sans-serif}
+        .ai-stat-pill:hover{transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,0,0,.12)}
+        .spt{background:#dbeafe;color:#1e40af}.spp{background:#fef9c3;color:#854d0e}
+        .spa{background:#dcfce7;color:#166534}.spo{background:#fee2e2;color:#991b1b}
+        .spr{background:#f3e8ff;color:#6b21a8}
+        #aiMessages{flex:1;overflow-y:auto;padding:13px 16px;display:flex;flex-direction:column;gap:9px;background:#f8f9fc}
+        #aiMessages::-webkit-scrollbar{width:4px}
+        #aiMessages::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:4px}
+        .ai-msg-user{align-self:flex-end;background:var(--jain-navy);color:#fff;padding:9px 13px;border-radius:14px 14px 3px 14px;font-size:13px;line-height:1.5;max-width:80%;word-break:break-word}
+        .ai-msg-bot{align-self:flex-start;background:#fff;color:var(--jain-text);padding:9px 13px;border-radius:14px 14px 14px 3px;font-size:13px;line-height:1.65;max-width:86%;border:1px solid #e5e7eb;white-space:pre-wrap;word-break:break-word}
+        .ai-msg-think{align-self:flex-start;display:flex;gap:5px;align-items:center;padding:9px 13px;background:#fff;border:1px solid #e5e7eb;border-radius:14px 14px 14px 3px;font-size:11px;color:#9ca3af}
+        .td{width:6px;height:6px;border-radius:50%;background:var(--jain-gold);animation:blink 1s infinite}
+        .td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
+        @keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
+
+        /* === PDF MODAL === */
+        #pdfModal{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:99999;display:none;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(4px)}
+        #pdfModal.open{display:flex}
+        .pdf-box{background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(10,25,41,.25);width:100%;max-width:450px;overflow:hidden;animation:popIn .24s ease}
+        @keyframes popIn{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+        .pdf-hdr{background:var(--jain-navy);padding:13px 17px;display:flex;align-items:center;justify-content:space-between}
+        .pdf-hdr-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#fff;display:flex;align-items:center;gap:7px}
+        .pdf-body{padding:17px}
+        .pdf-preview{background:#f8f9fc;border:1px solid #e5e7eb;border-radius:8px;padding:11px;max-height:220px;overflow-y:auto;font-size:12px;line-height:1.7;color:#374151;white-space:pre-wrap;margin-bottom:13px}
+
+        /* === TOASTS === */
+        #toastCenter{position:fixed;bottom:calc(var(--ai-bar-h) + 14px);left:16px;z-index:99999;width:300px;max-width:90vw;display:flex;flex-direction:column;gap:7px;pointer-events:none}
+        .toast{pointer-events:all;background:#fff;border-radius:10px;box-shadow:0 8px 28px rgba(10,25,41,.14);padding:11px 13px;display:flex;align-items:flex-start;gap:9px;border-left:4px solid;animation:tIn .28s ease}
+        .toast.success{border-left-color:#22c55e}.toast.error{border-left-color:#ef4444}
+        .toast.info{border-left-color:#3b82f6}.toast.warning{border-left-color:#f59e0b}
+        @keyframes tIn{from{transform:translateX(-110%);opacity:0}to{transform:translateX(0);opacity:1}}
+        @keyframes tOut{from{transform:translateX(0);opacity:1}to{transform:translateX(-110%);opacity:0}}
+
+        #comingSoonModal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:99998}
     </style>
 </head>
 <body>
-    <!-- Initialize notifications variable if not defined -->
-    {% if notifications is not defined %}
-        {% set notifications = [] %}
-    {% endif %}
-    
-    <!-- TOP NAVIGATION - Dark Navy Blue -->
-    <nav class="top-nav">
-        <div class="nav-container">
-            <div class="flex items-center justify-between h-16">
-                <!-- Logo -->
-                <div class="logo-area">
-                    <div class="logo-icon">
-                        <i class="fas fa-university"></i>
-                    </div>
-                    <div class="logo-text">
-                        <h1>Jain (Deemed-to-be University)</h1>
-                        <p>Office of Academics</p>
-                    </div>
-                </div>
+{% if notifications is not defined %}{% set notifications = [] %}{% endif %}
 
-                <!-- Desktop Navigation -->
-                <div class="nav-menu" id="navMenu">
-                    <a href="{{ url_for('home') }}" class="nav-item {% if request.endpoint == 'home' %}active{% endif %}">
-                        <i class="fas fa-home"></i>
-                        <span>Dashboard</span>
-                    </a>
-                    
-                    <a href="{{ url_for('usernewsletters') }}" class="nav-item {% if request.endpoint == 'usernewsletters' %}active{% endif %}">
-                        <i class="fas fa-newspaper"></i>
-                        <span>Newsletters</span>
-                    </a>
+<!-- =================== TOP NAV =================== -->
+<nav class="top-nav">
+  <div class="nav-container">
+    <div class="flex items-center justify-between h-16 gap-3">
 
-                    {% if session.approved %}
-                        {% if session.special_role == 'leader' %}
-                        <a href="{{ url_for('leader_dashboard') }}" class="nav-item {% if request.endpoint == 'leader_dashboard' %}active{% endif %}">
-                            <i class="fas fa-crown"></i>
-                            <span>Leader Dashboard</span>
-                        </a>
-                        {% endif %}
-                        
-                        {% if session.special_role == 'office_barrier' or session.user_type == 'core' %}
-                        <a href="{{ url_for('core_dashboard') }}" class="nav-item {% if request.endpoint == 'core_dashboard' %}active{% endif %}">
-                            <i class="fas fa-users"></i>
-                            <span>Core Dashboard</span>
-                        </a>
-                        
-                        {% endif %}
-                        
-                        {% if session.role == 'admin' %}
-                        <a href="{{ url_for('admin_dashboard') }}" class="nav-item {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">
-                            <i class="fas fa-users-cog"></i>
-                            <span>Admin</span>
-                        </a>
-                        <a href="{{ url_for('edit_ugc') }}" class="nav-item">
-                            <i class="fas fa-edit"></i>
-                            <span>UGC</span>
-                        </a>
-                        <a href="{{ url_for('admin_events') }}" class="nav-item">
-                            <i class="fas fa-calendar-plus"></i>
-                            <span>Events</span>
-                        </a>
-                        {% endif %}
+      <!-- Brand -->
+      <a href="{{ url_for('home') }}" class="logo-area">
+        <div class="logo-icon"><i class="fas fa-university"></i></div>
+        <div class="logo-text hidden sm:block">
+          <h1>Jain (Deemed-to-be University)</h1>
+          <p>Office of Academics</p>
+        </div>
+      </a>
 
-                        <!-- Department Repository -->
-                        <a href="{{ url_for('dept_repo') }}" class="nav-item {% if request.endpoint == 'dept_repo' %}active{% endif %}">
-                            <i class="fas fa-database"></i>
-                            <span>Repository</span>
-                        </a>
-                        {% if session.user_type == 'core' or session.special_role == 'office_barrier' %}
-                        <a href="{{ url_for('core_repo') }}" class="nav-item {% if request.endpoint == 'core_repo' %}active{% endif %}">
-                            <i class="fas fa-upload"></i>
-                            <span>Manage Repo</span>
-                        </a>
-                        {% endif %}
-                    {% endif %}
-                </div>
+      <!-- Desktop links -->
+      <div class="nav-menu" id="navMenu">
+        <a href="{{ url_for('home') }}" class="nav-item {% if request.endpoint=='home' %}active{% endif %}"><i class="fas fa-home"></i><span>Dashboard</span></a>
+        <a href="{{ url_for('jainevents') }}" class="nav-item {% if request.endpoint=='jainevents' %}active{% endif %}"><i class="fas fa-calendar-alt"></i><span>Events</span></a>
+        <a href="{{ url_for('usernewsletters') }}" class="nav-item {% if request.endpoint=='usernewsletters' %}active{% endif %}"><i class="fas fa-newspaper"></i><span>Newsletters</span></a>
+        {% if session.approved %}
+          {% if session.special_role == 'leader' %}
+          <a href="{{ url_for('leader_dashboard') }}" class="nav-item {% if request.endpoint=='leader_dashboard' %}active{% endif %}"><i class="fas fa-crown"></i><span>Leader</span></a>
+          {% endif %}
+          {% if session.special_role == 'office_barrier' or session.user_type == 'core' %}
+          <a href="{{ url_for('core_dashboard') }}" class="nav-item {% if request.endpoint=='core_dashboard' %}active{% endif %}"><i class="fas fa-users"></i><span>Core</span></a>
+          {% endif %}
+          {% if session.role == 'admin' %}
+          <a href="{{ url_for('admin_dashboard') }}" class="nav-item {% if request.endpoint=='admin_dashboard' %}active{% endif %}"><i class="fas fa-users-cog"></i><span>Admin</span></a>
+          <a href="{{ url_for('edit_ugc') }}" class="nav-item"><i class="fas fa-edit"></i><span>UGC</span></a>
+          <a href="{{ url_for('admin_events') }}" class="nav-item"><i class="fas fa-calendar-plus"></i><span>Events Mgr</span></a>
+          {% endif %}
+          <a href="{{ url_for('dept_repo') }}" class="nav-item {% if request.endpoint=='dept_repo' %}active{% endif %}"><i class="fas fa-database"></i><span>Repo</span></a>
+          {% if session.user_type == 'core' or session.special_role == 'office_barrier' %}
+          <a href="{{ url_for('core_repo') }}" class="nav-item {% if request.endpoint=='core_repo' %}active{% endif %}"><i class="fas fa-upload"></i><span>Manage</span></a>
+          {% endif %}
+        {% endif %}
+      </div>
 
-                <!-- Right Side Actions -->
-                <div class="flex items-center gap-3">
-                    <!-- Search -->
-                    <div class="search-container hidden md:block">
-                        <i class="fas fa-search search-icon"></i>
-                        <input type="text" placeholder="Search..." class="search-bar" id="globalSearch">
-                    </div>
+      <!-- Right cluster -->
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <!-- Search -->
+        <div class="search-wrap hidden md:block">
+          <i class="fas fa-search search-icon-abs"></i>
+          <input type="text" placeholder="Search..." class="search-bar" id="globalSearch">
+        </div>
 
-                    <!-- Notifications -->
-                    <div class="relative">
-                        <button class="action-btn" onclick="toggleNotifications()" id="notificationBtn">
-                            <i class="fas fa-bell"></i>
-                            {% if notifications and notifications|length > 0 %}
-                            <span class="notification-badge"></span>
-                            {% endif %}
-                        </button>
-                        
-                        <!-- Notification Dropdown -->
-                        <div class="notification-dropdown" id="notificationDropdown">
-                            <div class="notification-header">
-                                <h3><i class="fas fa-bell mr-2"></i> Notifications</h3>
-                                <span>{{ notifications|length }}</span>
-                            </div>
-                            
-                            <div class="notification-list">
-                                {% if notifications and notifications|length > 0 %}
-                                    {% for notification in notifications[:5] %}
-                                    <div class="notification-item {% if loop.first %}unread{% endif %}">
-                                        <div class="notification-icon">
-                                            {% if notification.type == 'reminder' %}
-                                                <i class="fas fa-bell"></i>
-                                            {% elif notification.type == 'document' %}
-                                                <i class="fas fa-file-alt"></i>
-                                            {% elif notification.type == 'event' %}
-                                                <i class="fas fa-calendar"></i>
-                                            {% elif notification.type == 'task' %}
-                                                <i class="fas fa-tasks"></i>
-                                            {% elif notification.type == 'progress' %}
-                                                <i class="fas fa-chart-line"></i>
-                                            {% else %}
-                                                <i class="fas fa-info-circle"></i>
-                                            {% endif %}
-                                        </div>
-                                        <div class="notification-content">
-                                            <div class="notification-title">{{ notification.title|truncate(30) }}</div>
-                                            <div class="notification-message">{{ notification.message|truncate(40) }}</div>
-                                            <div class="notification-time">
-                                                <i class="far fa-clock"></i>
-                                                {{ notification.time.strftime('%I:%M %p') if notification.time else 'Just now' }}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {% endfor %}
-                                {% else %}
-                                    <div class="text-center py-6 px-4">
-                                        <div class="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                                            <i class="fas fa-bell-slash text-gray-400 text-xl"></i>
-                                        </div>
-                                        <p class="text-gray-500 text-xs">No notifications</p>
-                                    </div>
-                                {% endif %}
-                            </div>
-                            
-                            {% if notifications and notifications|length > 0 %}
-                            <a href="{{ url_for('user_dashboard') }}" class="view-all-btn">
-                                View All <i class="fas fa-arrow-right ml-1"></i>
-                            </a>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <!-- User Menu -->
-                    <div class="user-menu">
-                        <div class="user-menu-btn" onclick="toggleUserMenu()" id="userMenuBtn">
-                            <div class="user-avatar">
-                                {% if session.email %}
-                                {{ session.email[0:1].upper() }}
-                                {% else %}
-                                <i class="fas fa-user"></i>
-                                {% endif %}
-                            </div>
-                            <div class="user-info hidden lg:block">
-                                <span class="user-name">
-                                    {% if session.email %}
-                                    {{ session.email.split('@')[0] }}
-                                    {% else %}
-                                    Guest
-                                    {% endif %}
-                                </span>
-                                <span class="user-role">
-                                    {% if session.special_role == 'leader' %}
-                                        <i class="fas fa-crown"></i> Leader
-                                    {% elif session.special_role == 'office_barrier' or session.user_type == 'core' %}
-                                        <i class="fas fa-users"></i> Core Team
-                                    {% elif session.role == 'admin' %}
-                                        <i class="fas fa-shield-alt"></i> Admin
-                                    {% else %}
-                                        <i class="fas fa-user"></i> Faculty
-                                    {% endif %}
-                                </span>
-                            </div>
-                            <i class="fas fa-chevron-down text-xs text-[#C5A572] ml-1"></i>
-                        </div>
-
-                        <!-- User Dropdown -->
-                        <div class="user-dropdown" id="userDropdown">
-                            <div class="dropdown-header">
-                                <div class="user-name-lg">{{ session.email.split('@')[0] if session.email else 'Guest' }}</div>
-                                <div class="user-email">{{ session.email if session.email else 'Not logged in' }}</div>
-                                {% if session.user_department %}
-                                <div class="text-[11px] mt-1 text-[#C5A572]">
-                                    <i class="fas fa-building mr-1"></i> {{ session.user_department }}
-                                </div>
-                                {% endif %}
-                                {% if session.user_location %}
-                                <div class="text-[11px] text-[#C5A572]">
-                                    <i class="fas fa-map-marker-alt mr-1"></i> {{ session.user_location }}
-                                </div>
-                                {% endif %}
-                            </div>
-                            <div class="dropdown-menu">
-                                <a href="#" class="dropdown-item" onclick="showComingSoon('My Profile')">
-                                    <i class="fas fa-user"></i>
-                                    <span>My Profile</span>
-                                </a>
-                                <a href="#" class="dropdown-item" onclick="showComingSoon('Settings')">
-                                    <i class="fas fa-cog"></i>
-                                    <span>Settings</span>
-                                </a>
-                                <a href="#" class="dropdown-item" onclick="showComingSoon('Help')">
-                                    <i class="fas fa-question-circle"></i>
-                                    <span>Help & Support</span>
-                                </a>
-                                <div class="dropdown-divider"></div>
-                                <a href="{{ url_for('logout') }}" class="dropdown-item text-red-600" onclick="return confirm('Are you sure you want to logout?')">
-                                    <i class="fas fa-sign-out-alt"></i>
-                                    <span>Logout</span>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Mobile Menu Button -->
-                    <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                </div>
+        <!-- MESSAGES -->
+        <div class="relative" id="msgWrap">
+          <button class="nav-icon-btn" onclick="toggleMsgDrop()" title="Messages (Alt+M)">
+            <i class="fas fa-comments"></i>
+            <span class="nav-badge-num" id="msgBadge" style="display:none">0</span>
+          </button>
+          <div class="nav-dropdown" id="msgDropdown" style="width:370px">
+            <div class="drop-hdr">
+              <h3><i class="fas fa-comments"></i> Core Team Messages</h3>
+              <span class="drop-count" id="msgCountBadge">0</span>
             </div>
-        </div>
-    </nav>
-
-    <!-- MAIN CONTENT -->
-    <main class="main-content">
-        <!-- Page Header -->
-        <div class="page-header">
-            <h1 class="page-title">{% block page_title %}Jain (Deemed-to-be University){% endblock %}</h1>
-            <p class="page-subtitle">{% block page_subtitle %}Office of Academics{% endblock %}</p>
+            <div class="msg-list" id="msgList"><div class="no-msgs"><i class="fas fa-comments"></i>Loading...</div></div>
+            <div class="msg-input-row">
+              <input class="msg-quick-input" id="quickMsgInp" placeholder="Quick message to core team..." onkeydown="if(event.key==='Enter')sendQuickMsg()">
+              <button class="msg-send-btn" onclick="sendQuickMsg()"><i class="fas fa-paper-plane"></i></button>
+            </div>
+          </div>
         </div>
 
-        <!-- Flash Messages -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert">
-                        <div class="alert-{{ category }} px-3 py-2 rounded-xl flex items-center gap-2 shadow-sm text-sm">
-                            {% if category == 'error' %}
-                                <i class="fas fa-exclamation-circle"></i>
-                            {% elif category == 'success' %}
-                                <i class="fas fa-check-circle"></i>
-                            {% elif category == 'info' %}
-                                <i class="fas fa-info-circle"></i>
-                            {% else %}
-                                <i class="fas fa-exclamation-triangle"></i>
-                            {% endif %}
-                            <span class="flex-1">{{ message }}</span>
-                            <button onclick="this.parentElement.parentElement.remove()" class="hover:opacity-70">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    </div>
-                {% endfor %}
+        <!-- NOTIFICATIONS -->
+        <div class="relative" id="notifWrap">
+          <button class="nav-icon-btn" onclick="toggleNotifDrop()" title="Notifications (Alt+N)">
+            <i class="fas fa-bell"></i>
+            {% if notifications and notifications|length > 0 %}<span class="nav-badge-dot"></span>{% endif %}
+          </button>
+          <div class="nav-dropdown" id="notifDropdown" style="width:360px;max-height:460px;overflow-y:auto">
+            <div class="drop-hdr">
+              <h3><i class="fas fa-bell"></i> Notifications</h3>
+              <span class="drop-count">{{ notifications|length }}</span>
+            </div>
+            {% if notifications and notifications|length > 0 %}
+              {% for n in notifications[:6] %}
+              <div class="notif-item {% if loop.first %}unread{% endif %}">
+                <div class="notif-icon"><i class="fas fa-{% if n.type=='reminder' %}bell{% elif n.type=='task' %}tasks{% elif n.type=='file' %}file-alt{% elif n.type=='share' %}share-alt{% else %}info-circle{% endif %}"></i></div>
+                <div style="flex:1;min-width:0">
+                  <div class="notif-title">{{ n.title|truncate(34) }}</div>
+                  <div class="notif-msg">{{ n.message|truncate(44) }}</div>
+                  <div class="notif-time"><i class="far fa-clock" style="margin-right:3px"></i>{{ n.time.strftime('%I:%M %p') if n.time else 'Just now' }}</div>
+                </div>
+              </div>
+              {% endfor %}
+              <a href="{{ url_for('user_dashboard') }}" class="drop-footer">View all <i class="fas fa-arrow-right" style="margin-left:4px"></i></a>
+            {% else %}
+              <div style="text-align:center;padding:2rem;color:#9ca3af">
+                <i class="fas fa-bell-slash" style="font-size:1.8rem;display:block;margin-bottom:7px;opacity:.35"></i>
+                <p style="font-size:12px">No new notifications</p>
+              </div>
             {% endif %}
-        {% endwith %}
+          </div>
+        </div>
 
-        <!-- Page Content -->
-        {% block content %}
-            <div class="jain-card text-center p-12">
-                <div class="inline-block p-4 bg-gradient-to-br from-[#C5A572] to-[#E8D5B5] rounded-full mb-4">
-                    <i class="fas fa-university text-3xl" style="color: var(--jain-navy);"></i>
-                </div>
-                <h2 class="text-2xl font-bold mb-2" style="color: var(--jain-navy);">Welcome to Jain (Deemed-to-be University)</h2>
-                <p class="text-gray-600 mb-4">Office of Academics Portal</p>
-                
-                {% if not session.approved and session.email %}
-                <div class="mt-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200 text-xs inline-block">
-                    <i class="fas fa-clock text-yellow-600 mr-1"></i>
-                    <span class="text-yellow-800">Account pending approval</span>
-                </div>
-                {% endif %}
-                
-                <!-- Jain University Motto -->
-                <div class="jain-divider max-w-md mx-auto my-6"></div>
-                <p class="text-sm italic text-[#8B1E3F]">"श्रद्धावान् लभते ज्ञानम्" - The faithful attain knowledge</p>
+        <!-- USER MENU -->
+        <div class="relative" id="userWrap">
+          <div class="user-menu-btn" onclick="toggleUserDrop()">
+            <div class="user-avatar">{{ session.email[0].upper() if session.email else '?' }}</div>
+            <div class="hidden lg:flex flex-col" style="line-height:1.2">
+              <span class="user-name-txt">{{ session.email.split('@')[0] if session.email else 'Guest' }}</span>
+              <span class="user-role-txt">
+                {% if session.special_role=='leader' %}<i class="fas fa-crown"></i>Leader
+                {% elif session.special_role=='office_barrier' or session.user_type=='core' %}<i class="fas fa-users"></i>Core Team
+                {% elif session.role=='admin' %}<i class="fas fa-shield-alt"></i>Admin
+                {% else %}<i class="fas fa-user"></i>Faculty{% endif %}
+              </span>
             </div>
-        {% endblock %}
-    </main>
-
-    <!-- FOOTER -->
-    <footer class="footer">
-        <div class="flex items-center justify-between text-xs text-gray-600">
-            <p>© 2026 Jain (Deemed-to-be University). All rights reserved.</p>
-            <div class="flex gap-4">
-                <a href="{{ url_for('about') }}" class="hover:text-[#0A1929]">About</a>
-                <a href="#" onclick="showComingSoon('Contact')">Contact</a>
-                <a href="#" onclick="showComingSoon('Privacy')">Privacy</a>
+            <i class="fas fa-chevron-down" style="color:var(--jain-gold);font-size:10px;margin-left:4px"></i>
+          </div>
+          <div class="nav-dropdown" id="userDropdown" style="width:280px">
+            <div class="user-drop-hdr">
+              <div class="dn">{{ session.email.split('@')[0] if session.email else 'Guest' }}</div>
+              <div class="de">{{ session.email if session.email else '' }}</div>
+              {% if session.user_department %}<div class="dm"><i class="fas fa-building" style="margin-right:4px"></i>{{ session.user_department }}</div>{% endif %}
+              {% if session.user_location %}<div class="dm"><i class="fas fa-map-marker-alt" style="margin-right:4px"></i>{{ session.user_location }}</div>{% endif %}
             </div>
-        </div>
-    </footer>
-
-    <!-- Chat Popup Button -->
-    <div class="chat-popup-btn" onclick="toggleChat()" id="chatPopupBtn">
-        <i class="fas fa-comments text-xl"></i>
-    </div>
-
-    <!-- Chat Popup -->
-    <div class="chat-popup" id="chatPopup">
-        <div class="chat-header">
-            <h3><i class="fas fa-comments"></i> Core Team Chat</h3>
-            <button onclick="toggleChat()"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="chat-messages" id="chatMessages">
-            <!-- Messages will be loaded here -->
-        </div>
-        <div class="chat-input-area">
-            <input type="text" id="chatInput" placeholder="Type your message...">
-            <button onclick="sendChatMessage()"><i class="fas fa-paper-plane"></i></button>
-        </div>
-    </div>
-
-    <!-- Notification Center -->
-    <div id="notificationCenter"></div>
-
-    <!-- Loading Spinner -->
-    <div id="loadingSpinner" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white p-6 rounded-xl shadow-2xl text-center">
-            <div class="spinner mx-auto"></div>
-            <p class="mt-3 text-sm text-gray-700">Loading...</p>
-        </div>
-    </div>
-
-    <!-- Coming Soon Modal -->
-    <div id="comingSoonModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white p-6 rounded-xl shadow-2xl max-w-sm text-center">
-            <div class="w-14 h-14 bg-[#C5A572] bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-3">
-                <i class="fas fa-rocket text-xl" style="color: var(--jain-navy);"></i>
+            <div class="drop-menu">
+              <a href="{{ url_for('user_dashboard') }}" class="drop-item"><i class="fas fa-user"></i>My Profile</a>
+              <a href="{{ url_for('user_preferences') }}" class="drop-item"><i class="fas fa-cog"></i>Settings</a>
+              <a href="{{ url_for('user_dashboard') }}" class="drop-item"><i class="fas fa-tachometer-alt"></i>My Dashboard</a>
+              <a href="{{ url_for('my_files') }}" class="drop-item"><i class="fas fa-folder-open"></i>My Files</a>
+              <button class="drop-item" onclick="openAiPanel()"><i class="fas fa-robot" style="color:#6366f1"></i>Ask Jain AI</button>
+              <div class="drop-divider"></div>
+              <a href="{{ url_for('logout') }}" class="drop-item" style="color:#ef4444" onclick="return confirm('Logout?')"><i class="fas fa-sign-out-alt" style="color:#ef4444"></i>Logout</a>
             </div>
-            <h3 class="text-base font-bold mb-1" style="color: var(--jain-navy);">Coming Soon!</h3>
-            <p class="text-sm text-gray-600 mb-4" id="comingSoonMessage">This feature is under development</p>
-            <button onclick="closeComingSoon()" class="px-4 py-1.5 text-sm rounded-lg text-white" style="background: var(--jain-navy);">
-                Got it
-            </button>
+          </div>
         </div>
+
+        <button class="mobile-menu-btn" onclick="document.getElementById('navMenu').classList.toggle('open')"><i class="fas fa-bars"></i></button>
+      </div>
     </div>
+  </div>
+</nav>
 
-    <!-- Task Update Modal -->
-    <div id="taskUpdateModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl w-full max-w-md">
-            <div class="flex items-center justify-between p-4 border-b border-gray-200">
-                <h3 class="text-lg font-bold text-[#0A1929]">Update Task Progress</h3>
-                <button onclick="closeTaskModal()" class="text-gray-500 hover:text-gray-700">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="p-4">
-                <form id="taskUpdateForm">
-                    <input type="hidden" id="taskId" name="taskId">
-                    
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Update Status</label>
-                        <select id="taskStatus" name="status" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C5A572]" required>
-                            <option value="in_progress">In Progress</option>
-                            <option value="completed">Completed</option>
-                        </select>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Progress %</label>
-                        <input type="range" id="taskProgress" name="progress" min="0" max="100" value="0" class="w-full" onchange="updateProgressValue(this.value)">
-                        <div class="flex justify-between mt-1">
-                            <span class="text-xs text-gray-500" id="progressValue">0%</span>
-                            <span class="text-xs text-gray-500">100%</span>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Add Comment (Optional)</label>
-                        <textarea id="taskComment" name="comment" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C5A572]" placeholder="Add a comment about your progress..."></textarea>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Upload Document (Optional)</label>
-                        <input type="file" id="taskUpdateFile" name="file" class="w-full px-3 py-2 border border-gray-300 rounded-lg" accept=".pdf,.docx,.txt,.png,.jpg,.jpeg">
-                    </div>
-                    
-                    <div class="flex gap-2">
-                        <button type="submit" class="flex-1 bg-[#0A1929] text-white px-4 py-2 rounded-lg hover:bg-[#1E3A5F] transition">
-                            Update Task
-                        </button>
-                        <button type="button" onclick="closeTaskModal()" class="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition">
-                            Cancel
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+<!-- =================== MAIN =================== -->
+<main class="main-content">
+  <div class="page-header">
+    <h1 class="page-title">{% block page_title %}Jain (Deemed-to-be University){% endblock %}</h1>
+    <p class="page-subtitle">{% block page_subtitle %}Office of Academics{% endblock %}</p>
+  </div>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}{% for cat,msg in messages %}
+    <div class="alert">
+      <div class="alert-{{ cat }} px-3 py-2 rounded-xl flex items-center gap-2 text-sm">
+        <i class="fas fa-{% if cat=='error' %}exclamation-circle{% elif cat=='success' %}check-circle{% elif cat=='info' %}info-circle{% else %}exclamation-triangle{% endif %}"></i>
+        <span class="flex-1">{{ msg }}</span>
+        <button onclick="this.parentElement.parentElement.remove()"><i class="fas fa-times"></i></button>
+      </div>
     </div>
+    {% endfor %}{% endif %}
+  {% endwith %}
+  {% block content %}
+  <div class="jain-card text-center p-12">
+    <i class="fas fa-university" style="font-size:2.5rem;color:var(--jain-navy);margin-bottom:12px;display:block"></i>
+    <h2 style="color:var(--jain-navy);font-size:22px;margin-bottom:6px">Welcome to Jain OOA</h2>
+    <p style="color:#6b7280;font-size:14px">Office of Academics Portal</p>
+    <div class="jain-divider" style="max-width:300px;margin:20px auto"></div>
+    <p style="font-size:13px;font-style:italic;color:#8B1E3F">"श्रद्धावान् लभते ज्ञानम्"</p>
+  </div>
+  {% endblock %}
+</main>
 
-    <style>
-        /* Chat Popup Styles */
-        .chat-popup-btn {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: var(--jain-navy);
-            color: var(--jain-gold);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(10, 25, 41, 0.3);
-            transition: all 0.3s ease;
-            z-index: 1000;
-        }
-        
-        .chat-popup-btn:hover {
-            transform: scale(1.1);
-            background: var(--jain-navy-light);
-        }
-        
-        .chat-popup {
-            position: fixed;
-            bottom: 80px;
-            right: 20px;
-            width: 350px;
-            height: 500px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(10, 25, 41, 0.2);
-            display: flex;
-            flex-direction: column;
-            z-index: 1000;
-            border: 1px solid var(--jain-gold);
-            transition: all 0.3s ease;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(20px);
-        }
-        
-        .chat-popup.active {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
-        
-        .chat-header {
-            padding: 12px 16px;
-            background: var(--jain-navy);
-            color: white;
-            border-radius: 12px 12px 0 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .chat-header h3 {
-            font-size: 14px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px;
-            background: #f9fafb;
-        }
-        
-        .chat-input-area {
-            padding: 12px;
-            border-top: 1px solid #e5e7eb;
-            display: flex;
-            gap: 8px;
-        }
-        
-        .chat-input-area input {
-            flex: 1;
-            padding: 8px 12px;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 13px;
-        }
-        
-        .chat-input-area input:focus {
-            outline: none;
-            border-color: var(--jain-gold);
-            box-shadow: 0 0 0 2px rgba(197, 165, 114, 0.1);
-        }
-        
-        .chat-input-area button {
-            padding: 8px 16px;
-            background: var(--jain-navy);
-            color: white;
-            border-radius: 8px;
-            font-size: 13px;
-            transition: all 0.2s ease;
-        }
-        
-        .chat-input-area button:hover {
-            background: var(--jain-navy-light);
-        }
-        
-        .chat-message {
-            margin-bottom: 12px;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .chat-message.sent {
-            align-items: flex-end;
-        }
-        
-        .chat-message.received {
-            align-items: flex-start;
-        }
-        
-        .message-bubble {
-            max-width: 80%;
-            padding: 8px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            line-height: 1.4;
-        }
-        
-        .chat-message.sent .message-bubble {
-            background: var(--jain-gold);
-            color: var(--jain-navy);
-            border-bottom-right-radius: 4px;
-        }
-        
-        .chat-message.received .message-bubble {
-            background: white;
-            color: var(--jain-text);
-            border: 1px solid #e5e7eb;
-            border-bottom-left-radius: 4px;
-        }
-        
-        .message-time {
-            font-size: 9px;
-            color: #9ca3af;
-            margin-top: 2px;
-            padding: 0 4px;
-        }
-        
-        .notification-toast {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(10, 25, 41, 0.15);
-            margin-bottom: 10px;
-            padding: 12px;
-            transform: translateX(-100%);
-            opacity: 0;
-            transition: all 0.3s ease;
-            border-left: 4px solid;
-            border: 1px solid var(--jain-gold);
-        }
-        
-        .notification-toast.show {
-            transform: translateX(0);
-            opacity: 1;
-        }
-        
-        #notificationCenter {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            z-index: 9999;
-            width: 320px;
-            max-width: 90vw;
-        }
-    </style>
+<footer class="footer">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+    <p style="font-size:12px;color:#6b7280">© 2026 Jain (Deemed-to-be University). All rights reserved.</p>
+    <div style="display:flex;gap:16px">
+      <a href="{{ url_for('about') }}">About</a>
+      <a href="/cdn-cgi/l/email-protection#402f2f21002a21292e352e29362532332934396e21236e292e">Contact</a>
+      <a href="{{ url_for('home') }}">Privacy</a>
+    </div>
+  </div>
+</footer>
 
-    <script>
-        // Toggle Mobile Menu
-        function toggleMobileMenu() {
-            const navMenu = document.getElementById('navMenu');
-            navMenu.classList.toggle('active');
-        }
+<!-- TEAM CHAT POPUP -->
+{% if session.approved and (session.user_type=='core' or session.special_role in ['office_barrier','leader']) %}
+<div class="team-chat-btn" onclick="toggleTeamChat()" title="Team Chat (Alt+C)"><i class="fas fa-comment-dots" style="font-size:18px"></i></div>
+<div class="team-chat-popup" id="teamChatPopup">
+  <div class="tchat-header">
+    <h3><i class="fas fa-users"></i> Core Team Chat</h3>
+    <button onclick="toggleTeamChat()" style="background:none;border:none;color:#fff;cursor:pointer;font-size:14px"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="tchat-messages" id="tchatMessages"></div>
+  <div class="tchat-input-row">
+    <input class="tchat-input" id="tchatInput" placeholder="Type message..." onkeydown="if(event.key==='Enter')sendTeamMsg()">
+    <button class="tchat-send" onclick="sendTeamMsg()"><i class="fas fa-paper-plane"></i></button>
+  </div>
+</div>
+{% endif %}
 
-        // Toggle User Dropdown
-        function toggleUserMenu() {
-            const dropdown = document.getElementById('userDropdown');
-            dropdown.classList.toggle('active');
-        }
+<!-- JAIN AI DOCKED BAR -->
+<div id="jainAiBar">
+  <div class="ai-bar-brand"><div class="ai-dot"></div><span>&#10022; JAIN AI</span></div>
+  <input class="ai-bar-input" id="aiBarInput" placeholder="Ask Jain AI — tasks, pending reviews, overdue, documents..." onkeydown="if(event.key==='Enter')sendAiMsg()">
+  <button class="ai-bar-btn" onclick="sendAiMsg()"><i class="fas fa-paper-plane"></i> Ask</button>
+  <button class="ai-bar-btn sec" onclick="aiMyStats()" title="Dashboard summary"><i class="fas fa-chart-bar"></i><span class="hidden sm:inline"> Stats</span></button>
+  <button class="ai-bar-btn sec" onclick="toggleAiPanel()" id="aiToggleBtn" title="Expand AI (Alt+A)"><i class="fas fa-chevron-up" id="aiChevron"></i></button>
+</div>
 
-        // Settings Dropdown Toggle
-        function toggleSettings() {
-            const menu = document.getElementById('settingsMenu');
-            const chevron = document.getElementById('settingsChevron');
-            if (menu) {
-                menu.classList.toggle('active');
-                if (chevron) chevron.style.transform = menu.classList.contains('active') ? 'rotate(180deg)' : 'rotate(0deg)';
-            }
-        }
+<!-- JAIN AI EXPANDED PANEL -->
+<div id="jainAiPanel">
+  <div class="ai-panel-hdr">
+    <div class="ai-panel-title">
+      <span class="gold">&#10022;</span> Jain AI Assistant
+      <span style="background:rgba(255,255,255,.15);color:rgba(255,255,255,.7);font-size:10px;padding:2px 8px;border-radius:20px;font-family:'Inter',sans-serif;font-weight:400">LLaMA 3.3 · OOA</span>
+    </div>
+    <div class="ai-panel-acts">
+      <button class="ai-act-btn" onclick="clearAiChat()"><i class="fas fa-trash-alt"></i> Clear</button>
+      <button class="ai-act-btn gold" onclick="exportPdf()"><i class="fas fa-file-pdf"></i> Export PDF</button>
+      <button class="ai-act-btn" onclick="toggleAiPanel()"><i class="fas fa-chevron-down"></i> Collapse</button>
+    </div>
+  </div>
+  <div class="ai-stats-row" id="aiStatsPills"><span style="font-size:11px;color:#9ca3af">Loading stats...</span></div>
+  <div id="aiMessages"></div>
+</div>
 
-        // Notifications Dropdown Toggle
-        function toggleNotifications() {
-            const dropdown = document.getElementById('notificationDropdown');
-            dropdown.classList.toggle('active');
-            
-            if (dropdown.classList.contains('active')) {
-                const unreadItems = document.querySelectorAll('.notification-item.unread');
-                unreadItems.forEach(item => {
-                    item.classList.remove('unread');
-                });
-            }
-        }
+<!-- PDF MODAL -->
+<div id="pdfModal">
+  <div class="pdf-box">
+    <div class="pdf-hdr">
+      <div class="pdf-hdr-title"><i class="fas fa-file-pdf" style="color:var(--jain-gold)"></i> Export Conversation as PDF</div>
+      <button onclick="closePdfModal()" style="background:rgba(255,255,255,.15);border:none;border-radius:50%;width:26px;height:26px;cursor:pointer;color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="pdf-body">
+      <p style="font-size:12px;color:#6b7280;margin-bottom:10px">Preview of content to export:</p>
+      <div class="pdf-preview" id="pdfPreviewBox"></div>
+      <div style="display:flex;gap:10px">
+        <button onclick="doPdfDownload()" style="flex:1;background:var(--jain-navy);color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;font-family:'Inter',sans-serif"><i class="fas fa-download"></i> Download PDF</button>
+        <button onclick="closePdfModal()" style="padding:10px 16px;background:#f3f4f6;border:none;border-radius:8px;font-size:13px;cursor:pointer">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-        // Close dropdowns when clicking outside
-        document.addEventListener('click', function(event) {
-            // User dropdown
-            const userMenu = document.querySelector('.user-menu');
-            const userDropdown = document.getElementById('userDropdown');
-            if (userMenu && userDropdown && !userMenu.contains(event.target)) {
-                userDropdown.classList.remove('active');
-            }
-            
-            // Notifications
-            const notificationBtn = document.getElementById('notificationBtn');
-            const notificationDropdown = document.getElementById('notificationDropdown');
-            if (notificationBtn && notificationDropdown && 
-                !notificationBtn.contains(event.target) && 
-                !notificationDropdown.contains(event.target)) {
-                notificationDropdown.classList.remove('active');
-            }
-            
-            // Mobile menu - close when clicking outside
-            const navMenu = document.getElementById('navMenu');
-            const mobileBtn = document.querySelector('.mobile-menu-btn');
-            if (navMenu && mobileBtn && !navMenu.contains(event.target) && !mobileBtn.contains(event.target)) {
-                navMenu.classList.remove('active');
-            }
-            
-            // Chat popup
-            const chatPopup = document.getElementById('chatPopup');
-            const chatBtn = document.getElementById('chatPopupBtn');
-            if (chatPopup && chatBtn && !chatPopup.contains(event.target) && !chatBtn.contains(event.target)) {
-                chatPopup.classList.remove('active');
-            }
-        });
+<div id="toastCenter"></div>
+<div id="loadingOverlay" style="display:none;position:fixed;inset:0;background:rgba(10,25,41,.45);z-index:99998;align-items:center;justify-content:center">
+  <div style="background:#fff;padding:1.6rem 2.2rem;border-radius:14px;text-align:center;box-shadow:0 20px 60px rgba(10,25,41,.25);border-top:3px solid var(--jain-gold)">
+    <div style="width:36px;height:36px;border:3px solid #f3f4f6;border-top-color:var(--jain-gold);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto"></div>
+    <p style="margin-top:10px;font-size:13px;color:#6b7280;font-family:'Inter',sans-serif" id="loadingMsg">Processing...</p>
+  </div>
+</div>
 
-        // Switch Leader Tab Function (if needed)
-        function switchLeaderTab(tabName) {
-            const currentPath = window.location.pathname;
-            if (currentPath.includes('leader_dashboard')) {
-                if (typeof window.switchTab === 'function') {
-                    window.switchTab(tabName);
-                }
-                
-                document.querySelectorAll('.leader-tab').forEach(tab => {
-                    tab.classList.remove('active');
-                });
-                const activeTab = document.querySelector(`.leader-tab[data-leader-tab="${tabName}"]`);
-                if (activeTab) {
-                    activeTab.classList.add('active');
-                }
-                
-                history.pushState(null, null, `#${tabName}`);
-            } else {
-                window.location.href = `/leader_dashboard#${tabName}`;
-            }
-        }
 
-        // Chat Functions
-        function toggleChat() {
-            const chatPopup = document.getElementById('chatPopup');
-            chatPopup.classList.toggle('active');
-            if (chatPopup.classList.contains('active')) {
-                loadChatMessages();
-            }
-        }
 
-        function loadChatMessages() {
-            fetch('/api/chat/messages')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        const chatDiv = document.getElementById('chatMessages');
-                        chatDiv.innerHTML = '';
-                        
-                        data.messages.forEach(msg => {
-                            const messageDiv = document.createElement('div');
-                            messageDiv.className = `chat-message ${msg.is_me ? 'sent' : 'received'}`;
-                            messageDiv.innerHTML = `
-                                <div class="message-bubble">
-                                    <p class="font-semibold text-xs ${msg.is_me ? 'text-[#0A1929]' : 'text-gray-700'}">${msg.sender_name}</p>
-                                    <p class="text-xs">${msg.content}</p>
-                                </div>
-                                <div class="message-time">${msg.timestamp}</div>
-                            `;
-                            chatDiv.appendChild(messageDiv);
-                        });
-                        
-                        chatDiv.scrollTop = chatDiv.scrollHeight;
-                    }
-                });
-        }
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+'use strict';
+// Dropdown helpers
+function _closeAll(ex){['msgDropdown','notifDropdown','userDropdown'].forEach(id=>{if(id!==ex)document.getElementById(id)?.classList.remove('open')});}
+function toggleNotifDrop(){_closeAll('notifDropdown');document.getElementById('notifDropdown').classList.toggle('open');}
+function toggleMsgDrop(){_closeAll('msgDropdown');const d=document.getElementById('msgDropdown');d.classList.toggle('open');if(d.classList.contains('open'))loadMsgs();}
+function toggleUserDrop(){_closeAll('userDropdown');document.getElementById('userDropdown').classList.toggle('open');}
+document.addEventListener('click',e=>{['msgWrap','notifWrap','userWrap'].forEach(id=>{const w=document.getElementById(id);if(w&&!w.contains(e.target))w.querySelector('.nav-dropdown')?.classList.remove('open');});});
 
-        function sendChatMessage() {
-            const input = document.getElementById('chatInput');
-            const message = input.value.trim();
-            
-            if (!message) return;
-            
-            fetch('/api/chat/send', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    content: message,
-                    group_id: 'core_team'
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    input.value = '';
-                    loadChatMessages();
-                }
-            });
-        }
+// Load messages
+async function loadMsgs(){
+  try{
+    const r=await fetch('/api/chat/messages',{credentials:'same-origin'});
+    const d=await r.json();
+    const list=document.getElementById('msgList');
+    if(!d.success||!d.messages?.length){list.innerHTML='<div class="no-msgs"><i class="fas fa-comments"></i>No messages yet</div>';return;}
+    const msgs=d.messages;
+    const unread=msgs.filter(m=>!m.is_me).length;
+    const badge=document.getElementById('msgBadge');
+    if(unread>0){badge.textContent=unread>9?'9+':unread;badge.style.display='flex';badge.style.alignItems='center';badge.style.justifyContent='center';}
+    document.getElementById('msgCountBadge').textContent=msgs.length;
+    list.innerHTML=msgs.slice(-25).reverse().map(m=>`<div class="msg-item ${!m.is_me?'unread':''}"><div class="msg-avatar">${(m.sender_name||'?')[0].toUpperCase()}</div><div style="flex:1;min-width:0"><div class="msg-sender">${m.sender_name||'Unknown'}</div><div class="msg-preview">${m.content||''}</div></div><div class="msg-ts">${m.timestamp||''}</div></div>`).join('');
+  }catch(e){document.getElementById('msgList').innerHTML='<div class="no-msgs"><i class="fas fa-comments"></i>Could not load</div>';}
+}
+async function sendQuickMsg(){
+  const inp=document.getElementById('quickMsgInp');const txt=inp.value.trim();if(!txt)return;
+  try{await fetch('/api/chat/send',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:txt})});inp.value='';showToast('Message sent','success');await loadMsgs();}catch(e){showToast('Failed to send','error');}
+}
 
-        // Task Update Functions
-        function openTaskModal(taskId, currentProgress = 0) {
-            document.getElementById('taskId').value = taskId;
-            document.getElementById('taskProgress').value = currentProgress;
-            document.getElementById('progressValue').textContent = currentProgress + '%';
-            document.getElementById('taskUpdateModal').classList.remove('hidden');
-        }
+// Team chat
+function toggleTeamChat(){const p=document.getElementById('teamChatPopup');if(!p)return;p.classList.toggle('open');if(p.classList.contains('open'))loadTeamChat();}
+async function loadTeamChat(){
+  try{
+    const r=await fetch('/api/chat/messages',{credentials:'same-origin'});const d=await r.json();
+    const box=document.getElementById('tchatMessages');if(!box||!d.success)return;
+    box.innerHTML=(d.messages||[]).map(m=>`<div class="tc-msg ${m.is_me?'sent':'recv'}"><div class="tc-bubble"><p style="font-weight:600;font-size:11px;margin-bottom:2px">${m.sender_name}</p><p>${m.content}</p></div><div class="tc-time">${m.timestamp}</div></div>`).join('');
+    box.scrollTop=box.scrollHeight;
+  }catch(e){}
+}
+async function sendTeamMsg(){
+  const inp=document.getElementById('tchatInput');const txt=inp.value.trim();if(!txt)return;
+  try{await fetch('/api/chat/send',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:txt})});inp.value='';await loadTeamChat();}catch(e){}
+}
 
-        function closeTaskModal() {
-            document.getElementById('taskUpdateModal').classList.add('hidden');
-            document.getElementById('taskUpdateForm').reset();
-        }
+// ===== JAIN AI =====
+let _aiOpen=false,_aiHist=[],_pdfLog=[];
+function openAiPanel(){if(!_aiOpen)toggleAiPanel();}
+function toggleAiPanel(){
+  _aiOpen=!_aiOpen;
+  document.getElementById('jainAiPanel').classList.toggle('open',_aiOpen);
+  document.getElementById('aiChevron').className=_aiOpen?'fas fa-chevron-down':'fas fa-chevron-up';
+  if(_aiOpen){
+    buildStatsPills();
+    if(_aiHist.length===0)_addBot("Hello! I'm Jain AI.\n\nI have access to your live dashboard stats. Click a stats pill above for instant analysis, or ask me anything about your tasks, documents, or dashboard.");
+    setTimeout(()=>{const m=document.getElementById('aiMessages');if(m)m.scrollTop=m.scrollHeight;},350);
+  }
+}
+function buildStatsPills(){
+  const pills=document.getElementById('aiStatsPills');if(!pills)return;
+  const s=window.DASH_STATS||_scrapeStats();
+  if(!s||!Object.keys(s).length){pills.innerHTML='<span style="font-size:11px;color:#9ca3af"><i class="fas fa-info-circle" style="margin-right:4px"></i>Open a dashboard page to see live stats</span>';return;}
+  window._STATS=s;
+  let html='<span style="font-size:11px;color:#64748b;font-weight:500;align-self:center">Quick ask:</span>';
+  if(s.total_tasks!=null)    html+=`<span class="ai-stat-pill spt" onclick="aiQuick('tasks')"><i class="fas fa-tasks"></i>${s.total_tasks} Tasks</span>`;
+  if(s.pending_tasks!=null)  html+=`<span class="ai-stat-pill spp" onclick="aiQuick('pending')"><i class="fas fa-clock"></i>${s.pending_tasks} Pending</span>`;
+  if(s.pending_review!=null) html+=`<span class="ai-stat-pill spr" onclick="aiQuick('review')"><i class="fas fa-file-alt"></i>${s.pending_review} Pending Review</span>`;
+  if(s.accepted_tasks!=null) html+=`<span class="ai-stat-pill spa" onclick="aiQuick('accepted')"><i class="fas fa-check-circle"></i>${s.accepted_tasks} Accepted</span>`;
+  if(s.overdue_tasks!=null)  html+=`<span class="ai-stat-pill spo" onclick="aiQuick('overdue')"><i class="fas fa-exclamation-triangle"></i>${s.overdue_tasks} Overdue</span>`;
+  if(s.approved_docs!=null)  html+=`<span class="ai-stat-pill spa" onclick="aiQuick('approved_docs')"><i class="fas fa-thumbs-up"></i>${s.approved_docs} Approved Docs</span>`;
+  pills.innerHTML=html;
+}
+function _scrapeStats(){
+  const s={};
+  document.querySelectorAll('[data-stat]').forEach(el=>{const k=el.getAttribute('data-stat');const v=parseInt(el.textContent.trim(),10);if(!isNaN(v))s[k]=v;});
+  if(!Object.keys(s).length){const nums=[...document.querySelectorAll('.num')];nums.forEach(n=>{const lbl=n.parentElement?.querySelector('.lbl');if(!lbl)return;const v=parseInt(n.textContent.trim(),10);const k=lbl.textContent.trim().toLowerCase().replace(/\W+/g,'_');if(!isNaN(v))s[k]=v;});}
+  return s;
+}
+function aiQuick(type){
+  const s=window._STATS||window.DASH_STATS||_scrapeStats();
+  const qs={
+    tasks:`I have ${s.total_tasks??'?'} total tasks — ${s.pending_tasks??'?'} pending, ${s.in_progress??'?'} in progress, ${s.completed_tasks??'?'} completed, ${s.overdue_tasks??'?'} overdue. Give me a prioritised action plan.`,
+    pending:`I have ${s.pending_tasks??'?'} pending tasks. How should I work through them most effectively?`,
+    review:`There are ${s.pending_review??'?'} documents pending my review. How should I prioritise and approach this?`,
+    accepted:`${s.accepted_tasks??'?'} of my tasks have been accepted. What does this tell me about my performance?`,
+    overdue:`I have ${s.overdue_tasks??'?'} overdue tasks. Give me a realistic catch-up plan and advice to prevent this in future.`,
+    approved_docs:`${s.approved_docs??'?'} of my documents were approved. What is my approval rate and how can I improve?`,
+  };
+  if(!_aiOpen)openAiPanel();
+  document.getElementById('aiBarInput').value=qs[type]||`Tell me about my ${type}.`;
+  sendAiMsg();
+}
+function aiMyStats(){
+  if(!_aiOpen)openAiPanel();
+  const s=window.DASH_STATS||_scrapeStats();
+  let q;
+  if(!s||!Object.keys(s).length){q="What can you help me with on this portal?";}
+  else{const line=Object.entries(s).map(([k,v])=>`${k.replace(/_/g,' ')}: ${v}`).join(', ');q=`My dashboard stats: ${line}. Give me a concise performance summary and top 3 action items.`;}
+  document.getElementById('aiBarInput').value=q;
+  sendAiMsg();
+}
+async function sendAiMsg(){
+  const inp=document.getElementById('aiBarInput');const text=inp.value.trim();if(!text)return;
+  inp.value='';if(!_aiOpen)openAiPanel();
+  _addUser(text);_aiHist.push({role:'user',content:text});_pdfLog.push({role:'user',text});
+  _showThink();
+  try{
+    const s=window.DASH_STATS||_scrapeStats();
+    const ctx=Object.keys(s||{}).length?`Live dashboard stats: ${JSON.stringify(s)}. `:'';
+    const r=await fetch('/api/ai/chat',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({message:text,task_title:'OOA Portal Assistant',task_desc:ctx+'User is on the Jain University OOA portal.',history:_aiHist.slice(-12)})});
+    const d=await r.json();_removeThink();
+    const reply=d.success?d.reply:'Jain AI is temporarily unavailable. Please try again.';
+    _addBot(reply);_aiHist.push({role:'assistant',content:reply});_pdfLog.push({role:'assistant',text:reply});
+  }catch(e){_removeThink();_addBot('Connection error. Please check your network.');}
+}
+function _addUser(t){const el=document.createElement('div');el.className='ai-msg-user';el.textContent=t;_app(el);}
+function _addBot(t){const el=document.createElement('div');el.className='ai-msg-bot';el.textContent=t;_app(el);}
+function _app(el){const b=document.getElementById('aiMessages');if(!b)return;b.appendChild(el);b.scrollTop=b.scrollHeight;}
+function _showThink(){const d=document.createElement('div');d.className='ai-msg-think';d.id='aiThinking';d.innerHTML='<div class="td"></div><div class="td"></div><div class="td"></div><span style="margin-left:7px;font-size:11px">Jain AI is thinking...</span>';_app(d);}
+function _removeThink(){document.getElementById('aiThinking')?.remove();}
+function clearAiChat(){if(!confirm('Clear this conversation?'))return;_aiHist=[];_pdfLog=[];const b=document.getElementById('aiMessages');if(b)b.innerHTML='';_addBot('Conversation cleared. How can I help?');}
 
-        function updateProgressValue(value) {
-            document.getElementById('progressValue').textContent = value + '%';
-        }
+// PDF export
+function exportPdf(){if(!_pdfLog.length){showToast('Start a conversation first!','warning');return;}document.getElementById('pdfPreviewBox').textContent=_pdfLog.map(m=>(m.role==='user'?'You:\n':'Jain AI:\n')+m.text).join('\n\n---\n\n');document.getElementById('pdfModal').classList.add('open');}
+function closePdfModal(){document.getElementById('pdfModal').classList.remove('open');}
+function doPdfDownload(){if(typeof window.jspdf!=='undefined'){_buildPdf();return;}const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';s.onload=_buildPdf;s.onerror=()=>showToast('Could not load PDF library','error');document.head.appendChild(s);}
+function _buildPdf(){
+  try{
+    const{jsPDF}=window.jspdf;const doc=new jsPDF({unit:'mm',format:'a4'});
+    const W=doc.internal.pageSize.getWidth();const H=doc.internal.pageSize.getHeight();const mg=18;let y=mg;
+    doc.setFillColor(10,25,41);doc.rect(0,0,W,30,'F');
+    doc.setDrawColor(197,165,114);doc.setLineWidth(.5);doc.line(0,30,W,30);
+    doc.setFontSize(15);doc.setFont('helvetica','bold');doc.setTextColor(197,165,114);doc.text('Jain (Deemed-to-be University)',mg,12);
+    doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(180,185,200);doc.text('Office of Academics  -  Jain AI Conversation Export',mg,20);
+    doc.setFontSize(8);doc.text(new Date().toLocaleString(),W-mg,20,{align:'right'});y=40;
+    const stats=window.DASH_STATS||_scrapeStats();
+    if(stats&&Object.keys(stats).length){
+      doc.setFontSize(10);doc.setFont('helvetica','bold');doc.setTextColor(10,25,41);doc.text('Dashboard Stats Snapshot',mg,y);y+=5;
+      doc.setFontSize(8.5);doc.setFont('helvetica','normal');doc.setTextColor(60,70,90);
+      const line=Object.entries(stats).map(([k,v])=>`${k.replace(/_/g,' ')}: ${v}`).join('   |   ');
+      const wrapped=doc.splitTextToSize(line,W-mg*2);doc.text(wrapped,mg,y);y+=wrapped.length*5+4;
+      doc.setDrawColor(197,165,114);doc.setLineWidth(.4);doc.line(mg,y,W-mg,y);y+=7;
+    }
+    doc.setFontSize(11);doc.setFont('helvetica','bold');doc.setTextColor(10,25,41);doc.text('Conversation',mg,y);y+=7;
+    _pdfLog.forEach(m=>{
+      if(y>H-32){doc.addPage();y=mg;}
+      const isUser=m.role==='user';
+      doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(isUser?10:70,isUser?25:40,isUser?41:150);doc.text(isUser?'You':'Jain AI',mg,y);y+=4;
+      doc.setFontSize(9);doc.setFont('helvetica','normal');
+      const lines=doc.splitTextToSize(m.text,W-mg*2-8);const bh=lines.length*5+7;
+      doc.setFillColor(isUser?10:248,isUser?25:249,isUser?41:252);doc.setDrawColor(isUser?197:210,isUser?165:215,isUser?114:225);doc.setLineWidth(.3);
+      doc.roundedRect(mg,y-2,W-mg*2,bh,3,3,'FD');
+      doc.setTextColor(isUser?240:30,isUser?235:30,isUser?200:50);doc.text(lines,mg+4,y+3);
+      y+=bh+6;if(y>H-20){doc.addPage();y=mg;}
+    });
+    const pages=doc.internal.getNumberOfPages();
+    for(let i=1;i<=pages;i++){doc.setPage(i);doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(160);doc.text(`Jain University OOA - Jain AI Export  |  Page ${i} of ${pages}`,W/2,H-7,{align:'center'});}
+    doc.save(`JainAI_${new Date().toISOString().slice(0,10)}.pdf`);closePdfModal();showToast('PDF downloaded','success');
+  }catch(e){console.error(e);showToast('PDF error: '+e.message,'error');}
+}
 
-        // Task Update Form Submit
-        document.getElementById('taskUpdateForm')?.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const taskId = document.getElementById('taskId').value;
-            const status = document.getElementById('taskStatus').value;
-            const progress = document.getElementById('taskProgress').value;
-            const comment = document.getElementById('taskComment').value;
-            const file = document.getElementById('taskUpdateFile').files[0];
-            
-            const formData = new FormData();
-            formData.append('taskId', taskId);
-            formData.append('status', status);
-            formData.append('progress', progress);
-            formData.append('comment', comment);
-            if (file) {
-                formData.append('file', file);
-            }
-            
-            fetch('/api/update-task', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    window.showNotification('Task Updated', 'Task progress updated successfully', 'success');
-                    closeTaskModal();
-                    setTimeout(() => {
-                        location.reload();
-                    }, 1500);
-                } else {
-                    window.showNotification('Error', data.error || 'Failed to update task', 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                window.showNotification('Error', 'Failed to update task', 'error');
-            });
-        });
+// Toasts
+function showToast(msg,type='info'){
+  const icons={success:'check-circle',error:'times-circle',warning:'exclamation-triangle',info:'info-circle'};
+  const t=document.createElement('div');t.className='toast '+type;
+  t.innerHTML=`<i class="fas fa-${icons[type]||'info-circle'}" style="font-size:14px;flex-shrink:0;margin-top:1px"></i><div style="flex:1;font-size:12px;color:#1a2b3c">${msg}</div><button onclick="this.parentElement.remove()" style="background:none;border:none;cursor:pointer;color:#9ca3af;font-size:12px"><i class="fas fa-times"></i></button>`;
+  document.getElementById('toastCenter').appendChild(t);
+  setTimeout(()=>{t.style.animation='tOut .28s ease forwards';setTimeout(()=>t.remove(),300);},5000);
+}
+window.showNotification=function(title,msg,type){showToast(title+(msg?': '+msg:''),type||'info');};
 
-        // Show Coming Soon Modal
-        function showComingSoon(feature) {
-            document.getElementById('comingSoonMessage').textContent = `${feature} is under development`;
-            document.getElementById('comingSoonModal').classList.remove('hidden');
-        }
+function showLoading(msg){
+  const el=document.getElementById('loadingOverlay');
+  if(!el)return;
+  document.getElementById('loadingMsg').textContent=msg||'Processing...';
+  el.style.display='flex';
+}
+function hideLoading(){
+  const el=document.getElementById('loadingOverlay');
+  if(el)el.style.display='none';
+}
 
-        function closeComingSoon() {
-            document.getElementById('comingSoonModal').classList.add('hidden');
-        }
 
-        // Show/Hide Loading Spinner
-        function showLoading() {
-            document.getElementById('loadingSpinner').classList.remove('hidden');
-        }
 
-        function hideLoading() {
-            document.getElementById('loadingSpinner').classList.add('hidden');
-        }
 
-        // Notification System
-        window.showNotification = function(title, message, type = 'info') {
-            const container = document.getElementById('notificationCenter');
-            
-            const notification = document.createElement('div');
-            notification.className = `notification-toast ${type}`;
-            notification.innerHTML = `
-                <div class="flex items-start gap-2">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'} text-${type === 'success' ? 'green' : type === 'error' ? 'red' : type === 'warning' ? 'yellow' : 'blue'}-500"></i>
-                    </div>
-                    <div class="flex-1">
-                        <p class="font-semibold text-gray-900 text-sm">${title}</p>
-                        <p class="text-xs text-gray-600">${message}</p>
-                    </div>
-                    <button onclick="this.remove()" class="text-gray-400 hover:text-gray-600">
-                        <i class="fas fa-times text-xs"></i>
-                    </button>
-                </div>
-            `;
-            
-            container.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.classList.add('show');
-            }, 10);
-            
-            setTimeout(() => {
-                notification.classList.remove('show');
-                setTimeout(() => notification.remove(), 300);
-            }, 5000);
-        };
-
-        // Auto-hide flash messages
-        document.addEventListener('DOMContentLoaded', function() {
-            const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(alert => {
-                setTimeout(() => {
-                    alert.style.opacity = '0';
-                    alert.style.transform = 'translateY(-10px)';
-                    setTimeout(() => {
-                        alert.remove();
-                    }, 300);
-                }, 5000);
-            });
-
-            // Highlight active nav item
-            const currentPath = window.location.pathname;
-            const navItems = document.querySelectorAll('.nav-item');
-            navItems.forEach(item => {
-                const href = item.getAttribute('href');
-                if (href && currentPath === href) {
-                    item.classList.add('active');
-                }
-            });
-
-            // Global search
-            const searchBar = document.getElementById('globalSearch');
-            if (searchBar) {
-                searchBar.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        const query = this.value.trim();
-                        if (query) {
-                            showLoading();
-                            window.location.href = `/search?q=${encodeURIComponent(query)}`;
-                        }
-                    }
-                });
-            }
-
-            // Keyboard shortcuts
-            document.addEventListener('keydown', function(e) {
-                if (e.altKey && e.key === 'n') {
-                    e.preventDefault();
-                    toggleNotifications();
-                }
-                if (e.altKey && e.key === 'c') {
-                    e.preventDefault();
-                    toggleChat();
-                }
-                if (e.key === 'Escape') {
-                    document.getElementById('notificationDropdown')?.classList.remove('active');
-                    document.getElementById('userDropdown')?.classList.remove('active');
-                    document.getElementById('chatPopup')?.classList.remove('active');
-                    document.getElementById('comingSoonModal')?.classList.add('hidden');
-                    document.getElementById('taskUpdateModal')?.classList.add('hidden');
-                    document.getElementById('navMenu')?.classList.remove('active');
-                }
-            });
-
-            // Add loading state to links
-            document.querySelectorAll('a[href]:not([href^="#"]):not([target="_blank"])').forEach(link => {
-                link.addEventListener('click', function(e) {
-                    if (!e.ctrlKey && !e.metaKey && !this.href.includes('#')) {
-                        showLoading();
-                    }
-                });
-            });
-
-            // Handle form submissions
-            document.querySelectorAll('form').forEach(form => {
-                form.addEventListener('submit', function() {
-                    showLoading();
-                });
-            });
-            
-            // Load chat messages if on core dashboard
-            if (currentPath.includes('core_dashboard')) {
-                loadChatMessages();
-                setInterval(loadChatMessages, 10000);
-            }
-        });
-
-        // Network status
-        window.addEventListener('online', function() {
-            showNotification('Back Online', 'Your internet connection has been restored', 'success');
-        });
-
-        window.addEventListener('offline', function() {
-            showNotification('You are offline', 'Please check your internet connection', 'error');
-        });
-    </script>
-
-    {% block scripts %}{% endblock %}
+document.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('.alert').forEach(a=>setTimeout(()=>{a.style.opacity='0';a.style.transform='translateY(-8px)';setTimeout(()=>a.remove(),300);},5500));
+  document.getElementById('globalSearch')?.addEventListener('keypress',e=>{if(e.key==='Enter'){const q=e.target.value.trim();if(q)window.location.href=`/search?q=${encodeURIComponent(q)}`;}});
+  loadMsgs();setInterval(loadMsgs,22000);
+  document.addEventListener('keydown',e=>{
+    if(e.altKey&&e.key==='a'){e.preventDefault();toggleAiPanel();}
+    if(e.altKey&&e.key==='m'){e.preventDefault();toggleMsgDrop();}
+    if(e.altKey&&e.key==='n'){e.preventDefault();toggleNotifDrop();}
+    if(e.altKey&&e.key==='c'){e.preventDefault();if(typeof toggleTeamChat!=='undefined')toggleTeamChat();}
+    if(e.key==='Escape'){['notifDropdown','msgDropdown','userDropdown'].forEach(id=>document.getElementById(id)?.classList.remove('open'));closePdfModal();if(_aiOpen)toggleAiPanel();}
+  });
+  window.addEventListener('online',()=>showToast('Back online','success'));
+  window.addEventListener('offline',()=>showToast('You are offline','error'));
+});
+Object.assign(window,{toggleAiPanel,openAiPanel,sendAiMsg,aiMyStats,aiQuick,clearAiChat,buildStatsPills,exportPdf,closePdfModal,doPdfDownload,toggleMsgDrop,toggleNotifDrop,toggleUserDrop,toggleTeamChat,sendTeamMsg,loadTeamChat,sendQuickMsg,loadMsgs,showToast,showLoading,hideLoading});
+</script>
+{% block scripts %}{% endblock %}
 </body>
 </html>

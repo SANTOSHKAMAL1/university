@@ -46,7 +46,7 @@ try:
     PYMUPDF_AVAILABLE = True
 except ImportError:
     PYMUPDF_AVAILABLE = False
-    logging.warning("PyMuPDF not installed — PDF text extraction disabled. Run: pip install pymupdf")
+    logging.warning("PyMuPDF not installed — PDF text extraction disabled.")
 
 # ══════════════════════════════════════════════════════════════════════
 #  LOGGING
@@ -62,24 +62,20 @@ from config import Config
 app.config.from_object(Config)
 
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
-
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)
 app.config['SESSION_COOKIE_SECURE']   = False
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
-# ── Upload settings ────────────────────────────────────────────────────
 UPLOAD_FOLDER      = 'static/uploads'
 ALLOWED_EXTENSIONS = {'pdf','docx','txt','png','jpg','jpeg','gif','xlsx','csv','xls'}
-app.config['UPLOAD_FOLDER']        = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH']   = 50 * 1024 * 1024  # 50 MB
+app.config['UPLOAD_FOLDER']      = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# ── MongoDB ────────────────────────────────────────────────────────────
 mongo = PyMongo(app)
 db    = mongo.db
 
-# ── Mail ───────────────────────────────────────────────────────────────
 app.config['MAIL_SERVER']         = 'smtp.gmail.com'
 app.config['MAIL_PORT']           = 587
 app.config['MAIL_USE_TLS']        = True
@@ -101,16 +97,12 @@ with app.app_context():
     except Exception as e:
         logger.error(f"❌ Mail config test failed: {e}")
 
-# ── Jain AI (Groq) client ──────────────────────────────────────────────
 _groq_key = os.getenv("GROQ_API_KEY", "").strip()
 if not _groq_key:
     logger.warning("⚠️  GROQ_API_KEY not set — Jain AI features will return errors")
 ai_client = Groq(api_key=_groq_key)
 
-# ── Timezone ───────────────────────────────────────────────────────────
 IST = pytz.timezone('Asia/Kolkata')
-
-# ── Google OAuth scopes ────────────────────────────────────────────────
 DRIVE_SCOPES = ['https://www.googleapis.com/auth/drive.file',
                 'https://www.googleapis.com/auth/drive']
 GMAIL_SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
@@ -119,22 +111,17 @@ GMAIL_SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 #  TIMEZONE HELPERS
 # ══════════════════════════════════════════════════════════════════════
 def make_timezone_aware(dt):
-    if dt is None:
-        return None
-    if dt.tzinfo is None:
-        return IST.localize(dt)
+    if dt is None: return None
+    if dt.tzinfo is None: return IST.localize(dt)
     return dt.astimezone(IST)
 
 def make_timezone_naive(dt):
-    if dt is None:
-        return None
-    if dt.tzinfo is not None:
-        return dt.astimezone(IST).replace(tzinfo=None)
+    if dt is None: return None
+    if dt.tzinfo is not None: return dt.astimezone(IST).replace(tzinfo=None)
     return dt
 
 def normalize_datetime_for_query(dt):
-    if dt is None:
-        return None
+    if dt is None: return None
     return dt.replace(tzinfo=None) if dt.tzinfo else dt
 
 def get_indian_time():
@@ -144,24 +131,19 @@ def get_indian_time_aware():
     return datetime.now(IST)
 
 def convert_to_ist(dt):
-    if dt.tzinfo is None:
-        dt = pytz.utc.localize(dt)
+    if dt.tzinfo is None: dt = pytz.utc.localize(dt)
     return dt.astimezone(IST)
 
 def get_today_ist_string():
     return datetime.utcnow().replace(tzinfo=pytz.utc).astimezone(IST).strftime("%Y-%m-%d")
 
 def normalize_date(date_str):
-    if not date_str:
-        return ""
+    if not date_str: return ""
     date_str = str(date_str).strip()
-    if len(date_str) == 10 and date_str[4] == "-":
-        return date_str
+    if len(date_str) == 10 and date_str[4] == "-": return date_str
     for fmt in ["%Y-%m-%d","%d/%m/%Y","%d-%m-%Y","%m/%d/%Y","%Y/%m/%d"]:
-        try:
-            return datetime.strptime(date_str, fmt).strftime("%Y-%m-%d")
-        except ValueError:
-            continue
+        try: return datetime.strptime(date_str, fmt).strftime("%Y-%m-%d")
+        except ValueError: continue
     return date_str
 
 # ══════════════════════════════════════════════════════════════════════
@@ -205,6 +187,10 @@ def create_indexes():
         db.ugc_data.create_index([('uploaded_at',-1)])
         db.monthly_engagement.create_index([('uploaded_at',-1)])
         db.newsletters.create_index([('uploaded_at',-1)])
+        db.direct_messages.create_index([('sender_id',1)])
+        db.direct_messages.create_index([('receiver_id',1)])
+        db.direct_messages.create_index([('timestamp',-1)])
+        db.direct_messages.create_index([('read',1)])
         logger.info("✅ DB indexes created")
     except Exception as e:
         logger.error(f"❌ Index creation error: {e}")
@@ -219,7 +205,7 @@ def _allowed(filename):
     return allowed_file(filename)
 
 # ══════════════════════════════════════════════════════════════════════
-#  AUTH DECORATORS  ← MUST BE DEFINED BEFORE ANY ROUTE USES THEM
+#  AUTH DECORATORS
 # ══════════════════════════════════════════════════════════════════════
 def login_required(f):
     @wraps(f)
@@ -311,20 +297,19 @@ def has_special_access():
 # ══════════════════════════════════════════════════════════════════════
 def _get_user_info():
     return {
-        'user_logged_in': bool(session.get('email')),
-        'user_email':     session.get('email', ''),
-        'user_role':      session.get('role', 'user'),
-        'user_type':      session.get('user_type', ''),
-        'special_role':   session.get('special_role', ''),
-        'approved':       session.get('approved', False),
-        'user_department':session.get('user_department', ''),
-        'user_location':  session.get('user_location', ''),
+        'user_logged_in':   bool(session.get('email')),
+        'user_email':       session.get('email', ''),
+        'user_role':        session.get('role', 'user'),
+        'user_type':        session.get('user_type', ''),
+        'special_role':     session.get('special_role', ''),
+        'approved':         session.get('approved', False),
+        'user_department':  session.get('user_department', ''),
+        'user_location':    session.get('user_location', ''),
     }
 
 def _track_activity(action_description=None):
     email = session.get('email')
-    if not email:
-        return
+    if not email: return
     update = {'$set': {'last_seen': datetime.utcnow()}}
     if action_description:
         update['$inc'] = {'changes_made': 1}
@@ -338,15 +323,13 @@ def _track_activity(action_description=None):
     db.users.update_one({'email': email}, update)
 
 # ══════════════════════════════════════════════════════════════════════
-#  JAIN AI — HELPERS  (defined AFTER decorators, BEFORE routes)
+#  JAIN AI HELPERS
 # ══════════════════════════════════════════════════════════════════════
 def extract_text_from_file(file_url: str, max_chars: int = 4000) -> str:
-    """Download a file and extract its text content."""
     try:
         response = http_requests.get(file_url, timeout=15)
         response.raise_for_status()
         content_type = response.headers.get("Content-Type", "")
-
         if "pdf" in content_type or file_url.lower().endswith(".pdf"):
             if PYMUPDF_AVAILABLE:
                 doc = fitz.open(stream=response.content, filetype="pdf")
@@ -354,10 +337,8 @@ def extract_text_from_file(file_url: str, max_chars: int = 4000) -> str:
                 doc.close()
                 return text[:max_chars]
             return ""
-
         elif any(file_url.lower().endswith(ext) for ext in [".txt", ".csv", ".md"]):
             return response.text[:max_chars]
-
         elif file_url.lower().endswith(".docx"):
             try:
                 from docx import Document
@@ -365,15 +346,12 @@ def extract_text_from_file(file_url: str, max_chars: int = 4000) -> str:
                 return "\n".join(p.text for p in doc.paragraphs)[:max_chars]
             except ImportError:
                 return ""
-
         return ""
     except Exception as e:
         logger.error(f"[Jain AI] File extraction error: {e}")
         return ""
 
-
 def call_claude(prompt: str, system: str = None, max_tokens: int = 1000) -> str:
-    """Call Groq (Jain AI) and return the text response."""
     try:
         messages = []
         if system:
@@ -396,9 +374,7 @@ def call_claude(prompt: str, system: str = None, max_tokens: int = 1000) -> str:
             raise Exception("Could not connect to Jain AI — check your internet connection")
         raise Exception(f"Jain AI error: {str(e)}")
 
-
 def call_claude_chat(messages: list, system: str = None, max_tokens: int = 800) -> str:
-    """Multi-turn chat via Groq (Jain AI)."""
     try:
         groq_messages = []
         if system:
@@ -423,18 +399,17 @@ def call_claude_chat(messages: list, system: str = None, max_tokens: int = 800) 
 #  GOOGLE DRIVE HELPERS
 # ══════════════════════════════════════════════════════════════════════
 def get_drive_service():
-    if 'drive_creds' not in session:
-        return None
+    if 'drive_creds' not in session: return None
     try:
         c = session['drive_creds']
         required = ['token','refresh_token','token_uri','client_id','client_secret']
         for f in required:
-            if f not in c:
-                return None
-        creds = Credentials(token=c['token'], refresh_token=c['refresh_token'],
-                            token_uri=c['token_uri'], client_id=c['client_id'],
-                            client_secret=c['client_secret'],
-                            scopes=c.get('scopes', DRIVE_SCOPES))
+            if f not in c: return None
+        creds = Credentials(
+            token=c['token'], refresh_token=c['refresh_token'],
+            token_uri=c['token_uri'], client_id=c['client_id'],
+            client_secret=c['client_secret'], scopes=c.get('scopes', DRIVE_SCOPES)
+        )
         return build('drive', 'v3', credentials=creds)
     except Exception as e:
         logger.error(f"Drive service error: {e}")
@@ -443,8 +418,7 @@ def get_drive_service():
 
 def make_file_public(service, file_id):
     try:
-        service.permissions().create(fileId=file_id,
-                                     body={'type':'anyone','role':'reader'}).execute()
+        service.permissions().create(fileId=file_id, body={'type':'anyone','role':'reader'}).execute()
         return True
     except Exception as e:
         logger.error(f"Make public error: {e}")
@@ -472,8 +446,7 @@ def delete_drive_file(service, file_id):
 def get_drive_stats():
     try:
         service = get_drive_service()
-        if not service:
-            return {'total_files': 0, 'recent_uploads': []}
+        if not service: return {'total_files': 0, 'recent_uploads': []}
         seven_days_ago = (get_indian_time() - timedelta(days=7)).isoformat()
         recent = service.files().list(
             q=f"createdTime >= '{seven_days_ago}' and trashed=false",
@@ -508,11 +481,9 @@ def get_user_navbar(email):
 # ══════════════════════════════════════════════════════════════════════
 def get_user_notifications():
     try:
-        if 'email' not in session:
-            return []
+        if 'email' not in session: return []
         user = db.users.find_one({'email': session['email']})
-        if not user:
-            return []
+        if not user: return []
         notifications = []
         upcoming_reminders = list(db.event_reminders.find(
             {'user_id': user['_id'], 'sent': False}).sort('reminder_datetime',1).limit(5))
@@ -569,6 +540,18 @@ def get_user_notifications():
                     'time': share.get('shared_at', get_indian_time()),
                     'link': url_for('leader_dashboard')
                 })
+        # unread direct messages
+        unread_dms = db.direct_messages.count_documents({
+            'receiver_id': user['_id'], 'read': False
+        })
+        if unread_dms > 0:
+            notifications.append({
+                'type':'message','icon':'comments',
+                'title':f"You have {unread_dms} unread message(s)",
+                'message':'Click Messages in the navbar to read',
+                'time': get_indian_time(),
+                'link': '#'
+            })
         notifications.sort(key=lambda x: x['time'], reverse=True)
         return notifications[:10]
     except Exception as e:
@@ -609,7 +592,9 @@ def send_document_notification(sender, receiver, document, message):
             subject=f"📄 New Document for Review: {document['document_name']}",
             sender=app.config['MAIL_USERNAME'],
             recipients=[receiver['email']])
-        msg.body = f"""New Document for Review\n\nFrom: {sender['email']}\nDocument: {document['document_name']}\nDescription: {document.get('description','')}\n\nMessage:\n{message}\n\nView: {request.url_root}leader_dashboard"""
+        msg.body = (f"New Document for Review\n\nFrom: {sender['email']}\n"
+                    f"Document: {document['document_name']}\nDescription: {document.get('description','')}\n\n"
+                    f"Message:\n{message}\n\nView: {request.url_root}leader_dashboard")
         mail.send(msg)
     except Exception as e:
         logger.error(f"Doc notification error: {e}")
@@ -619,17 +604,22 @@ def send_task_notification(sender, receiver, task_title, due_date, attachment_ms
         msg = Message(subject=f"📋 New Task Assigned: {task_title}",
                       sender=app.config['MAIL_USERNAME'],
                       recipients=[receiver['email']])
-        msg.body = f"""New Task Assigned\n\nFrom: {sender['email'].split('@')[0]}\nTask: {task_title}\nDue: {due_date}\nPriority: {priority}{attachment_msg}\n\nDescription:\n{description}\n\nView: {request.url_root}core_dashboard"""
+        msg.body = (f"New Task Assigned\n\nFrom: {sender['email'].split('@')[0]}\n"
+                    f"Task: {task_title}\nDue: {due_date}\nPriority: {priority}{attachment_msg}\n\n"
+                    f"Description:\n{description}\n\nView: {request.url_root}core_dashboard")
         mail.send(msg)
     except Exception as e:
         logger.error(f"Task notification error: {e}")
 
 def send_review_reply(reviewer, recipient, document, comments, status):
     try:
-        msg = Message(subject=f"{'✅' if status=='approved' else '❌'} Document Review: {document['document_name']}",
-                      sender=app.config['MAIL_USERNAME'],
-                      recipients=[recipient['email']])
-        msg.body = f"""Document Review Complete\n\nDocument: {document['document_name']}\nStatus: {status.upper()}\nReviewed by: {reviewer['email']}\n\nComments:\n{comments}\n\nView: {request.url_root}core_dashboard"""
+        msg = Message(
+            subject=f"{'✅' if status=='approved' else '❌'} Document Review: {document['document_name']}",
+            sender=app.config['MAIL_USERNAME'],
+            recipients=[recipient['email']])
+        msg.body = (f"Document Review Complete\n\nDocument: {document['document_name']}\n"
+                    f"Status: {status.upper()}\nReviewed by: {reviewer['email']}\n\n"
+                    f"Comments:\n{comments}\n\nView: {request.url_root}core_dashboard")
         mail.send(msg)
     except Exception as e:
         logger.error(f"Review reply error: {e}")
@@ -639,7 +629,8 @@ def send_chat_notification(sender, receiver, message_preview):
         msg = Message(subject=f"💬 New message from {sender['email'].split('@')[0]}",
                       sender=app.config['MAIL_USERNAME'],
                       recipients=[receiver['email']])
-        msg.body = f"New message from {sender['email'].split('@')[0]}:\n\n\"{message_preview}...\"\n\nView: {request.url_root}core_dashboard"
+        msg.body = (f"New message from {sender['email'].split('@')[0]}:\n\n"
+                    f"\"{message_preview}...\"\n\nView: {request.url_root}core_dashboard")
         mail.send(msg)
     except Exception as e:
         logger.error(f"Chat notification error: {e}")
@@ -659,7 +650,11 @@ def notify_group_chat(sender, message_preview):
 def send_newsletter_email(title, content, image_filename, recipients):
     try:
         msg = Message(subject=title, sender=app.config['MAIL_USERNAME'], recipients=recipients)
-        msg.html = f"""<html><body><div style="max-width:600px;margin:0 auto;font-family:Arial,sans-serif"><div style="background:#04043a;color:#FFD700;padding:20px;text-align:center"><h1>{title}</h1></div><div style="padding:20px">{content}</div><div style="text-align:center;font-size:12px;color:#666;padding:20px">Jain University - Office of Academics</div></div></body></html>"""
+        msg.html = (f"<html><body><div style='max-width:600px;margin:0 auto;font-family:Arial,sans-serif'>"
+                    f"<div style='background:#04043a;color:#FFD700;padding:20px;text-align:center'><h1>{title}</h1></div>"
+                    f"<div style='padding:20px'>{content}</div>"
+                    f"<div style='text-align:center;font-size:12px;color:#666;padding:20px'>Jain University - Office of Academics</div>"
+                    f"</div></body></html>")
         if image_filename:
             image_path = os.path.join(app.config['UPLOAD_FOLDER'], image_filename)
             if os.path.exists(image_path):
@@ -677,7 +672,11 @@ def send_completion_notification(assigner, completer, task, comment, attachment_
         msg = Message(subject=f"✅ Task Completed: {task['title']}",
                       sender=app.config['MAIL_USERNAME'],
                       recipients=[assigner['email']])
-        msg.body = f"""Task Completed\n\nTask: {task['title']}\nCompleted by: {completer['email'].split('@')[0]}\nProgress: {task.get('progress',0)}%{attachment_msg}\n\nCompletion note:\n{comment if comment else 'Marked as completed'}\n\nView: {request.url_root}leader_dashboard"""
+        msg.body = (f"Task Completed\n\nTask: {task['title']}\n"
+                    f"Completed by: {completer['email'].split('@')[0]}\n"
+                    f"Progress: {task.get('progress',0)}%{attachment_msg}\n\n"
+                    f"Completion note:\n{comment if comment else 'Marked as completed'}\n\n"
+                    f"View: {request.url_root}leader_dashboard")
         if attachment_url:
             msg.body += f"\n\nAttachment: {request.url_root.rstrip('/')}{attachment_url}"
         mail.send(msg)
@@ -729,7 +728,11 @@ def send_event_reminders():
                 msg = Message(subject=f"🔔 REMINDER: {event['event_name']}",
                               sender=app.config['MAIL_USERNAME'],
                               recipients=[user['email']])
-                msg.body = f"""EVENT REMINDER\n\nEvent: {event['event_name']}\nDate: {event['event_date']}\nTime: {event.get('event_time','All Day')}\nVenue: {event['venue']}\n\nDescription:\n{event.get('description','')}\n\nScheduled reminder: {reminder_dt.strftime('%d %B %Y at %I:%M %p') if isinstance(reminder_dt, datetime) else ''} IST\n\nView: {request.url_root}jainevents"""
+                msg.body = (f"EVENT REMINDER\n\nEvent: {event['event_name']}\n"
+                            f"Date: {event['event_date']}\nTime: {event.get('event_time','All Day')}\n"
+                            f"Venue: {event['venue']}\n\nDescription:\n{event.get('description','')}\n\n"
+                            f"Scheduled reminder: {reminder_dt.strftime('%d %B %Y at %I:%M %p') if isinstance(reminder_dt, datetime) else ''} IST\n\n"
+                            f"View: {request.url_root}jainevents")
                 mail.send(msg)
                 db.event_reminders.update_one({'_id': reminder_id},
                     {'$set': {'sent': True, 'sent_at': now_naive, 'email_sent': True}})
@@ -744,10 +747,8 @@ def send_event_reminders():
         logger.error(f"[REMINDER SYSTEM ERROR] {e}")
 
 # ══════════════════════════════════════════════════════════════════════
-#  ██████████  JAIN AI ROUTES  ████████████████████████████████████████
-#  All decorated with @login_required which is now defined above
+#  JAIN AI ROUTES
 # ══════════════════════════════════════════════════════════════════════
-
 @app.route("/api/ai/summarize", methods=["POST"])
 @login_required
 def ai_summarize():
@@ -769,7 +770,6 @@ def ai_summarize():
         logger.error(f"[Jain AI] summarize error: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
-
 @app.route("/api/ai/task-help", methods=["POST"])
 @login_required
 def ai_task_help():
@@ -789,7 +789,6 @@ def ai_task_help():
     except Exception as e:
         logger.error(f"[Jain AI] task-help error: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
-
 
 @app.route("/api/ai/chat", methods=["POST"])
 @login_required
@@ -817,7 +816,6 @@ def ai_chat():
         logger.error(f"[Jain AI] chat error: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
-
 @app.route("/api/ai/suggest-feedback", methods=["POST"])
 @login_required
 def ai_suggest_feedback():
@@ -829,16 +827,13 @@ def ai_suggest_feedback():
         prompt = (f"You are a Jain University OOA leader reviewing a submitted document.\n\n"
                   f"Document: {doc_name}\nSubmitted by: {submitted_by}\nDescription: {description}\n\n"
                   f"Write professional, constructive feedback (150-200 words).\n"
-                  f"- Be specific and actionable\n"
-                  f"- Point out what is good and what needs improvement\n"
-                  f"- Do NOT approve or reject — only provide feedback\n"
-                  f"- Plain text, no markdown")
+                  f"- Be specific and actionable\n- Point out what is good and what needs improvement\n"
+                  f"- Do NOT approve or reject — only provide feedback\n- Plain text, no markdown")
         feedback = call_claude(prompt, max_tokens=600)
         return jsonify({"success": True, "feedback": feedback})
     except Exception as e:
         logger.error(f"[Jain AI] suggest-feedback error: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
-
 
 @app.route("/api/ai/suggest-task-desc", methods=["POST"])
 @login_required
@@ -849,16 +844,13 @@ def ai_suggest_task_desc():
         prompt = (f"You are a Jain University OOA leader creating a task for a core team member.\n\n"
                   f"Task title: {title}\n\n"
                   f"Write a clear, detailed task description (3-5 sentences) that:\n"
-                  f"- Explains what needs to be done\n"
-                  f"- Mentions deliverables or outputs expected\n"
-                  f"- Notes quality standards or guidelines\n"
-                  f"- Is specific enough to act on\n\nPlain text only.")
+                  f"- Explains what needs to be done\n- Mentions deliverables or outputs expected\n"
+                  f"- Notes quality standards or guidelines\n- Is specific enough to act on\n\nPlain text only.")
         description = call_claude(prompt, max_tokens=400)
         return jsonify({"success": True, "description": description})
     except Exception as e:
         logger.error(f"[Jain AI] suggest-task-desc error: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
-
 
 @app.route("/api/ai/analyze-task", methods=["POST"])
 @login_required
@@ -873,15 +865,13 @@ def ai_analyze_task():
                   f"Task: {title}\nDescription: {description}\n"
                   f"Current progress: {progress}%\nStatus: {status}\n\n"
                   f"Provide a brief progress analysis (100-150 words):\n"
-                  f"- Is the progress on track?\n"
-                  f"- Any risks or concerns?\n"
+                  f"- Is the progress on track?\n- Any risks or concerns?\n"
                   f"- Recommendations (accept, request rework, follow up)?\n\nPlain text only.")
         analysis = call_claude(prompt, max_tokens=500)
         return jsonify({"success": True, "analysis": analysis})
     except Exception as e:
         logger.error(f"[Jain AI] analyze-task error: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
-
 
 @app.route("/api/ai/suggest-rework-feedback", methods=["POST"])
 @login_required
@@ -903,7 +893,6 @@ def ai_suggest_rework_feedback():
         logger.error(f"[Jain AI] suggest-rework-feedback error: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
-
 @app.route("/api/ai/member-insight", methods=["POST"])
 @login_required
 def ai_member_insight():
@@ -920,13 +909,36 @@ def ai_member_insight():
                   f"Documents submitted: {total}\nApproved: {approved}\n"
                   f"Pending: {pending}\nNeeds revision: {revision}\n\n"
                   f"Write a brief performance insight (100-150 words):\n"
-                  f"- Highlight strengths\n"
-                  f"- Note areas for improvement\n"
+                  f"- Highlight strengths\n- Note areas for improvement\n"
                   f"- Give 1-2 concrete suggestions for the leader\n\nPlain text, professional tone.")
         insight = call_claude(prompt, max_tokens=500)
         return jsonify({"success": True, "insight": insight})
     except Exception as e:
         logger.error(f"[Jain AI] member-insight error: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+# ── NEW: AI dashboard stats summary ──
+@app.route("/api/ai/dashboard-summary", methods=["POST"])
+@login_required
+def ai_dashboard_summary():
+    """Generate an AI summary of the user's current dashboard stats."""
+    try:
+        data   = request.get_json(force=True) or {}
+        stats  = data.get("stats", {})
+        role   = data.get("role", "core")
+        lines  = "\n".join(f"- {k.replace('_',' ').title()}: {v}" for k, v in stats.items())
+        prompt = (f"You are Jain AI, assistant for Jain University OOA portal.\n"
+                  f"The user is a {role} team member. Here are their current dashboard stats:\n\n"
+                  f"{lines}\n\n"
+                  f"Give a concise (120-180 word) performance snapshot:\n"
+                  f"1. Overall status (healthy/needs attention)\n"
+                  f"2. Top 2 priorities right now\n"
+                  f"3. One practical recommendation\n"
+                  f"Be encouraging but honest. Plain text only.")
+        summary = call_claude(prompt, max_tokens=500)
+        return jsonify({"success": True, "summary": summary})
+    except Exception as e:
+        logger.error(f"[Jain AI] dashboard-summary error: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 # ══════════════════════════════════════════════════════════════════════
@@ -943,13 +955,13 @@ def login():
         user = db.users.find_one({'email': email})
         if user and check_password_hash(user['password'], password):
             session.clear()
-            session['email']       = email
-            session['role']        = user['role']
-            session['user_type']   = user.get('user_type', 'faculty')
-            session['special_role']= user.get('special_role', None)
-            session['approved']    = user.get('approved', False)
-            session['user_id']     = str(user['_id'])
-            session.permanent      = True
+            session['email']        = email
+            session['role']         = user['role']
+            session['user_type']    = user.get('user_type', 'faculty')
+            session['special_role'] = user.get('special_role', None)
+            session['approved']     = user.get('approved', False)
+            session['user_id']      = str(user['_id'])
+            session.permanent       = True
             profile = user.get('profile', {}) or {}
             session['user_department'] = user.get('department','') or profile.get('department','')
             session['user_location']   = user.get('location','') or profile.get('location','')
@@ -1042,7 +1054,7 @@ def register():
             assigned_core   = db.pre_assigned_core.find_one({'email': email})
             hashed_pw = generate_password_hash(password)
             if assigned_leader:
-                new_id = db.users.insert_one({
+                db.users.insert_one({
                     'email': email, 'password': hashed_pw, 'role': 'user',
                     'user_type': 'faculty', 'special_role': 'leader', 'approved': True,
                     'is_online': True, 'last_seen': get_indian_time(),
@@ -1050,12 +1062,11 @@ def register():
                     'profile': {'department': department, 'location': location,
                                 'school': assigned_leader.get('school',''), 'phone': ''},
                     'created_at': get_indian_time()
-                }).inserted_id
+                })
                 db.pre_assigned_leaders.delete_one({'email': email})
-                session['special_role'] = 'leader'
                 flash('✅ Registered as Leader! Please log in.', 'success')
             elif assigned_core:
-                new_id = db.users.insert_one({
+                db.users.insert_one({
                     'email': email, 'password': hashed_pw, 'role': 'user',
                     'user_type': 'core', 'special_role': 'office_barrier', 'approved': True,
                     'is_online': True, 'last_seen': get_indian_time(),
@@ -1063,12 +1074,11 @@ def register():
                     'profile': {'department': department, 'location': location,
                                 'school': assigned_core.get('department',''), 'phone': ''},
                     'created_at': get_indian_time()
-                }).inserted_id
+                })
                 db.pre_assigned_core.delete_one({'email': email})
-                session['special_role'] = 'office_barrier'
                 flash('✅ Registered as Core Team member! Please log in.', 'success')
             else:
-                new_id = db.users.insert_one({
+                db.users.insert_one({
                     'email': email, 'password': hashed_pw, 'role': 'user',
                     'user_type': 'faculty', 'special_role': None, 'approved': False,
                     'is_online': True, 'last_seen': get_indian_time(),
@@ -1076,7 +1086,7 @@ def register():
                     'profile': {'department': department, 'location': location,
                                 'school': '', 'phone': ''},
                     'created_at': get_indian_time()
-                }).inserted_id
+                })
                 flash('✅ Registration complete! Awaiting admin approval.', 'info')
             return redirect(url_for('login'))
     otp_sent     = session.get('step', 1) >= 2
@@ -1268,19 +1278,16 @@ def refresh_session():
 @login_required
 def home():
     try:
-        user       = db.users.find_one({"email": session["email"]})
-        today_str  = get_today_ist_string()
+        user      = db.users.find_one({"email": session["email"]})
+        today_str = get_today_ist_string()
         all_events_raw = list(db.events.find({}).sort("event_date", 1))
-        today_events   = []
-        upcoming_events= []
-        all_upcoming   = []
+        today_events = []; upcoming_events = []; all_upcoming = []
         for ev in all_events_raw:
-            ev["_id"]      = str(ev["_id"])
-            event_date     = normalize_date(ev.get("event_date", ""))
-            end_date       = normalize_date(ev.get("end_date", "")) if ev.get("end_date") else ""
+            ev["_id"]       = str(ev["_id"])
+            event_date      = normalize_date(ev.get("event_date", ""))
+            end_date        = normalize_date(ev.get("end_date", "")) if ev.get("end_date") else ""
             ev["event_date"]= event_date
-            if not event_date:
-                continue
+            if not event_date: continue
             if end_date and event_date <= today_str <= end_date:
                 today_events.append(ev); all_upcoming.append(ev)
             elif event_date == today_str:
@@ -1370,17 +1377,14 @@ def user_dashboard():
         user_reminders = list(db.event_reminders.find({'user_id':user['_id']}).sort('reminder_datetime',1))
         for reminder in user_reminders:
             event = db.events.find_one({'_id': reminder['event_id']})
-            if event:
-                reminder['event'] = event
+            if event: reminder['event'] = event
         drive_stats = {'total_files':0,'recent_uploads':[]}
         drive_connected = 'drive_creds' in session
         if drive_connected:
-            try:
-                drive_stats = get_drive_stats()
-            except:
-                drive_connected = False
-        user_files  = list(db.user_files.find({'user_email':session['email']}).sort('uploaded_at',-1).limit(20))
-        public_files= list(db.public_files.find().sort('uploaded_at',-1).limit(20))
+            try: drive_stats = get_drive_stats()
+            except: drive_connected = False
+        user_files   = list(db.user_files.find({'user_email':session['email']}).sort('uploaded_at',-1).limit(20))
+        public_files = list(db.public_files.find().sort('uploaded_at',-1).limit(20))
         return render_template('user_dashboard.html',
             today_events=today_events, upcoming_events=upcoming_events,
             user_reminders=user_reminders, drive_stats=drive_stats,
@@ -1432,10 +1436,11 @@ def core_dashboard():
         for task in my_tasks:
             assigner = db.users.find_one({'_id': task['assigned_by']})
             task['assigned_by_name'] = assigner['email'].split('@')[0] if assigner else 'Unknown'
-            task['progress'] = task.get('progress', 0)
-            task['priority'] = task.get('priority', 'medium')
-            task['status']   = task.get('status', 'pending')
-            task['updates']  = task.get('updates', [])
+            task['progress']  = task.get('progress', 0)
+            task['priority']  = task.get('priority', 'medium')
+            task['status']    = task.get('status', 'pending')
+            task['updates']   = task.get('updates', [])
+            task['rework_comment'] = task.get('rework_comment', '')
             if task.get('due_date'):
                 task['due_date_str'] = task['due_date'].strftime('%d %b %Y') if isinstance(task['due_date'], datetime) else str(task['due_date'])
             else:
@@ -1445,7 +1450,8 @@ def core_dashboard():
         in_progress_tasks  = len([t for t in my_tasks if t.get('status')=='in_progress'])
         completed_tasks    = len([t for t in my_tasks if t.get('status')=='completed'])
         high_priority_tasks= len([t for t in my_tasks if t.get('priority')=='high' and t.get('status')!='completed'])
-        overdue_tasks      = len([t for t in my_tasks if t.get('due_date') and t.get('due_date') < now_naive and t.get('status')!='completed'])
+        overdue_tasks      = len([t for t in my_tasks if t.get('due_date') and
+                                   t.get('due_date') < now_naive and t.get('status') not in ['completed','accepted']])
         online_core = list(db.users.find({
             '$or':[{'user_type':'core'},{'special_role':'office_barrier'}],
             'approved': True, 'is_online': True}) or [])
@@ -1470,7 +1476,6 @@ def core_dashboard():
                 share['sender_name'] = sender['email'].split('@')[0] if sender else 'Unknown'
         except:
             recent_shares = []
-        chat_messages = []
         recent_activity = []
         for doc in my_documents[:5]:
             if doc.get('submitted_at'):
@@ -1499,7 +1504,7 @@ def core_dashboard():
             in_progress_tasks=in_progress_tasks, completed_tasks=completed_tasks,
             high_priority_tasks=high_priority_tasks, overdue_tasks=overdue_tasks,
             recent_activity=recent_activity, online_core=online_core,
-            recent_shares=recent_shares, chat_messages=chat_messages,
+            recent_shares=recent_shares, chat_messages=[],
             now=get_indian_time())
     except Exception as e:
         logger.error(f"core_dashboard error: {e}", exc_info=True)
@@ -1519,13 +1524,13 @@ def upload_document():
     if not is_core_member():
         return jsonify({'error': 'Access denied'}), 403
     try:
-        user            = db.users.find_one({'email': session['email']})
-        document_name   = request.form.get('document_name')
-        description     = request.form.get('description')
-        assigned_users  = request.form.getlist('assigned_users')
-        notify_users    = request.form.get('notify_users') == 'on'
-        file            = request.files.get('file')
-        file_url        = None
+        user           = db.users.find_one({'email': session['email']})
+        document_name  = request.form.get('document_name')
+        description    = request.form.get('description')
+        assigned_users = request.form.getlist('assigned_users')
+        notify_users   = request.form.get('notify_users') == 'on'
+        file           = request.files.get('file')
+        file_url       = None
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             ts       = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -1616,7 +1621,9 @@ def leader_dashboard():
                 assignee = db.users.find_one({'_id': task['assigned_to']})
                 if assignee:
                     task['assigned_to_name'] = assignee['email'].split('@')[0]
-                task['due_date_str'] = task['due_date'].strftime('%d %b %Y') if isinstance(task.get('due_date'), datetime) else str(task.get('due_date',''))
+                task['due_date_str'] = (task['due_date'].strftime('%d %b %Y')
+                                        if isinstance(task.get('due_date'), datetime)
+                                        else str(task.get('due_date','')))
         except Exception as e:
             logger.error(f"Assigned tasks error: {e}")
         core_members = list(db.users.find({
@@ -1667,10 +1674,8 @@ def review_document(document_id):
         doc      = db.office_documents.find_one({'_id': ObjectId(document_id)})
         uploader = db.users.find_one({'_id': doc['user_id']})
         if uploader and send_reply:
-            try:
-                send_review_reply(user, uploader, doc, comments, status)
-            except Exception as e:
-                logger.error(f"Review reply error: {e}")
+            try: send_review_reply(user, uploader, doc, comments, status)
+            except Exception as e: logger.error(f"Review reply error: {e}")
         flash(f'✅ Document {status}', 'success')
         return redirect(url_for('leader_dashboard'))
     except Exception as e:
@@ -1684,20 +1689,19 @@ def share_document_leader():
     if not is_leader():
         return jsonify({'error': 'Access denied'}), 403
     try:
-        user         = db.users.find_one({'email': session['email']})
-        document_id  = request.form.get('document_id')
-        leader_ids   = request.form.getlist('leaders')
-        core_ids     = request.form.getlist('core_members')
-        message      = request.form.get('message', '').strip()
-        file         = request.files.get('share_file')
-        file_url     = None
-        file_name    = None
+        user        = db.users.find_one({'email': session['email']})
+        document_id = request.form.get('document_id')
+        leader_ids  = request.form.getlist('leaders')
+        core_ids    = request.form.getlist('core_members')
+        message     = request.form.get('message', '').strip()
+        file        = request.files.get('share_file')
+        file_url    = None; file_name = None
         if file and file.filename and allowed_file(file.filename):
-            filename  = secure_filename(file.filename)
-            ts        = datetime.now().strftime('%Y%m%d_%H%M%S')
-            n, e      = os.path.splitext(filename)
-            ufn       = f"share_{n}_{ts}{e}"
-            fp        = os.path.join(app.config['UPLOAD_FOLDER'], ufn)
+            filename = secure_filename(file.filename)
+            ts = datetime.now().strftime('%Y%m%d_%H%M%S')
+            n, e = os.path.splitext(filename)
+            ufn  = f"share_{n}_{ts}{e}"
+            fp   = os.path.join(app.config['UPLOAD_FOLDER'], ufn)
             file.save(fp)
             file_url  = '/' + fp.replace('\\', '/')
             file_name = filename
@@ -1710,22 +1714,21 @@ def share_document_leader():
             document = db.office_documents.find_one({'_id': ObjectId(document_id)})
             if document:
                 document_name = document['document_name']
-                if not file_url:
-                    file_url = document.get('file_url')
+                if not file_url: file_url = document.get('file_url')
         if not document_id and not file_url:
             flash('Please select a document or upload a file', 'error')
             return redirect(url_for('leader_dashboard'))
         share_data = {
-            'document_id':    ObjectId(document_id) if document_id else None,
-            'document_name':  document_name,
-            'shared_by':      user['_id'],
-            'shared_by_email':session['email'],
-            'shared_with':    [ObjectId(rid) for rid in recipient_ids],
-            'message':        message,
-            'file_url':       file_url,
-            'file_name':      file_name,
-            'shared_at':      get_indian_time(),
-            'status':         'sent'
+            'document_id':     ObjectId(document_id) if document_id else None,
+            'document_name':   document_name,
+            'shared_by':       user['_id'],
+            'shared_by_email': session['email'],
+            'shared_with':     [ObjectId(rid) for rid in recipient_ids],
+            'message':         message,
+            'file_url':        file_url,
+            'file_name':       file_name,
+            'shared_at':       get_indian_time(),
+            'status':          'sent'
         }
         result = db.document_shares.insert_one(share_data)
         for rid in recipient_ids:
@@ -1756,14 +1759,13 @@ def assign_task():
         priority    = request.form.get('priority', 'medium')
         assigned_to = request.form.get('assigned_to')
         file        = request.files.get('task_file')
-        file_url    = None
-        file_name   = None
+        file_url    = None; file_name = None
         if file and file.filename and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            ts       = datetime.now().strftime('%Y%m%d_%H%M%S')
-            n, e     = os.path.splitext(filename)
-            ufn      = f"task_{n}_{ts}{e}"
-            fp       = os.path.join(app.config['UPLOAD_FOLDER'], ufn)
+            ts = datetime.now().strftime('%Y%m%d_%H%M%S')
+            n, e = os.path.splitext(filename)
+            ufn  = f"task_{n}_{ts}{e}"
+            fp   = os.path.join(app.config['UPLOAD_FOLDER'], ufn)
             file.save(fp)
             file_url  = '/' + fp.replace('\\', '/')
             file_name = filename
@@ -1782,6 +1784,7 @@ def assign_task():
             'attachment_url':    file_url,
             'attachment_name':   file_name,
             'updates':           [],
+            'leader_comments':   [],
             'created_at':        get_indian_time(),
             'updated_at':        get_indian_time()
         }
@@ -1819,21 +1822,18 @@ def update_task_progress(task_id):
             comment    = request.form.get('comment', '')
             attachment = request.files.get('attachment')
         user = db.users.find_one({'email': session['email']})
-        if not user:
-            return jsonify({'success': False, 'error': 'User not found'}), 404
+        if not user: return jsonify({'success': False, 'error': 'User not found'}), 404
         task = db.tasks.find_one({'_id': ObjectId(task_id)})
-        if not task:
-            return jsonify({'success': False, 'error': 'Task not found'}), 404
+        if not task: return jsonify({'success': False, 'error': 'Task not found'}), 404
         if str(task['assigned_to']) != str(user['_id']):
             return jsonify({'success': False, 'error': 'Not assigned to this task'}), 403
-        file_url  = None
-        file_name = None
+        file_url = None; file_name = None
         if attachment and attachment.filename and allowed_file(attachment.filename):
             filename = secure_filename(attachment.filename)
-            ts       = datetime.now().strftime('%Y%m%d_%H%M%S')
-            n, e     = os.path.splitext(filename)
-            ufn      = f"task_update_{n}_{ts}{e}"
-            fp       = os.path.join(app.config['UPLOAD_FOLDER'], ufn)
+            ts = datetime.now().strftime('%Y%m%d_%H%M%S')
+            n, e = os.path.splitext(filename)
+            ufn  = f"task_update_{n}_{ts}{e}"
+            fp   = os.path.join(app.config['UPLOAD_FOLDER'], ufn)
             attachment.save(fp)
             file_url  = '/' + fp.replace('\\', '/')
             file_name = filename
@@ -1850,16 +1850,15 @@ def update_task_progress(task_id):
             {'$set': set_data, '$push': {'updates': update_entry}})
         db.activity_logs.insert_one({
             'user_id': user['_id'], 'user_email': session['email'],
-            'action': 'task_update', 'details': f'Updated: {task["title"]} → {status} ({progress}%)',
+            'action': 'task_update',
+            'details': f'Updated: {task["title"]} → {status} ({progress}%)',
             'timestamp': get_indian_time(), 'ip_address': request.remote_addr
         })
         if status == 'completed':
             assigner = db.users.find_one({'_id': task['assigned_by']})
             if assigner:
-                try:
-                    send_completion_notification(assigner, user, task, comment, file_url)
-                except Exception as e:
-                    logger.error(f"Completion notification error: {e}")
+                try: send_completion_notification(assigner, user, task, comment, file_url)
+                except Exception as e: logger.error(f"Completion notification error: {e}")
         return jsonify({'success': True,
                         'message': 'Task updated' + (' with attachment' if file_url else '')})
     except Exception as e:
@@ -1869,15 +1868,12 @@ def update_task_progress(task_id):
 @app.route('/api/leader/accept_task/<task_id>', methods=['POST'])
 @approval_required
 def leader_accept_task(task_id):
-    if not is_leader():
-        return jsonify({'error': 'Access denied'}), 403
+    if not is_leader(): return jsonify({'error': 'Access denied'}), 403
     try:
         user = db.users.find_one({'email': session['email']})
         task = db.tasks.find_one({'_id': ObjectId(task_id)})
-        if not task:
-            return jsonify({'error': 'Task not found'}), 404
-        if str(task['assigned_by']) != str(user['_id']):
-            return jsonify({'error': 'Not authorized'}), 403
+        if not task: return jsonify({'error': 'Task not found'}), 404
+        if str(task['assigned_by']) != str(user['_id']): return jsonify({'error': 'Not authorized'}), 403
         db.tasks.update_one({'_id': ObjectId(task_id)},
             {'$set': {'status': 'accepted', 'accepted_at': get_indian_time(),
                       'accepted_by': user['_id'], 'updated_at': get_indian_time()}})
@@ -1885,17 +1881,12 @@ def leader_accept_task(task_id):
         if assignee:
             try:
                 msg = Message(subject=f"✅ Task Accepted: {task['title']}",
-                              sender=app.config['MAIL_USERNAME'],
-                              recipients=[assignee['email']])
-                msg.body = f"Your task '{task['title']}' has been accepted by {user['email'].split('@')[0]}! Great work!\n\nView: {request.url_root}core_dashboard"
+                              sender=app.config['MAIL_USERNAME'], recipients=[assignee['email']])
+                msg.body = (f"Your task '{task['title']}' has been accepted by "
+                            f"{user['email'].split('@')[0]}! Great work!\n\n"
+                            f"View: {request.url_root}core_dashboard")
                 mail.send(msg)
-            except Exception as e:
-                logger.error(f"Accept task email error: {e}")
-        db.activity_logs.insert_one({
-            'user_id': user['_id'], 'user_email': session['email'],
-            'action': 'task_accepted', 'details': f"Accepted task: {task['title']}",
-            'timestamp': get_indian_time(), 'ip_address': request.remote_addr
-        })
+            except Exception as e: logger.error(f"Accept task email error: {e}")
         return jsonify({'success': True, 'message': 'Task accepted successfully'})
     except Exception as e:
         logger.error(f"accept_task error: {e}")
@@ -1904,20 +1895,16 @@ def leader_accept_task(task_id):
 @app.route('/api/leader/request_rework/<task_id>', methods=['POST'])
 @approval_required
 def leader_request_rework(task_id):
-    if not is_leader():
-        return jsonify({'error': 'Access denied'}), 403
+    if not is_leader(): return jsonify({'error': 'Access denied'}), 403
     try:
-        user    = db.users.find_one({'email': session['email']})
-        task    = db.tasks.find_one({'_id': ObjectId(task_id)})
-        if not task:
-            return jsonify({'error': 'Task not found'}), 404
-        if str(task['assigned_by']) != str(user['_id']):
-            return jsonify({'error': 'Not authorized'}), 403
-        data        = request.get_json(force=True) or {}
-        comment     = data.get('comment', '').strip()
-        new_due_date= data.get('new_due_date', '')
-        if not comment:
-            return jsonify({'error': 'Rework instructions are required'}), 400
+        user = db.users.find_one({'email': session['email']})
+        task = db.tasks.find_one({'_id': ObjectId(task_id)})
+        if not task: return jsonify({'error': 'Task not found'}), 404
+        if str(task['assigned_by']) != str(user['_id']): return jsonify({'error': 'Not authorized'}), 403
+        data         = request.get_json(force=True) or {}
+        comment      = data.get('comment', '').strip()
+        new_due_date = data.get('new_due_date', '')
+        if not comment: return jsonify({'error': 'Rework instructions are required'}), 400
         update_data = {
             'status': 'rework', 'rework_comment': comment,
             'rework_requested_at': get_indian_time(),
@@ -1937,17 +1924,13 @@ def leader_request_rework(task_id):
         if assignee:
             try:
                 msg = Message(subject=f"🔄 Rework Required: {task['title']}",
-                              sender=app.config['MAIL_USERNAME'],
-                              recipients=[assignee['email']])
-                msg.body = f"Rework requested by {user['email'].split('@')[0]}\n\nTask: {task['title']}\n{f'New Due: {new_due_date}' if new_due_date else ''}\n\nInstructions:\n{comment}\n\nView: {request.url_root}core_dashboard"
+                              sender=app.config['MAIL_USERNAME'], recipients=[assignee['email']])
+                msg.body = (f"Rework requested by {user['email'].split('@')[0]}\n\n"
+                            f"Task: {task['title']}\n"
+                            f"{f'New Due: {new_due_date}' if new_due_date else ''}\n\n"
+                            f"Instructions:\n{comment}\n\nView: {request.url_root}core_dashboard")
                 mail.send(msg)
-            except Exception as e:
-                logger.error(f"Rework email error: {e}")
-        db.activity_logs.insert_one({
-            'user_id': user['_id'], 'user_email': session['email'],
-            'action': 'task_rework_requested', 'details': f"Rework on: {task['title']}",
-            'timestamp': get_indian_time(), 'ip_address': request.remote_addr
-        })
+            except Exception as e: logger.error(f"Rework email error: {e}")
         return jsonify({'success': True, 'message': 'Rework requested successfully'})
     except Exception as e:
         logger.error(f"request_rework error: {e}")
@@ -1956,20 +1939,16 @@ def leader_request_rework(task_id):
 @app.route('/api/leader/reschedule_task/<task_id>', methods=['POST'])
 @login_required
 def leader_reschedule_task(task_id):
-    if not is_leader():
-        return jsonify({'error': 'Access denied'}), 403
+    if not is_leader(): return jsonify({'error': 'Access denied'}), 403
     try:
         user = db.users.find_one({'email': session['email']})
         task = db.tasks.find_one({'_id': ObjectId(task_id)})
-        if not task:
-            return jsonify({'error': 'Task not found'}), 404
-        if str(task['assigned_by']) != str(user['_id']):
-            return jsonify({'error': 'Not authorized'}), 403
+        if not task: return jsonify({'error': 'Task not found'}), 404
+        if str(task['assigned_by']) != str(user['_id']): return jsonify({'error': 'Not authorized'}), 403
         data         = request.get_json(force=True) or {}
         new_due_date = data.get('new_due_date', '')
         reason       = data.get('reason', '').strip()
-        if not new_due_date:
-            return jsonify({'error': 'New due date is required'}), 400
+        if not new_due_date: return jsonify({'error': 'New due date is required'}), 400
         new_date_obj = datetime.strptime(new_due_date, '%Y-%m-%d')
         if new_date_obj.date() < get_indian_time().date():
             return jsonify({'error': 'Date cannot be in the past'}), 400
@@ -1987,12 +1966,12 @@ def leader_reschedule_task(task_id):
         if assignee:
             try:
                 msg = Message(subject=f"📅 Task Rescheduled: {task['title']}",
-                              sender=app.config['MAIL_USERNAME'],
-                              recipients=[assignee['email']])
-                msg.body = f"Task rescheduled by {user['email'].split('@')[0]}\n\nTask: {task['title']}\nNew Due: {new_due_date}\n{f'Reason: {reason}' if reason else ''}\n\nView: {request.url_root}core_dashboard"
+                              sender=app.config['MAIL_USERNAME'], recipients=[assignee['email']])
+                msg.body = (f"Task rescheduled by {user['email'].split('@')[0]}\n\n"
+                            f"Task: {task['title']}\nNew Due: {new_due_date}\n"
+                            f"{f'Reason: {reason}' if reason else ''}\n\nView: {request.url_root}core_dashboard")
                 mail.send(msg)
-            except Exception as e:
-                logger.error(f"Reschedule email error: {e}")
+            except Exception as e: logger.error(f"Reschedule email error: {e}")
         return jsonify({'success': True, 'message': 'Task rescheduled successfully'})
     except Exception as e:
         logger.error(f"reschedule_task error: {e}")
@@ -2001,19 +1980,15 @@ def leader_reschedule_task(task_id):
 @app.route('/api/leader/add_task_comment/<task_id>', methods=['POST'])
 @approval_required
 def leader_add_task_comment(task_id):
-    if not is_leader():
-        return jsonify({'error': 'Access denied'}), 403
+    if not is_leader(): return jsonify({'error': 'Access denied'}), 403
     try:
-        user    = db.users.find_one({'email': session['email']})
-        task    = db.tasks.find_one({'_id': ObjectId(task_id)})
-        if not task:
-            return jsonify({'error': 'Task not found'}), 404
-        if str(task['assigned_by']) != str(user['_id']):
-            return jsonify({'error': 'Not authorized'}), 403
+        user = db.users.find_one({'email': session['email']})
+        task = db.tasks.find_one({'_id': ObjectId(task_id)})
+        if not task: return jsonify({'error': 'Task not found'}), 404
+        if str(task['assigned_by']) != str(user['_id']): return jsonify({'error': 'Not authorized'}), 403
         data    = request.get_json(force=True) or {}
         comment = data.get('comment', '').strip()
-        if not comment:
-            return jsonify({'error': 'Comment is required'}), 400
+        if not comment: return jsonify({'error': 'Comment is required'}), 400
         comment_entry = {
             'comment': comment, 'commented_by': user['email'].split('@')[0],
             'timestamp': get_indian_time(), 'type': 'leader_comment'
@@ -2025,12 +2000,11 @@ def leader_add_task_comment(task_id):
         if assignee:
             try:
                 msg = Message(subject=f"💬 New Comment: {task['title']}",
-                              sender=app.config['MAIL_USERNAME'],
-                              recipients=[assignee['email']])
-                msg.body = f"{user['email'].split('@')[0]} commented:\n\n\"{comment}\"\n\nView: {request.url_root}core_dashboard"
+                              sender=app.config['MAIL_USERNAME'], recipients=[assignee['email']])
+                msg.body = (f"{user['email'].split('@')[0]} commented:\n\n\"{comment}\"\n\n"
+                            f"View: {request.url_root}core_dashboard")
                 mail.send(msg)
-            except Exception as e:
-                logger.error(f"Comment email error: {e}")
+            except Exception as e: logger.error(f"Comment email error: {e}")
         return jsonify({'success': True, 'message': 'Comment added'})
     except Exception as e:
         logger.error(f"add_task_comment error: {e}")
@@ -2039,14 +2013,12 @@ def leader_add_task_comment(task_id):
 @app.route('/api/leader/add_share_comment/<share_id>', methods=['POST'])
 @approval_required
 def leader_add_share_comment(share_id):
-    if not is_leader():
-        return jsonify({'error': 'Access denied'}), 403
+    if not is_leader(): return jsonify({'error': 'Access denied'}), 403
     try:
         user    = db.users.find_one({'email': session['email']})
         data    = request.get_json(force=True) or {}
         comment = data.get('comment', '').strip()
-        if not comment:
-            return jsonify({'error': 'Comment is required'}), 400
+        if not comment: return jsonify({'error': 'Comment is required'}), 400
         db.document_shares.update_one(
             {'_id': ObjectId(share_id), 'shared_with': user['_id']},
             {'$set': {'leader_comment': comment,
@@ -2065,19 +2037,20 @@ def leader_add_share_comment(share_id):
 def get_activity_status():
     try:
         user = db.users.find_one({'email': session['email']})
-        if not user:
-            return jsonify({'error': 'User not found'}), 404
+        if not user: return jsonify({'error': 'User not found'}), 404
         now   = get_indian_time_aware()
         five_n= make_timezone_naive(now - timedelta(minutes=5))
-        new_tasks   = db.tasks.count_documents({'assigned_to':user['_id'],'created_at':{'$gte':five_n},'status':'pending'})
+        new_tasks    = db.tasks.count_documents({'assigned_to':user['_id'],'created_at':{'$gte':five_n},'status':'pending'})
         new_documents= db.document_shares.count_documents({'shared_with':user['_id'],'shared_at':{'$gte':five_n}})
         overdue_tasks= db.tasks.count_documents({'assigned_to':user['_id'],'due_date':{'$lt':five_n},'status':{'$ne':'completed'}})
         updated_tasks = 0
         if is_leader():
             updated_tasks = db.tasks.count_documents({'assigned_by':user['_id'],'updated_at':{'$gte':five_n},'status':{'$in':['in_progress','completed']}})
+        unread_messages = db.direct_messages.count_documents({'receiver_id':user['_id'],'read':False})
         db.users.update_one({'_id':user['_id']},{'$set':{'last_seen':get_indian_time()}})
         return jsonify({'success':True,'new_tasks':new_tasks,'new_documents':new_documents,
                         'overdue_tasks':overdue_tasks,'updated_tasks':updated_tasks,
+                        'unread_messages': unread_messages,
                         'timestamp':get_indian_time().strftime('%Y-%m-%d %H:%M:%S')})
     except Exception as e:
         logger.error(f"activity_status error: {e}")
@@ -2089,12 +2062,10 @@ def get_activity_status():
 @app.route('/api/core-member/analytics/<member_id>')
 @approval_required
 def core_member_analytics(member_id):
-    if not is_leader():
-        return jsonify({'error': 'Access denied'}), 403
+    if not is_leader(): return jsonify({'error': 'Access denied'}), 403
     try:
         member    = db.users.find_one({'_id': ObjectId(member_id)})
-        if not member:
-            return jsonify({'error': 'Member not found'}), 404
+        if not member: return jsonify({'error': 'Member not found'}), 404
         documents = list(db.office_documents.find({'user_id':member['_id']}).sort('submitted_at',-1))
         total     = len(documents)
         pending   = len([d for d in documents if d.get('status')=='pending'])
@@ -2131,12 +2102,10 @@ def core_member_analytics(member_id):
 @app.route('/api/documents/by-date')
 @approval_required
 def documents_by_date():
-    if not is_leader():
-        return jsonify({'error': 'Access denied'}), 403
+    if not is_leader(): return jsonify({'error': 'Access denied'}), 403
     try:
         date_str    = request.args.get('date')
-        if not date_str:
-            return jsonify({'error': 'Date required'}), 400
+        if not date_str: return jsonify({'error': 'Date required'}), 400
         filter_date = IST.localize(datetime.strptime(date_str, '%Y-%m-%d'))
         next_day    = filter_date + timedelta(days=1)
         documents   = list(db.office_documents.find({
@@ -2162,7 +2131,7 @@ def office_documents():
         flash('Access denied', 'error')
         return redirect(url_for('home'))
     try:
-        documents    = list(db.office_documents.find().sort('submitted_at', -1))
+        documents = list(db.office_documents.find().sort('submitted_at', -1))
         for doc in documents:
             u = db.users.find_one({'_id': doc['user_id']})
             if u:
@@ -2190,7 +2159,7 @@ def activity_logs():
         return redirect(url_for('home'))
 
 # ══════════════════════════════════════════════════════════════════════
-#  CHAT API
+#  CHAT API (Group / Core Team)
 # ══════════════════════════════════════════════════════════════════════
 @app.route('/api/chat/messages')
 @login_required
@@ -2209,15 +2178,15 @@ def get_chat_messages():
                 ts_aware = IST.localize(ts) if ts.tzinfo is None else ts
                 ts_str   = ts_aware.strftime('%I:%M %p')
             formatted.append({
-                'id': str(msg['_id']),
-                'sender_id': str(msg['sender_id']),
-                'sender_name': sender['email'].split('@')[0] if sender else 'Unknown',
+                'id':           str(msg['_id']),
+                'sender_id':    str(msg['sender_id']),
+                'sender_name':  sender['email'].split('@')[0] if sender else 'Unknown',
                 'sender_email': sender['email'] if sender else '',
-                'content': msg.get('content',''),
-                'file_url': msg.get('file_url'),
-                'document_id': str(msg['document_id']) if msg.get('document_id') else None,
-                'timestamp': ts_str,
-                'is_me': msg['sender_id'] == user['_id']
+                'content':      msg.get('content',''),
+                'file_url':     msg.get('file_url'),
+                'document_id':  str(msg['document_id']) if msg.get('document_id') else None,
+                'timestamp':    ts_str,
+                'is_me':        msg['sender_id'] == user['_id']
             })
         return jsonify({'success': True, 'messages': formatted})
     except Exception as e:
@@ -2227,12 +2196,12 @@ def get_chat_messages():
 @login_required
 def send_chat_message():
     try:
-        user       = db.users.find_one({'email': session['email']})
-        data       = request.get_json(force=True) or {}
-        content    = data.get('content','').strip()
-        receiver_id= data.get('receiver_id')
-        file_url   = data.get('file_url')
-        document_id= data.get('document_id')
+        user        = db.users.find_one({'email': session['email']})
+        data        = request.get_json(force=True) or {}
+        content     = data.get('content','').strip()
+        receiver_id = data.get('receiver_id')
+        file_url    = data.get('file_url')
+        document_id = data.get('document_id')
         if not content and not file_url and not document_id:
             return jsonify({'error': 'Message content, file, or document required'}), 400
         message = {
@@ -2257,14 +2226,86 @@ def send_chat_message():
         return jsonify({'error': str(e)}), 500
 
 # ══════════════════════════════════════════════════════════════════════
+#  DIRECT MESSAGES API (Navbar messaging)
+# ══════════════════════════════════════════════════════════════════════
+@app.route('/api/dm/send', methods=['POST'])
+@login_required
+def send_direct_message():
+    """Send a direct message to a specific user."""
+    try:
+        sender      = db.users.find_one({'email': session['email']})
+        data        = request.get_json(force=True) or {}
+        receiver_id = data.get('receiver_id')
+        content     = data.get('content', '').strip()
+        if not content: return jsonify({'error': 'Message content required'}), 400
+        receiver = db.users.find_one({'_id': ObjectId(receiver_id)}) if receiver_id else None
+        msg = {
+            'sender_id':   sender['_id'],
+            'sender_email':session['email'],
+            'receiver_id': ObjectId(receiver_id) if receiver_id else None,
+            'content':     content,
+            'timestamp':   get_indian_time(),
+            'read':        False
+        }
+        db.direct_messages.insert_one(msg)
+        if receiver:
+            try: send_chat_notification(sender, receiver, content[:50])
+            except: pass
+        return jsonify({'success': True, 'message': 'Message sent'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/dm/messages')
+@login_required
+def get_direct_messages():
+    """Get direct messages for current user."""
+    try:
+        user = db.users.find_one({'email': session['email']})
+        # mark received as read
+        db.direct_messages.update_many(
+            {'receiver_id': user['_id'], 'read': False},
+            {'$set': {'read': True}}
+        )
+        messages = list(db.direct_messages.find({
+            '$or': [{'sender_id': user['_id']}, {'receiver_id': user['_id']}]
+        }).sort('timestamp', -1).limit(50))
+        formatted = []
+        for msg in reversed(messages):
+            sender = db.users.find_one({'_id': msg['sender_id']})
+            ts = msg.get('timestamp')
+            ts_str = ts.strftime('%d %b, %I:%M %p') if ts else ''
+            formatted.append({
+                'id':           str(msg['_id']),
+                'sender_name':  sender['email'].split('@')[0] if sender else 'Unknown',
+                'sender_email': sender['email'] if sender else '',
+                'content':      msg.get('content', ''),
+                'timestamp':    ts_str,
+                'is_me':        msg['sender_id'] == user['_id'],
+                'read':         msg.get('read', True)
+            })
+        return jsonify({'success': True, 'messages': formatted})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/dm/unread-count')
+@login_required
+def unread_dm_count():
+    """Get unread DM count for badge."""
+    try:
+        user  = db.users.find_one({'email': session['email']})
+        count = db.direct_messages.count_documents({'receiver_id': user['_id'], 'read': False})
+        return jsonify({'success': True, 'count': count})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# ══════════════════════════════════════════════════════════════════════
 #  GOOGLE OAUTH
 # ══════════════════════════════════════════════════════════════════════
 @app.route('/connect-drive')
 @login_required
 def connect_drive():
     try:
-        session.pop('drive_creds', None)
-        session.pop('drive_state', None)
+        session.pop('drive_creds', None); session.pop('drive_state', None)
         redirect_uri = ('https://office-academic.juooa.cloud/drive/callback'
                         if request.url_root.startswith('https://') else
                         'http://localhost:5000/drive/callback')
@@ -2307,8 +2348,7 @@ def drive_callback():
 @login_required
 def connect_gmail():
     try:
-        session.pop('gmail_creds', None)
-        session.pop('gmail_state', None)
+        session.pop('gmail_creds', None); session.pop('gmail_state', None)
         redirect_uri = ('https://office-academic.juooa.cloud/gmail/callback'
                         if request.url_root.startswith('https://') else
                         'http://localhost:5000/gmail/callback')
@@ -2365,7 +2405,7 @@ def drive_files():
             pageSize=100, fields="files(id,name,mimeType,createdTime,webViewLink,iconLink)",
             orderBy="name").execute()
         folders = results.get('files', [])
-        user_folders   = db.user_navbars.find_one({'user_email': session['email']})
+        user_folders     = db.user_navbars.find_one({'user_email': session['email']})
         saved_folder_ids = [item['ref_id'] for item in user_folders['items']] if user_folders and 'items' in user_folders else []
         for folder in folders:
             if 'webViewLink' not in folder:
@@ -2381,12 +2421,10 @@ def drive_files():
 @app.route('/api/drive/folder/<folder_id>')
 @login_required
 def get_drive_folder_contents(folder_id):
-    if 'drive_creds' not in session:
-        return jsonify({'error': 'Not authenticated'}), 401
+    if 'drive_creds' not in session: return jsonify({'error': 'Not authenticated'}), 401
     try:
         service = get_drive_service()
-        if not service:
-            return jsonify({'error': 'Drive service unavailable'}), 500
+        if not service: return jsonify({'error': 'Drive service unavailable'}), 500
         results = service.files().list(
             q=f"'{folder_id}' in parents and trashed=false",
             pageSize=100, fields="files(id,name,mimeType,size,createdTime,webViewLink)").execute()
@@ -2397,15 +2435,12 @@ def get_drive_folder_contents(folder_id):
 @app.route('/api/drive/search')
 @login_required
 def search_drive_files():
-    if 'drive_creds' not in session:
-        return jsonify({'error': 'Not authenticated'}), 401
+    if 'drive_creds' not in session: return jsonify({'error': 'Not authenticated'}), 401
     try:
         query = request.args.get('q', '')
-        if not query:
-            return jsonify([])
+        if not query: return jsonify([])
         service = get_drive_service()
-        if not service:
-            return jsonify({'error': 'Drive service unavailable'}), 500
+        if not service: return jsonify({'error': 'Drive service unavailable'}), 500
         results = service.files().list(
             q=f"name contains '{query}' and trashed=false",
             pageSize=20, fields="files(id,name,mimeType,webViewLink,iconLink)").execute()
@@ -2416,17 +2451,14 @@ def search_drive_files():
 @app.route('/drive/upload', methods=['POST'])
 @login_required
 def drive_upload():
-    if 'drive_creds' not in session:
-        return jsonify({'error': 'Not authenticated'}), 401
+    if 'drive_creds' not in session: return jsonify({'error': 'Not authenticated'}), 401
     try:
         file        = request.files.get('file')
         folder_id   = request.form.get('folder_id', 'root')
         make_public = request.form.get('make_public', 'false') == 'true'
-        if not file:
-            return jsonify({'error': 'No file provided'}), 400
+        if not file: return jsonify({'error': 'No file provided'}), 400
         service = get_drive_service()
-        if not service:
-            return jsonify({'error': 'Drive service unavailable'}), 500
+        if not service: return jsonify({'error': 'Drive service unavailable'}), 500
         file_metadata = {'name': secure_filename(file.filename), 'parents': [folder_id]}
         file_content  = file.read()
         media         = MediaIoBaseUpload(BytesIO(file_content),
@@ -2461,17 +2493,14 @@ def drive_upload():
 @app.route('/drive/create-folder', methods=['POST'])
 @login_required
 def drive_create_folder():
-    if 'drive_creds' not in session:
-        return jsonify({'error': 'Not authenticated'}), 401
+    if 'drive_creds' not in session: return jsonify({'error': 'Not authenticated'}), 401
     try:
         data        = request.get_json(force=True) or {}
         folder_name = data.get('folder_name')
         parent_id   = data.get('parent_id', 'root')
-        if not folder_name:
-            return jsonify({'error': 'Folder name required'}), 400
+        if not folder_name: return jsonify({'error': 'Folder name required'}), 400
         service = get_drive_service()
-        if not service:
-            return jsonify({'error': 'Drive service unavailable'}), 500
+        if not service: return jsonify({'error': 'Drive service unavailable'}), 500
         folder = service.files().create(body={
             'name': folder_name,
             'mimeType': 'application/vnd.google-apps.folder',
@@ -2504,15 +2533,13 @@ def upload_file():
         file        = request.files.get('file')
         file_name   = request.form.get('file_name', '')
         description = request.form.get('description', '')
-        if not file:
-            return jsonify({'error': 'No file provided', 'success': False}), 400
-        if not allowed_file(file.filename):
-            return jsonify({'error': 'File type not allowed', 'success': False}), 400
+        if not file: return jsonify({'error': 'No file provided', 'success': False}), 400
+        if not allowed_file(file.filename): return jsonify({'error': 'File type not allowed', 'success': False}), 400
         filename = secure_filename(file.filename)
-        ts       = datetime.now().strftime('%Y%m%d_%H%M%S')
-        n, e     = os.path.splitext(filename)
-        ufn      = f"{n}_{ts}{e}"
-        fp       = os.path.join(app.config['UPLOAD_FOLDER'], ufn)
+        ts = datetime.now().strftime('%Y%m%d_%H%M%S')
+        n, e = os.path.splitext(filename)
+        ufn  = f"{n}_{ts}{e}"
+        fp   = os.path.join(app.config['UPLOAD_FOLDER'], ufn)
         file.save(fp)
         file_doc = {
             'user_email': session['email'], 'file_name': file_name or filename,
@@ -2533,7 +2560,7 @@ def upload_file():
 @login_required
 def edit_file(file_id):
     try:
-        data = request.get_json(force=True) or {}
+        data   = request.get_json(force=True) or {}
         result = db.user_files.update_one(
             {'_id':ObjectId(file_id),'user_email':session['email']},
             {'$set':{'file_name':data.get('file_name',''),'description':data.get('description',''),
@@ -2549,14 +2576,12 @@ def edit_file(file_id):
 def delete_file(file_id):
     try:
         file_doc = db.user_files.find_one({'_id':ObjectId(file_id),'user_email':session['email']})
-        if not file_doc:
-            return jsonify({'error': 'File not found'}), 404
+        if not file_doc: return jsonify({'error': 'File not found'}), 404
         if file_doc.get('source') == 'local' and file_doc.get('file_path') and os.path.exists(file_doc['file_path']):
             os.remove(file_doc['file_path'])
         elif file_doc.get('source') == 'drive' and file_doc.get('drive_file_id'):
             service = get_drive_service()
-            if service:
-                delete_drive_file(service, file_doc['drive_file_id'])
+            if service: delete_drive_file(service, file_doc['drive_file_id'])
         db.user_files.delete_one({'_id': ObjectId(file_id)})
         db.public_files.delete_one({'file_id': file_doc.get('drive_file_id')})
         return jsonify({'success': True, 'message': 'File deleted'})
@@ -2584,18 +2609,17 @@ def link_drive_file():
     try:
         data          = request.get_json(force=True) or {}
         drive_file_id = data.get('drive_file_id')
-        if not drive_file_id:
-            return jsonify({'error': 'Drive file ID required'}), 400
+        if not drive_file_id: return jsonify({'error': 'Drive file ID required'}), 400
         service = get_drive_service()
-        if not service:
-            return jsonify({'error': 'Drive not connected'}), 400
+        if not service: return jsonify({'error': 'Drive not connected'}), 400
         file_metadata = service.files().get(fileId=drive_file_id,
                                             fields='id,name,mimeType,size,webViewLink').execute()
         file_doc = {
             'user_email': session['email'], 'file_name': data.get('file_name') or file_metadata['name'],
             'original_filename': file_metadata['name'], 'description': data.get('description',''),
             'drive_file_id': drive_file_id, 'drive_link': file_metadata.get('webViewLink'),
-            'file_type': file_metadata.get('mimeType',''), 'source': 'drive', 'uploaded_at': get_indian_time()
+            'file_type': file_metadata.get('mimeType',''), 'source': 'drive',
+            'uploaded_at': get_indian_time()
         }
         result = db.user_files.insert_one(file_doc)
         return jsonify({'success': True, 'message': 'Drive file linked', 'file_id': str(result.inserted_id)})
@@ -2629,19 +2653,16 @@ def manage_public_files():
                                drive_connected=drive_connected, notifications=get_user_notifications())
     except Exception as e:
         logger.error(f"manage_public_files error: {e}")
-        flash('Error loading public files', 'error')
         return render_template('manage_public_files.html', public_files=[], drive_connected=False, notifications=[])
 
 @app.route('/make_file_private/<file_id>', methods=['POST'])
 @login_required
 def make_file_private_api(file_id):
     try:
-        service = get_drive_service()
-        if not service:
-            return jsonify({'error': 'Drive not connected'}), 400
+        service  = get_drive_service()
+        if not service: return jsonify({'error': 'Drive not connected'}), 400
         file_doc = db.public_files.find_one({'file_id':file_id,'uploader_email':session['email']})
-        if not file_doc:
-            return jsonify({'error': 'File not found or unauthorized'}), 404
+        if not file_doc: return jsonify({'error': 'File not found or unauthorized'}), 404
         if make_file_private(service, file_id):
             db.public_files.delete_one({'file_id': file_id})
             db.user_files.update_one({'drive_file_id':file_id,'user_email':session['email']},
@@ -2655,12 +2676,10 @@ def make_file_private_api(file_id):
 @login_required
 def delete_public_file(file_id):
     try:
-        service = get_drive_service()
-        if not service:
-            return jsonify({'error': 'Drive not connected'}), 400
+        service  = get_drive_service()
+        if not service: return jsonify({'error': 'Drive not connected'}), 400
         file_doc = db.public_files.find_one({'file_id':file_id,'uploader_email':session['email']})
-        if not file_doc:
-            return jsonify({'error': 'File not found or unauthorized'}), 404
+        if not file_doc: return jsonify({'error': 'File not found or unauthorized'}), 404
         if delete_drive_file(service, file_id):
             db.public_files.delete_one({'file_id': file_id})
             db.user_files.delete_one({'drive_file_id':file_id,'user_email':session['email']})
@@ -2676,22 +2695,19 @@ def delete_public_file(file_id):
 @login_required
 def set_reminder():
     try:
-        data           = request.get_json(force=True) or {}
-        event_id       = data.get('event_id')
-        reminder_date  = data.get('reminder_date')
-        reminder_time  = data.get('reminder_time')
+        data          = request.get_json(force=True) or {}
+        event_id      = data.get('event_id')
+        reminder_date = data.get('reminder_date')
+        reminder_time = data.get('reminder_time')
         if not all([event_id, reminder_date, reminder_time]):
             return jsonify({'error': 'Missing required fields', 'success': False}), 400
         event = db.events.find_one({'_id': ObjectId(event_id)})
-        if not event:
-            return jsonify({'error': 'Event not found', 'success': False}), 404
+        if not event: return jsonify({'error': 'Event not found', 'success': False}), 404
         user = db.users.find_one({'email': session['email']})
-        if not user:
-            return jsonify({'error': 'User not found', 'success': False}), 404
+        if not user: return jsonify({'error': 'User not found', 'success': False}), 404
         if '-' in reminder_date and len(reminder_date.split('-')[0]) == 2:
             d, m, y = reminder_date.split('-')
-            if len(y) == 4:
-                reminder_date = f"{y}-{m}-{d}"
+            if len(y) == 4: reminder_date = f"{y}-{m}-{d}"
         if len(reminder_time.split(':')) == 2:
             reminder_time = f"{reminder_time}:00"
         reminder_datetime = IST.localize(datetime.strptime(f"{reminder_date} {reminder_time}", '%Y-%m-%d %H:%M:%S'))
@@ -2713,7 +2729,8 @@ def set_reminder():
         try:
             msg = Message(subject=f"✅ Reminder Set: {event['event_name']}",
                           sender=app.config['MAIL_USERNAME'], recipients=[user['email']])
-            msg.body = f"Reminder set for {event['event_name']}\nScheduled: {reminder_datetime.strftime('%d %B %Y at %I:%M %p')} IST"
+            msg.body = (f"Reminder set for {event['event_name']}\n"
+                        f"Scheduled: {reminder_datetime.strftime('%d %B %Y at %I:%M %p')} IST")
             mail.send(msg)
         except:
             pass
@@ -2728,15 +2745,12 @@ def subscribe_to_event():
     try:
         data     = request.get_json(force=True) or {}
         event_id = data.get('event_id')
-        if not event_id:
-            return jsonify({'error': 'Event ID required'}), 400
+        if not event_id: return jsonify({'error': 'Event ID required'}), 400
         event = db.events.find_one({'_id': ObjectId(event_id)})
-        if not event:
-            return jsonify({'error': 'Event not found'}), 404
+        if not event: return jsonify({'error': 'Event not found'}), 404
         user = db.users.find_one({'email': session['email']})
         existing = db.event_subscriptions.find_one({'user_id':user['_id'],'event_id':event['_id']})
-        if existing:
-            return jsonify({'success': True, 'message': 'Already subscribed'})
+        if existing: return jsonify({'success': True, 'message': 'Already subscribed'})
         db.event_subscriptions.insert_one({
             'user_id': user['_id'], 'event_id': event['_id'],
             'event_name': event['event_name'], 'subscribed_at': get_indian_time()
@@ -2768,8 +2782,7 @@ def my_reminders():
         reminders = list(db.event_reminders.find({'user_id':user['_id']}).sort('reminder_datetime',1))
         for reminder in reminders:
             event = db.events.find_one({'_id': reminder['event_id']})
-            if event:
-                reminder['event'] = event
+            if event: reminder['event'] = event
         return render_template('my_reminders.html', reminders=reminders,
                                notifications=get_user_notifications())
     except Exception as e:
@@ -2794,8 +2807,7 @@ def subscribe():
     try:
         data  = request.get_json(force=True) or {}
         email = data.get('email')
-        if not email:
-            return jsonify({"message": "Email is required"}), 400
+        if not email: return jsonify({"message": "Email is required"}), 400
         db.subscribers.update_one({"email": email},
             {"$set": {"school": data.get('school',''), "subscribed_at": datetime.now()}}, upsert=True)
         return jsonify({"message": "Subscribed successfully"}), 200
@@ -2844,14 +2856,10 @@ def admin_dashboard():
     role_filter = request.args.get('role_filter', '').strip()
     dept_filter = request.args.get('dept_filter', '').strip()
     query = {}
-    if search:
-        query['email'] = {'$regex': search, '$options': 'i'}
-    if type_filter:
-        query['user_type'] = type_filter
-    if role_filter == 'none':
-        query['special_role'] = {'$in': [None, '', 'none']}
-    elif role_filter:
-        query['special_role'] = role_filter
+    if search:      query['email'] = {'$regex': search, '$options': 'i'}
+    if type_filter: query['user_type'] = type_filter
+    if role_filter == 'none': query['special_role'] = {'$in': [None, '', 'none']}
+    elif role_filter:         query['special_role'] = role_filter
     if dept_filter:
         query['$or'] = [
             {'department': {'$regex': dept_filter, '$options': 'i'}},
@@ -2868,31 +2876,28 @@ def admin_dashboard():
         profile = u.get('profile', {}) or {}
         u['dept_display']     = u.get('department') or profile.get('department') or '—'
         u['location_display'] = u.get('location')   or profile.get('location')   or '—'
-        u['last_login_display'] = (
-            u['last_login'].strftime('%d %b %Y, %H:%M') if isinstance(u.get('last_login'), datetime) else '—')
-        u['last_seen_display'] = (
-            last_seen.strftime('%d %b %Y, %H:%M') if isinstance(last_seen, datetime) else '—')
-        u['changes_made']   = u.get('changes_made', 0)
-        u['total_logins']   = u.get('total_logins', 0)
-        if u.get('special_role') == 'leader':
-            u['display_type'] = 'Leader'
-        elif u.get('special_role') == 'office_barrier' or u.get('user_type') == 'core':
-            u['display_type'] = 'Core Team'
-        else:
-            u['display_type'] = 'Faculty'
+        u['last_login_display'] = (u['last_login'].strftime('%d %b %Y, %H:%M')
+                                   if isinstance(u.get('last_login'), datetime) else '—')
+        u['last_seen_display']  = (last_seen.strftime('%d %b %Y, %H:%M')
+                                   if isinstance(last_seen, datetime) else '—')
+        u['changes_made']  = u.get('changes_made', 0)
+        u['total_logins']  = u.get('total_logins', 0)
+        if u.get('special_role') == 'leader':               u['display_type'] = 'Leader'
+        elif u.get('special_role') == 'office_barrier' or u.get('user_type') == 'core': u['display_type'] = 'Core Team'
+        else:                                                u['display_type'] = 'Faculty'
         users.append(u)
-    all_departments = sorted(set(d for d in (db.users.distinct('department') + db.users.distinct('profile.department')) if d))
+    all_departments = sorted(set(
+        d for d in (db.users.distinct('department') + db.users.distinct('profile.department')) if d
+    ))
     return render_template(
-        'admin_dashboard.html',
-        users=users,
+        'admin_dashboard.html', users=users,
         total_users=db.users.count_documents({}),
         pending_users=db.users.count_documents({'approved':{'$ne':True}}),
         approved_users=db.users.count_documents({'approved':True}),
         active_now=sum(1 for u in users if u['is_active_now']),
         pre_assigned_leaders=list(db.pre_assigned_roles.find({'role':'leader'}).sort('assigned_at',-1)),
         pre_assigned_core=list(db.pre_assigned_roles.find({'role':'core'}).sort('assigned_at',-1)),
-        all_departments=all_departments,
-        **_get_user_info()
+        all_departments=all_departments, **_get_user_info()
     )
 
 @app.route('/admin/users')
@@ -2917,13 +2922,13 @@ def update_user(user_id):
         user_type    = request.form.get('user_type', 'faculty')
         special_role = request.form.get('special_role', '') or None
         approved     = request.form.get('approved', 'false') == 'true'
-        if role not in ['user','admin']:             role = 'user'
-        if user_type not in ['faculty','core']:      user_type = 'faculty'
+        if role not in ['user','admin']:           role = 'user'
+        if user_type not in ['faculty','core']:    user_type = 'faculty'
         if special_role and special_role not in ['office_barrier','leader']: special_role = None
-        if special_role == 'office_barrier':  user_type = 'core'
-        elif special_role == 'leader':        user_type = 'faculty'
-        elif user_type == 'core':             special_role = 'office_barrier'
-        result = db.users.update_one({'_id': ObjectId(user_id)}, {'$set': {
+        if special_role == 'office_barrier': user_type = 'core'
+        elif special_role == 'leader':       user_type = 'faculty'
+        elif user_type == 'core':            special_role = 'office_barrier'
+        db.users.update_one({'_id': ObjectId(user_id)}, {'$set': {
             'email': email, 'role': role, 'user_type': user_type,
             'special_role': special_role, 'approved': approved, 'updated_at': get_indian_time()
         }})
@@ -2933,7 +2938,8 @@ def update_user(user_id):
                 db.chat_groups.update_one({'_id':core_chat['_id']},{'$addToSet':{'members':ObjectId(user_id)}})
             else:
                 db.chat_groups.insert_one({'name':'Core Team Chat','group_type':'core_team',
-                    'description':'Automatic group','created_at':get_indian_time(),'members':[ObjectId(user_id)],'created_by':ObjectId(user_id)})
+                    'description':'Automatic group','created_at':get_indian_time(),
+                    'members':[ObjectId(user_id)],'created_by':ObjectId(user_id)})
         else:
             if core_chat:
                 db.chat_groups.update_one({'_id':core_chat['_id']},{'$pull':{'members':ObjectId(user_id)}})
@@ -2977,6 +2983,7 @@ def delete_user(user_id):
         db.user_preferences.delete_many({'email': user_email})
         db.user_navbars.delete_many({'user_email': user_email})
         db.activity_logs.delete_many({'user_id': ObjectId(user_id)})
+        db.direct_messages.delete_many({'$or':[{'sender_id':ObjectId(user_id)},{'receiver_id':ObjectId(user_id)}]})
         flash(f'✅ User {user_email} deleted.', 'success')
     except Exception as e:
         logger.error(f"delete_user error: {e}")
@@ -2985,8 +2992,7 @@ def delete_user(user_id):
 
 @app.route('/pre_assign_leader', methods=['POST'])
 def pre_assign_leader():
-    if session.get('role') != 'admin':
-        return jsonify({'error': 'Access denied'}), 403
+    if session.get('role') != 'admin': return jsonify({'error': 'Access denied'}), 403
     try:
         data   = request.get_json(force=True) or {}
         email  = data.get('email')
@@ -3012,8 +3018,7 @@ def pre_assign_leader():
 
 @app.route('/pre_assign_core', methods=['POST'])
 def pre_assign_core():
-    if session.get('role') != 'admin':
-        return jsonify({'error': 'Access denied'}), 403
+    if session.get('role') != 'admin': return jsonify({'error': 'Access denied'}), 403
     try:
         data       = request.get_json(force=True) or {}
         email      = data.get('email')
@@ -3039,15 +3044,11 @@ def pre_assign_core():
 
 @app.route('/remove_pre_assigned/<type>/<email>', methods=['DELETE'])
 def remove_pre_assigned(type, email):
-    if session.get('role') != 'admin':
-        return jsonify({'error': 'Access denied'}), 403
+    if session.get('role') != 'admin': return jsonify({'error': 'Access denied'}), 403
     try:
-        if type == 'leader':
-            db.pre_assigned_leaders.delete_one({'email': email})
-        elif type == 'core':
-            db.pre_assigned_core.delete_one({'email': email})
-        else:
-            return jsonify({'error': 'Invalid type'}), 400
+        if type == 'leader':  db.pre_assigned_leaders.delete_one({'email': email})
+        elif type == 'core':  db.pre_assigned_core.delete_one({'email': email})
+        else: return jsonify({'error': 'Invalid type'}), 400
         return jsonify({'success': True, 'message': 'Removed'})
     except Exception as e:
         return jsonify({'error': str(e)}), 400
@@ -3057,26 +3058,22 @@ def remove_pre_assigned(type, email):
 # ══════════════════════════════════════════════════════════════════════
 @app.route("/admin/events")
 def admin_events():
-    if session.get('role') != 'admin':
-        return redirect(url_for('login'))
+    if session.get('role') != 'admin': return redirect(url_for('login'))
     try:
         events = list(db.events.find().sort('event_date', -1))
-        for e in events:
-            e["_id"] = str(e["_id"])
+        for e in events: e["_id"] = str(e["_id"])
         return render_template("admin_events.html", events=events)
     except Exception as e:
         return render_template("admin_events.html", events=[])
 
 @app.route("/add_event", methods=["POST"])
 def add_event():
-    if session.get('role') != 'admin':
-        return redirect(url_for('login'))
+    if session.get('role') != 'admin': return redirect(url_for('login'))
     try:
         data       = request.form.to_dict()
         image_file = request.files.get("image")
         pdf_file   = request.files.get("pdf")
-        image_path = None
-        pdf_path   = None
+        image_path = None; pdf_path = None
         if image_file and image_file.filename:
             fn = secure_filename(image_file.filename)
             ip = os.path.join(app.config["UPLOAD_FOLDER"], fn)
@@ -3103,19 +3100,17 @@ def add_event():
 
 @app.route("/delete_event/<event_id>")
 def delete_event(event_id):
-    if session.get('role') != 'admin':
-        return redirect(url_for('login'))
+    if session.get('role') != 'admin': return redirect(url_for('login'))
     try:
         db.events.delete_one({"_id": ObjectId(event_id)})
         flash('✅ Event deleted!', 'success')
-    except Exception as e:
+    except:
         flash('Error deleting event', 'error')
     return redirect(url_for('admin_events'))
 
 @app.route("/edit_event/<event_id>", methods=["GET"])
 def edit_event(event_id):
-    if session.get('role') != 'admin':
-        return redirect(url_for('login'))
+    if session.get('role') != 'admin': return redirect(url_for('login'))
     try:
         event = db.events.find_one({"_id": ObjectId(event_id)})
         if not event:
@@ -3123,14 +3118,13 @@ def edit_event(event_id):
             return redirect(url_for('admin_events'))
         event["_id"] = str(event["_id"])
         return render_template("edit_event.html", event=event)
-    except Exception as e:
+    except:
         flash('Error loading event', 'error')
         return redirect(url_for('admin_events'))
 
 @app.route("/update_event/<event_id>", methods=["POST"])
 def update_event(event_id):
-    if session.get('role') != 'admin':
-        return redirect(url_for('login'))
+    if session.get('role') != 'admin': return redirect(url_for('login'))
     try:
         data       = request.form.to_dict()
         image_file = request.files.get("image")
@@ -3155,7 +3149,7 @@ def update_event(event_id):
             update_data["pdf"] = "/" + pp.replace("\\", "/")
         db.events.update_one({"_id": ObjectId(event_id)}, {"$set": update_data})
         flash('✅ Event updated!', 'success')
-    except Exception as e:
+    except:
         flash('Error updating event', 'error')
     return redirect(url_for('admin_events'))
 
@@ -3164,8 +3158,7 @@ def update_event(event_id):
 # ══════════════════════════════════════════════════════════════════════
 @app.route('/edit_ugc', methods=['GET', 'POST'])
 def edit_ugc():
-    if session.get('role') != 'admin':
-        return redirect(url_for('login'))
+    if session.get('role') != 'admin': return redirect(url_for('login'))
     if request.method == 'POST':
         try:
             text_data           = request.form.get('text_data')
@@ -3194,8 +3187,7 @@ def edit_ugc():
 
 @app.route('/edit_ugc_record/<record_id>', methods=['GET', 'POST'])
 def edit_ugc_record(record_id):
-    if session.get('role') != 'admin':
-        return redirect(url_for('login'))
+    if session.get('role') != 'admin': return redirect(url_for('login'))
     try:
         record = db.ugc_data.find_one({'_id': ObjectId(record_id)})
         if not record:
@@ -3224,8 +3216,7 @@ def edit_ugc_record(record_id):
 
 @app.route('/delete_ugc/<record_id>', methods=['GET'])
 def delete_ugc(record_id):
-    if session.get('role') != 'admin':
-        return redirect(url_for('login'))
+    if session.get('role') != 'admin': return redirect(url_for('login'))
     try:
         db.ugc_data.delete_one({'_id': ObjectId(record_id)})
         flash('✅ UGC record deleted.', 'success')
@@ -3235,8 +3226,7 @@ def delete_ugc(record_id):
 
 @app.route('/edit_monthly', methods=['GET', 'POST'])
 def edit_monthly():
-    if session.get('role') != 'admin':
-        return redirect(url_for('login'))
+    if session.get('role') != 'admin': return redirect(url_for('login'))
     if request.method == 'POST':
         try:
             heading     = request.form.get('heading','').strip()
@@ -3258,7 +3248,7 @@ def edit_monthly():
             })
             flash('✅ Monthly engagement uploaded.', 'success')
             return redirect(url_for('edit_monthly'))
-        except Exception as e:
+        except:
             flash('Error uploading data', 'error')
     try:
         return render_template('edit_monthly.html', records=list(db.monthly_engagement.find().sort('uploaded_at',-1)))
@@ -3267,8 +3257,7 @@ def edit_monthly():
 
 @app.route('/edit_record/<record_id>', methods=['GET', 'POST'])
 def edit_record(record_id):
-    if session.get('role') != 'admin':
-        return redirect(url_for('login'))
+    if session.get('role') != 'admin': return redirect(url_for('login'))
     try:
         record = db.monthly_engagement.find_one({'_id': ObjectId(record_id)})
         if not record:
@@ -3286,21 +3275,19 @@ def edit_record(record_id):
                 flash('✅ Record updated.', 'success')
             return redirect(url_for('edit_monthly'))
         return render_template('edit_record.html', record=record)
-    except Exception as e:
+    except:
         flash('Error processing request', 'error')
         return redirect(url_for('edit_monthly'))
 
 @app.route('/delete_record/<record_id>', methods=['POST'])
 def delete_record(record_id):
-    if session.get('role') != 'admin':
-        return redirect(url_for('login'))
+    if session.get('role') != 'admin': return redirect(url_for('login'))
     try:
         record = db.monthly_engagement.find_one({'_id': ObjectId(record_id)})
         if record and 'files' in record:
             for fn in record['files']:
                 fp = os.path.join(app.config['UPLOAD_FOLDER'], fn)
-                if os.path.exists(fp):
-                    os.remove(fp)
+                if os.path.exists(fp): os.remove(fp)
         db.monthly_engagement.delete_one({'_id': ObjectId(record_id)})
         flash('✅ Record deleted.', 'success')
     except:
@@ -3316,8 +3303,7 @@ def usernewsletters():
 
 @app.route('/newsletter', methods=['GET', 'POST'])
 def newsletter():
-    if session.get('role') != 'admin':
-        return redirect(url_for('login'))
+    if session.get('role') != 'admin': return redirect(url_for('login'))
     if request.method == 'POST':
         try:
             title               = request.form.get('title')
@@ -3358,30 +3344,28 @@ def newsletter():
 
 @app.route('/edit_newsletter/<id>', methods=['GET'])
 def edit_newsletter(id):
-    if session.get('role') != 'admin':
-        return redirect(url_for('login'))
+    if session.get('role') != 'admin': return redirect(url_for('login'))
     try:
         record = db.newsletters.find_one({'_id': ObjectId(id)})
         if not record:
             flash('Newsletter not found.', 'error')
             return redirect(url_for('newsletter'))
         return render_template('edit_newsletter.html', record=record)
-    except Exception as e:
+    except:
         flash('Error loading newsletter', 'error')
         return redirect(url_for('newsletter'))
 
 @app.route('/update_newsletter/<id>', methods=['POST'])
 def update_newsletter(id):
-    if session.get('role') != 'admin':
-        return redirect(url_for('login'))
+    if session.get('role') != 'admin': return redirect(url_for('login'))
     try:
         record = db.newsletters.find_one({'_id': ObjectId(id)})
         if not record:
             flash('Newsletter not found.', 'error')
             return redirect(url_for('newsletter'))
-        title    = request.form.get('title')
-        description = request.form.get('description')
-        tags     = request.form.getlist('tags')
+        title      = request.form.get('title')
+        description= request.form.get('description')
+        tags       = request.form.getlist('tags')
         recipients = [e.strip() for e in request.form.get('recipient_email','').split(',') if e.strip()]
         image_file = request.files.get('image')
         image_filename = record.get('image')
@@ -3393,14 +3377,13 @@ def update_newsletter(id):
                      'recipients':recipients,'image':image_filename,'updated_at':get_indian_time()}})
         flash('✅ Newsletter updated!', 'success')
         return redirect(url_for('newsletter'))
-    except Exception as e:
+    except:
         flash('Error updating newsletter', 'error')
         return redirect(url_for('newsletter'))
 
 @app.route('/newsletter/delete/<id>')
 def delete_newsletter(id):
-    if session.get('role') != 'admin':
-        return redirect(url_for('login'))
+    if session.get('role') != 'admin': return redirect(url_for('login'))
     try:
         db.newsletters.delete_one({"_id": ObjectId(id)})
         flash("✅ Newsletter deleted.", 'success')
@@ -3428,7 +3411,7 @@ def subscribe_newsletter():
             except:
                 flash("Subscribed, but confirmation email failed.", "warning")
         return redirect(request.referrer or url_for('jainevents'))
-    except Exception as e:
+    except:
         flash('Error processing subscription', 'error')
         return redirect(request.referrer or url_for('jainevents'))
 
@@ -3483,15 +3466,14 @@ def get_events():
             'school': e.get('school',''), 'department': e.get('department',''),
             'image': e.get('image',''), 'pdf': e.get('pdf','')
         } for e in events])
-    except Exception as e:
+    except:
         return jsonify([])
 
 @app.route('/api/events/<event_id>')
 def get_event(event_id):
     try:
         event = db.events.find_one({"_id": ObjectId(event_id)})
-        if not event:
-            return jsonify({'error': 'Event not found'}), 404
+        if not event: return jsonify({'error': 'Event not found'}), 404
         return jsonify({'id': str(event['_id']), 'event_name': event.get('event_name',''),
                         'event_date': event.get('event_date',''), 'end_date': event.get('end_date',''),
                         'event_time': event.get('event_time','All Day'), 'venue': event.get('venue','TBA'),
@@ -3546,17 +3528,13 @@ def filter_events():
 
 @app.route('/api/departments')
 def get_departments():
-    try:
-        return jsonify(sorted([d for d in db.events.distinct('department') if d]))
-    except:
-        return jsonify([])
+    try: return jsonify(sorted([d for d in db.events.distinct('department') if d]))
+    except: return jsonify([])
 
 @app.route('/api/schools')
 def get_schools():
-    try:
-        return jsonify(sorted([s for s in db.events.distinct('school') if s]))
-    except:
-        return jsonify([])
+    try: return jsonify(sorted([s for s in db.events.distinct('school') if s]))
+    except: return jsonify([])
 
 # ══════════════════════════════════════════════════════════════════════
 #  NOTIFICATIONS API
@@ -3586,11 +3564,10 @@ def dept_repo():
         flash('Your account is pending approval.', 'warning')
         return redirect(url_for('home'))
     _track_activity()
-    today_str = date.today().isoformat()
-    user_dept = session.get('user_department', '')
-    docs      = list(db.dept_repo_docs.find({'departments':user_dept}).sort('uploaded_at',-1)) if user_dept else []
-    for d in docs:
-        d['_id'] = str(d['_id'])
+    today_str   = date.today().isoformat()
+    user_dept   = session.get('user_department', '')
+    docs        = list(db.dept_repo_docs.find({'departments':user_dept}).sort('uploaded_at',-1)) if user_dept else []
+    for d in docs: d['_id'] = str(d['_id'])
     recent_count  = sum(1 for d in docs if isinstance(d.get('uploaded_at'), datetime) and (datetime.utcnow()-d['uploaded_at']).days<=30)
     faculty_count = sum(1 for d in docs if d.get('source') == 'faculty')
     return render_template('dept_repo.html', docs=docs, today_str=today_str,
@@ -3599,11 +3576,9 @@ def dept_repo():
 @app.route('/faculty_upload', methods=['POST'])
 @login_required
 def faculty_upload():
-    if not session.get('approved'):
-        return jsonify({'success':False,'error':'Account not approved'}), 403
+    if not session.get('approved'): return jsonify({'success':False,'error':'Account not approved'}), 403
     user = db.users.find_one({'email': session['email']})
-    if not user:
-        return jsonify({'success':False,'error':'User not found'}), 404
+    if not user: return jsonify({'success':False,'error':'User not found'}), 404
     title       = request.form.get('title','').strip()
     description = request.form.get('description','').strip()
     doc_date    = request.form.get('doc_date','').strip()
@@ -3636,9 +3611,8 @@ def core_repo():
     ui        = _get_user_info()
     today_str = date.today().isoformat()
     _track_activity()
-    repo_docs           = list(db.dept_repo_docs.find({}).sort('uploaded_at',-1))
-    for d in repo_docs:
-        d['_id'] = str(d['_id'])
+    repo_docs = list(db.dept_repo_docs.find({}).sort('uploaded_at',-1))
+    for d in repo_docs: d['_id'] = str(d['_id'])
     faculty_submissions = [d for d in repo_docs if d.get('source') == 'faculty']
     core_uploads        = [d for d in repo_docs if d.get('source') != 'faculty']
     seen, all_depts_with_docs = set(), []
@@ -3683,8 +3657,7 @@ def core_repo_upload():
         'uploaded_at': datetime.utcnow()
     })
     dept_label = ', '.join(d.replace('Department of ','') for d in departments[:3])
-    if len(departments) > 3:
-        dept_label += f' +{len(departments)-3} more'
+    if len(departments) > 3: dept_label += f' +{len(departments)-3} more'
     _track_activity(f"Core upload: {title or 'Untitled'} → {dept_label}")
     flash(f'✅ Document uploaded to: {dept_label}', 'success')
     return redirect(url_for('core_repo'))
@@ -3694,8 +3667,7 @@ def core_repo_upload():
 def core_repo_delete():
     data   = request.get_json(force=True) or {}
     doc_id = data.get('doc_id')
-    if not doc_id:
-        return jsonify({'success': False, 'error': 'Missing document ID'})
+    if not doc_id: return jsonify({'success': False, 'error': 'Missing document ID'})
     try:
         doc    = db.dept_repo_docs.find_one({'_id': ObjectId(doc_id)})
         result = db.dept_repo_docs.delete_one({'_id': ObjectId(doc_id)})
@@ -3707,13 +3679,12 @@ def core_repo_delete():
         return jsonify({'success': False, 'error': str(e)})
 
 # ══════════════════════════════════════════════════════════════════════
-#  INIT & DEBUG ROUTES
+#  UTILITY / DEBUG ROUTES
 # ══════════════════════════════════════════════════════════════════════
 @app.route('/init_core_chat')
 @login_required
 def init_core_chat():
-    if session.get('role') != 'admin':
-        return jsonify({'error': 'Access denied'}), 403
+    if session.get('role') != 'admin': return jsonify({'error': 'Access denied'}), 403
     try:
         existing = db.chat_groups.find_one({'group_type': 'core_team'})
         if existing:
@@ -3734,11 +3705,14 @@ def init_core_chat():
 def debug_my_session():
     try:
         user = db.users.find_one({'email': session['email']})
-        if not user:
-            return jsonify({'error': 'User not found'}), 404
+        if not user: return jsonify({'error': 'User not found'}), 404
         return jsonify({
-            'session':  {'email':session.get('email'),'role':session.get('role'),'user_type':session.get('user_type'),'special_role':session.get('special_role'),'approved':session.get('approved')},
-            'database': {'email':user.get('email'),'role':user.get('role'),'user_type':user.get('user_type'),'special_role':user.get('special_role'),'approved':user.get('approved')},
+            'session':  {'email':session.get('email'),'role':session.get('role'),
+                         'user_type':session.get('user_type'),'special_role':session.get('special_role'),
+                         'approved':session.get('approved')},
+            'database': {'email':user.get('email'),'role':user.get('role'),
+                         'user_type':user.get('user_type'),'special_role':user.get('special_role'),
+                         'approved':user.get('approved')},
             'is_leader':     is_leader(),
             'is_core_member':is_core_member()
         })
@@ -3750,20 +3724,20 @@ def debug_my_session():
 def debug_check_collections():
     try:
         return jsonify({
-            'collections': db.list_collection_names(),
-            'users_count':    db.users.count_documents({}),
-            'leaders_count':  db.users.count_documents({'special_role':'leader'}),
-            'core_count':     db.users.count_documents({'$or':[{'user_type':'core'},{'special_role':'office_barrier'}]}),
-            'tasks_count':    db.tasks.count_documents({}),
-            'docs_count':     db.office_documents.count_documents({})
+            'collections':  db.list_collection_names(),
+            'users_count':  db.users.count_documents({}),
+            'leaders_count':db.users.count_documents({'special_role':'leader'}),
+            'core_count':   db.users.count_documents({'$or':[{'user_type':'core'},{'special_role':'office_barrier'}]}),
+            'tasks_count':  db.tasks.count_documents({}),
+            'docs_count':   db.office_documents.count_documents({}),
+            'dm_count':     db.direct_messages.count_documents({})
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 @app.route('/debug/users')
 def debug_users():
-    if session.get('role') != 'admin':
-        return jsonify({'error': 'Admin access required'}), 403
+    if session.get('role') != 'admin': return jsonify({'error': 'Admin access required'}), 403
     try:
         users = list(db.users.find({}))
         return jsonify({'total_users': len(users), 'users': [
@@ -3845,7 +3819,7 @@ def uploaded_file(filename):
         return "File not found", 404
 
 # ══════════════════════════════════════════════════════════════════════
-#  ERROR HANDLERS  ← JSON-safe for /api/ routes
+#  ERROR HANDLERS
 # ══════════════════════════════════════════════════════════════════════
 @app.errorhandler(401)
 def unauthorized(e):
